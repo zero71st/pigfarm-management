@@ -9,9 +9,13 @@ export PATH=$PATH:$HOME/.dotnet
 echo "Building Blazor WebAssembly application..."
 dotnet publish src/client/PigFarmManagement.Client/PigFarmManagement.Client.csproj -c Release -o build-output
 
-# Create public directory and copy wwwroot contents
+# Create public directory and copy ALL wwwroot contents including _framework
 echo "Preparing files for Vercel..."
 mkdir -p public
 cp -r build-output/wwwroot/* public/
+
+# List contents to verify
+echo "Public directory contents:"
+ls -la public/
 
 echo "Build completed! Files are in public/ directory"
