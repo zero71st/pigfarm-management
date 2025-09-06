@@ -1,0 +1,176 @@
+@inject HttpClient Http
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudContainer Style="max-width: 800px;">
+            @if (summary == null)
+            {
+                <MudProgressCircular Indeterminate="true" />
+                <MudText>Loading pen details...</MudText>
+            }
+            else
+            {
+                <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+                    <MudTabPanel Text="Summary" Icon="Icons.Material.Filled.Assessment">
+                        <MudGrid>
+                            <MudItem xs="12" md="6">
+                                <MudCard>
+                                    <MudCardContent>
+                                        <MudText Typo="Typo.h6">Pen Information</MudText>
+                                        <MudText><strong>Pen Code:</strong> @pigPen?.PenCode</MudText>
+                                        <MudText><strong>Quantity:</strong> @pigPen?.PigQty pigs</MudText>
+                                        <MudText><strong>Start Date:</strong> @pigPen?.StartDate.ToString("dd/MM/yyyy")</MudText>
+                                        <MudText><strong>End Date:</strong> @pigPen?.EndDate?.ToString("dd/MM/yyyy")</MudText>
+                                    </MudCardContent>
+                                </MudCard>
+                            </MudItem>
+                            <MudItem xs="12" md="6">
+                                <MudCard>
+                                    <MudCardContent>
+                                        <MudText Typo="Typo.h6">Financial Summary</MudText>
+                                        <MudText Color="Color.Primary"><strong>Feed Cost:</strong> ฿@summary.TotalFeedCost.ToString("N0")</MudText>
+                                        <MudText Color="Color.Secondary"><strong>Total Deposits:</strong> ฿@summary.TotalDeposit.ToString("N0")</MudText>
+                                        <MudText Color="Color.Info"><strong>Investment:</strong> ฿@summary.Investment.ToString("N0")</MudText>
+                                        <MudText Color="@(summary.ProfitLoss >= 0 ? Color.Success : Color.Error)">
+                                            <strong>Profit/Loss:</strong> ฿@summary.ProfitLoss.ToString("N0")
+                                        </MudText>
+                                    </MudCardContent>
+                                </MudCard>
+                            </MudItem>
+                        </MudGrid>
+                    </MudTabPanel>
+
+                    <MudTabPanel Text="Feed History" Icon="Icons.Material.Filled.Fastfood">
+                        <div class="d-flex justify-end mb-4">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" 
+                                       StartIcon="Icons.Material.Filled.Add" OnClick="AddFeed">
+                                Add Feed
+                            </MudButton>
+                        </div>
+                        <MudTable Items="@feeds" Hover="true" Striped="true">
+                            <HeaderContent>
+                                <MudTh>Date</MudTh>
+                                <MudTh>Type</MudTh>
+                                <MudTh>Quantity</MudTh>
+                                <MudTh>Price per Unit</MudTh>
+                                <MudTh>Total Cost</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd>@context.Date.ToString("dd/MM/yyyy")</MudTd>
+                                <MudTd>@context.FeedType</MudTd>
+                                <MudTd>@context.QuantityKg</MudTd>
+                                <MudTd>฿@context.PricePerKg.ToString("N2")</MudTd>
+                                <MudTd>฿@context.Cost.ToString("N2")</MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    </MudTabPanel>
+
+                    <MudTabPanel Text="Deposits" Icon="Icons.Material.Filled.AccountBalance">
+                        <div class="d-flex justify-end mb-4">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" 
+                                       StartIcon="Icons.Material.Filled.Add" OnClick="AddDeposit">
+                                Add Deposit
+                            </MudButton>
+                        </div>
+                        <MudTable Items="@deposits" Hover="true" Striped="true">
+                            <HeaderContent>
+                                <MudTh>Date</MudTh>
+                                <MudTh>Amount</MudTh>
+                                <MudTh>Notes</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd>@context.Date.ToString("dd/MM/yyyy")</MudTd>
+                                <MudTd>฿@context.Amount.ToString("N2")</MudTd>
+                                <MudTd>@context.Remark</MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    </MudTabPanel>
+
+                    <MudTabPanel Text="Harvest" Icon="Icons.Material.Filled.Agriculture">
+                        <div class="d-flex justify-end mb-4">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" 
+                                       StartIcon="Icons.Material.Filled.Add" OnClick="AddHarvest">
+                                Add Harvest
+                            </MudButton>
+                        </div>
+                        <MudTable Items="@harvests" Hover="true" Striped="true">
+                            <HeaderContent>
+                                <MudTh>Date</MudTh>
+                                <MudTh>Pigs Sold</MudTh>
+                                <MudTh>Avg Weight</MudTh>
+                                <MudTh>Min Weight</MudTh>
+                                <MudTh>Max Weight</MudTh>
+                                <MudTh>Price per Kg</MudTh>
+                                <MudTh>Total Revenue</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd>@context.HarvestDate.ToString("dd/MM/yyyy")</MudTd>
+                                <MudTd>@context.PigCount</MudTd>
+                                <MudTd>@context.AvgWeight.ToString("N1") kg</MudTd>
+                                <MudTd>@context.MinWeight.ToString("N1") kg</MudTd>
+                                <MudTd>@context.MaxWeight.ToString("N1") kg</MudTd>
+                                <MudTd>฿@context.SalePricePerKg.ToString("N2")</MudTd>
+                                <MudTd>฿@context.Revenue.ToString("N2")</MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    </MudTabPanel>
+                </MudTabs>
+            }
+        </MudContainer>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="OnClose">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance? MudDialog { get; set; }
+    [Parameter] public Guid PigPenId { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private PigPen? pigPen;
+    private PigPenSummary? summary;
+    private List<FeedItem> feeds = new();
+    private List<Deposit> deposits = new();
+    private List<HarvestResult> harvests = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            summary = await Http.GetFromJsonAsync<PigPenSummary>($"/api/pigpens/{PigPenId}/summary");
+            feeds = await Http.GetFromJsonAsync<List<FeedItem>>($"/api/pigpens/{PigPenId}/feeds") ?? new();
+            deposits = await Http.GetFromJsonAsync<List<Deposit>>($"/api/pigpens/{PigPenId}/deposits") ?? new();
+            harvests = await Http.GetFromJsonAsync<List<HarvestResult>>($"/api/pigpens/{PigPenId}/harvests") ?? new();
+            
+            // Get pen details from current list or API call
+            var pigPens = await Http.GetFromJsonAsync<List<PigPen>>("/api/pigpens") ?? new();
+            pigPen = pigPens.FirstOrDefault(p => p.Id == PigPenId);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading data: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task AddFeed()
+    {
+        Snackbar.Add("Feed dialog not implemented yet", Severity.Info);
+    }
+
+    private async Task AddDeposit()
+    {
+        Snackbar.Add("Deposit dialog not implemented yet", Severity.Info);
+    }
+
+    private async Task AddHarvest()
+    {
+        Snackbar.Add("Harvest dialog not implemented yet", Severity.Info);
+    }
+}

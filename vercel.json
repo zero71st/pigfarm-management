@@ -1,0 +1,21 @@
+{
+  "version": 2,
+  "name": "pigfarm-client",
+  "builds": [
+    {
+      "src": "src/client/PigFarmManagement.Client/PigFarmManagement.Client.csproj",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "src/client/PigFarmManagement.Client/bin/Release/net8.0/publish/wwwroot"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ],
+  "buildCommand": "cd src && dotnet publish client/PigFarmManagement.Client/PigFarmManagement.Client.csproj -c Release -o client/PigFarmManagement.Client/bin/Release/net8.0/publish",
+  "outputDirectory": "src/client/PigFarmManagement.Client/bin/Release/net8.0/publish/wwwroot"
+}

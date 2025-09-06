@@ -1,0 +1,14 @@
+{
+  "profiles": {
+    "PigFarmManagement.Client": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "applicationUrl": "https://localhost:7100;http://localhost:7000",
+      "inspectUri": "{wsProtocol}://localhost:{wsPort}/_framework/debug/ws-proxy?browser={browserInspectUri}",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
