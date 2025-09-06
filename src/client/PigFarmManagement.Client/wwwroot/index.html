@@ -55,41 +55,44 @@
     <script>
         // MudBlazor-style loading animation with value display
         let progress = 0;
+        let progressInterval;
         const progressCircle = document.querySelector('.mud-progress-circular-circle');
         const progressValueElement = document.getElementById('progress-value');
         const statusText = document.getElementById('status-text');
         
-        // Simulate loading progress
-        const progressInterval = setInterval(() => {
-            progress += Math.random() * 8 + 2; // Smoother increment
-            if (progress > 100) progress = 100;
-            
-            // Update circular progress
-            const circumference = 2 * Math.PI * 20.2;
-            const strokeDasharray = `${(progress / 100) * circumference} ${circumference}`;
-            if (progressCircle) {
-                progressCircle.style.strokeDasharray = strokeDasharray;
-            }
-            
-            // Update progress value display
-            if (progressValueElement) {
-                progressValueElement.textContent = Math.floor(progress);
-            }
-            
-            // Update status text
-            if (statusText) {
-                if (progress < 25) statusText.textContent = 'Loading';
-                else if (progress < 50) statusText.textContent = 'Initializing';
-                else if (progress < 75) statusText.textContent = 'Preparing';
-                else if (progress < 95) statusText.textContent = 'Finalizing';
-                else statusText.textContent = 'Ready';
-            }
-            
-            if (progress >= 100) {
-                clearInterval(progressInterval);
-                hideLoadingScreen();
-            }
-        }, 100);
+        function startProgressAnimation() {
+            // Simulate loading progress
+            progressInterval = setInterval(() => {
+                progress += Math.random() * 8 + 2; // Smoother increment
+                if (progress > 100) progress = 100;
+                
+                // Update circular progress
+                const circumference = 2 * Math.PI * 20.2;
+                const strokeDasharray = `${(progress / 100) * circumference} ${circumference}`;
+                if (progressCircle) {
+                    progressCircle.style.strokeDasharray = strokeDasharray;
+                }
+                
+                // Update progress value display
+                if (progressValueElement) {
+                    progressValueElement.textContent = Math.floor(progress);
+                }
+                
+                // Update status text
+                if (statusText) {
+                    if (progress < 25) statusText.textContent = 'Loading';
+                    else if (progress < 50) statusText.textContent = 'Initializing';
+                    else if (progress < 75) statusText.textContent = 'Preparing';
+                    else if (progress < 95) statusText.textContent = 'Finalizing';
+                    else statusText.textContent = 'Ready';
+                }
+                
+                if (progress >= 100) {
+                    clearInterval(progressInterval);
+                    hideLoadingScreen();
+                }
+            }, 100);
+        }
 
         function hideLoadingScreen() {
             setTimeout(() => {
@@ -104,26 +107,29 @@
             }, 300);
         }
 
-        // Also hide when Blazor starts (fallback)
-        Blazor.start().then(() => {
-            const loadingContainer = document.querySelector('.loading-container');
-            if (loadingContainer && loadingContainer.style.display !== 'none') {
-                // Ensure we reach 100% when Blazor is ready
-                if (progress < 100) {
-                    progress = 100;
-                    if (progressCircle) {
-                        const circumference = 2 * Math.PI * 20.2;
-                        progressCircle.style.strokeDasharray = `${circumference} ${circumference}`;
-                    }
-                    if (progressValueElement) {
-                        progressValueElement.textContent = '100';
-                    }
-                    if (statusText) {
-                        statusText.textContent = 'Ready';
-                    }
+        // Start the animation when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            startProgressAnimation();
+        });
+
+        // Listen for Blazor started event instead of calling Blazor.start()
+        window.addEventListener('blazor:started', () => {
+            // Ensure we reach 100% when Blazor is ready
+            if (progress < 100) {
+                progress = 100;
+                if (progressCircle) {
+                    const circumference = 2 * Math.PI * 20.2;
+                    progressCircle.style.strokeDasharray = `${circumference} ${circumference}`;
                 }
-                hideLoadingScreen();
+                if (progressValueElement) {
+                    progressValueElement.textContent = '100';
+                }
+                if (statusText) {
+                    statusText.textContent = 'Ready';
+                }
+                clearInterval(progressInterval);
             }
+            hideLoadingScreen();
         });
     </script>
 </body>
