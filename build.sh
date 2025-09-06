@@ -7,11 +7,11 @@ export PATH=$PATH:$HOME/.dotnet
 
 # Build the Blazor WebAssembly app
 echo "Building Blazor WebAssembly application..."
-dotnet publish src/client/PigFarmManagement.Client/PigFarmManagement.Client.csproj -c Release -o dist
+dotnet publish src/client/PigFarmManagement.Client/PigFarmManagement.Client.csproj -c Release -o build-output
 
-# Copy wwwroot contents to dist root
+# Create public directory and copy wwwroot contents
 echo "Preparing files for Vercel..."
-cp -r dist/wwwroot/* dist/
-rm -rf dist/wwwroot
+mkdir -p public
+cp -r build-output/wwwroot/* public/
 
-echo "Build completed!"
+echo "Build completed! Files are in public/ directory"

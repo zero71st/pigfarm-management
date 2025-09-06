@@ -3,3 +3,5 @@ src/*/obj/
 .git/
 *.log
 node_modules/
+build-output/
+dist/
