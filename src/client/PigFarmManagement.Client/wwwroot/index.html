@@ -13,15 +13,18 @@
 <body>
     <div id="app">
         <div class="loading-container">
-            <!-- MudBlazor Style Circular Progress -->
+            <!-- MudBlazor Style Circular Progress with Value -->
             <div class="mud-progress-circular">
                 <svg class="mud-progress-circular-svg" viewBox="22 22 44 44">
                     <circle class="mud-progress-circular-circle-bg" cx="44" cy="44" r="20.2" fill="none" stroke-width="3.6"></circle>
                     <circle class="mud-progress-circular-circle" cx="44" cy="44" r="20.2" fill="none" stroke-width="3.6" stroke-linecap="round"></circle>
                 </svg>
-                <!-- Custom Content in Center -->
+                <!-- Custom Content in Center - Value Display -->
                 <div class="mud-progress-circular-content">
-                    <div class="loading-icon">🐷</div>
+                    <div class="progress-value">
+                        <span class="value-label">Value</span>
+                        <span class="value-number" id="progress-value">0</span>
+                    </div>
                 </div>
             </div>
             
@@ -30,7 +33,7 @@
                 <h1 class="mud-typography-h4">PigTrack Pro</h1>
                 <p class="mud-typography-body1">Initializing your farm management system...</p>
                 <div class="loading-status">
-                    <span class="status-text">Loading</span>
+                    <span class="status-text" id="status-text">Loading</span>
                     <div class="loading-dots">
                         <span>.</span>
                         <span>.</span>
@@ -50,14 +53,15 @@
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
     
     <script>
-        // MudBlazor-style loading animation
+        // MudBlazor-style loading animation with value display
         let progress = 0;
         const progressCircle = document.querySelector('.mud-progress-circular-circle');
-        const statusText = document.querySelector('.status-text');
+        const progressValueElement = document.getElementById('progress-value');
+        const statusText = document.getElementById('status-text');
         
         // Simulate loading progress
         const progressInterval = setInterval(() => {
-            progress += Math.random() * 20;
+            progress += Math.random() * 8 + 2; // Smoother increment
             if (progress > 100) progress = 100;
             
             // Update circular progress
@@ -67,11 +71,17 @@
                 progressCircle.style.strokeDasharray = strokeDasharray;
             }
             
+            // Update progress value display
+            if (progressValueElement) {
+                progressValueElement.textContent = Math.floor(progress);
+            }
+            
             // Update status text
             if (statusText) {
-                if (progress < 30) statusText.textContent = 'Loading';
-                else if (progress < 60) statusText.textContent = 'Initializing';
-                else if (progress < 90) statusText.textContent = 'Preparing';
+                if (progress < 25) statusText.textContent = 'Loading';
+                else if (progress < 50) statusText.textContent = 'Initializing';
+                else if (progress < 75) statusText.textContent = 'Preparing';
+                else if (progress < 95) statusText.textContent = 'Finalizing';
                 else statusText.textContent = 'Ready';
             }
             
@@ -79,7 +89,7 @@
                 clearInterval(progressInterval);
                 hideLoadingScreen();
             }
-        }, 150);
+        }, 100);
 
         function hideLoadingScreen() {
             setTimeout(() => {
@@ -91,13 +101,27 @@
                         loadingContainer.style.display = 'none';
                     }, 600);
                 }
-            }, 500);
+            }, 300);
         }
 
         // Also hide when Blazor starts (fallback)
         Blazor.start().then(() => {
             const loadingContainer = document.querySelector('.loading-container');
             if (loadingContainer && loadingContainer.style.display !== 'none') {
+                // Ensure we reach 100% when Blazor is ready
+                if (progress < 100) {
+                    progress = 100;
+                    if (progressCircle) {
+                        const circumference = 2 * Math.PI * 20.2;
+                        progressCircle.style.strokeDasharray = `${circumference} ${circumference}`;
+                    }
+                    if (progressValueElement) {
+                        progressValueElement.textContent = '100';
+                    }
+                    if (statusText) {
+                        statusText.textContent = 'Ready';
+                    }
+                }
                 hideLoadingScreen();
             }
         });

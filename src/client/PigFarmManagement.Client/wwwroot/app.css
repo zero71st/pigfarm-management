@@ -20,8 +20,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 120px;
-    height: 120px;
+    width: 140px;
+    height: 140px;
     margin-bottom: 2rem;
 }
 
@@ -32,14 +32,16 @@
 }
 
 .mud-progress-circular-circle-bg {
-    stroke: rgba(94, 53, 177, 0.1);
+    stroke: rgba(94, 53, 177, 0.12);
+    stroke-width: 4;
     transition: stroke-dasharray 300ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
 }
 
 .mud-progress-circular-circle {
     stroke: #594ae2;
+    stroke-width: 4;
     stroke-dasharray: 0 126.92;
-    transition: stroke-dasharray 300ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+    transition: stroke-dasharray 200ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
 }
 
 .mud-progress-circular-content {
@@ -52,21 +54,27 @@
     justify-content: center;
 }
 
-.loading-icon {
-    font-size: 2.5rem;
-    animation: bounce 2s infinite;
+.progress-value {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
 }
 
-@keyframes bounce {
-    0%, 20%, 50%, 80%, 100% {
-        transform: translateY(0);
-    }
-    40% {
-        transform: translateY(-10px);
-    }
-    60% {
-        transform: translateY(-5px);
-    }
+.value-label {
+    font-size: 0.875rem;
+    font-weight: 400;
+    color: #594ae2;
+    line-height: 1.2;
+    margin-bottom: 2px;
+}
+
+.value-number {
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: #594ae2;
+    line-height: 1;
 }
 
 /* MudBlazor Typography Styles */
