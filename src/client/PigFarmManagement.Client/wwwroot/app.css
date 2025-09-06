@@ -12,6 +12,8 @@
     align-items: center;
     z-index: 9999;
     font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
+    padding: 2rem;
+    box-sizing: border-box;
 }
 
 /* MudBlazor Circular Progress */
@@ -22,7 +24,8 @@
     justify-content: center;
     width: 140px;
     height: 140px;
-    margin-bottom: 2rem;
+    margin-bottom: 3rem;
+    flex-shrink: 0;
 }
 
 .mud-progress-circular-svg {
@@ -81,6 +84,8 @@
 .loading-text-content {
     text-align: center;
     color: rgba(0, 0, 0, 0.87);
+    max-width: 400px;
+    width: 100%;
 }
 
 .mud-typography-h4 {
@@ -97,7 +102,7 @@
     font-weight: 400;
     line-height: 1.5;
     letter-spacing: 0.00938em;
-    margin: 0 0 1.5rem 0;
+    margin: 0 0 2rem 0;
     color: rgba(0, 0, 0, 0.6);
 }
 
@@ -148,17 +153,51 @@
 
 /* Responsive Design */
 @media (max-width: 600px) {
+    .loading-container {
+        padding: 1rem;
+    }
+    
+    .mud-progress-circular {
+        width: 100px;
+        height: 100px;
+        margin-bottom: 2rem;
+    }
+    
+    .value-label {
+        font-size: 0.75rem;
+    }
+    
+    .value-number {
+        font-size: 1.2rem;
+    }
+    
+    .mud-typography-h4 {
+        font-size: 1.75rem;
+    }
+    
+    .mud-typography-body1 {
+        font-size: 0.875rem;
+    }
+    
+    .loading-text-content {
+        max-width: 300px;
+    }
+}
+
+@media (max-height: 500px) {
     .mud-progress-circular {
         width: 80px;
         height: 80px;
-    }
-    
-    .loading-icon {
-        font-size: 1.8rem;
+        margin-bottom: 1rem;
     }
     
     .mud-typography-h4 {
         font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .mud-typography-body1 {
+        margin-bottom: 1rem;
     }
 }
 
