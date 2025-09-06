@@ -13,16 +13,29 @@
 <body>
     <div id="app">
         <div class="loading-container">
-            <div class="loading-spinner">
-                <div class="spinner"></div>
+            <!-- MudBlazor Style Circular Progress -->
+            <div class="mud-progress-circular">
+                <svg class="mud-progress-circular-svg" viewBox="22 22 44 44">
+                    <circle class="mud-progress-circular-circle-bg" cx="44" cy="44" r="20.2" fill="none" stroke-width="3.6"></circle>
+                    <circle class="mud-progress-circular-circle" cx="44" cy="44" r="20.2" fill="none" stroke-width="3.6" stroke-linecap="round"></circle>
+                </svg>
+                <!-- Custom Content in Center -->
+                <div class="mud-progress-circular-content">
+                    <div class="loading-icon">🐷</div>
+                </div>
             </div>
-            <div class="loading-progress-text">
-                <h2>🐷 PigTrack Pro</h2>
-                <p>Loading your pig farm management system...</p>
-                <div class="loading-dots">
-                    <span>.</span>
-                    <span>.</span>
-                    <span>.</span>
+            
+            <!-- Loading Text -->
+            <div class="loading-text-content">
+                <h1 class="mud-typography-h4">PigTrack Pro</h1>
+                <p class="mud-typography-body1">Initializing your farm management system...</p>
+                <div class="loading-status">
+                    <span class="status-text">Loading</span>
+                    <div class="loading-dots">
+                        <span>.</span>
+                        <span>.</span>
+                        <span>.</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -37,30 +50,55 @@
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
     
     <script>
-        // Hide loading screen when Blazor is ready
-        window.addEventListener('DOMContentLoaded', (event) => {
-            // Add a minimum loading time for better UX
+        // MudBlazor-style loading animation
+        let progress = 0;
+        const progressCircle = document.querySelector('.mud-progress-circular-circle');
+        const statusText = document.querySelector('.status-text');
+        
+        // Simulate loading progress
+        const progressInterval = setInterval(() => {
+            progress += Math.random() * 20;
+            if (progress > 100) progress = 100;
+            
+            // Update circular progress
+            const circumference = 2 * Math.PI * 20.2;
+            const strokeDasharray = `${(progress / 100) * circumference} ${circumference}`;
+            if (progressCircle) {
+                progressCircle.style.strokeDasharray = strokeDasharray;
+            }
+            
+            // Update status text
+            if (statusText) {
+                if (progress < 30) statusText.textContent = 'Loading';
+                else if (progress < 60) statusText.textContent = 'Initializing';
+                else if (progress < 90) statusText.textContent = 'Preparing';
+                else statusText.textContent = 'Ready';
+            }
+            
+            if (progress >= 100) {
+                clearInterval(progressInterval);
+                hideLoadingScreen();
+            }
+        }, 150);
+
+        function hideLoadingScreen() {
             setTimeout(() => {
                 const loadingContainer = document.querySelector('.loading-container');
                 if (loadingContainer) {
-                    loadingContainer.style.transition = 'opacity 0.5s ease-out';
+                    loadingContainer.style.transition = 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
                     loadingContainer.style.opacity = '0';
                     setTimeout(() => {
                         loadingContainer.style.display = 'none';
-                    }, 500);
+                    }, 600);
                 }
-            }, 1500); // Show loading for at least 1.5 seconds
-        });
+            }, 500);
+        }
 
-        // Also hide when Blazor starts
+        // Also hide when Blazor starts (fallback)
         Blazor.start().then(() => {
             const loadingContainer = document.querySelector('.loading-container');
             if (loadingContainer && loadingContainer.style.display !== 'none') {
-                loadingContainer.style.transition = 'opacity 0.5s ease-out';
-                loadingContainer.style.opacity = '0';
-                setTimeout(() => {
-                    loadingContainer.style.display = 'none';
-                }, 500);
+                hideLoadingScreen();
             }
         });
     </script>
