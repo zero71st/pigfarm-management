@@ -6,10 +6,10 @@
             <MudGrid>
                 <MudItem xs="12">
                     <MudSelect T="Guid?" @bind-Value="pigPen.CustomerId" Label="Customer" Variant="Variant.Outlined" Required="true">
-                        <MudSelectItem Value="@((Guid?)null)">-- Select Customer --</MudSelectItem>
+                        <MudSelectItem T="Guid?" Value="@((Guid?)null)">-- Select Customer --</MudSelectItem>
                         @foreach (var customer in Customers)
                         {
-                            <MudSelectItem Value="@customer.Id">@customer.Name (@customer.Type)</MudSelectItem>
+                            <MudSelectItem T="Guid?" Value="@((Guid?)customer.Id)">@customer.Name (@customer.Type)</MudSelectItem>
                         }
                     </MudSelect>
                 </MudItem>

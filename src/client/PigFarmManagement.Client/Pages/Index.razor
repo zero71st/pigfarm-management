@@ -11,10 +11,10 @@
     <MudGrid>
         <MudItem xs="12" md="6">
             <MudSelect T="Guid?" @bind-Value="selectedCustomerId" Label="Filter Customer" Variant="Variant.Outlined">
-                <MudSelectItem Value="@((Guid?)null)">All Customers</MudSelectItem>
+                <MudSelectItem T="Guid?" Value="@((Guid?)null)">All Customers</MudSelectItem>
                 @foreach (var customer in customers)
                 {
-                    <MudSelectItem Value="@customer.Id">@customer.Name (@customer.Type)</MudSelectItem>
+                    <MudSelectItem T="Guid?" Value="@((Guid?)customer.Id)">@customer.Name (@customer.Type)</MudSelectItem>
                 }
             </MudSelect>
         </MudItem>
@@ -174,7 +174,7 @@
         selectedPen = pigPenId;
     }
 
-    private void OnParametersSet()
+    protected override void OnParametersSet()
     {
         FilterPigPens();
     }
