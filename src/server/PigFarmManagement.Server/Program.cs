@@ -16,13 +16,17 @@ builder.Services.AddCors(options =>
         }
         else
         {
-            // In production, specify allowed origins
+            // In production, allow Vercel domains
             var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() 
-                ?? new[] { "https://*.vercel.app" };
+                ?? new[] { 
+                    "https://*.vercel.app", 
+                    "https://pigfarm-management-client.vercel.app",  // Update with your actual Vercel URL
+                    "https://zero71st-pigfarm-management.vercel.app" // Common Vercel URL pattern
+                };
             policy.WithOrigins(allowedOrigins)
                   .AllowAnyHeader()
                   .AllowAnyMethod()
-                  .AllowCredentials();
+                  .SetIsOriginAllowedToAllowWildcardSubdomains(); // Allow wildcard subdomains
         }
     });
 });
