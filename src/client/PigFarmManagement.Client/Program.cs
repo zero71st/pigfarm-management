@@ -15,7 +15,7 @@ var baseAddress = builder.Configuration["ApiBaseUrl"];
 if (string.IsNullOrEmpty(baseAddress))
 {
     baseAddress = builder.HostEnvironment.IsProduction() ? 
-        "https://pigfarm-management-production.up.railway.app" :  // Update this with your actual Railway URL
+        "https://pigfarm-management-production.up.railway.app" :  // Your actual Railway URL
         "http://localhost:5000";
 }
 
