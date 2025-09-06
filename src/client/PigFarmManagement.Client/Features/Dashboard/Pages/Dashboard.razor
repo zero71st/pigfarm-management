@@ -1,0 +1,156 @@
+@page "/dashboard"
+@using Microsoft.AspNetCore.Components
+@using MudBlazor
+@using PigFarmManagement.Shared.Models
+@using PigFarmManagement.Client.Features.Customers.Services
+@using PigFarmManagement.Client.Features.PigPens.Services
+@using PigFarmManagement.Client.Features.PigPens.Components
+@inject ICustomerService CustomerService
+@inject IPigPenService PigPenService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>PigTrack Pro - Dashboard</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Pig Farm Management</MudText>
+
+<MudPaper Class="pa-4 ma-2" Elevation="2">
+    <MudGrid>
+        <MudItem xs="12" md="6">
+            <MudSelect T="Guid?" @bind-Value="selectedCustomerId" Label="Filter Customer" Variant="Variant.Outlined">
+                <MudSelectItem T="Guid?" Value="@((Guid?)null)">All Customers</MudSelectItem>
+                @foreach (var customer in customers)
+                {
+                    <MudSelectItem T="Guid?" Value="@((Guid?)customer.Id)">@customer.Name (@customer.Type)</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" md="6">
+            <MudTextField @bind-Value="searchText" Label="Search" Variant="Variant.Outlined" 
+                         Adornment="Adornment.End" AdornmentIcon="Icons.Material.Filled.Search" />
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+<MudPaper Class="pa-4 ma-2" Elevation="2">
+    <div class="d-flex justify-space-between align-center mb-4">
+        <MudText Typo="Typo.h6">Pig Pen List</MudText>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" 
+                   StartIcon="Icons.Material.Filled.Add" OnClick="ShowAddDialog">
+            Add New Pig Pen
+        </MudButton>
+    </div>
+
+    <MudTable Items="@filteredPigPens" Hover="true" Striped="true" Loading="@loading">
+        <HeaderContent>
+            <MudTh>Customer</MudTh>
+            <MudTh>Pen Code</MudTh>
+            <MudTh>Quantity</MudTh>
+            <MudTh>Start Date</MudTh>
+            <MudTh>Est. Harvest</MudTh>
+            <MudTh>Feed Cost</MudTh>
+            <MudTh>Investment</MudTh>
+            <MudTh>Profit/Loss</MudTh>
+            <MudTh>Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Customer">@GetCustomerName(context.CustomerId)</MudTd>
+            <MudTd DataLabel="Pen Code">@context.PenCode</MudTd>
+            <MudTd DataLabel="Quantity">@context.PigQty</MudTd>
+            <MudTd DataLabel="Start Date">@context.StartDate.ToString("yyyy-MM-dd")</MudTd>
+            <MudTd DataLabel="Est. Harvest">@(context.EstimatedHarvestDate?.ToString("yyyy-MM-dd") ?? "N/A")</MudTd>
+            <MudTd DataLabel="Feed Cost">$@context.FeedCost.ToString("N2")</MudTd>
+            <MudTd DataLabel="Investment">$@context.Investment.ToString("N2")</MudTd>
+            <MudTd DataLabel="Profit/Loss">
+                <MudText Color="@(context.ProfitLoss >= 0 ? Color.Success : Color.Error)">
+                    $@context.ProfitLoss.ToString("N2")
+                </MudText>
+            </MudTd>
+            <MudTd DataLabel="Actions">
+                <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary"
+                          OnClick="() => NavigateToPigPenDetail(context.Id)">
+                    View Details
+                </MudButton>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+</MudPaper>
+
+@code {
+    private List<Customer> customers = new();
+    private List<PigPen> pigPens = new();
+    private List<PigPen> filteredPigPens = new();
+    private bool loading = true;
+    private Guid? selectedCustomerId = null;
+    private string searchText = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            loading = true;
+
+            var customersTask = CustomerService.GetCustomersAsync();
+            var pigPensTask = PigPenService.GetPigPensAsync();
+
+            await Task.WhenAll(customersTask, pigPensTask);
+
+            customers = customersTask.Result;
+            pigPens = pigPensTask.Result;
+
+            FilterPigPens();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading data: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private void FilterPigPens()
+    {
+        filteredPigPens = pigPens.Where(p =>
+            (selectedCustomerId == null || p.CustomerId == selectedCustomerId) &&
+            (string.IsNullOrEmpty(searchText) || 
+             p.PenCode.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+             GetCustomerName(p.CustomerId).Contains(searchText, StringComparison.OrdinalIgnoreCase))
+        ).ToList();
+    }
+
+    protected override void OnParametersSet()
+    {
+        FilterPigPens();
+    }
+
+    private string GetCustomerName(Guid customerId)
+    {
+        return customers.FirstOrDefault(c => c.Id == customerId)?.Name ?? "Unknown";
+    }
+
+    private async Task ShowAddDialog()
+    {
+        var dialog = await DialogService.ShowAsync<AddPigPenDialog>("Add New Pig Pen");
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await LoadData();
+            Snackbar.Add("Pig pen added successfully!", Severity.Success);
+        }
+    }
+
+    private void NavigateToPigPenDetail(Guid pigPenId)
+    {
+        // This would navigate to pig pen detail page
+        // For now, we'll just show a snackbar
+        Snackbar.Add($"Navigate to pig pen detail: {pigPenId}", Severity.Info);
+    }
+}

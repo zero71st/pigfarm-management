@@ -12,6 +12,7 @@ This guide explains how to deploy the PigFarm Management System to Vercel (clien
 ## Step 1: Push to GitHub
 
 1. Initialize git repository (if not done):
+
 ```bash
 git init
 git add .
@@ -19,11 +20,13 @@ git commit -m "Initial commit"
 ```
 
 2. Create a new repository on GitHub:
+
    - Go to https://github.com/new
    - Name your repository (e.g., "pigfarm-management")
    - Don't initialize with README (we already have one)
 
 3. Add GitHub remote and push:
+
 ```bash
 git remote add origin https://github.com/YOUR_USERNAME/pigfarm-management.git
 git branch -M main
@@ -34,12 +37,14 @@ git push -u origin main
 
 1. Go to https://railway.app and sign up/login
 2. Create a new project:
+
    - Click "New Project"
    - Select "Deploy from GitHub repo"
    - Choose your repository
    - Railway will automatically detect the Dockerfile
 
 3. Configure environment variables (if needed):
+
    - Go to your project settings
    - Add any required environment variables
 
@@ -51,16 +56,19 @@ git push -u origin main
 ### Option A: Using Vercel CLI (Recommended)
 
 1. Install Vercel CLI:
+
 ```bash
 npm install -g vercel
 ```
 
 2. Login to Vercel:
+
 ```bash
 vercel login
 ```
 
 3. Deploy:
+
 ```bash
 cd "d:\dz Projects\PigFarmManagement"
 vercel --prod
@@ -81,9 +89,11 @@ vercel --prod
 After deployment, update the client configuration:
 
 1. Update the API base URL in `src/client/PigFarmManagement.Client/Program.cs`:
+
    - Replace `"https://your-railway-app.railway.app"` with your actual Railway URL
 
 2. Update Railway CORS settings if needed:
+
    - Add your Vercel domain to allowed origins
 
 3. Redeploy both applications
@@ -91,21 +101,25 @@ After deployment, update the client configuration:
 ## Environment Variables
 
 ### Railway (Server)
+
 - `ASPNETCORE_ENVIRONMENT=Production`
 - `ASPNETCORE_URLS=http://+:8080`
 - `AllowedOrigins__0=https://your-vercel-app.vercel.app` (replace with actual URL)
 
 ### Vercel (Client)
+
 - `ApiBaseUrl=https://your-railway-app.railway.app` (replace with actual URL)
 
 ## Custom Domains (Optional)
 
 ### Vercel
+
 1. Go to your project settings
 2. Click "Domains"
 3. Add your custom domain
 
 ### Railway
+
 1. Go to your project settings
 2. Click "Custom Domain"
 3. Add your custom domain
@@ -126,5 +140,6 @@ After deployment, update the client configuration:
 ## Local Development
 
 To run locally:
+
 1. Server: `dotnet run --project src/server/PigFarmManagement.Server/PigFarmManagement.Server.csproj`
 2. Client: `dotnet run --project src/client/PigFarmManagement.Client/PigFarmManagement.Client.csproj`

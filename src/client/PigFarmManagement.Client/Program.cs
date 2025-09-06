@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using PigFarmManagement.Client;
+using PigFarmManagement.Client.Features.Customers.Services;
+using PigFarmManagement.Client.Features.PigPens.Services;
 using MudBlazor.Services;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -23,5 +25,9 @@ Console.WriteLine($"API Base Address: {baseAddress}"); // For debugging
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(baseAddress) });
 builder.Services.AddMudServices();
+
+// Register feature services
+builder.Services.AddScoped<ICustomerService, CustomerService>();
+builder.Services.AddScoped<IPigPenService, PigPenService>();
 
 await builder.Build().RunAsync();

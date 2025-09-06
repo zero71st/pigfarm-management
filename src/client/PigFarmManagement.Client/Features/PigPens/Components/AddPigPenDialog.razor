@@ -1,0 +1,113 @@
+@using Microsoft.AspNetCore.Components
+@using MudBlazor
+@using PigFarmManagement.Shared.Models
+@using PigFarmManagement.Client.Features.Customers.Services
+@using PigFarmManagement.Client.Features.PigPens.Services
+@inject ICustomerService CustomerService
+@inject IPigPenService PigPenService
+
+<MudDialog>
+    <DialogContent>
+        <MudContainer Style="max-width: 500px;">
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudSelect T="Guid?" @bind-Value="selectedCustomerId" Label="Customer" Variant="Variant.Outlined" Required="true">
+                        <MudSelectItem T="Guid?" Value="@((Guid?)null)">-- Select Customer --</MudSelectItem>
+                        @foreach (var customer in customers)
+                        {
+                            <MudSelectItem T="Guid?" Value="@((Guid?)customer.Id)">@customer.Name (@customer.Type)</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="penCode" Label="Pen Code" Variant="Variant.Outlined" Required="true" />
+                </MudItem>
+                <MudItem xs="6">
+                    <MudNumericField @bind-Value="pigQty" Label="Pig Quantity" Variant="Variant.Outlined" Min="1" Required="true" />
+                </MudItem>
+                <MudItem xs="6">
+                    <MudDatePicker @bind-Date="startDate" Label="Start Date" Variant="Variant.Outlined" Required="true" />
+                </MudItem>
+                <MudItem xs="6">
+                    <MudDatePicker @bind-Date="endDate" Label="End Date" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="6">
+                    <MudDatePicker @bind-Date="estimatedHarvestDate" Label="Estimated Harvest Date" Variant="Variant.Outlined" />
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" 
+                  Variant="Variant.Filled" 
+                  OnClick="Submit"
+                  Disabled="@(!IsFormValid())">
+            Add Pig Pen
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
+
+    private List<Customer> customers = new();
+    private Guid? selectedCustomerId;
+    private string penCode = "";
+    private int pigQty = 1;
+    private DateTime? startDate = DateTime.Today;
+    private DateTime? endDate;
+    private DateTime? estimatedHarvestDate;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCustomers();
+    }
+
+    private async Task LoadCustomers()
+    {
+        try
+        {
+            customers = await CustomerService.GetCustomersAsync();
+        }
+        catch
+        {
+            customers = new();
+        }
+    }
+
+    void Cancel() => MudDialog.Cancel();
+
+    private bool IsFormValid()
+    {
+        return selectedCustomerId.HasValue && 
+               !string.IsNullOrWhiteSpace(penCode) && 
+               pigQty > 0 && 
+               startDate.HasValue;
+    }
+
+    async Task Submit()
+    {
+        if (!IsFormValid())
+            return;
+
+        try
+        {
+            var pigPenDto = new PigPenCreateDto(
+                selectedCustomerId!.Value,
+                penCode,
+                pigQty,
+                startDate!.Value,
+                endDate,
+                estimatedHarvestDate
+            );
+
+            var createdPigPen = await PigPenService.CreatePigPenAsync(pigPenDto);
+            MudDialog.Close(DialogResult.Ok(createdPigPen));
+        }
+        catch
+        {
+            MudDialog.Cancel();
+        }
+    }
+}

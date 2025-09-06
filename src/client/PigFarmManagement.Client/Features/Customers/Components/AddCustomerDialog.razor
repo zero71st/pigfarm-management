@@ -1,0 +1,79 @@
+@using Microsoft.AspNetCore.Components
+@using MudBlazor
+@using PigFarmManagement.Shared.Models
+@using PigFarmManagement.Client.Features.Customers.Services
+@inject ICustomerService CustomerService
+
+<MudDialog>
+    <DialogContent>
+        <MudContainer Style="max-width: 500px;">
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="customerName" 
+                                 Label="Customer Name" 
+                                 Variant="Variant.Outlined" 
+                                 Required="true"
+                                 RequiredError="Customer name is required" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="customerCode" 
+                                 Label="Customer Code" 
+                                 Variant="Variant.Outlined" 
+                                 Required="true"
+                                 RequiredError="Customer code is required" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudSelect T="CustomerType" @bind-Value="customerType" 
+                              Label="Customer Type" 
+                              Variant="Variant.Outlined"
+                              Required="true">
+                        <MudSelectItem T="CustomerType" Value="@CustomerType.Cash">Cash</MudSelectItem>
+                        <MudSelectItem T="CustomerType" Value="@CustomerType.Project">Project</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" 
+                  Variant="Variant.Filled" 
+                  OnClick="Submit" 
+                  Disabled="@(!IsFormValid())">
+            Add Customer
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
+
+    private string customerName = "";
+    private string customerCode = "";
+    private CustomerType customerType = CustomerType.Cash;
+
+    void Cancel() => MudDialog.Cancel();
+
+    private bool IsFormValid()
+    {
+        return !string.IsNullOrWhiteSpace(customerName) &&
+               !string.IsNullOrWhiteSpace(customerCode);
+    }
+
+    async Task Submit()
+    {
+        if (!IsFormValid())
+            return;
+
+        try
+        {
+            var customer = new Customer(Guid.NewGuid(), customerCode, customerName, customerType);
+            var createdCustomer = await CustomerService.CreateCustomerAsync(customer);
+            MudDialog.Close(DialogResult.Ok(createdCustomer));
+        }
+        catch
+        {
+            MudDialog.Cancel();
+        }
+    }
+}

@@ -1,0 +1,223 @@
+@page "/customers"
+@using Microsoft.AspNetCore.Components
+@using MudBlazor
+@using PigFarmManagement.Shared.Models
+@using PigFarmManagement.Client.Features.Customers.Services
+@using PigFarmManagement.Client.Features.Customers.Components
+@using PigFarmManagement.Client.Features.PigPens.Services
+@inject ICustomerService CustomerService
+@inject IPigPenService PigPenService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>PigTrack Pro - Customers</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge">
+    <MudText Typo="Typo.h4" GutterBottom="true" Class="mb-4">
+        <MudIcon Icon="Icons.Material.Filled.People" Class="mr-2" />
+        Customer Management
+    </MudText>
+
+    <!-- Action Bar -->
+    <MudPaper Class="pa-4 mb-4" Elevation="2">
+        <MudGrid AlignItems="Center">
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="searchText" 
+                             Label="Search customers..." 
+                             Variant="Variant.Outlined" 
+                             Adornment="Adornment.End" 
+                             AdornmentIcon="Icons.Material.Filled.Search"
+                             OnKeyUp="OnSearchKeyUp"
+                             Immediate="true" />
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudSelect T="CustomerType?" @bind-Value="selectedCustomerType" 
+                          Label="Filter by Type" 
+                          Variant="Variant.Outlined"
+                          Clearable="true">
+                    <MudSelectItem T="CustomerType?" Value="@CustomerType.Cash">Cash</MudSelectItem>
+                    <MudSelectItem T="CustomerType?" Value="@CustomerType.Project">Project</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="3" Class="text-right">
+                <MudButton Variant="Variant.Filled" 
+                          Color="Color.Primary" 
+                          StartIcon="Icons.Material.Filled.Add"
+                          OnClick="OpenAddCustomerDialog">
+                    Add Customer
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <!-- Customer Cards Grid -->
+    <MudGrid>
+        @if (isLoading)
+        {
+            <MudItem xs="12">
+                <div class="d-flex justify-center pa-8">
+                    <MudProgressCircular Indeterminate="true" Size="Size.Medium" />
+                </div>
+            </MudItem>
+        }
+        else if (filteredCustomers?.Any() == true)
+        {
+            @foreach (var customer in filteredCustomers)
+            {
+                <MudItem xs="12" sm="6" md="4" lg="3">
+                    <CustomerCard Customer="customer" 
+                                 PigPenCount="@GetCustomerPigPenCount(customer.Id)"
+                                 OnEdit="EditCustomer"
+                                 OnDelete="DeleteCustomer"
+                                 OnViewDetails="ViewCustomerDetails" />
+                </MudItem>
+            }
+        }
+        else
+        {
+            <MudItem xs="12">
+                <CustomerEmptyState OnAddCustomer="OpenAddCustomerDialog" 
+                                   HasFilters="@(!string.IsNullOrEmpty(searchText) || selectedCustomerType != null)" />
+            </MudItem>
+        }
+    </MudGrid>
+
+    <!-- Stats Summary -->
+    @if (customers?.Any() == true)
+    {
+        <CustomerStatistics Customers="customers" PigPens="pigPens" />
+    }
+</MudContainer>
+
+@code {
+    private List<Customer> customers = new();
+    private List<Customer> filteredCustomers = new();
+    private List<PigPen> pigPens = new();
+    private bool isLoading = true;
+    private string searchText = "";
+    private CustomerType? selectedCustomerType = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            isLoading = true;
+            
+            // Load customers and pig pens in parallel
+            var customersTask = CustomerService.GetCustomersAsync();
+            var pigPensTask = PigPenService.GetPigPensAsync();
+            
+            await Task.WhenAll(customersTask, pigPensTask);
+            
+            customers = customersTask.Result;
+            pigPens = pigPensTask.Result;
+            
+            FilterCustomers();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading data: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void FilterCustomers()
+    {
+        filteredCustomers = customers.Where(c =>
+            (string.IsNullOrEmpty(searchText) || 
+             c.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+             c.Code.Contains(searchText, StringComparison.OrdinalIgnoreCase)) &&
+            (selectedCustomerType == null || c.Type == selectedCustomerType)
+        ).ToList();
+    }
+
+    private void OnSearchKeyUp(KeyboardEventArgs e)
+    {
+        FilterCustomers();
+        StateHasChanged();
+    }
+
+    protected override void OnParametersSet()
+    {
+        FilterCustomers();
+    }
+
+    private int GetCustomerPigPenCount(Guid customerId)
+    {
+        return pigPens.Count(p => p.CustomerId == customerId);
+    }
+
+    private async Task OpenAddCustomerDialog()
+    {
+        var dialog = await DialogService.ShowAsync<AddCustomerDialog>("Add New Customer");
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await LoadData();
+            Snackbar.Add("Customer added successfully!", Severity.Success);
+        }
+    }
+
+    private async Task EditCustomer(Customer customer)
+    {
+        var parameters = new DialogParameters { ["Customer"] = customer };
+        var dialog = await DialogService.ShowAsync<EditCustomerDialog>("Edit Customer", parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await LoadData();
+            Snackbar.Add("Customer updated successfully!", Severity.Success);
+        }
+    }
+
+    private async Task DeleteCustomer(Customer customer)
+    {
+        var parameters = new DialogParameters
+        {
+            ["ContentText"] = $"Are you sure you want to delete customer '{customer.Name}'? This action cannot be undone.",
+            ["ButtonText"] = "Delete",
+            ["ButtonColor"] = Color.Error
+        };
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<DeleteConfirmationDialog>("Delete Customer", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            try
+            {
+                var success = await CustomerService.DeleteCustomerAsync(customer.Id);
+                if (success)
+                {
+                    await LoadData();
+                    Snackbar.Add("Customer deleted successfully!", Severity.Success);
+                }
+                else
+                {
+                    Snackbar.Add("Failed to delete customer. Please try again.", Severity.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting customer: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    private async Task ViewCustomerDetails(Customer customer)
+    {
+        var parameters = new DialogParameters { ["Customer"] = customer };
+        await DialogService.ShowAsync<CustomerDetailsDialog>("Customer Details", parameters);
+    }
+}
