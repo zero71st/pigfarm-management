@@ -32,10 +32,16 @@
 <MudPaper Class="pa-4 ma-2" Elevation="2">
     <div class="d-flex justify-space-between align-center mb-4">
         <MudText Typo="Typo.h6">Pig Pen List</MudText>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" 
-                   StartIcon="Icons.Material.Filled.Add" OnClick="ShowAddDialog">
-            Add New Pig Pen
-        </MudButton>
+        <div class="d-flex gap-2">
+            <MudButton Variant="Variant.Filled" Color="Color.Secondary" 
+                       StartIcon="Icons.Material.Filled.CloudDownload" OnClick="ShowFeedImportDialog">
+                Import POSPOS Feeds
+            </MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" 
+                       StartIcon="Icons.Material.Filled.Add" OnClick="ShowAddDialog">
+                Add New Pig Pen
+            </MudButton>
+        </div>
     </div>
 
     <MudTable Items="@filteredPigPens" Hover="true" Striped="true" Loading="@loading">
@@ -70,10 +76,21 @@
                 </MudText>
             </MudTd>
             <MudTd DataLabel="Actions">
-                <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary"
-                          OnClick="() => NavigateToPigPenDetail(context.Id)">
-                    View Details
-                </MudButton>
+                <MudButtonGroup Size="Size.Small" Variant="Variant.Text">
+                    <MudButton Color="Color.Info" StartIcon="Icons.Material.Filled.CloudDownload"
+                              OnClick="() => ShowPosImportDialog(context.Id, GetCustomerName(context.CustomerId), context.PenCode, GetCustomerCode(context.CustomerId))"
+                              Title="Import POSPOS feeds for this pig pen">
+                        POSPOS
+                    </MudButton>
+                    <MudButton Color="Color.Success" StartIcon="Icons.Material.Filled.Add"
+                              OnClick="() => ShowAddFeedDialog(context.Id, GetCustomerName(context.CustomerId), context.PenCode)">
+                        Add Feed
+                    </MudButton>
+                    <MudButton Color="Color.Primary" StartIcon="Icons.Material.Filled.Visibility"
+                              OnClick="() => NavigateToPigPenDetail(context.Id)">
+                        Details
+                    </MudButton>
+                </MudButtonGroup>
             </MudTd>
         </RowTemplate>
     </MudTable>
@@ -163,6 +180,62 @@
             await LoadData();
             Snackbar.Add("Pig pen added successfully!", Severity.Success);
         }
+    }
+
+    private async Task ShowAddFeedDialog(Guid pigPenId, string customerName, string penCode)
+    {
+        var parameters = new DialogParameters<AddFeedDialog>
+        {
+            { x => x.PigPenId, pigPenId },
+            { x => x.CustomerName, customerName },
+            { x => x.PenCode, penCode }
+        };
+
+        var dialog = await DialogService.ShowAsync<AddFeedDialog>("Add Feed", parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await LoadData(); // Refresh the list to show updated feed costs
+            Snackbar.Add("Feed added successfully!", Severity.Success);
+        }
+    }
+
+    private async Task ShowPosImportDialog(Guid pigPenId, string customerName, string penCode, string customerCode)
+    {
+        var parameters = new DialogParameters
+        {
+            { "PigPenId", pigPenId },
+            { "CustomerName", customerName },
+            { "PenCode", penCode },
+            { "CustomerCode", customerCode }
+        };
+
+        var dialog = await DialogService.ShowAsync<PigPenPosImportDialog>("Import POSPOS Feed Data", parameters, new DialogOptions 
+        { 
+            MaxWidth = MaxWidth.Large,
+            FullWidth = true 
+        });
+        
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await LoadData(); // Refresh the list after import
+            Snackbar.Add("POSPOS feed import completed!", Severity.Success);
+        }
+    }
+
+    private string GetCustomerCode(Guid customerId)
+    {
+        var customer = customers.FirstOrDefault(c => c.Id == customerId);
+        return customer?.Code ?? "";
+    }
+
+    private async Task ShowFeedImportDialog()
+    {
+        // This is the old general import - we can remove this or keep for bulk imports
+        Snackbar.Add("Use the inline POSPOS import buttons for each pig pen instead", Severity.Info);
     }
 
     private void NavigateToPigPenDetail(Guid pigPenId)

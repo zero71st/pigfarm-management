@@ -1,4 +1,5 @@
 using PigFarmManagement.Shared.Models;
+using PigFarmManagement.Client.Features.Feeds.Services;
 using System.Net.Http.Json;
 
 namespace PigFarmManagement.Client.Features.PigPens.Services;
@@ -95,6 +96,5 @@ public class PigPenService : IPigPenService
 
 // DTOs that should be moved to shared project later
 public record PigPenCreateDto(Guid CustomerId, string PenCode, int PigQty, DateTime StartDate, DateTime? EndDate, DateTime? EstimatedHarvestDate);
-public record FeedCreateDto(string FeedType, decimal QuantityKg, decimal PricePerKg, DateTime Date);
 public record DepositCreateDto(decimal Amount, DateTime Date, string? Remark);
 public record HarvestCreateDto(DateTime HarvestDate, int PigCount, decimal AvgWeight, decimal MinWeight, decimal MaxWeight, decimal SalePricePerKg);

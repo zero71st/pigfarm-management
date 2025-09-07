@@ -1,0 +1,252 @@
+@using PigFarmManagement.Shared.Models
+@inject IFeedImportService FeedImportService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <div class="pa-4">
+            <MudText Typo="Typo.h6" Class="mb-4">Import POSPOS Feed for Pig Pen @PenCode</MudText>
+            
+            <MudAlert Severity="Severity.Info" Class="mb-4">
+                <MudText Typo="Typo.body2">
+                    <strong>Customer:</strong> @CustomerName<br/>
+                    <strong>Pen Code:</strong> @PenCode<br/>
+                    Select which POSPOS invoices should be applied to this pig pen.
+                </MudText>
+            </MudAlert>
+            
+            @if (_availableTransactions.Any())
+            {
+                <MudText Typo="Typo.h6" Class="mb-3">Available POSPOS Invoices for Customer Code: @_customerCode</MudText>
+                
+                <MudTable Items="_availableTransactions" Hover="true" Striped="true" MultiSelection="true" 
+                         @bind-SelectedItems="_selectedTransactions" T="PosPosFeedTransaction">
+                    <HeaderContent>
+                        <MudTh><MudTableSortLabel SortBy="new Func<PosPosFeedTransaction, object>(x => x.Code)">Invoice Code</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<PosPosFeedTransaction, object>(x => x.Timestamp)">Date</MudTableSortLabel></MudTh>
+                        <MudTh>Customer</MudTh>
+                        <MudTh>Items</MudTh>
+                        <MudTh>Total Amount</MudTh>
+                        <MudTh>Preview</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Invoice Code">
+                            <MudChip Color="Color.Primary" Size="Size.Small">@context.Code</MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Date">@context.Timestamp.ToString("yyyy-MM-dd HH:mm")</MudTd>
+                        <MudTd DataLabel="Customer">@context.BuyerDetail.FirstName @context.BuyerDetail.LastName</MudTd>
+                        <MudTd DataLabel="Items">@context.OrderList.Count item(s)</MudTd>
+                        <MudTd DataLabel="Total Amount">$@context.GrandTotal.ToString("F2")</MudTd>
+                        <MudTd DataLabel="Preview">
+                            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Info"
+                                     OnClick="() => ShowTransactionDetails(context)">
+                                View Items
+                            </MudButton>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+                
+                @if (_selectedTransactions.Any())
+                {
+                    <MudCard Class="mt-4">
+                        <MudCardContent>
+                            <MudText Typo="Typo.h6" Class="mb-2">Selected Invoices Summary</MudText>
+                            <MudText Typo="Typo.body2">
+                                • @_selectedTransactions.Count invoice(s) selected<br/>
+                                • @_selectedTransactions.Sum(t => t.OrderList.Count) total feed items<br/>
+                                • $@_selectedTransactions.Sum(t => t.GrandTotal).ToString("F2") total amount
+                            </MudText>
+                            
+                            @if (_selectedTransactionDetails.Any())
+                            {
+                                <MudExpansionPanels Elevation="0" Class="mt-3">
+                                    @foreach (var transaction in _selectedTransactions)
+                                    {
+                                        var panelText = $"{transaction.Code} - ${transaction.GrandTotal:F2}";
+                                        <MudExpansionPanel Text="@panelText">>
+                                            <div class="pa-2">
+                                                @foreach (var item in transaction.OrderList)
+                                                {
+                                                    <MudChip Size="Size.Small" Color="Color.Secondary" Class="mr-1 mb-1">
+                                                        @item.Name (Qty: @item.Stock) - $@item.TotalPriceIncludeDiscount.ToString("F2")
+                                                    </MudChip>
+                                                }
+                                            </div>
+                                        </MudExpansionPanel>
+                                    }
+                                </MudExpansionPanels>
+                            }
+                        </MudCardContent>
+                    </MudCard>
+                }
+                
+                <div class="d-flex justify-end gap-2 mt-4">
+                    <MudButton Color="Color.Primary" 
+                             Variant="Variant.Filled" 
+                             StartIcon="@Icons.Material.Filled.Upload"
+                             OnClick="ImportSelectedTransactions"
+                             Disabled="_isImporting || !_selectedTransactions.Any()">
+                        @if (_isImporting)
+                        {
+                            <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                            <span class="ml-2">Importing...</span>
+                        }
+                        else
+                        {
+                            <span>Import Selected (@_selectedTransactions.Count)</span>
+                        }
+                    </MudButton>
+                </div>
+            }
+            else if (_isLoading)
+            {
+                <div class="d-flex justify-center align-center" style="height: 200px;">
+                    <MudProgressCircular Size="Size.Large" Indeterminate="true" />
+                    <MudText Class="ml-4">Loading POSPOS transactions...</MudText>
+                </div>
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Warning">
+                    <MudText Typo="Typo.body1">
+                        No POSPOS transactions found for customer code: <strong>@_customerCode</strong>
+                    </MudText>
+                    <MudText Typo="Typo.body2" Class="mt-2">
+                        This could mean:
+                        <br/>• No transactions exist for this customer in POSPOS
+                        <br/>• Customer code doesn't match between systems
+                        <br/>• POSPOS data hasn't been synced yet
+                    </MudText>
+                </MudAlert>
+            }
+            
+            @if (_importResult != null)
+            {
+                <MudAlert Severity="@(_importResult.FailedImports > 0 ? Severity.Warning : Severity.Success)" Class="mt-4">
+                    <MudText Typo="Typo.h6" Class="mb-2">Import Results</MudText>
+                    <MudText Typo="Typo.body2">
+                        • Successfully imported: @_importResult.SuccessfulImports transaction(s)<br/>
+                        • Total feed items: @_importResult.TotalFeedItems<br/>
+                        • Failed imports: @_importResult.FailedImports
+                    </MudText>
+                    
+                    @if (_importResult.Errors.Any())
+                    {
+                        <MudText Typo="Typo.body2" Class="mt-2 text-error">
+                            <strong>Errors:</strong><br/>
+                            @foreach (var error in _importResult.Errors)
+                            {
+                                <span>• @error<br/></span>
+                            }
+                        </MudText>
+                    }
+                </MudAlert>
+            }
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = default!;
+    
+    [Parameter] public Guid PigPenId { get; set; }
+    [Parameter] public string CustomerName { get; set; } = "";
+    [Parameter] public string PenCode { get; set; } = "";
+    [Parameter] public string CustomerCode { get; set; } = "";
+
+    private bool _isLoading = true;
+    private bool _isImporting;
+    private string _customerCode = "";
+    private List<PosPosFeedTransaction> _availableTransactions = new();
+    private HashSet<PosPosFeedTransaction> _selectedTransactions = new();
+    private List<PosPosFeedTransaction> _selectedTransactionDetails = new();
+    private FeedImportResult? _importResult;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _customerCode = CustomerCode;
+        await LoadAvailableTransactions();
+    }
+
+    private async Task LoadAvailableTransactions()
+    {
+        _isLoading = true;
+        try
+        {
+            // Get all mock transactions and filter by customer code
+            var allTransactions = await FeedImportService.GetMockPosPosFeedDataAsync();
+            _availableTransactions = allTransactions
+                .Where(t => t.BuyerDetail.Code.Equals(_customerCode, StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(t => t.Timestamp)
+                .ToList();
+                
+            if (_availableTransactions.Any())
+            {
+                Snackbar.Add($"Found {_availableTransactions.Count} POSPOS transaction(s) for customer {_customerCode}", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add($"No POSPOS transactions found for customer code: {_customerCode}", Severity.Warning);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to load POSPOS transactions: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void ShowTransactionDetails(PosPosFeedTransaction transaction)
+    {
+        var items = string.Join(", ", transaction.OrderList.Select(i => $"{i.Name} (Qty: {i.Stock})"));
+        Snackbar.Add($"Invoice {transaction.Code}: {items}", Severity.Info, configure: config =>
+        {
+            config.VisibleStateDuration = 5000;
+        });
+    }
+
+    private async Task ImportSelectedTransactions()
+    {
+        if (!_selectedTransactions.Any())
+        {
+            Snackbar.Add("Please select at least one transaction to import", Severity.Warning);
+            return;
+        }
+
+        _isImporting = true;
+        try
+        {
+            // Create a specialized import request for this specific pig pen
+            _importResult = await FeedImportService.ImportPosPosFeedForPigPenAsync(
+                PigPenId, 
+                _selectedTransactions.ToList()
+            );
+            
+            if (_importResult.FailedImports == 0)
+            {
+                Snackbar.Add($"Successfully imported {_importResult.SuccessfulImports} transaction(s) with {_importResult.TotalFeedItems} feed items to {PenCode}", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(_importResult));
+            }
+            else
+            {
+                Snackbar.Add($"Import completed with {_importResult.FailedImports} failures", Severity.Warning);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Import failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isImporting = false;
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

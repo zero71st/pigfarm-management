@@ -13,6 +13,7 @@ public static class WebApplicationExtensions
         app.MapCustomerEndpoints();
         app.MapPigPenEndpoints();
         app.MapFeedEndpoints();
+        app.MapFeedImportEndpoints();
         app.MapDashboardEndpoints();
 
         return app;

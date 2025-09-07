@@ -1,0 +1,104 @@
+@inject IFeedService FeedService
+
+<MudDialog>
+    <DialogContent>
+        <MudContainer Style="max-width: 500px;">
+            <MudText Typo="Typo.h6" GutterBottom="true">Add Feed for @PenInfo</MudText>
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudSelect T="string" @bind-Value="feedType" Label="Feed Type" Variant="Variant.Outlined" Required="true">
+                        <MudSelectItem T="string" Value="@("Starter Feed")">Starter Feed</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("Grower Feed")">Grower Feed</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("Finisher Feed")">Finisher Feed</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("Breeder Feed")">Breeder Feed</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("Vitamin Supplement")">Vitamin Supplement</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("Medicine")">Medicine</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudNumericField T="decimal" @bind-Value="quantityKg" Label="Quantity (kg)" Variant="Variant.Outlined" 
+                                   Min="0.1m" Step="0.1m" Required="true" />
+                </MudItem>
+                <MudItem xs="6">
+                    <MudNumericField T="decimal" @bind-Value="pricePerKg" Label="Price per kg ($)" Variant="Variant.Outlined" 
+                                   Min="0.01m" Step="0.01m" Required="true" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudDatePicker @bind-Date="feedDate" Label="Feed Date" Variant="Variant.Outlined" Required="true" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudCard Variant="Variant.Outlined" Class="pa-3">
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">Summary</MudText>
+                        <MudText><strong>Total Cost:</strong> $@CalculateTotalCost().ToString("N2")</MudText>
+                        <MudText><strong>Customer:</strong> @CustomerName</MudText>
+                        <MudText><strong>Pen:</strong> @PenCode</MudText>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Success" 
+                  Variant="Variant.Filled" 
+                  OnClick="Submit"
+                  Disabled="@(!IsFormValid())"
+                  StartIcon="Icons.Material.Filled.Add">
+            Add Feed
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public Guid PigPenId { get; set; }
+    [Parameter] public string CustomerName { get; set; } = "";
+    [Parameter] public string PenCode { get; set; } = "";
+
+    private string feedType = "";
+    private decimal quantityKg = 0;
+    private decimal pricePerKg = 0;
+    private DateTime? feedDate = DateTime.Today;
+
+    private string PenInfo => $"{CustomerName} - {PenCode}";
+
+    protected override void OnInitialized()
+    {
+        feedDate = DateTime.Today;
+    }
+
+    private decimal CalculateTotalCost()
+    {
+        return quantityKg * pricePerKg;
+    }
+
+    private bool IsFormValid()
+    {
+        return !string.IsNullOrEmpty(feedType) && 
+               quantityKg > 0 && 
+               pricePerKg > 0 && 
+               feedDate.HasValue;
+    }
+
+    private async Task Submit()
+    {
+        try
+        {
+            await FeedService.AddFeedToPigPenAsync(PigPenId, new PigFarmManagement.Client.Features.Feeds.Services.FeedCreateDto(
+                feedType,
+                quantityKg,
+                pricePerKg,
+                feedDate!.Value
+            ));
+            
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            // Handle error - in a real app you'd show proper error handling
+            Console.WriteLine($"Error adding feed: {ex.Message}");
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

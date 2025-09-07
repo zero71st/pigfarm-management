@@ -1,0 +1,61 @@
+        {
+            "_id": "68b7fd1d092fdfe725b5e45c",
+            "discount": 0,
+            "tax_percent": 0,
+            "code": "TR68017651",
+            "order_list": [
+                {
+                    "stock": 4,
+                    "name": "เจ็ท 120 หมู 40-60 กก.",
+                    "price": 630,
+                    "special_price": 630,
+                    "discount_type": 1,
+                    "cost_discount_price": 10,
+                    "code": "PK64000161",
+                    "sku_list": [],
+                    "topping_in_order": [],
+                    "total_price_include_discount": 2480,
+                    "note_in_order": [
+                        "เมฆ"
+                    ]
+                },
+                {
+                    "stock": 2,
+                    "name": "เจ็ท 130 หมู 60-90 กก.",
+                    "price": 598,
+                    "special_price": 598,
+                    "discount_type": 1,
+                    "cost_discount_price": 10,
+                    "code": "PK64000162",
+                    "sku_list": [],
+                    "topping_in_order": [],
+                    "total_price_include_discount": 1176,
+                    "note_in_order": [
+                        "เมฆ"
+                    ]
+                }
+            ],
+            "timestamp": "2025-09-03T08:32:27.270Z",
+            "comment": "",
+            "return_date": null,
+            "register_vat": false,
+            "segment_type": 4,
+            "sub_total": 3656,
+            "sub_total_exclude_vat": 0,
+            "grand_total": 3656,
+            "cash_register": null,
+            "buyer_detail": {
+                "code": "M000204",
+                "firstname": "คุณเมฆ0924031794บ้านดงเค้ง",
+                "lastname": "",
+                "key_card_id": "M000204"
+            },
+            "status": "success",
+            "rounding_rule": 0,
+            "rounding_rule_value": 1,
+            "rounding_amount": 0,
+            "reference_tax_invoice_abbreviate": {
+                "code": "ST68017651"
+            },
+            "number_of_order_list": 2
+        }

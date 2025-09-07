@@ -15,9 +15,9 @@ public class InMemoryDataStore
         // Initialize with sample data
         Customers = new List<Customer>
         {
-            new(Guid.NewGuid(), "C001", "John Farm", CustomerType.Project),
-            new(Guid.NewGuid(), "C002", "Mary Farm", CustomerType.Cash),
-            new(Guid.NewGuid(), "C003", "Somchai", CustomerType.Project)
+            new(Guid.NewGuid(), "CUST-001", "John Farm", CustomerType.Project),
+            new(Guid.NewGuid(), "CUST-002", "Mary Farm", CustomerType.Cash),
+            new(Guid.NewGuid(), "CUST-003", "Somchai", CustomerType.Project)
         };
 
         PigPens = new List<PigPen>

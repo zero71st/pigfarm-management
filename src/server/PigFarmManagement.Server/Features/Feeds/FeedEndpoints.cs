@@ -11,7 +11,7 @@ public static class FeedEndpoints
         group.MapGet("/{pigPenId:guid}/feeds", GetFeedsByPigPen)
             .WithName("GetFeedsByPigPen");
 
-        group.MapPost("/{pigPenId:guid}/feed", AddFeedToPigPen)
+        group.MapPost("/{pigPenId:guid}/feeds", AddFeedToPigPen)
             .WithName("AddFeedToPigPen");
 
         group.MapDelete("/feeds/{id:guid}", DeleteFeed)
