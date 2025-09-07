@@ -12,7 +12,7 @@
 <!-- Filter and Search Section -->
 <MudPaper Class="pa-4 ma-2" Elevation="2">
     <MudGrid>
-        <MudItem xs="12" md="6">
+        <MudItem xs="12" md="4">
             <MudSelect T="Guid?" @bind-Value="SelectedCustomerId" Label="Filter Customer" Variant="Variant.Outlined">
                 <MudSelectItem T="Guid?" Value="@((Guid?)null)">All Customers</MudSelectItem>
                 @foreach (var customer in customers)
@@ -21,7 +21,14 @@
                 }
             </MudSelect>
         </MudItem>
-        <MudItem xs="12" md="6">
+        <MudItem xs="12" md="4">
+            <MudSelect T="PigPenType?" @bind-Value="SelectedPigPenType" Label="Filter Type" Variant="Variant.Outlined">
+                <MudSelectItem T="PigPenType?" Value="@((PigPenType?)null)">All Types</MudSelectItem>
+                <MudSelectItem T="PigPenType?" Value="PigPenType.Cash">Cash</MudSelectItem>
+                <MudSelectItem T="PigPenType?" Value="PigPenType.Project">Project</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" md="4">
             <MudTextField @bind-Value="SearchText" Label="Search" Variant="Variant.Outlined" 
                          Adornment="Adornment.End" AdornmentIcon="Icons.Material.Filled.Search" />
         </MudItem>
@@ -48,6 +55,7 @@
         <HeaderContent>
             <MudTh>Customer</MudTh>
             <MudTh>Pen Code</MudTh>
+            <MudTh>Type</MudTh>
             <MudTh>Quantity</MudTh>
             <MudTh>Start Date</MudTh>
             <MudTh>Est. Harvest</MudTh>
@@ -60,6 +68,12 @@
         <RowTemplate>
             <MudTd DataLabel="Customer">@GetCustomerName(context.CustomerId)</MudTd>
             <MudTd DataLabel="Pen Code">@context.PenCode</MudTd>
+            <MudTd DataLabel="Type">
+                <MudChip Color="@(context.Type == PigPenType.Cash ? Color.Success : Color.Info)" 
+                         Size="Size.Small" Variant="Variant.Filled">
+                    @context.Type
+                </MudChip>
+            </MudTd>
             <MudTd DataLabel="Quantity">@context.PigQty</MudTd>
             <MudTd DataLabel="Start Date">@context.StartDate.ToString("yyyy-MM-dd")</MudTd>
             <MudTd DataLabel="Est. Harvest">@(context.EstimatedHarvestDate?.ToString("yyyy-MM-dd") ?? "N/A")</MudTd>
@@ -102,6 +116,7 @@
     private List<PigPen> filteredPigPens = new();
     private bool loading = true;
     private Guid? selectedCustomerId = null;
+    private PigPenType? selectedPigPenType = null;
     private string searchText = "";
 
     private Guid? SelectedCustomerId
@@ -110,6 +125,16 @@
         set
         {
             selectedCustomerId = value;
+            FilterPigPens();
+        }
+    }
+
+    private PigPenType? SelectedPigPenType
+    {
+        get => selectedPigPenType;
+        set
+        {
+            selectedPigPenType = value;
             FilterPigPens();
         }
     }
@@ -159,6 +184,7 @@
     {
         filteredPigPens = pigPens.Where(p =>
             (selectedCustomerId == null || p.CustomerId == selectedCustomerId) &&
+            (selectedPigPenType == null || p.Type == selectedPigPenType) &&
             (string.IsNullOrEmpty(searchText) || 
              p.PenCode.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
              GetCustomerName(p.CustomerId).Contains(searchText, StringComparison.OrdinalIgnoreCase))

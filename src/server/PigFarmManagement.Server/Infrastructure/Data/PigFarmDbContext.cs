@@ -39,6 +39,7 @@ public class PigFarmDbContext : DbContext
             entity.Property(e => e.FeedCost).HasColumnType("decimal(18,2)");
             entity.Property(e => e.Investment).HasColumnType("decimal(18,2)");
             entity.Property(e => e.ProfitLoss).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.Type).HasConversion<int>();
 
             entity.HasOne(e => e.Customer)
                   .WithMany(e => e.PigPens)
@@ -118,6 +119,8 @@ public class PigFarmDbContext : DbContext
 
         // Generate 100 PigPens
         var pigPens = new List<PigPenEntity>();
+        var pigPenTypes = Enum.GetValues<PigPenType>();
+        
         for (int i = 1; i <= 100; i++)
         {
             var customer = customers[random.Next(customers.Count)];
@@ -138,6 +141,7 @@ public class PigFarmDbContext : DbContext
                 FeedCost = pigQty * feedCostPerPig + random.Next(-500, 500),
                 Investment = pigQty * investmentPerPig + random.Next(-2000, 2000),
                 ProfitLoss = random.Next(-5000, 2000),
+                Type = pigPenTypes[random.Next(pigPenTypes.Length)],
                 CreatedAt = now.AddDays(-startDaysAgo),
                 UpdatedAt = now.AddDays(-random.Next(1, 30))
             });

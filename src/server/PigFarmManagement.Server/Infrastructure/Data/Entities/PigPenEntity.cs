@@ -29,6 +29,8 @@ public class PigPenEntity
     [Column(TypeName = "decimal(18,2)")]
     public decimal ProfitLoss { get; set; }
     
+    public PigPenType Type { get; set; }
+    
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     
@@ -54,6 +56,7 @@ public class PigPenEntity
             FeedCost, 
             Investment, 
             ProfitLoss, 
+            Type,
             CreatedAt, 
             UpdatedAt
         );
@@ -74,6 +77,7 @@ public class PigPenEntity
             FeedCost = pigPen.FeedCost,
             Investment = pigPen.Investment,
             ProfitLoss = pigPen.ProfitLoss,
+            Type = pigPen.Type,
             CreatedAt = pigPen.CreatedAt,
             UpdatedAt = pigPen.UpdatedAt
         };

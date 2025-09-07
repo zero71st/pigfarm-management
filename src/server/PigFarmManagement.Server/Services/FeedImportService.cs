@@ -449,6 +449,7 @@ public class FeedImportService : IFeedImportService
                 1200.00m,
                 5000.00m,
                 -800.00m,
+                PigPenType.Cash,
                 DateTime.Now.AddDays(-10),
                 DateTime.Now.AddDays(-1)
             ),
@@ -463,6 +464,7 @@ public class FeedImportService : IFeedImportService
                 980.00m,
                 4200.00m,
                 -650.00m,
+                PigPenType.Project,
                 DateTime.Now.AddDays(-8),
                 DateTime.Now.AddDays(-2)
             )

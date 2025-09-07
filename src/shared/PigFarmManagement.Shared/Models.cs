@@ -6,6 +6,12 @@ public enum CustomerStatus
     Inactive
 }
 
+public enum PigPenType
+{
+    Cash,
+    Project
+}
+
 public record Customer(Guid Id, string Code, string Name, CustomerStatus Status)
 {
     public string? ExternalId { get; init; }
@@ -19,7 +25,7 @@ public record Customer(Guid Id, string Code, string Name, CustomerStatus Status)
 public record PigPen(Guid Id, Guid CustomerId, string PenCode, int PigQty,
     DateTime StartDate, DateTime? EndDate, DateTime? EstimatedHarvestDate,
     decimal FeedCost, decimal Investment, decimal ProfitLoss, 
-    DateTime CreatedAt, DateTime UpdatedAt)
+    PigPenType Type, DateTime CreatedAt, DateTime UpdatedAt)
 {
     public string Name => $"Pen {PenCode}";
     public string Code => PenCode;
@@ -59,8 +65,14 @@ public record PigPenSummary(Guid PigPenId, decimal TotalFeedCost, decimal TotalD
 public record DashboardOverview(
     int TotalActivePigPens,
     int TotalPigs,
+    int TotalPigsCash,
+    int TotalPigsProject,
     decimal TotalInvestment,
+    decimal TotalInvestmentCash,
+    decimal TotalInvestmentProject,
     decimal TotalProfitLoss,
+    decimal TotalProfitLossCash,
+    decimal TotalProfitLossProject,
     List<CustomerPigPenStats> CustomerStats
 );
 

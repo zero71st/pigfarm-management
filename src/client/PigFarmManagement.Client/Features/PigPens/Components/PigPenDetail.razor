@@ -19,6 +19,12 @@
                                     <MudCardContent>
                                         <MudText Typo="Typo.h6">Pen Information</MudText>
                                         <MudText><strong>Pen Code:</strong> @pigPen?.PenCode</MudText>
+                                        <MudText><strong>Type:</strong> 
+                                            <MudChip Color="@(pigPen?.Type == PigPenType.Cash ? Color.Success : Color.Info)" 
+                                                     Size="Size.Small" Variant="Variant.Filled">
+                                                @pigPen?.Type
+                                            </MudChip>
+                                        </MudText>
                                         <MudText><strong>Quantity:</strong> @pigPen?.PigQty pigs</MudText>
                                         <MudText><strong>Start Date:</strong> @pigPen?.StartDate.ToString("dd/MM/yyyy")</MudText>
                                         <MudText><strong>End Date:</strong> @pigPen?.EndDate?.ToString("dd/MM/yyyy")</MudText>

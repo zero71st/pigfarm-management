@@ -22,6 +22,12 @@
                 <MudItem xs="12">
                     <MudTextField @bind-Value="penCode" Label="Pen Code" Variant="Variant.Outlined" Required="true" />
                 </MudItem>
+                <MudItem xs="12">
+                    <MudSelect T="PigPenType" @bind-Value="selectedType" Label="Pig Pen Type" Variant="Variant.Outlined" Required="true">
+                        <MudSelectItem T="PigPenType" Value="PigPenType.Cash">Cash</MudSelectItem>
+                        <MudSelectItem T="PigPenType" Value="PigPenType.Project">Project</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
                 <MudItem xs="6">
                     <MudNumericField @bind-Value="pigQty" Label="Pig Quantity" Variant="Variant.Outlined" Min="1" Required="true" />
                 </MudItem>
@@ -54,6 +60,7 @@
     private List<Customer> customers = new();
     private Guid? selectedCustomerId;
     private string penCode = "";
+    private PigPenType selectedType = PigPenType.Cash;
     private int pigQty = 1;
     private DateTime? startDate = DateTime.Today;
     private DateTime? endDate;
@@ -99,7 +106,8 @@
                 pigQty,
                 startDate!.Value,
                 endDate,
-                estimatedHarvestDate
+                estimatedHarvestDate,
+                selectedType
             );
 
             var createdPigPen = await PigPenService.CreatePigPenAsync(pigPenDto);

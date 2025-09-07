@@ -72,13 +72,23 @@ public class DashboardService : IDashboardService
             (p.EndDate == null || p.EndDate > DateTime.Now) &&
             customers.FirstOrDefault(c => c.Id == p.CustomerId)?.Status == CustomerStatus.Active).ToList();
 
+        // Group by pig pen type
+        var cashPigPens = activePigPens.Where(p => p.Type == PigPenType.Cash).ToList();
+        var projectPigPens = activePigPens.Where(p => p.Type == PigPenType.Project).ToList();
+
         // Calculate totals
         int totalActivePigPens = activePigPens.Count;
         int totalPigs = activePigPens.Sum(p => p.PigQty);
+        int totalPigsCash = cashPigPens.Sum(p => p.PigQty);
+        int totalPigsProject = projectPigPens.Sum(p => p.PigQty);
 
         // Calculate financial metrics
         decimal totalInvestment = await CalculateTotalInvestmentAsync(activePigPens);
+        decimal totalInvestmentCash = await CalculateTotalInvestmentAsync(cashPigPens);
+        decimal totalInvestmentProject = await CalculateTotalInvestmentAsync(projectPigPens);
         decimal totalProfitLoss = await CalculateTotalProfitLossAsync(activePigPens);
+        decimal totalProfitLossCash = await CalculateTotalProfitLossAsync(cashPigPens);
+        decimal totalProfitLossProject = await CalculateTotalProfitLossAsync(projectPigPens);
 
         // Calculate customer statistics
         var customerStats = new List<CustomerPigPenStats>();
@@ -105,8 +115,14 @@ public class DashboardService : IDashboardService
         return new DashboardOverview(
             totalActivePigPens,
             totalPigs,
+            totalPigsCash,
+            totalPigsProject,
             totalInvestment,
+            totalInvestmentCash,
+            totalInvestmentProject,
             totalProfitLoss,
+            totalProfitLossCash,
+            totalProfitLossProject,
             customerStats
         );
     }
