@@ -1,4 +1,5 @@
 using PigFarmManagement.Shared.Models;
+using System.Linq;
 
 namespace PigFarmManagement.Server.Features.PigPens;
 
@@ -25,7 +26,8 @@ public class PigPenService : IPigPenService
 
     public async Task<List<PigPen>> GetAllPigPensAsync()
     {
-        return await _pigPenRepository.GetAllAsync();
+        var pigPens = await _pigPenRepository.GetAllAsync();
+        return pigPens.OrderByDescending(p => p.UpdatedAt).ToList();
     }
 
     public async Task<PigPen?> GetPigPenByIdAsync(Guid id)
@@ -36,6 +38,7 @@ public class PigPenService : IPigPenService
     public async Task<PigPen> CreatePigPenAsync(PigPenCreateDto dto)
     {
         var id = Guid.NewGuid();
+        var now = DateTime.UtcNow;
         var pigPen = new PigPen(
             id, 
             dto.CustomerId, 
@@ -44,7 +47,9 @@ public class PigPenService : IPigPenService
             dto.StartDate, 
             dto.EndDate, 
             dto.EstimatedHarvestDate, 
-            0, 0, 0); // Initial values for currentQty, harvested, deaths
+            0, 0, 0, // Initial values for FeedCost, Investment, ProfitLoss
+            now, // CreatedAt
+            now); // UpdatedAt
 
         return await _pigPenRepository.CreateAsync(pigPen);
     }
@@ -57,7 +62,13 @@ public class PigPenService : IPigPenService
             throw new InvalidOperationException("Pig pen not found");
         }
 
-        return await _pigPenRepository.UpdateAsync(pigPen);
+        // Update the UpdatedAt timestamp while preserving CreatedAt
+        var updatedPigPen = pigPen with { 
+            CreatedAt = existingPigPen.CreatedAt, 
+            UpdatedAt = DateTime.UtcNow 
+        };
+
+        return await _pigPenRepository.UpdateAsync(updatedPigPen);
     }
 
     public async Task<bool> DeletePigPenAsync(Guid id)

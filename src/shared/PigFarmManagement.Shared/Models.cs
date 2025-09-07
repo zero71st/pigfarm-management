@@ -10,7 +10,8 @@ public record Customer(Guid Id, string Code, string Name, CustomerType Type);
 
 public record PigPen(Guid Id, Guid CustomerId, string PenCode, int PigQty,
     DateTime StartDate, DateTime? EndDate, DateTime? EstimatedHarvestDate,
-    decimal FeedCost, decimal Investment, decimal ProfitLoss)
+    decimal FeedCost, decimal Investment, decimal ProfitLoss, 
+    DateTime CreatedAt, DateTime UpdatedAt)
 {
     public string Name => $"Pen {PenCode}";
     public string Code => PenCode;
