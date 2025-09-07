@@ -109,6 +109,31 @@ public class FeedImportService : IFeedImportService
             .ToList();
     }
 
+    public async Task<List<PosPosFeedTransaction>> GetPosPosFeedByDateRangeAsync(DateTime fromDate, DateTime toDate)
+    {
+        var allTransactions = await GetMockPosPosFeedDataAsync();
+        return allTransactions
+            .Where(t => t.Timestamp >= fromDate && t.Timestamp <= toDate)
+            .OrderByDescending(t => t.Timestamp)
+            .ToList();
+    }
+
+    public async Task<List<PosPosFeedTransaction>> GetPosPosFeedByCustomerAndDateRangeAsync(string customerCode, DateTime fromDate, DateTime toDate)
+    {
+        var allTransactions = await GetMockPosPosFeedDataAsync();
+        return allTransactions
+            .Where(t => t.BuyerDetail.Code.Equals(customerCode, StringComparison.OrdinalIgnoreCase) &&
+                       t.Timestamp >= fromDate && t.Timestamp <= toDate)
+            .OrderByDescending(t => t.Timestamp)
+            .ToList();
+    }
+
+    public async Task<FeedImportResult> ImportPosPosFeedByDateRangeAsync(DateTime fromDate, DateTime toDate)
+    {
+        var transactions = await GetPosPosFeedByDateRangeAsync(fromDate, toDate);
+        return await ImportPosPosFeedDataAsync(transactions);
+    }
+
     public async Task<List<PosPosFeedTransaction>> GetMockPosPosFeedDataAsync()
     {
         // Mock data based on the POSPOS structure you provided
@@ -118,7 +143,7 @@ public class FeedImportService : IFeedImportService
             {
                 Id = "66fc65e4a2e61a30b0dcb111",
                 Code = "INV-2024-001",
-                Timestamp = DateTime.Now.AddHours(-2),
+                Timestamp = DateTime.Today.AddHours(-2), // Today, 2 hours ago
                 OrderList = new()
                 {
                     new PosPosFeedItem
@@ -161,7 +186,7 @@ public class FeedImportService : IFeedImportService
             {
                 Id = "66fc65e4a2e61a30b0dcb222",
                 Code = "INV-2024-002", 
-                Timestamp = DateTime.Now.AddHours(-1),
+                Timestamp = DateTime.Today.AddDays(-1).AddHours(-1), // Yesterday, 1 hour ago from midnight
                 OrderList = new()
                 {
                     new PosPosFeedItem
@@ -194,7 +219,7 @@ public class FeedImportService : IFeedImportService
             {
                 Id = "66fc65e4a2e61a30b0dcb333",
                 Code = "INV-2024-003", 
-                Timestamp = DateTime.Now.AddHours(-3),
+                Timestamp = DateTime.Today.AddDays(-3).AddHours(10), // 3 days ago, 10 AM
                 OrderList = new()
                 {
                     new PosPosFeedItem
@@ -227,7 +252,7 @@ public class FeedImportService : IFeedImportService
             {
                 Id = "66fc65e4a2e61a30b0dcb444",
                 Code = "INV-2024-004", 
-                Timestamp = DateTime.Now.AddMinutes(-30),
+                Timestamp = DateTime.Today.AddDays(-5).AddHours(14), // 5 days ago, 2 PM
                 OrderList = new()
                 {
                     new PosPosFeedItem
@@ -264,6 +289,82 @@ public class FeedImportService : IFeedImportService
                 },
                 SubTotal = 910.00m,
                 GrandTotal = 910.00m,
+                Status = "completed"
+            },
+            new()
+            {
+                Id = "66fc65e4a2e61a30b0dcb555",
+                Code = "INV-2024-005", 
+                Timestamp = DateTime.Today.AddDays(-7).AddHours(9), // 7 days ago, 9 AM
+                OrderList = new()
+                {
+                    new PosPosFeedItem
+                    {
+                        Stock = 60,
+                        Name = "Organic Feed Mix",
+                        Price = 1200.00m,
+                        SpecialPrice = 1100.00m,
+                        Code = "OF-MIX-007",
+                        TotalPriceIncludeDiscount = 1100.00m,
+                        NoteInOrder = new() { "Organic certified", "Premium quality" }
+                    }
+                },
+                BuyerDetail = new()
+                {
+                    Code = "CUST-003",
+                    FirstName = "Mike",
+                    LastName = "Green",
+                    KeyCardId = "CARD-99999"
+                },
+                InvoiceReference = new()
+                {
+                    Code = "REF-2024-005"
+                },
+                SubTotal = 1100.00m,
+                GrandTotal = 1100.00m,
+                Status = "completed"
+            },
+            new()
+            {
+                Id = "66fc65e4a2e61a30b0dcb666",
+                Code = "INV-2024-006", 
+                Timestamp = DateTime.Today.AddDays(-10).AddHours(16), // 10 days ago, 4 PM
+                OrderList = new()
+                {
+                    new PosPosFeedItem
+                    {
+                        Stock = 80,
+                        Name = "Feed Mix Economy",
+                        Price = 520.00m,
+                        SpecialPrice = 500.00m,
+                        Code = "FM-ECO-008",
+                        TotalPriceIncludeDiscount = 500.00m,
+                        NoteInOrder = new() { "Cost-effective option", "Good nutrition" }
+                    },
+                    new PosPosFeedItem
+                    {
+                        Stock = 20,
+                        Name = "Protein Booster",
+                        Price = 380.00m,
+                        SpecialPrice = 350.00m,
+                        Code = "PB-001",
+                        TotalPriceIncludeDiscount = 350.00m,
+                        NoteInOrder = new() { "High protein supplement" }
+                    }
+                },
+                BuyerDetail = new()
+                {
+                    Code = "CUST-001",
+                    FirstName = "John",
+                    LastName = "Farmer",
+                    KeyCardId = "CARD-12345"
+                },
+                InvoiceReference = new()
+                {
+                    Code = "REF-2024-006"
+                },
+                SubTotal = 850.00m,
+                GrandTotal = 850.00m,
                 Status = "completed"
             }
         };

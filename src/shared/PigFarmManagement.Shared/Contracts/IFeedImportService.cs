@@ -33,4 +33,19 @@ public interface IFeedImportService
     /// Get POSPOS feed data by customer code
     /// </summary>
     Task<List<PosPosFeedTransaction>> GetPosPosFeedByCustomerCodeAsync(string customerCode);
+    
+    /// <summary>
+    /// Get POSPOS feed data by date range
+    /// </summary>
+    Task<List<PosPosFeedTransaction>> GetPosPosFeedByDateRangeAsync(DateTime fromDate, DateTime toDate);
+    
+    /// <summary>
+    /// Get POSPOS feed data by customer code and date range
+    /// </summary>
+    Task<List<PosPosFeedTransaction>> GetPosPosFeedByCustomerAndDateRangeAsync(string customerCode, DateTime fromDate, DateTime toDate);
+    
+    /// <summary>
+    /// Import POSPOS feed data by date range
+    /// </summary>
+    Task<FeedImportResult> ImportPosPosFeedByDateRangeAsync(DateTime fromDate, DateTime toDate);
 }

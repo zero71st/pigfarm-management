@@ -79,6 +79,93 @@
                     </div>
                 </MudTabPanel>
                 
+                <MudTabPanel Text="Date Range Import" Icon="@Icons.Material.Filled.DateRange">
+                    <div class="d-flex flex-column gap-4">
+                        <MudText Typo="Typo.body1" Class="mb-3">
+                            Import POSPOS feed transactions from a specific date range.
+                        </MudText>
+                        
+                        <div class="d-flex gap-4">
+                            <MudDatePicker @bind-Date="_fromDate"
+                                         Label="From Date"
+                                         Variant="Variant.Outlined"
+                                         DateFormat="yyyy-MM-dd"
+                                         HelperText="Start date for importing transactions" />
+                            
+                            <MudDatePicker @bind-Date="_toDate"
+                                         Label="To Date"
+                                         Variant="Variant.Outlined"
+                                         DateFormat="yyyy-MM-dd"
+                                         HelperText="End date for importing transactions" />
+                        </div>
+                        
+                        @if (_dateRangeTransactions.Any())
+                        {
+                            <MudCard>
+                                <MudCardContent>
+                                    <MudText Typo="Typo.h6" Class="mb-2">Preview Date Range Data</MudText>
+                                    <MudText Typo="Typo.body2" Class="mb-2">
+                                        Found @_dateRangeTransactions.Count transaction(s) with @_dateRangeTransactions.Sum(t => t.OrderList.Count) feed items
+                                        from @(_fromDate?.ToString("yyyy-MM-dd")) to @(_toDate?.ToString("yyyy-MM-dd"))
+                                    </MudText>
+                                    
+                                    @foreach (var transaction in _dateRangeTransactions.Take(3))
+                                    {
+                                        <MudChip Color="Color.Primary" Size="Size.Small" Class="mr-2 mb-1">
+                                            @transaction.Code - @transaction.BuyerDetail.FirstName @transaction.BuyerDetail.LastName
+                                            (@transaction.Timestamp.ToString("MM/dd HH:mm"))
+                                        </MudChip>
+                                    }
+                                    
+                                    @if (_dateRangeTransactions.Count > 3)
+                                    {
+                                        <MudChip Color="Color.Secondary" Size="Size.Small" Variant="Variant.Outlined">
+                                            +@(_dateRangeTransactions.Count - 3) more...
+                                        </MudChip>
+                                    }
+                                </MudCardContent>
+                            </MudCard>
+                        }
+                        
+                        <div class="d-flex gap-2">
+                            <MudButton Color="Color.Info" 
+                                     Variant="Variant.Filled" 
+                                     StartIcon="@Icons.Material.Filled.Search"
+                                     OnClick="LoadDateRangeData"
+                                     Disabled="_isLoading || !_fromDate.HasValue || !_toDate.HasValue">
+                                @if (_isLoading)
+                                {
+                                    <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                                    <span class="ml-2">Searching...</span>
+                                }
+                                else
+                                {
+                                    <span>Search Transactions</span>
+                                }
+                            </MudButton>
+                            
+                            @if (_dateRangeTransactions.Any())
+                            {
+                                <MudButton Color="Color.Success" 
+                                         Variant="Variant.Filled" 
+                                         StartIcon="@Icons.Material.Filled.Upload"
+                                         OnClick="ImportDateRangeData"
+                                         Disabled="_isImporting">
+                                    @if (_isImporting)
+                                    {
+                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                                        <span class="ml-2">Importing...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Import Selected Range</span>
+                                    }
+                                </MudButton>
+                            }
+                        </div>
+                    </div>
+                </MudTabPanel>
+                
                 <MudTabPanel Text="JSON Import" Icon="@Icons.Material.Filled.Code">
                     <div class="d-flex flex-column gap-4">
                         <MudText Typo="Typo.body1" Class="mb-3">
@@ -163,7 +250,10 @@
     private bool _isImporting;
     private string _jsonContent = "";
     private List<PosPosFeedTransaction> _mockData = new();
+    private List<PosPosFeedTransaction> _dateRangeTransactions = new();
     private FeedImportResult? _importResult;
+    private DateTime? _fromDate = DateTime.Today.AddDays(-7); // Default to last 7 days
+    private DateTime? _toDate = DateTime.Today;
 
     protected override async Task OnInitializedAsync()
     {
@@ -224,6 +314,68 @@
             if (_importResult.FailedImports == 0)
             {
                 Snackbar.Add($"Successfully imported {_importResult.SuccessfulImports} transactions with {_importResult.TotalFeedItems} feed items", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add($"Import completed with {_importResult.FailedImports} failures", Severity.Warning);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Import failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isImporting = false;
+        }
+    }
+
+    private async Task LoadDateRangeData()
+    {
+        if (!_fromDate.HasValue || !_toDate.HasValue)
+        {
+            Snackbar.Add("Please select both from and to dates", Severity.Warning);
+            return;
+        }
+
+        if (_fromDate.Value > _toDate.Value)
+        {
+            Snackbar.Add("From date cannot be later than to date", Severity.Warning);
+            return;
+        }
+
+        _isLoading = true;
+        try
+        {
+            _dateRangeTransactions = await FeedImportService.GetPosPosFeedByDateRangeAsync(_fromDate.Value, _toDate.Value);
+            Snackbar.Add($"Found {_dateRangeTransactions.Count} transactions in the selected date range", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to load date range data: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task ImportDateRangeData()
+    {
+        if (!_fromDate.HasValue || !_toDate.HasValue)
+        {
+            Snackbar.Add("Please select both from and to dates", Severity.Warning);
+            return;
+        }
+
+        _isImporting = true;
+        try
+        {
+            _importResult = await FeedImportService.ImportPosPosFeedByDateRangeAsync(_fromDate.Value, _toDate.Value);
+            
+            if (_importResult.FailedImports == 0)
+            {
+                Snackbar.Add($"Successfully imported {_importResult.SuccessfulImports} transactions with {_importResult.TotalFeedItems} feed items from date range", Severity.Success);
             }
             else
             {

@@ -15,6 +15,73 @@
                 </MudText>
             </MudAlert>
             
+            <!-- Date Range Filter -->
+            <MudCard Class="mb-4">
+                <MudCardContent>
+                    <MudText Typo="Typo.h6" Class="mb-3">
+                        <MudIcon Icon="@Icons.Material.Filled.DateRange" Class="mr-2"/>
+                        Filter by Date Range
+                    </MudText>
+                    
+                    <div class="d-flex gap-4 align-center">
+                        <MudDatePicker @bind-Date="_fromDate"
+                                     Label="From Date"
+                                     Variant="Variant.Outlined"
+                                     DateFormat="yyyy-MM-dd"
+                                     HelperText="Start date" />
+                        
+                        <MudDatePicker @bind-Date="_toDate"
+                                     Label="To Date"
+                                     Variant="Variant.Outlined"
+                                     DateFormat="yyyy-MM-dd"
+                                     HelperText="End date" />
+                        
+                        <MudButton Color="Color.Info" 
+                                 Variant="Variant.Filled" 
+                                 StartIcon="@Icons.Material.Filled.Search"
+                                 OnClick="LoadAvailableTransactions"
+                                 Disabled="_isLoading">
+                            @if (_isLoading)
+                            {
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                                <span class="ml-2">Searching...</span>
+                            }
+                            else
+                            {
+                                <span>Search</span>
+                            }
+                        </MudButton>
+                        
+                        <MudButton Color="Color.Secondary" 
+                                 Variant="Variant.Outlined" 
+                                 StartIcon="@Icons.Material.Filled.Clear"
+                                 OnClick="ClearDateFilter"
+                                 Disabled="_isLoading">
+                            Clear Filter
+                        </MudButton>
+                    </div>
+                    
+                    @if (_fromDate.HasValue || _toDate.HasValue)
+                    {
+                        <MudText Typo="Typo.body2" Class="mt-2 text-info">
+                            <MudIcon Icon="@Icons.Material.Filled.FilterAlt" Size="Size.Small" Class="mr-1"/>
+                            @if (_fromDate.HasValue && _toDate.HasValue)
+                            {
+                                <span>Filtering transactions from @_fromDate.Value.ToString("yyyy-MM-dd") to @_toDate.Value.ToString("yyyy-MM-dd")</span>
+                            }
+                            else if (_fromDate.HasValue)
+                            {
+                                <span>Filtering transactions from @_fromDate.Value.ToString("yyyy-MM-dd") onwards</span>
+                            }
+                            else if (_toDate.HasValue)
+                            {
+                                <span>Filtering transactions up to @_toDate.Value.ToString("yyyy-MM-dd")</span>
+                            }
+                        </MudText>
+                    }
+                </MudCardContent>
+            </MudCard>
+            
             @if (_availableTransactions.Any())
             {
                 <MudText Typo="Typo.h6" Class="mb-3">Available POSPOS Invoices for Customer Code: @_customerCode</MudText>
@@ -164,6 +231,8 @@
     private HashSet<PosPosFeedTransaction> _selectedTransactions = new();
     private List<PosPosFeedTransaction> _selectedTransactionDetails = new();
     private FeedImportResult? _importResult;
+    private DateTime? _fromDate; // Default to no filter
+    private DateTime? _toDate; // Default to no filter
 
     protected override async Task OnInitializedAsync()
     {
@@ -174,22 +243,59 @@
     private async Task LoadAvailableTransactions()
     {
         _isLoading = true;
+        _selectedTransactions.Clear(); // Clear previous selections when reloading
+        
         try
         {
-            // Get all mock transactions and filter by customer code
-            var allTransactions = await FeedImportService.GetMockPosPosFeedDataAsync();
+            List<PosPosFeedTransaction> allTransactions;
+            
+            // Use date range filtering if dates are specified
+            if (_fromDate.HasValue || _toDate.HasValue)
+            {
+                if (_fromDate.HasValue && _toDate.HasValue)
+                {
+                    // Both dates specified - use customer and date range endpoint
+                    allTransactions = await FeedImportService.GetPosPosFeedByCustomerAndDateRangeAsync(
+                        _customerCode, _fromDate.Value, _toDate.Value);
+                }
+                else if (_fromDate.HasValue)
+                {
+                    // Only from date - get all transactions and filter
+                    var allData = await FeedImportService.GetMockPosPosFeedDataAsync();
+                    allTransactions = allData
+                        .Where(t => t.BuyerDetail.Code.Equals(_customerCode, StringComparison.OrdinalIgnoreCase) &&
+                                   t.Timestamp >= _fromDate.Value)
+                        .ToList();
+                }
+                else // _toDate.HasValue
+                {
+                    // Only to date - get all transactions and filter
+                    var allData = await FeedImportService.GetMockPosPosFeedDataAsync();
+                    allTransactions = allData
+                        .Where(t => t.BuyerDetail.Code.Equals(_customerCode, StringComparison.OrdinalIgnoreCase) &&
+                                   t.Timestamp <= _toDate!.Value)
+                        .ToList();
+                }
+            }
+            else
+            {
+                // No date filter - use existing customer-only endpoint
+                allTransactions = await FeedImportService.GetPosPosFeedByCustomerCodeAsync(_customerCode);
+            }
+            
             _availableTransactions = allTransactions
-                .Where(t => t.BuyerDetail.Code.Equals(_customerCode, StringComparison.OrdinalIgnoreCase))
                 .OrderByDescending(t => t.Timestamp)
                 .ToList();
                 
             if (_availableTransactions.Any())
             {
-                Snackbar.Add($"Found {_availableTransactions.Count} POSPOS transaction(s) for customer {_customerCode}", Severity.Success);
+                var dateRangeText = GetDateRangeDisplayText();
+                Snackbar.Add($"Found {_availableTransactions.Count} POSPOS transaction(s) for customer {_customerCode}{dateRangeText}", Severity.Success);
             }
             else
             {
-                Snackbar.Add($"No POSPOS transactions found for customer code: {_customerCode}", Severity.Warning);
+                var dateRangeText = GetDateRangeDisplayText();
+                Snackbar.Add($"No POSPOS transactions found for customer code: {_customerCode}{dateRangeText}", Severity.Warning);
             }
         }
         catch (Exception ex)
@@ -200,6 +306,31 @@
         {
             _isLoading = false;
         }
+    }
+
+    private string GetDateRangeDisplayText()
+    {
+        if (_fromDate.HasValue && _toDate.HasValue)
+        {
+            return $" (from {_fromDate.Value:yyyy-MM-dd} to {_toDate.Value:yyyy-MM-dd})";
+        }
+        else if (_fromDate.HasValue)
+        {
+            return $" (from {_fromDate.Value:yyyy-MM-dd})";
+        }
+        else if (_toDate.HasValue)
+        {
+            return $" (up to {_toDate.Value:yyyy-MM-dd})";
+        }
+        return "";
+    }
+
+    private async Task ClearDateFilter()
+    {
+        _fromDate = null;
+        _toDate = null;
+        await LoadAvailableTransactions();
+        Snackbar.Add("Date filter cleared", Severity.Info);
     }
 
     private void ShowTransactionDetails(PosPosFeedTransaction transaction)

@@ -34,6 +34,18 @@ public static class FeedImportEndpoints
         group.MapGet("/pospos/customer/{customerCode}", GetPosPosFeedByCustomer)
             .WithName("GetPosPosFeedByCustomer")
             .WithSummary("Get POSPOS feed transactions by customer code");
+
+        group.MapGet("/pospos/daterange", GetPosPosFeedByDateRange)
+            .WithName("GetPosPosFeedByDateRange")
+            .WithSummary("Get POSPOS feed transactions by date range");
+
+        group.MapGet("/pospos/customer/{customerCode}/daterange", GetPosPosFeedByCustomerAndDateRange)
+            .WithName("GetPosPosFeedByCustomerAndDateRange")
+            .WithSummary("Get POSPOS feed transactions by customer code and date range");
+
+        group.MapPost("/pospos/daterange/import", ImportPosPosFeedByDateRange)
+            .WithName("ImportPosPosFeedByDateRange")
+            .WithSummary("Import POSPOS feed data by date range");
     }
 
     private static async Task<IResult> ImportPosPosFeedData(
@@ -123,6 +135,55 @@ public static class FeedImportEndpoints
             return Results.Problem($"Failed to get transactions: {ex.Message}");
         }
     }
+
+    private static async Task<IResult> GetPosPosFeedByDateRange(
+        DateTime fromDate,
+        DateTime toDate,
+        IFeedImportService feedImportService)
+    {
+        try
+        {
+            var transactions = await feedImportService.GetPosPosFeedByDateRangeAsync(fromDate, toDate);
+            return Results.Ok(transactions);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Failed to get transactions: {ex.Message}");
+        }
+    }
+
+    private static async Task<IResult> GetPosPosFeedByCustomerAndDateRange(
+        string customerCode,
+        DateTime fromDate,
+        DateTime toDate,
+        IFeedImportService feedImportService)
+    {
+        try
+        {
+            var transactions = await feedImportService.GetPosPosFeedByCustomerAndDateRangeAsync(customerCode, fromDate, toDate);
+            return Results.Ok(transactions);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Failed to get transactions: {ex.Message}");
+        }
+    }
+
+    private static async Task<IResult> ImportPosPosFeedByDateRange(
+        [FromBody] DateRangeImportRequest request,
+        IFeedImportService feedImportService)
+    {
+        try
+        {
+            var result = await feedImportService.ImportPosPosFeedByDateRangeAsync(request.FromDate, request.ToDate);
+            return Results.Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Import failed: {ex.Message}");
+        }
+    }
 }
 
 public record ImportJsonRequest(string JsonContent);
+public record DateRangeImportRequest(DateTime FromDate, DateTime ToDate);

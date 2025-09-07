@@ -11,6 +11,9 @@ public interface IFeedImportService
     Task<FeedImportResult> ImportMockPosPosFeedDataAsync();
     Task<FeedImportResult> ImportPosPosFeedForPigPenAsync(Guid pigPenId, List<PosPosFeedTransaction> transactions);
     Task<List<PosPosFeedTransaction>> GetPosPosFeedByCustomerCodeAsync(string customerCode);
+    Task<List<PosPosFeedTransaction>> GetPosPosFeedByDateRangeAsync(DateTime fromDate, DateTime toDate);
+    Task<List<PosPosFeedTransaction>> GetPosPosFeedByCustomerAndDateRangeAsync(string customerCode, DateTime fromDate, DateTime toDate);
+    Task<FeedImportResult> ImportPosPosFeedByDateRangeAsync(DateTime fromDate, DateTime toDate);
 }
 
 public class FeedImportService : IFeedImportService
@@ -61,5 +64,27 @@ public class FeedImportService : IFeedImportService
     {
         var response = await _httpClient.GetFromJsonAsync<List<PosPosFeedTransaction>>($"/api/feeds/import/pospos/customer/{customerCode}");
         return response ?? new List<PosPosFeedTransaction>();
+    }
+
+    public async Task<List<PosPosFeedTransaction>> GetPosPosFeedByDateRangeAsync(DateTime fromDate, DateTime toDate)
+    {
+        var response = await _httpClient.GetFromJsonAsync<List<PosPosFeedTransaction>>(
+            $"/api/feeds/import/pospos/daterange?fromDate={fromDate:yyyy-MM-ddTHH:mm:ss}&toDate={toDate:yyyy-MM-ddTHH:mm:ss}");
+        return response ?? new List<PosPosFeedTransaction>();
+    }
+
+    public async Task<List<PosPosFeedTransaction>> GetPosPosFeedByCustomerAndDateRangeAsync(string customerCode, DateTime fromDate, DateTime toDate)
+    {
+        var response = await _httpClient.GetFromJsonAsync<List<PosPosFeedTransaction>>(
+            $"/api/feeds/import/pospos/customer/{customerCode}/daterange?fromDate={fromDate:yyyy-MM-ddTHH:mm:ss}&toDate={toDate:yyyy-MM-ddTHH:mm:ss}");
+        return response ?? new List<PosPosFeedTransaction>();
+    }
+
+    public async Task<FeedImportResult> ImportPosPosFeedByDateRangeAsync(DateTime fromDate, DateTime toDate)
+    {
+        var request = new { FromDate = fromDate, ToDate = toDate };
+        var response = await _httpClient.PostAsJsonAsync("/api/feeds/import/pospos/daterange/import", request);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<FeedImportResult>() ?? new FeedImportResult();
     }
 }
