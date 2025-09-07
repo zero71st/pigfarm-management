@@ -2,7 +2,11 @@ using System.Text.Json.Serialization;
 
 namespace PigFarmManagement.Shared.Models;
 
-// POSPOS API Data Models
+/// <summary>
+/// External API models for POSPOS system integration
+/// Responsibility: Define data contracts for external POSPOS API communication
+/// </summary>
+
 public class PosPosFeedTransaction
 {
     [JsonPropertyName("_id")]
@@ -31,6 +35,11 @@ public class PosPosFeedTransaction
     
     [JsonPropertyName("status")]
     public string Status { get; set; } = "";
+    
+    // Helper methods for external integration
+    public bool IsValidTransaction() => !string.IsNullOrWhiteSpace(Code) && OrderList.Any();
+    public decimal TotalFeedCost => OrderList.Sum(item => item.TotalPriceIncludeDiscount);
+    public string CustomerFullName => $"{BuyerDetail.FirstName} {BuyerDetail.LastName}".Trim();
 }
 
 public class PosPosFeedItem
@@ -55,6 +64,11 @@ public class PosPosFeedItem
     
     [JsonPropertyName("note_in_order")]
     public List<string> NoteInOrder { get; set; } = new();
+    
+    // Business logic for feed item
+    public bool HasDiscount => SpecialPrice < Price;
+    public decimal DiscountAmount => Price - SpecialPrice;
+    public string NotesText => string.Join(", ", NoteInOrder);
 }
 
 public class PosPosBuyerDetail
@@ -70,31 +84,17 @@ public class PosPosBuyerDetail
     
     [JsonPropertyName("key_card_id")]
     public string KeyCardId { get; set; } = "";
+    
+    // Helper properties
+    public string FullName => $"{FirstName} {LastName}".Trim();
+    public bool HasKeyCard => !string.IsNullOrWhiteSpace(KeyCardId);
 }
 
 public class PosPosInvoiceReference
 {
     [JsonPropertyName("code")]
     public string Code { get; set; } = "";
-}
-
-// Import Result Models
-public class FeedImportResult
-{
-    public int TotalTransactions { get; set; }
-    public int TotalFeedItems { get; set; }
-    public int SuccessfulImports { get; set; }
-    public int FailedImports { get; set; }
-    public List<string> Errors { get; set; } = new();
-    public List<ImportedFeedSummary> ImportedFeeds { get; set; } = new();
-}
-
-public class ImportedFeedSummary
-{
-    public string InvoiceCode { get; set; } = "";
-    public string CustomerName { get; set; } = "";
-    public string PigPenCode { get; set; } = "";
-    public int FeedItemsCount { get; set; }
-    public decimal TotalAmount { get; set; }
-    public DateTime ImportDate { get; set; }
+    
+    // Validation
+    public bool IsValid => !string.IsNullOrWhiteSpace(Code);
 }

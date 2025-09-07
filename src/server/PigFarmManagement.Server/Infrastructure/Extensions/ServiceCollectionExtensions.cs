@@ -4,7 +4,7 @@ using PigFarmManagement.Server.Features.PigPens;
 using PigFarmManagement.Server.Features.Feeds;
 using PigFarmManagement.Server.Features.Dashboard;
 using PigFarmManagement.Server.Services;
-using PigFarmManagement.Shared.Services;
+using PigFarmManagement.Shared.Contracts;
 
 namespace PigFarmManagement.Server.Infrastructure.Extensions;
 

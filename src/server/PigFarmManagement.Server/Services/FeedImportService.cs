@@ -1,6 +1,6 @@
 using System.Text.Json;
 using PigFarmManagement.Shared.Models;
-using PigFarmManagement.Shared.Services;
+using PigFarmManagement.Shared.Contracts;
 
 namespace PigFarmManagement.Server.Services;
 
