@@ -9,8 +9,7 @@ public static class DashboardEndpoints
         var group = builder.MapGroup("/api/pigpens").WithTags("Dashboard");
 
         group.MapGet("/{id:guid}/summary", GetPigPenSummary)
-            .WithName("GetPigPenSummary")
-            .WithOpenApi();
+            .WithName("GetPigPenSummary");
 
         return builder;
     }

@@ -19,12 +19,14 @@ builder.Services.AddCors(options =>
         }
         else
         {
-            // In production, allow Vercel domains
+            // In production, allow Vercel domains AND localhost for development
             var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() 
                 ?? new[] { 
                     "https://*.vercel.app", 
                     "https://pigfarm-management-client.vercel.app",  // Update with your actual Vercel URL
-                    "https://zero71st-pigfarm-management.vercel.app" // Common Vercel URL pattern
+                    "https://zero71st-pigfarm-management.vercel.app", // Common Vercel URL pattern
+                    "http://localhost:7000",     // Local development HTTP
+                    "https://localhost:7100"     // Local development HTTPS
                 };
             policy.WithOrigins(allowedOrigins)
                   .AllowAnyHeader()

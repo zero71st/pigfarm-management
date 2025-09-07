@@ -9,16 +9,13 @@ public static class FeedEndpoints
         var group = builder.MapGroup("/api/pigpens").WithTags("Feeds");
 
         group.MapGet("/{pigPenId:guid}/feeds", GetFeedsByPigPen)
-            .WithName("GetFeedsByPigPen")
-            .WithOpenApi();
+            .WithName("GetFeedsByPigPen");
 
         group.MapPost("/{pigPenId:guid}/feed", AddFeedToPigPen)
-            .WithName("AddFeedToPigPen")
-            .WithOpenApi();
+            .WithName("AddFeedToPigPen");
 
         group.MapDelete("/feeds/{id:guid}", DeleteFeed)
-            .WithName("DeleteFeed")
-            .WithOpenApi();
+            .WithName("DeleteFeed");
 
         return builder;
     }

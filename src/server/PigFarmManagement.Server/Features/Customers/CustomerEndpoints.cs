@@ -9,24 +9,19 @@ public static class CustomerEndpoints
         var group = builder.MapGroup("/api/customers").WithTags("Customers");
 
         group.MapGet("/", GetAllCustomers)
-            .WithName("GetAllCustomers")
-            .WithOpenApi();
+            .WithName("GetAllCustomers");
 
         group.MapGet("/{id:guid}", GetCustomerById)
-            .WithName("GetCustomerById")
-            .WithOpenApi();
+            .WithName("GetCustomerById");
 
         group.MapPost("/", CreateCustomer)
-            .WithName("CreateCustomer")
-            .WithOpenApi();
+            .WithName("CreateCustomer");
 
         group.MapPut("/{id:guid}", UpdateCustomer)
-            .WithName("UpdateCustomer")
-            .WithOpenApi();
+            .WithName("UpdateCustomer");
 
         group.MapDelete("/{id:guid}", DeleteCustomer)
-            .WithName("DeleteCustomer")
-            .WithOpenApi();
+            .WithName("DeleteCustomer");
 
         return builder;
     }

@@ -9,24 +9,19 @@ public static class PigPenEndpoints
         var group = builder.MapGroup("/api/pigpens").WithTags("PigPens");
 
         group.MapGet("/", GetAllPigPens)
-            .WithName("GetAllPigPens")
-            .WithOpenApi();
+            .WithName("GetAllPigPens");
 
         group.MapGet("/{id:guid}", GetPigPenById)
-            .WithName("GetPigPenById")
-            .WithOpenApi();
+            .WithName("GetPigPenById");
 
         group.MapPost("/", CreatePigPen)
-            .WithName("CreatePigPen")
-            .WithOpenApi();
+            .WithName("CreatePigPen");
 
         group.MapPut("/{id:guid}", UpdatePigPen)
-            .WithName("UpdatePigPen")
-            .WithOpenApi();
+            .WithName("UpdatePigPen");
 
         group.MapDelete("/{id:guid}", DeletePigPen)
-            .WithName("DeletePigPen")
-            .WithOpenApi();
+            .WithName("DeletePigPen");
 
         return builder;
     }
