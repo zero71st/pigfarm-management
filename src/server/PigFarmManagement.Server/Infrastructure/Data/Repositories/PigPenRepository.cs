@@ -51,7 +51,7 @@ public class PigPenRepository : IPigPenRepository
         var entity = PigPenEntity.FromModel(pigPen);
         _context.PigPens.Add(entity);
         await _context.SaveChangesAsync();
-        
+
         // Reload with customer data
         await _context.Entry(entity).Reference(p => p.Customer).LoadAsync();
         return entity.ToModel();
@@ -62,7 +62,7 @@ public class PigPenRepository : IPigPenRepository
         var entity = await _context.PigPens
             .Include(p => p.Customer)
             .FirstOrDefaultAsync(p => p.Id == pigPen.Id);
-        
+
         if (entity == null)
             throw new ArgumentException($"PigPen with ID {pigPen.Id} not found");
 

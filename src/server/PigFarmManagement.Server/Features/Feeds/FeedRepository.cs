@@ -1,5 +1,5 @@
 using PigFarmManagement.Shared.Models;
-using PigFarmManagement.Server.Infrastructure.Data;
+using PigFarmManagement.Server.Infrastructure.Data.Repositories;
 
 namespace PigFarmManagement.Server.Features.Feeds;
 
@@ -13,39 +13,79 @@ public interface IFeedRepository
 
 public class FeedRepository : IFeedRepository
 {
-    private readonly InMemoryDataStore _dataStore;
+    private readonly Infrastructure.Data.Repositories.IFeedRepository _efFeedRepository;
 
-    public FeedRepository(InMemoryDataStore dataStore)
+    public FeedRepository(Infrastructure.Data.Repositories.IFeedRepository efFeedRepository)
     {
-        _dataStore = dataStore;
+        _efFeedRepository = efFeedRepository;
     }
 
-    public Task<List<FeedItem>> GetByPigPenIdAsync(Guid pigPenId)
+    public async Task<List<FeedItem>> GetByPigPenIdAsync(Guid pigPenId)
     {
-        var feeds = _dataStore.Feeds.Where(f => f.PigPenId == pigPenId).ToList();
-        return Task.FromResult(feeds);
+        var feeds = await _efFeedRepository.GetByPigPenIdAsync(pigPenId);
+        return feeds.Select(ConvertToFeedItem).ToList();
     }
 
-    public Task<FeedItem> CreateAsync(FeedItem feedItem)
+    public async Task<FeedItem> CreateAsync(FeedItem feedItem)
     {
-        _dataStore.Feeds.Add(feedItem);
-        return Task.FromResult(feedItem);
+        var feed = ConvertToFeed(feedItem);
+        var createdFeed = await _efFeedRepository.CreateAsync(feed);
+        return ConvertToFeedItem(createdFeed);
     }
 
-    public Task<FeedItem?> GetByIdAsync(Guid id)
+    public async Task<FeedItem?> GetByIdAsync(Guid id)
     {
-        var feedItem = _dataStore.Feeds.FirstOrDefault(f => f.Id == id);
-        return Task.FromResult(feedItem);
+        var feed = await _efFeedRepository.GetByIdAsync(id);
+        return feed != null ? ConvertToFeedItem(feed) : null;
     }
 
-    public Task<bool> DeleteAsync(Guid id)
+    public async Task<bool> DeleteAsync(Guid id)
     {
-        var feedItem = _dataStore.Feeds.FirstOrDefault(f => f.Id == id);
-        if (feedItem != null)
+        try
         {
-            _dataStore.Feeds.Remove(feedItem);
-            return Task.FromResult(true);
+            await _efFeedRepository.DeleteAsync(id);
+            return true;
         }
-        return Task.FromResult(false);
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static FeedItem ConvertToFeedItem(Feed feed)
+    {
+        return new FeedItem(
+            feed.Id,
+            feed.PigPenId,
+            feed.ProductType, // FeedType from ProductType
+            feed.Quantity,    // QuantityKg from Quantity (assuming same unit)
+            feed.UnitPrice,   // PricePerKg from UnitPrice
+            feed.TotalPrice,  // Cost from TotalPrice
+            feed.FeedDate     // Date from FeedDate
+        )
+        {
+            ExternalReference = feed.ExternalReference,
+            Notes = feed.Notes,
+            CreatedAt = feed.CreatedAt,
+            UpdatedAt = feed.UpdatedAt
+        };
+    }
+
+    private static Feed ConvertToFeed(FeedItem feedItem)
+    {
+        return new Feed
+        {
+            Id = feedItem.Id,
+            PigPenId = feedItem.PigPenId,
+            ProductType = feedItem.FeedType,
+            Quantity = (int)feedItem.QuantityKg, // Convert decimal to int
+            UnitPrice = feedItem.PricePerKg,
+            TotalPrice = feedItem.Cost,
+            FeedDate = feedItem.Date,
+            ExternalReference = feedItem.ExternalReference,
+            Notes = feedItem.Notes,
+            CreatedAt = feedItem.CreatedAt,
+            UpdatedAt = feedItem.UpdatedAt
+        };
     }
 }

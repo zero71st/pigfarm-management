@@ -1,5 +1,5 @@
 using PigFarmManagement.Shared.Models;
-using PigFarmManagement.Server.Infrastructure.Data;
+using PigFarmManagement.Server.Infrastructure.Data.Repositories;
 
 namespace PigFarmManagement.Server.Features.Customers;
 
@@ -16,61 +16,60 @@ public interface ICustomerRepository
 
 public class CustomerRepository : ICustomerRepository
 {
-    private readonly InMemoryDataStore _dataStore;
+    private readonly Infrastructure.Data.Repositories.ICustomerRepository _efCustomerRepository;
+    private readonly Infrastructure.Data.Repositories.IPigPenRepository _efPigPenRepository;
 
-    public CustomerRepository(InMemoryDataStore dataStore)
+    public CustomerRepository(
+        Infrastructure.Data.Repositories.ICustomerRepository efCustomerRepository,
+        Infrastructure.Data.Repositories.IPigPenRepository efPigPenRepository)
     {
-        _dataStore = dataStore;
+        _efCustomerRepository = efCustomerRepository;
+        _efPigPenRepository = efPigPenRepository;
     }
 
-    public Task<List<Customer>> GetAllAsync()
+    public async Task<List<Customer>> GetAllAsync()
     {
-        return Task.FromResult(_dataStore.Customers.ToList());
+        var customers = await _efCustomerRepository.GetAllAsync();
+        return customers.ToList();
     }
 
-    public Task<Customer?> GetByIdAsync(Guid id)
+    public async Task<Customer?> GetByIdAsync(Guid id)
     {
-        var customer = _dataStore.Customers.FirstOrDefault(c => c.Id == id);
-        return Task.FromResult(customer);
+        return await _efCustomerRepository.GetByIdAsync(id);
     }
 
-    public Task<Customer> CreateAsync(Customer customer)
+    public async Task<Customer> CreateAsync(Customer customer)
     {
-        _dataStore.Customers.Add(customer);
-        return Task.FromResult(customer);
+        return await _efCustomerRepository.CreateAsync(customer);
     }
 
-    public Task<Customer> UpdateAsync(Customer customer)
+    public async Task<Customer> UpdateAsync(Customer customer)
     {
-        var existingCustomer = _dataStore.Customers.FirstOrDefault(c => c.Id == customer.Id);
-        if (existingCustomer != null)
+        return await _efCustomerRepository.UpdateAsync(customer);
+    }
+
+    public async Task<bool> DeleteAsync(Guid id)
+    {
+        try
         {
-            _dataStore.Customers.Remove(existingCustomer);
+            await _efCustomerRepository.DeleteAsync(id);
+            return true;
         }
-        _dataStore.Customers.Add(customer);
-        return Task.FromResult(customer);
-    }
-
-    public Task<bool> DeleteAsync(Guid id)
-    {
-        var customer = _dataStore.Customers.FirstOrDefault(c => c.Id == id);
-        if (customer != null)
+        catch
         {
-            _dataStore.Customers.Remove(customer);
-            return Task.FromResult(true);
+            return false;
         }
-        return Task.FromResult(false);
     }
 
-    public Task<bool> ExistsWithCodeAsync(string code, Guid? excludeId = null)
+    public async Task<bool> ExistsWithCodeAsync(string code, Guid? excludeId = null)
     {
-        var exists = _dataStore.Customers.Any(c => c.Code == code && (excludeId == null || c.Id != excludeId));
-        return Task.FromResult(exists);
+        var customer = await _efCustomerRepository.GetByCodeAsync(code);
+        return customer != null && (excludeId == null || customer.Id != excludeId);
     }
 
-    public Task<bool> HasAssociatedPigPensAsync(Guid customerId)
+    public async Task<bool> HasAssociatedPigPensAsync(Guid customerId)
     {
-        var hasAssociation = _dataStore.PigPens.Any(p => p.CustomerId == customerId);
-        return Task.FromResult(hasAssociation);
+        var pigPens = await _efPigPenRepository.GetByCustomerIdAsync(customerId);
+        return pigPens.Any();
     }
 }

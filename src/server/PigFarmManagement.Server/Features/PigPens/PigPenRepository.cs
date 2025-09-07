@@ -1,5 +1,5 @@
 using PigFarmManagement.Shared.Models;
-using PigFarmManagement.Server.Infrastructure.Data;
+using PigFarmManagement.Server.Infrastructure.Data.Repositories;
 
 namespace PigFarmManagement.Server.Features.PigPens;
 
@@ -15,55 +15,50 @@ public interface IPigPenRepository
 
 public class PigPenRepository : IPigPenRepository
 {
-    private readonly InMemoryDataStore _dataStore;
+    private readonly Infrastructure.Data.Repositories.IPigPenRepository _efPigPenRepository;
 
-    public PigPenRepository(InMemoryDataStore dataStore)
+    public PigPenRepository(Infrastructure.Data.Repositories.IPigPenRepository efPigPenRepository)
     {
-        _dataStore = dataStore;
+        _efPigPenRepository = efPigPenRepository;
     }
 
-    public Task<List<PigPen>> GetAllAsync()
+    public async Task<List<PigPen>> GetAllAsync()
     {
-        return Task.FromResult(_dataStore.PigPens.ToList());
+        var pigPens = await _efPigPenRepository.GetAllAsync();
+        return pigPens.ToList();
     }
 
-    public Task<PigPen?> GetByIdAsync(Guid id)
+    public async Task<PigPen?> GetByIdAsync(Guid id)
     {
-        var pigPen = _dataStore.PigPens.FirstOrDefault(p => p.Id == id);
-        return Task.FromResult(pigPen);
+        return await _efPigPenRepository.GetByIdAsync(id);
     }
 
-    public Task<PigPen> CreateAsync(PigPen pigPen)
+    public async Task<PigPen> CreateAsync(PigPen pigPen)
     {
-        _dataStore.PigPens.Add(pigPen);
-        return Task.FromResult(pigPen);
+        return await _efPigPenRepository.CreateAsync(pigPen);
     }
 
-    public Task<PigPen> UpdateAsync(PigPen pigPen)
+    public async Task<PigPen> UpdateAsync(PigPen pigPen)
     {
-        var existingPigPen = _dataStore.PigPens.FirstOrDefault(p => p.Id == pigPen.Id);
-        if (existingPigPen != null)
+        return await _efPigPenRepository.UpdateAsync(pigPen);
+    }
+
+    public async Task<bool> DeleteAsync(Guid id)
+    {
+        try
         {
-            _dataStore.PigPens.Remove(existingPigPen);
+            await _efPigPenRepository.DeleteAsync(id);
+            return true;
         }
-        _dataStore.PigPens.Add(pigPen);
-        return Task.FromResult(pigPen);
-    }
-
-    public Task<bool> DeleteAsync(Guid id)
-    {
-        var pigPen = _dataStore.PigPens.FirstOrDefault(p => p.Id == id);
-        if (pigPen != null)
+        catch
         {
-            _dataStore.PigPens.Remove(pigPen);
-            return Task.FromResult(true);
+            return false;
         }
-        return Task.FromResult(false);
     }
 
-    public Task<List<PigPen>> GetByCustomerIdAsync(Guid customerId)
+    public async Task<List<PigPen>> GetByCustomerIdAsync(Guid customerId)
     {
-        var pigPens = _dataStore.PigPens.Where(p => p.CustomerId == customerId).ToList();
-        return Task.FromResult(pigPens);
+        var pigPens = await _efPigPenRepository.GetByCustomerIdAsync(customerId);
+        return pigPens.ToList();
     }
 }

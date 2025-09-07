@@ -95,126 +95,161 @@ public class PigFarmDbContext : DbContext
 
     private static void SeedData(ModelBuilder modelBuilder)
     {
-        var customer1Id = Guid.Parse("11111111-1111-1111-1111-111111111111");
-        var customer2Id = Guid.Parse("22222222-2222-2222-2222-222222222222");
-        var customer3Id = Guid.Parse("33333333-3333-3333-3333-333333333333");
-
-        var pigPen1Id = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
-        var pigPen2Id = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
-        var pigPen3Id = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccccc");
-        var pigPen4Id = Guid.Parse("dddddddd-dddd-dddd-dddd-dddddddddddd");
-        var pigPen5Id = Guid.Parse("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee");
-
         var now = DateTime.UtcNow;
+        var random = new Random(42); // Fixed seed for consistent data
 
-        // Seed Customers
-        modelBuilder.Entity<CustomerEntity>().HasData(
-            new CustomerEntity
+        // Generate 100 Customers
+        var customers = new List<CustomerEntity>();
+        var customerTypes = Enum.GetValues<CustomerType>();
+        
+        for (int i = 1; i <= 100; i++)
+        {
+            customers.Add(new CustomerEntity
             {
-                Id = customer1Id,
-                Code = "CUST-001",
-                Name = "John Farm",
-                Type = CustomerType.Project,
-                CreatedAt = now.AddDays(-60),
-                UpdatedAt = now.AddDays(-60)
-            },
-            new CustomerEntity
-            {
-                Id = customer2Id,
-                Code = "CUST-002",
-                Name = "Mary Farm",
-                Type = CustomerType.Cash,
-                CreatedAt = now.AddDays(-50),
-                UpdatedAt = now.AddDays(-50)
-            },
-            new CustomerEntity
-            {
-                Id = customer3Id,
-                Code = "CUST-003",
-                Name = "Somchai",
-                Type = CustomerType.Project,
-                CreatedAt = now.AddDays(-40),
-                UpdatedAt = now.AddDays(-40)
-            }
-        );
+                Id = Guid.NewGuid(),
+                Code = $"CUST-{i:D3}",
+                Name = GetRandomCustomerName(i, random),
+                Type = customerTypes[random.Next(customerTypes.Length)],
+                CreatedAt = now.AddDays(-random.Next(1, 365)),
+                UpdatedAt = now.AddDays(-random.Next(1, 30))
+            });
+        }
+        modelBuilder.Entity<CustomerEntity>().HasData(customers);
 
-        // Seed PigPens
-        modelBuilder.Entity<PigPenEntity>().HasData(
-            new PigPenEntity
+        // Generate 100 PigPens
+        var pigPens = new List<PigPenEntity>();
+        for (int i = 1; i <= 100; i++)
+        {
+            var customer = customers[random.Next(customers.Count)];
+            var startDaysAgo = random.Next(1, 180);
+            var pigQty = random.Next(10, 50);
+            var feedCostPerPig = random.Next(30, 100);
+            var investmentPerPig = random.Next(400, 800);
+            
+            pigPens.Add(new PigPenEntity
             {
-                Id = pigPen1Id,
-                CustomerId = customer1Id,
-                PenCode = "P001",
-                PigQty = 25,
-                StartDate = now.AddDays(-30),
-                EndDate = null,
-                EstimatedHarvestDate = now.AddDays(60),
-                FeedCost = 1250.00m,
-                Investment = 12500.00m,
-                ProfitLoss = -2500.00m,
-                CreatedAt = now.AddDays(-30),
-                UpdatedAt = now.AddDays(-1)
-            },
-            new PigPenEntity
+                Id = Guid.NewGuid(),
+                CustomerId = customer.Id,
+                PenCode = $"P{i:D3}",
+                PigQty = pigQty,
+                StartDate = now.AddDays(-startDaysAgo),
+                EndDate = random.Next(0, 10) == 0 ? now.AddDays(-random.Next(1, startDaysAgo)) : null, // 10% chance of being completed
+                EstimatedHarvestDate = now.AddDays(random.Next(30, 120)),
+                FeedCost = pigQty * feedCostPerPig + random.Next(-500, 500),
+                Investment = pigQty * investmentPerPig + random.Next(-2000, 2000),
+                ProfitLoss = random.Next(-5000, 2000),
+                CreatedAt = now.AddDays(-startDaysAgo),
+                UpdatedAt = now.AddDays(-random.Next(1, 30))
+            });
+        }
+        modelBuilder.Entity<PigPenEntity>().HasData(pigPens);
+
+        // Generate 100 Feeds
+        var feeds = new List<FeedEntity>();
+        var productTypes = new[] { "Starter Feed", "Grower Feed", "Finisher Feed", "Sow Feed", "Premium Mix", "Organic Feed", "Vitamin Supplement" };
+        
+        for (int i = 1; i <= 100; i++)
+        {
+            var pigPen = pigPens[random.Next(pigPens.Count)];
+            var quantity = random.Next(50, 500);
+            var unitPrice = random.Next(15, 45);
+            
+            feeds.Add(new FeedEntity
             {
-                Id = pigPen2Id,
-                CustomerId = customer1Id,
-                PenCode = "P002",
-                PigQty = 18,
-                StartDate = now.AddDays(-45),
-                EndDate = null,
-                EstimatedHarvestDate = now.AddDays(45),
-                FeedCost = 980.00m,
-                Investment = 9000.00m,
-                ProfitLoss = -1800.00m,
-                CreatedAt = now.AddDays(-45),
-                UpdatedAt = now.AddDays(-2)
-            },
-            new PigPenEntity
+                Id = Guid.NewGuid(),
+                PigPenId = pigPen.Id,
+                ProductType = productTypes[random.Next(productTypes.Length)],
+                Quantity = quantity,
+                UnitPrice = unitPrice,
+                TotalPrice = quantity * unitPrice,
+                FeedDate = now.AddDays(-random.Next(1, 90)),
+                ExternalReference = $"INV-{random.Next(10000, 99999)}",
+                Notes = random.Next(0, 3) == 0 ? GetRandomFeedNote(random) : null,
+                CreatedAt = now.AddDays(-random.Next(1, 90)),
+                UpdatedAt = now.AddDays(-random.Next(1, 30))
+            });
+        }
+        modelBuilder.Entity<FeedEntity>().HasData(feeds);
+
+        // Generate 100 Deposits
+        var deposits = new List<DepositEntity>();
+        for (int i = 1; i <= 100; i++)
+        {
+            var pigPen = pigPens[random.Next(pigPens.Count)];
+            
+            deposits.Add(new DepositEntity
             {
-                Id = pigPen3Id,
-                CustomerId = customer2Id,
-                PenCode = "P003",
-                PigQty = 30,
-                StartDate = now.AddDays(-20),
-                EndDate = null,
-                EstimatedHarvestDate = now.AddDays(70),
-                FeedCost = 1680.00m,
-                Investment = 15000.00m,
-                ProfitLoss = -3200.00m,
-                CreatedAt = now.AddDays(-20),
-                UpdatedAt = now.AddDays(-1)
-            },
-            new PigPenEntity
+                Id = Guid.NewGuid(),
+                PigPenId = pigPen.Id,
+                Amount = random.Next(1000, 10000),
+                Date = now.AddDays(-random.Next(1, 120)),
+                Remark = random.Next(0, 3) == 0 ? GetRandomDepositRemark(random) : null
+            });
+        }
+        modelBuilder.Entity<DepositEntity>().HasData(deposits);
+
+        // Generate 100 Harvests
+        var harvests = new List<HarvestEntity>();
+        for (int i = 1; i <= 100; i++)
+        {
+            var pigPen = pigPens[random.Next(pigPens.Count)];
+            var pigCount = random.Next(5, pigPen.PigQty);
+            var avgWeight = random.Next(80, 120);
+            var minWeight = avgWeight - random.Next(10, 20);
+            var maxWeight = avgWeight + random.Next(10, 20);
+            var totalWeight = pigCount * avgWeight + random.Next(-50, 50);
+            var salePricePerKg = random.Next(45, 75);
+            
+            harvests.Add(new HarvestEntity
             {
-                Id = pigPen4Id,
-                CustomerId = customer3Id,
-                PenCode = "P004",
-                PigQty = 22,
-                StartDate = now.AddDays(-35),
-                EndDate = null,
-                EstimatedHarvestDate = now.AddDays(55),
-                FeedCost = 1210.00m,
-                Investment = 11000.00m,
-                ProfitLoss = -2200.00m,
-                CreatedAt = now.AddDays(-35),
-                UpdatedAt = now.AddDays(-3)
-            },
-            new PigPenEntity
-            {
-                Id = pigPen5Id,
-                CustomerId = customer2Id,
-                PenCode = "P005",
-                PigQty = 15,
-                StartDate = now.AddDays(-10),
-                EndDate = null,
-                EstimatedHarvestDate = now.AddDays(80),
-                FeedCost = 750.00m,
-                Investment = 7500.00m,
-                ProfitLoss = -1500.00m,
-                CreatedAt = now.AddDays(-10),
-                UpdatedAt = now.AddDays(-1)
-            }
-        );
+                Id = Guid.NewGuid(),
+                PigPenId = pigPen.Id,
+                HarvestDate = now.AddDays(-random.Next(1, 180)),
+                PigCount = pigCount,
+                AvgWeight = avgWeight,
+                MinWeight = minWeight,
+                MaxWeight = maxWeight,
+                TotalWeight = totalWeight,
+                SalePricePerKg = salePricePerKg,
+                Revenue = totalWeight * salePricePerKg
+            });
+        }
+        modelBuilder.Entity<HarvestEntity>().HasData(harvests);
+    }
+
+    private static string GetRandomCustomerName(int index, Random random)
+    {
+        var firstNames = new[] { "John", "Mary", "Somchai", "Siriporn", "David", "Sarah", "Michael", "Lisa", "Niran", "Ploy", "Robert", "Jennifer", "Suchart", "Malee", "James" };
+        var lastNames = new[] { "Farm", "Ranch", "Agriculture", "Livestock", "Farming Co", "Pig Farm", "Swine Ranch", "Agricultural", "Livestock Ltd", "Farm Corp" };
+        
+        return $"{firstNames[random.Next(firstNames.Length)]} {lastNames[random.Next(lastNames.Length)]} {index}";
+    }
+
+    private static string GetRandomFeedNote(Random random)
+    {
+        var notes = new[] { 
+            "High quality feed", 
+            "Organic certified", 
+            "Special diet supplement", 
+            "Vitamin enriched", 
+            "Bulk purchase discount",
+            "Premium grade feed",
+            "Locally sourced ingredients"
+        };
+        return notes[random.Next(notes.Length)];
+    }
+
+    private static string GetRandomDepositRemark(Random random)
+    {
+        var remarks = new[] { 
+            "Initial investment", 
+            "Additional funding", 
+            "Monthly payment", 
+            "Equipment purchase", 
+            "Feed advance payment",
+            "Maintenance fund",
+            "Emergency fund"
+        };
+        return remarks[random.Next(remarks.Length)];
     }
 }

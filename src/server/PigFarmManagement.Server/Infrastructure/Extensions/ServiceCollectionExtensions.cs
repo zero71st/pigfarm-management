@@ -1,4 +1,3 @@
-using PigFarmManagement.Server.Infrastructure.Data;
 using PigFarmManagement.Server.Infrastructure.Data.Repositories;
 using PigFarmManagement.Server.Features.Customers;
 using PigFarmManagement.Server.Features.PigPens;
@@ -13,9 +12,6 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
-        // Infrastructure (Keep for backward compatibility until full migration is complete)
-        services.AddSingleton<InMemoryDataStore>();
-
         // EF Core Repositories
         services.AddScoped<Infrastructure.Data.Repositories.ICustomerRepository, Infrastructure.Data.Repositories.CustomerRepository>();
         services.AddScoped<Infrastructure.Data.Repositories.IPigPenRepository, Infrastructure.Data.Repositories.PigPenRepository>();
