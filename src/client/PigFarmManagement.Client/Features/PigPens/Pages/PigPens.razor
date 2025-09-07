@@ -4,6 +4,7 @@
 @inject IPigPenService PigPenService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@inject NavigationManager NavigationManager
 
 <PageTitle>PigTrack Pro - Pig Pens</PageTitle>
 
@@ -266,9 +267,7 @@
 
     private void NavigateToPigPenDetail(Guid pigPenId)
     {
-        // This would navigate to pig pen detail page
-        // For now, we'll just show a snackbar
-        Snackbar.Add($"Navigate to pig pen detail: {pigPenId}", Severity.Info);
+        NavigationManager.NavigateTo($"/pigpens/{pigPenId}/detail");
     }
 
     private bool IsRecentlyUpdated(DateTime updatedAt)

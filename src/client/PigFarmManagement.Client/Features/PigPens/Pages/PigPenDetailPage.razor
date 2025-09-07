@@ -1,0 +1,484 @@
+@page "/pigpens/{pigPenId:guid}/detail"
+@inject HttpClient Http
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<PageTitle>Pig Pen Detail</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-6">
+    @if (loading)
+    {
+        <div class="d-flex justify-center align-center" style="min-height: 400px;">
+            <MudProgressCircular Indeterminate="true" Size="Size.Large" />
+            <MudText Class="ml-4" Typo="Typo.h6">Loading pig pen details...</MudText>
+        </div>
+    }
+    else if (pigPen == null)
+    {
+        <MudAlert Severity="Severity.Error">
+            <MudText Typo="Typo.h6">Pig pen not found</MudText>
+            <MudText>The requested pig pen could not be found.</MudText>
+        </MudAlert>
+    }
+    else
+    {
+        <!-- Header Section -->
+        <div class="d-flex justify-space-between align-center mb-6">
+            <div>
+                <MudText Typo="Typo.h3" GutterBottom="true">
+                    <MudIcon Icon="Icons.Material.Filled.Widgets" Class="mr-3" />
+                    @pigPen.Name
+                </MudText>
+                <MudBreadcrumbs Items="@breadcrumbItems" />
+            </div>
+            <div>
+                <MudButton Variant="Variant.Outlined" 
+                           StartIcon="Icons.Material.Filled.ArrowBack"
+                           OnClick="@(() => Navigation.NavigateTo("/pigpens"))"
+                           Class="mr-2">
+                    Back to List
+                </MudButton>
+                <MudButton Variant="Variant.Filled" 
+                           Color="Color.Primary"
+                           StartIcon="Icons.Material.Filled.Edit"
+                           OnClick="EditPigPen">
+                    Edit
+                </MudButton>
+            </div>
+        </div>
+
+        <!-- Section 1: Pig Pen Details -->
+        <MudCard Elevation="2" Class="mb-6">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h5">
+                        <MudIcon Icon="Icons.Material.Filled.Info" Class="mr-2" />
+                        Pig Pen Information
+                    </MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudGrid>
+                    <MudItem xs="12" md="6">
+                        <MudSimpleTable Style="overflow-x: auto;" Dense="true">
+                            <tbody>
+                                <tr>
+                                    <td><strong>Pen Code:</strong></td>
+                                    <td>@pigPen.PenCode</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Type:</strong></td>
+                                    <td>
+                                        <MudChip Color="@(pigPen.Type == PigPenType.Cash ? Color.Success : Color.Info)" 
+                                                 Size="Size.Small" Variant="Variant.Filled">
+                                            @pigPen.Type
+                                        </MudChip>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Quantity:</strong></td>
+                                    <td>@pigPen.PigQty pigs</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Start Date:</strong></td>
+                                    <td>@pigPen.StartDate.ToString("dd/MM/yyyy")</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>End Date:</strong></td>
+                                    <td>@(pigPen.EndDate?.ToString("dd/MM/yyyy") ?? "Ongoing")</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Est. Harvest:</strong></td>
+                                    <td>@(pigPen.EstimatedHarvestDate?.ToString("dd/MM/yyyy") ?? "Not set")</td>
+                                </tr>
+                            </tbody>
+                        </MudSimpleTable>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        @if (summary != null)
+                        {
+                            <MudSimpleTable Style="overflow-x: auto;" Dense="true">
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Feed Cost:</strong></td>
+                                        <td class="text-right">
+                                            <MudText Color="Color.Primary">฿@summary.TotalFeedCost.ToString("N0")</MudText>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Total Deposits:</strong></td>
+                                        <td class="text-right">
+                                            <MudText Color="Color.Secondary">฿@summary.TotalDeposit.ToString("N0")</MudText>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Investment:</strong></td>
+                                        <td class="text-right">
+                                            <MudText Color="Color.Info">฿@summary.Investment.ToString("N0")</MudText>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Profit/Loss:</strong></td>
+                                        <td class="text-right">
+                                            <MudText Color="@(summary.ProfitLoss >= 0 ? Color.Success : Color.Error)">
+                                                ฿@summary.ProfitLoss.ToString("N0")
+                                            </MudText>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Net Balance:</strong></td>
+                                        <td class="text-right">
+                                            <MudText Color="@(summary.NetBalance >= 0 ? Color.Success : Color.Warning)">
+                                                ฿@summary.NetBalance.ToString("N0")
+                                            </MudText>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>ROI:</strong></td>
+                                        <td class="text-right">
+                                            <MudText Color="@(summary.ROI >= 0 ? Color.Success : Color.Error)">
+                                                @summary.ROI.ToString("N1")%
+                                            </MudText>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </MudSimpleTable>
+                        }
+                    </MudItem>
+                </MudGrid>
+            </MudCardContent>
+        </MudCard>
+
+        <!-- Section 2: Deposits List -->
+        <MudCard Elevation="2" Class="mb-6">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h5">
+                        <MudIcon Icon="Icons.Material.Filled.AccountBalance" Class="mr-2" />
+                        Deposits (@deposits.Count)
+                    </MudText>
+                </CardHeaderContent>
+                <CardHeaderActions>
+                    <MudButton Variant="Variant.Filled" 
+                               Color="Color.Primary"
+                               StartIcon="Icons.Material.Filled.Add"
+                               OnClick="AddDeposit">
+                        Add Deposit
+                    </MudButton>
+                </CardHeaderActions>
+            </MudCardHeader>
+            <MudCardContent>
+                @if (deposits.Any())
+                {
+                    <MudTable Items="@deposits" Hover="true" Striped="true" Dense="true">
+                        <HeaderContent>
+                            <MudTh>Date</MudTh>
+                            <MudTh Style="text-align: right">Amount</MudTh>
+                            <MudTh>Notes</MudTh>
+                            <MudTh Style="text-align: center">Actions</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Date">@context.Date.ToString("dd/MM/yyyy")</MudTd>
+                            <MudTd DataLabel="Amount" Style="text-align: right">
+                                <MudText Color="Color.Success"><strong>฿@context.Amount.ToString("N2")</strong></MudText>
+                            </MudTd>
+                            <MudTd DataLabel="Notes">@(context.Remark ?? "-")</MudTd>
+                            <MudTd DataLabel="Actions" Style="text-align: center">
+                                <MudButtonGroup Size="Size.Small" Variant="Variant.Outlined">
+                                    <MudIconButton Icon="Icons.Material.Filled.Edit" 
+                                                   Color="Color.Primary" 
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => EditDeposit(context))" />
+                                    <MudIconButton Icon="Icons.Material.Filled.Delete" 
+                                                   Color="Color.Error" 
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => DeleteDeposit(context))" />
+                                </MudButtonGroup>
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+                else
+                {
+                    <MudAlert Severity="Severity.Info">
+                        <MudText>No deposits recorded for this pig pen.</MudText>
+                    </MudAlert>
+                }
+            </MudCardContent>
+        </MudCard>
+
+        <!-- Section 3: Feed History -->
+        <MudCard Elevation="2" Class="mb-6">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h5">
+                        <MudIcon Icon="Icons.Material.Filled.Fastfood" Class="mr-2" />
+                        Feed History (@feeds.Count)
+                    </MudText>
+                </CardHeaderContent>
+                <CardHeaderActions>
+                    <MudButton Variant="Variant.Filled" 
+                               Color="Color.Primary"
+                               StartIcon="Icons.Material.Filled.Download"
+                               OnClick="ImportFeeds">
+                        Import Feeds
+                    </MudButton>
+                </CardHeaderActions>
+            </MudCardHeader>
+            <MudCardContent>
+                @if (feeds.Any())
+                {
+                    <MudTable Items="@feeds" Hover="true" Striped="true" Dense="true">
+                        <HeaderContent>
+                            <MudTh>Date</MudTh>
+                            <MudTh>Type</MudTh>
+                            <MudTh Style="text-align: right">Quantity (kg)</MudTh>
+                            <MudTh Style="text-align: right">Price per Kg</MudTh>
+                            <MudTh Style="text-align: right">Total Cost</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Date">@context.Date.ToString("dd/MM/yyyy")</MudTd>
+                            <MudTd DataLabel="Type">@context.FeedType</MudTd>
+                            <MudTd DataLabel="Quantity" Style="text-align: right">@context.QuantityKg.ToString("N1")</MudTd>
+                            <MudTd DataLabel="Price per Kg" Style="text-align: right">฿@context.PricePerKg.ToString("N2")</MudTd>
+                            <MudTd DataLabel="Total Cost" Style="text-align: right">
+                                <MudText Color="Color.Primary"><strong>฿@context.Cost.ToString("N2")</strong></MudText>
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                    
+                    <!-- Feed Summary -->
+                    <MudDivider Class="my-4" />
+                    <MudText Typo="Typo.h6" Class="mb-2">Feed Summary</MudText>
+                    <MudGrid>
+                        <MudItem xs="12" sm="4">
+                            <MudPaper Class="pa-3" Elevation="1">
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">Total Quantity</MudText>
+                                <MudText Typo="Typo.h6">@feeds.Sum(f => f.QuantityKg).ToString("N1") kg</MudText>
+                            </MudPaper>
+                        </MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudPaper Class="pa-3" Elevation="1">
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">Avg Price per Kg</MudText>
+                                <MudText Typo="Typo.h6">฿@feeds.Average(f => f.PricePerKg).ToString("N2")</MudText>
+                            </MudPaper>
+                        </MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudPaper Class="pa-3" Elevation="1">
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">Total Cost</MudText>
+                                <MudText Typo="Typo.h6" Color="Color.Primary">฿@feeds.Sum(f => f.Cost).ToString("N2")</MudText>
+                            </MudPaper>
+                        </MudItem>
+                    </MudGrid>
+                }
+                else
+                {
+                    <MudAlert Severity="Severity.Info">
+                        <MudText>No feed records found for this pig pen.</MudText>
+                    </MudAlert>
+                }
+            </MudCardContent>
+        </MudCard>
+
+        <!-- Section 4: Harvest List -->
+        <MudCard Elevation="2" Class="mb-6">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h5">
+                        <MudIcon Icon="Icons.Material.Filled.Agriculture" Class="mr-2" />
+                        Harvest Records (@harvests.Count)
+                    </MudText>
+                </CardHeaderContent>
+                <CardHeaderActions>
+                    <MudButton Variant="Variant.Filled" 
+                               Color="Color.Primary"
+                               StartIcon="Icons.Material.Filled.Add"
+                               OnClick="AddHarvest">
+                        Add Harvest
+                    </MudButton>
+                </CardHeaderActions>
+            </MudCardHeader>
+            <MudCardContent>
+                @if (harvests.Any())
+                {
+                    <MudTable Items="@harvests" Hover="true" Striped="true" Dense="true">
+                        <HeaderContent>
+                            <MudTh>Date</MudTh>
+                            <MudTh Style="text-align: center">Pigs Sold</MudTh>
+                            <MudTh Style="text-align: right">Avg Weight (kg)</MudTh>
+                            <MudTh Style="text-align: right">Weight Range (kg)</MudTh>
+                            <MudTh Style="text-align: right">Price per Kg</MudTh>
+                            <MudTh Style="text-align: right">Total Revenue</MudTh>
+                            <MudTh Style="text-align: center">Actions</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Date">@context.HarvestDate.ToString("dd/MM/yyyy")</MudTd>
+                            <MudTd DataLabel="Pigs Sold" Style="text-align: center">
+                                <MudChip Size="Size.Small" Color="Color.Info">@context.PigCount</MudChip>
+                            </MudTd>
+                            <MudTd DataLabel="Avg Weight" Style="text-align: right">@context.AvgWeight.ToString("N1")</MudTd>
+                            <MudTd DataLabel="Weight Range" Style="text-align: right">
+                                @context.MinWeight.ToString("N1") - @context.MaxWeight.ToString("N1")
+                            </MudTd>
+                            <MudTd DataLabel="Price per Kg" Style="text-align: right">฿@context.SalePricePerKg.ToString("N2")</MudTd>
+                            <MudTd DataLabel="Total Revenue" Style="text-align: right">
+                                <MudText Color="Color.Success"><strong>฿@context.Revenue.ToString("N2")</strong></MudText>
+                            </MudTd>
+                            <MudTd DataLabel="Actions" Style="text-align: center">
+                                <MudButtonGroup Size="Size.Small" Variant="Variant.Outlined">
+                                    <MudIconButton Icon="Icons.Material.Filled.Edit" 
+                                                   Color="Color.Primary" 
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => EditHarvest(context))" />
+                                    <MudIconButton Icon="Icons.Material.Filled.Delete" 
+                                                   Color="Color.Error" 
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => DeleteHarvest(context))" />
+                                </MudButtonGroup>
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                    
+                    <!-- Harvest Summary -->
+                    <MudDivider Class="my-4" />
+                    <MudText Typo="Typo.h6" Class="mb-2">Harvest Summary</MudText>
+                    <MudGrid>
+                        <MudItem xs="12" sm="3">
+                            <MudPaper Class="pa-3" Elevation="1">
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">Total Pigs Sold</MudText>
+                                <MudText Typo="Typo.h6">@harvests.Sum(h => h.PigCount)</MudText>
+                            </MudPaper>
+                        </MudItem>
+                        <MudItem xs="12" sm="3">
+                            <MudPaper Class="pa-3" Elevation="1">
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">Total Weight</MudText>
+                                <MudText Typo="Typo.h6">@harvests.Sum(h => h.TotalWeight).ToString("N1") kg</MudText>
+                            </MudPaper>
+                        </MudItem>
+                        <MudItem xs="12" sm="3">
+                            <MudPaper Class="pa-3" Elevation="1">
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">Avg Price per Kg</MudText>
+                                <MudText Typo="Typo.h6">฿@harvests.Average(h => h.SalePricePerKg).ToString("N2")</MudText>
+                            </MudPaper>
+                        </MudItem>
+                        <MudItem xs="12" sm="3">
+                            <MudPaper Class="pa-3" Elevation="1">
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">Total Revenue</MudText>
+                                <MudText Typo="Typo.h6" Color="Color.Success">฿@harvests.Sum(h => h.Revenue).ToString("N2")</MudText>
+                            </MudPaper>
+                        </MudItem>
+                    </MudGrid>
+                }
+                else
+                {
+                    <MudAlert Severity="Severity.Info">
+                        <MudText>No harvest records found for this pig pen.</MudText>
+                    </MudAlert>
+                }
+            </MudCardContent>
+        </MudCard>
+    }
+</MudContainer>
+
+@code {
+    [Parameter] public Guid PigPenId { get; set; }
+
+    private bool loading = true;
+    private PigPen? pigPen;
+    private PigPenSummary? summary;
+    private List<FeedItem> feeds = new();
+    private List<Deposit> deposits = new();
+    private List<HarvestResult> harvests = new();
+
+    private List<BreadcrumbItem> breadcrumbItems = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+        SetupBreadcrumbs();
+    }
+
+    private async Task LoadData()
+    {
+        loading = true;
+        try
+        {
+            // Load pig pen details
+            var pigPens = await Http.GetFromJsonAsync<List<PigPen>>("/api/pigpens") ?? new();
+            pigPen = pigPens.FirstOrDefault(p => p.Id == PigPenId);
+
+            if (pigPen != null)
+            {
+                // Load summary
+                summary = await Http.GetFromJsonAsync<PigPenSummary>($"/api/pigpens/{PigPenId}/summary");
+
+                // Load feeds
+                feeds = await Http.GetFromJsonAsync<List<FeedItem>>($"/api/pigpens/{PigPenId}/feeds") ?? new();
+
+                // Load deposits
+                deposits = await Http.GetFromJsonAsync<List<Deposit>>($"/api/pigpens/{PigPenId}/deposits") ?? new();
+
+                // Load harvests
+                harvests = await Http.GetFromJsonAsync<List<HarvestResult>>($"/api/pigpens/{PigPenId}/harvests") ?? new();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading data: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private void SetupBreadcrumbs()
+    {
+        breadcrumbItems = new List<BreadcrumbItem>
+        {
+            new BreadcrumbItem("Home", href: "/"),
+            new BreadcrumbItem("Pig Pens", href: "/pigpens"),
+            new BreadcrumbItem(pigPen?.PenCode ?? "Detail", href: null, disabled: true)
+        };
+    }
+
+    private void EditPigPen()
+    {
+        Snackbar.Add("Edit pig pen functionality coming soon", Severity.Info);
+    }
+
+    private void AddDeposit()
+    {
+        Snackbar.Add("Add deposit dialog coming soon", Severity.Info);
+    }
+
+    private void EditDeposit(Deposit deposit)
+    {
+        Snackbar.Add($"Edit deposit {deposit.Id} coming soon", Severity.Info);
+    }
+
+    private void DeleteDeposit(Deposit deposit)
+    {
+        Snackbar.Add($"Delete deposit {deposit.Id} coming soon", Severity.Info);
+    }
+
+    private void ImportFeeds()
+    {
+        Snackbar.Add("Import feeds functionality coming soon", Severity.Info);
+    }
+
+    private void AddHarvest()
+    {
+        Snackbar.Add("Add harvest dialog coming soon", Severity.Info);
+    }
+
+    private void EditHarvest(HarvestResult harvest)
+    {
+        Snackbar.Add($"Edit harvest {harvest.Id} coming soon", Severity.Info);
+    }
+
+    private void DeleteHarvest(HarvestResult harvest)
+    {
+        Snackbar.Add($"Delete harvest {harvest.Id} coming soon", Severity.Info);
+    }
+}

@@ -8,9 +8,6 @@ public static class FeedEndpoints
     {
         var group = builder.MapGroup("/api/pigpens").WithTags("Feeds");
 
-        group.MapGet("/{pigPenId:guid}/feeds", GetFeedsByPigPen)
-            .WithName("GetFeedsByPigPen");
-
         group.MapPost("/{pigPenId:guid}/feeds", AddFeedToPigPen)
             .WithName("AddFeedToPigPen");
 
@@ -18,19 +15,6 @@ public static class FeedEndpoints
             .WithName("DeleteFeed");
 
         return builder;
-    }
-
-    private static async Task<IResult> GetFeedsByPigPen(Guid pigPenId, IFeedService feedService)
-    {
-        try
-        {
-            var feeds = await feedService.GetFeedsByPigPenIdAsync(pigPenId);
-            return Results.Ok(feeds);
-        }
-        catch (Exception ex)
-        {
-            return Results.Problem($"Error retrieving feeds: {ex.Message}");
-        }
     }
 
     private static async Task<IResult> AddFeedToPigPen(Guid pigPenId, FeedCreateDto dto, IFeedService feedService)

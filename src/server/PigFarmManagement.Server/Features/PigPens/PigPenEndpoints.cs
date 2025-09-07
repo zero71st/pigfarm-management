@@ -23,6 +23,39 @@ public static class PigPenEndpoints
         group.MapDelete("/{id:guid}", DeletePigPen)
             .WithName("DeletePigPen");
 
+        // Pig pen detail endpoints
+        group.MapGet("/{id:guid}/summary", GetPigPenSummary)
+            .WithName("GetPigPenDetailSummary");
+
+        group.MapGet("/{id:guid}/feeds", GetPigPenFeeds)
+            .WithName("GetPigPenFeeds");
+
+        group.MapGet("/{id:guid}/deposits", GetPigPenDeposits)
+            .WithName("GetPigPenDeposits");
+
+        group.MapGet("/{id:guid}/harvests", GetPigPenHarvests)
+            .WithName("GetPigPenHarvests");
+
+        // CRUD for deposits
+        group.MapPost("/{id:guid}/deposits", CreateDeposit)
+            .WithName("CreateDeposit");
+
+        group.MapPut("/{id:guid}/deposits/{depositId:guid}", UpdateDeposit)
+            .WithName("UpdateDeposit");
+
+        group.MapDelete("/{id:guid}/deposits/{depositId:guid}", DeleteDeposit)
+            .WithName("DeleteDeposit");
+
+        // CRUD for harvests
+        group.MapPost("/{id:guid}/harvests", CreateHarvest)
+            .WithName("CreateHarvest");
+
+        group.MapPut("/{id:guid}/harvests/{harvestId:guid}", UpdateHarvest)
+            .WithName("UpdateHarvest");
+
+        group.MapDelete("/{id:guid}/harvests/{harvestId:guid}", DeleteHarvest)
+            .WithName("DeleteHarvest");
+
         return builder;
     }
 
@@ -106,6 +139,173 @@ public static class PigPenEndpoints
         catch (Exception ex)
         {
             return Results.Problem($"Error deleting pig pen: {ex.Message}");
+        }
+    }
+
+    // Pig pen detail endpoints
+    private static async Task<IResult> GetPigPenSummary(Guid id, IPigPenDetailService pigPenDetailService)
+    {
+        try
+        {
+            var summary = await pigPenDetailService.GetPigPenSummaryAsync(id);
+            return summary == null ? Results.NotFound() : Results.Ok(summary);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Error retrieving pig pen summary: {ex.Message}");
+        }
+    }
+
+    private static async Task<IResult> GetPigPenFeeds(Guid id, IPigPenDetailService pigPenDetailService)
+    {
+        try
+        {
+            var feeds = await pigPenDetailService.GetPigPenFeedsAsync(id);
+            return Results.Ok(feeds);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Error retrieving pig pen feeds: {ex.Message}");
+        }
+    }
+
+    private static async Task<IResult> GetPigPenDeposits(Guid id, IPigPenDetailService pigPenDetailService)
+    {
+        try
+        {
+            var deposits = await pigPenDetailService.GetPigPenDepositsAsync(id);
+            return Results.Ok(deposits);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Error retrieving pig pen deposits: {ex.Message}");
+        }
+    }
+
+    private static async Task<IResult> GetPigPenHarvests(Guid id, IPigPenDetailService pigPenDetailService)
+    {
+        try
+        {
+            var harvests = await pigPenDetailService.GetPigPenHarvestsAsync(id);
+            return Results.Ok(harvests);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Error retrieving pig pen harvests: {ex.Message}");
+        }
+    }
+
+    // Deposit CRUD
+    private static async Task<IResult> CreateDeposit(Guid id, DepositCreateDto dto, IPigPenDetailService pigPenDetailService)
+    {
+        try
+        {
+            var deposit = await pigPenDetailService.CreateDepositAsync(id, dto);
+            return Results.Created($"/api/pigpens/{id}/deposits/{deposit.Id}", deposit);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Results.BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Error creating deposit: {ex.Message}");
+        }
+    }
+
+    private static async Task<IResult> UpdateDeposit(Guid id, Guid depositId, Deposit deposit, IPigPenDetailService pigPenDetailService)
+    {
+        try
+        {
+            if (depositId != deposit.Id)
+            {
+                return Results.BadRequest("Deposit ID mismatch");
+            }
+
+            var updatedDeposit = await pigPenDetailService.UpdateDepositAsync(deposit);
+            return Results.Ok(updatedDeposit);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Results.BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Error updating deposit: {ex.Message}");
+        }
+    }
+
+    private static async Task<IResult> DeleteDeposit(Guid id, Guid depositId, IPigPenDetailService pigPenDetailService)
+    {
+        try
+        {
+            await pigPenDetailService.DeleteDepositAsync(depositId);
+            return Results.Ok();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Results.BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Error deleting deposit: {ex.Message}");
+        }
+    }
+
+    // Harvest CRUD
+    private static async Task<IResult> CreateHarvest(Guid id, HarvestCreateDto dto, IPigPenDetailService pigPenDetailService)
+    {
+        try
+        {
+            var harvest = await pigPenDetailService.CreateHarvestAsync(id, dto);
+            return Results.Created($"/api/pigpens/{id}/harvests/{harvest.Id}", harvest);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Results.BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Error creating harvest: {ex.Message}");
+        }
+    }
+
+    private static async Task<IResult> UpdateHarvest(Guid id, Guid harvestId, HarvestResult harvest, IPigPenDetailService pigPenDetailService)
+    {
+        try
+        {
+            if (harvestId != harvest.Id)
+            {
+                return Results.BadRequest("Harvest ID mismatch");
+            }
+
+            var updatedHarvest = await pigPenDetailService.UpdateHarvestAsync(harvest);
+            return Results.Ok(updatedHarvest);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Results.BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Error updating harvest: {ex.Message}");
+        }
+    }
+
+    private static async Task<IResult> DeleteHarvest(Guid id, Guid harvestId, IPigPenDetailService pigPenDetailService)
+    {
+        try
+        {
+            await pigPenDetailService.DeleteHarvestAsync(harvestId);
+            return Results.Ok();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Results.BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Error deleting harvest: {ex.Message}");
         }
     }
 }
