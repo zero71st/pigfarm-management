@@ -1,9 +1,15 @@
+using Microsoft.EntityFrameworkCore;
+using PigFarmManagement.Server.Infrastructure.Data;
 using PigFarmManagement.Server.Infrastructure.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Add Entity Framework
+builder.Services.AddDbContext<PigFarmDbContext>(options =>
+    options.UseInMemoryDatabase("PigFarmManagement"));
 
 // Add application services
 builder.Services.AddApplicationServices();
@@ -37,6 +43,13 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Ensure database is created and seeded
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<PigFarmDbContext>();
+    context.Database.EnsureCreated();
+}
 
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
