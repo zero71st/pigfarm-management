@@ -1,18 +1,29 @@
 using System.Text.Json;
 using PigFarmManagement.Shared.Models;
 using PigFarmManagement.Shared.Contracts;
+using PigFarmManagement.Server.Infrastructure.Data.Repositories;
 
 namespace PigFarmManagement.Server.Services;
 
 public class FeedImportService : IFeedImportService
 {
+    private readonly IPigPenRepository _pigPenRepository;
+    private readonly ICustomerRepository _customerRepository;
+    private readonly IFeedRepository _feedRepository;
+
+    // Keep legacy in-memory data for mock POSPOS transactions
     private readonly List<PigPen> _pigPens = new();
     private readonly List<Customer> _customers = new();
-    private readonly List<Feed> _feeds = new();
 
-    public FeedImportService()
+    public FeedImportService(
+        IPigPenRepository pigPenRepository,
+        ICustomerRepository customerRepository,
+        IFeedRepository feedRepository)
     {
-        InitializeData();
+        _pigPenRepository = pigPenRepository;
+        _customerRepository = customerRepository;
+        _feedRepository = feedRepository;
+        InitializeData(); // Still needed for mock data
     }
 
     public async Task<FeedImportResult> ImportPosPosFeedDataAsync(List<PosPosFeedTransaction> transactions)
@@ -74,8 +85,8 @@ public class FeedImportService : IFeedImportService
             TotalTransactions = transactions.Count
         };
 
-        // Find the specific pig pen
-        var pigPen = _pigPens.FirstOrDefault(p => p.Id == pigPenId);
+        // Find the specific pig pen using the repository
+        var pigPen = await _pigPenRepository.GetByIdAsync(pigPenId);
         if (pigPen == null)
         {
             result.FailedImports = transactions.Count;
@@ -414,12 +425,11 @@ public class FeedImportService : IFeedImportService
                 ExternalReference = $"POSPOS-{transaction.Code}-{item.Code}"
             };
 
-            _feeds.Add(feed);
+            await _feedRepository.CreateAsync(feed);
             result.TotalFeedItems++;
         }
 
         result.ImportedFeeds.Add(importedSummary);
-        await Task.CompletedTask;
     }
 
     private async Task ProcessTransactionForPigPenAsync(PosPosFeedTransaction transaction, PigPen pigPen, FeedImportResult result)
@@ -452,12 +462,11 @@ public class FeedImportService : IFeedImportService
                 ExternalReference = $"POSPOS-{transaction.Code}-{item.Code}"
             };
 
-            _feeds.Add(feed);
+            await _feedRepository.CreateAsync(feed);
             result.TotalFeedItems++;
         }
 
         result.ImportedFeeds.Add(importedSummary);
-        await Task.CompletedTask;
     }
 
     private Customer FindOrCreateCustomer(PosPosBuyerDetail buyerDetail)
