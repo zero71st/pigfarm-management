@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using PigFarmManagement.Client;
 using PigFarmManagement.Client.Features.Customers.Services;
 using PigFarmManagement.Client.Features.PigPens.Services;
+using PigFarmManagement.Client.Features.Dashboard.Services;
 using MudBlazor.Services;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -29,5 +30,6 @@ builder.Services.AddMudServices();
 // Register feature services
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IPigPenService, PigPenService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 
 await builder.Build().RunAsync();

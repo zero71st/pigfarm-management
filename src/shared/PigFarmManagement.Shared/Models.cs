@@ -25,3 +25,24 @@ public record Deposit(Guid Id, Guid PigPenId, decimal Amount, DateTime Date, str
 public record HarvestResult(Guid Id, Guid PigPenId, DateTime HarvestDate, int PigCount, decimal AvgWeight, decimal MinWeight, decimal MaxWeight, decimal TotalWeight, decimal SalePricePerKg, decimal Revenue);
 
 public record PigPenSummary(Guid PigPenId, decimal TotalFeedCost, decimal TotalDeposit, decimal Investment, decimal ProfitLoss, decimal NetBalance);
+
+public record DashboardOverview(
+    int TotalActivePigPens,
+    int TotalPigsCash,
+    int TotalPigsProject,
+    decimal TotalInvestmentCash,
+    decimal TotalInvestmentProject,
+    decimal TotalProfitLossCash,
+    decimal TotalProfitLossProject,
+    List<CustomerPigPenStats> CustomerStats
+);
+
+public record CustomerPigPenStats(
+    Guid CustomerId,
+    string CustomerName,
+    CustomerType CustomerType,
+    int PigPenCount,
+    int TotalPigs,
+    decimal TotalInvestment,
+    decimal TotalProfitLoss
+);

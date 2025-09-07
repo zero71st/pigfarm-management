@@ -4,17 +4,33 @@
 @using PigFarmManagement.Shared.Models
 @using PigFarmManagement.Client.Features.Customers.Services
 @using PigFarmManagement.Client.Features.PigPens.Services
+@using PigFarmManagement.Client.Features.Dashboard.Services
 @using PigFarmManagement.Client.Features.PigPens.Components
 @inject ICustomerService CustomerService
 @inject IPigPenService PigPenService
+@inject IDashboardService DashboardService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
 <PageTitle>PigTrack Pro - Dashboard</PageTitle>
 
-<MudText Typo="Typo.h4" GutterBottom="true">Pig Farm Management</MudText>
+<MudText Typo="Typo.h4" GutterBottom="true">Pig Farm Management Dashboard</MudText>
 
-<MudPaper Class="pa-4 ma-2" Elevation="2">
+@if (loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="ma-2" />
+}
+else if (dashboardOverview != null)
+{
+    <!-- Dashboard Overview Cards -->
+    <DashboardOverviewCards Overview="dashboardOverview" />
+    
+    <!-- Customer Performance Table -->
+    <CustomerStatsTable CustomerStats="dashboardOverview.CustomerStats" />
+}
+
+<!-- Pig Pen Management Section -->
+<MudPaper Class="pa-4 ma-2 mt-6" Elevation="2">
     <MudGrid>
         <MudItem xs="12" md="6">
             <MudSelect T="Guid?" @bind-Value="selectedCustomerId" Label="Filter Customer" Variant="Variant.Outlined">
@@ -34,7 +50,7 @@
 
 <MudPaper Class="pa-4 ma-2" Elevation="2">
     <div class="d-flex justify-space-between align-center mb-4">
-        <MudText Typo="Typo.h6">Pig Pen List</MudText>
+        <MudText Typo="Typo.h6">Pig Pen Management</MudText>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" 
                    StartIcon="Icons.Material.Filled.Add" OnClick="ShowAddDialog">
             Add New Pig Pen
@@ -77,6 +93,7 @@
 </MudPaper>
 
 @code {
+    private DashboardOverview? dashboardOverview;
     private List<Customer> customers = new();
     private List<PigPen> pigPens = new();
     private List<PigPen> filteredPigPens = new();
@@ -97,12 +114,15 @@
 
             var customersTask = CustomerService.GetCustomersAsync();
             var pigPensTask = PigPenService.GetPigPensAsync();
+            var dashboardTask = DashboardService.GetDashboardOverviewAsync();
 
-            await Task.WhenAll(customersTask, pigPensTask);
+            await Task.WhenAll(customersTask, pigPensTask, dashboardTask);
 
             customers = customersTask.Result;
             pigPens = pigPensTask.Result;
+            dashboardOverview = dashboardTask.Result;
 
+            FilterPigPens();
             FilterPigPens();
         }
         catch (Exception ex)

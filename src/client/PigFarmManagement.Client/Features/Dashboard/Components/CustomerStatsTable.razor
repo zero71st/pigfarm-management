@@ -1,0 +1,76 @@
+@using PigFarmManagement.Shared.Models
+@using System.ComponentModel
+
+<MudCard Elevation="3" Class="mt-4">
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">
+                <MudIcon Icon="Icons.Material.Filled.Group" Class="mr-2" />
+                Customer Performance Summary
+            </MudText>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudCardContent>
+        <MudTable Items="@CustomerStats" Hover="true" Striped="true">
+            <HeaderContent>
+                <MudTh>Customer</MudTh>
+                <MudTh>Type</MudTh>
+                <MudTh>Pig Pens</MudTh>
+                <MudTh>Total Pigs</MudTh>
+                <MudTh>Investment</MudTh>
+                <MudTh>Profit/Loss</MudTh>
+                <MudTh>ROI</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Customer">@context.CustomerName</MudTd>
+                <MudTd DataLabel="Type">
+                    <MudChip Color="@GetCustomerTypeColor(context.CustomerType)" Size="Size.Small">
+                        @context.CustomerType
+                    </MudChip>
+                </MudTd>
+                <MudTd DataLabel="Pig Pens">@context.PigPenCount</MudTd>
+                <MudTd DataLabel="Total Pigs">@context.TotalPigs</MudTd>
+                <MudTd DataLabel="Investment">@FormatCurrency(context.TotalInvestment)</MudTd>
+                <MudTd DataLabel="Profit/Loss">
+                    <span style="color: @(context.TotalProfitLoss >= 0 ? "green" : "red")">
+                        @FormatCurrency(context.TotalProfitLoss)
+                    </span>
+                </MudTd>
+                <MudTd DataLabel="ROI">
+                    <span style="color: @(CalculateROI(context.TotalProfitLoss, context.TotalInvestment) >= 0 ? "green" : "red")">
+                        @FormatPercentage(CalculateROI(context.TotalProfitLoss, context.TotalInvestment))
+                    </span>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudCardContent>
+</MudCard>
+
+@code {
+    [Parameter] public List<CustomerPigPenStats> CustomerStats { get; set; } = new();
+
+    private string FormatCurrency(decimal amount)
+    {
+        return $"${amount:N2}";
+    }
+
+    private string FormatPercentage(decimal percentage)
+    {
+        return $"{percentage:P1}";
+    }
+
+    private decimal CalculateROI(decimal profit, decimal investment)
+    {
+        return investment != 0 ? profit / investment : 0;
+    }
+
+    private Color GetCustomerTypeColor(CustomerType type)
+    {
+        return type switch
+        {
+            CustomerType.Cash => Color.Success,
+            CustomerType.Project => Color.Info,
+            _ => Color.Default
+        };
+    }
+}
