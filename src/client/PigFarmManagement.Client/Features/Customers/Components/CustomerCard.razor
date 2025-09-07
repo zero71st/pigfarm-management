@@ -6,7 +6,7 @@
     <MudCardHeader>
         <CardHeaderContent>
             <div class="d-flex align-center">
-                <MudIcon Icon="@GetCustomerIcon(Customer.Type)" Class="mr-2" />
+                <MudIcon Icon="@GetCustomerIcon(Customer.Status)" Class="mr-2" />
                 <MudText Typo="Typo.h6">@Customer.Name</MudText>
             </div>
         </CardHeaderContent>
@@ -32,9 +32,9 @@
             <strong>Code:</strong> @Customer.Code
         </MudText>
         <MudText Typo="Typo.body2" Class="mb-2">
-            <strong>Type:</strong> 
-            <MudChip Text="@Customer.Type.ToString()" 
-                    Color="@GetCustomerTypeColor(Customer.Type)" 
+            <strong>Status:</strong> 
+            <MudChip Text="@Customer.Status.ToString()" 
+                    Color="@GetCustomerStatusColor(Customer.Status)" 
                     Size="Size.Small" />
         </MudText>
         <MudText Typo="Typo.body2" Class="mb-2">
@@ -58,22 +58,22 @@
     [Parameter] public EventCallback<Customer> OnDelete { get; set; }
     [Parameter] public EventCallback<Customer> OnViewDetails { get; set; }
 
-    private string GetCustomerIcon(CustomerType type)
+    private string GetCustomerIcon(CustomerStatus status)
     {
-        return type switch
+        return status switch
         {
-            CustomerType.Cash => Icons.Material.Filled.AccountBalanceWallet,
-            CustomerType.Project => Icons.Material.Filled.Work,
+            CustomerStatus.Active => Icons.Material.Filled.CheckCircle,
+            CustomerStatus.Inactive => Icons.Material.Filled.Cancel,
             _ => Icons.Material.Filled.Person
         };
     }
 
-    private Color GetCustomerTypeColor(CustomerType type)
+    private Color GetCustomerStatusColor(CustomerStatus status)
     {
-        return type switch
+        return status switch
         {
-            CustomerType.Cash => Color.Success,
-            CustomerType.Project => Color.Info,
+            CustomerStatus.Active => Color.Success,
+            CustomerStatus.Inactive => Color.Error,
             _ => Color.Default
         };
     }

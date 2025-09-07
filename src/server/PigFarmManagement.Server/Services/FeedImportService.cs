@@ -375,7 +375,7 @@ public class FeedImportService : IFeedImportService
             Guid.NewGuid(),
             buyerDetail.Code,
             $"{buyerDetail.FirstName} {buyerDetail.LastName}",
-            CustomerType.Cash)
+            CustomerStatus.Active)
         {
             ExternalId = buyerDetail.Code,
             KeyCardId = buyerDetail.KeyCardId,
@@ -414,7 +414,7 @@ public class FeedImportService : IFeedImportService
             Guid.NewGuid(),
             "CUST-001",
             "John Farmer",
-            CustomerType.Project)
+            CustomerStatus.Active)
         {
             Phone = "123-456-7890",
             Email = "john@example.com",
@@ -426,7 +426,7 @@ public class FeedImportService : IFeedImportService
             Guid.NewGuid(),
             "CUST-002",
             "Sarah Johnson",
-            CustomerType.Cash)
+            CustomerStatus.Active)
         {
             Phone = "098-765-4321",
             Email = "sarah@example.com",

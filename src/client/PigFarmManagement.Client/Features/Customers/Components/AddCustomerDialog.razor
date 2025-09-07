@@ -23,12 +23,12 @@
                                  RequiredError="Customer code is required" />
                 </MudItem>
                 <MudItem xs="12">
-                    <MudSelect T="CustomerType" @bind-Value="customerType" 
-                              Label="Customer Type" 
+                    <MudSelect T="CustomerStatus" @bind-Value="customerStatus" 
+                              Label="Customer Status" 
                               Variant="Variant.Outlined"
                               Required="true">
-                        <MudSelectItem T="CustomerType" Value="@CustomerType.Cash">Cash</MudSelectItem>
-                        <MudSelectItem T="CustomerType" Value="@CustomerType.Project">Project</MudSelectItem>
+                        <MudSelectItem T="CustomerStatus" Value="@CustomerStatus.Active">Active</MudSelectItem>
+                        <MudSelectItem T="CustomerStatus" Value="@CustomerStatus.Inactive">Inactive</MudSelectItem>
                     </MudSelect>
                 </MudItem>
             </MudGrid>
@@ -50,7 +50,7 @@
 
     private string customerName = "";
     private string customerCode = "";
-    private CustomerType customerType = CustomerType.Cash;
+    private CustomerStatus customerStatus = CustomerStatus.Active;
 
     void Cancel() => MudDialog.Cancel();
 
@@ -67,7 +67,7 @@
 
         try
         {
-            var customer = new Customer(Guid.NewGuid(), customerCode, customerName, customerType);
+            var customer = new Customer(Guid.NewGuid(), customerCode, customerName, customerStatus);
             var createdCustomer = await CustomerService.CreateCustomerAsync(customer);
             MudDialog.Close(DialogResult.Ok(createdCustomer));
         }

@@ -16,7 +16,7 @@ public class CustomerEntity
     [MaxLength(100)]
     public string Name { get; set; } = string.Empty;
     
-    public CustomerType Type { get; set; }
+    public CustomerStatus Status { get; set; }
     
     public string? Phone { get; set; }
     public string? Email { get; set; }
@@ -32,7 +32,7 @@ public class CustomerEntity
     // Convert to shared model
     public Customer ToModel()
     {
-        return new Customer(Id, Code, Name, Type)
+        return new Customer(Id, Code, Name, Status)
         {
             Phone = Phone,
             Email = Email,
@@ -51,7 +51,7 @@ public class CustomerEntity
             Id = customer.Id,
             Code = customer.Code,
             Name = customer.Name,
-            Type = customer.Type,
+            Status = customer.Status,
             Phone = customer.Phone,
             Email = customer.Email,
             ExternalId = customer.ExternalId,

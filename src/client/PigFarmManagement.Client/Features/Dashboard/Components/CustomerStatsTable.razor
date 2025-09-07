@@ -14,7 +14,7 @@
         <MudTable Items="@CustomerStats" Hover="true" Striped="true">
             <HeaderContent>
                 <MudTh>Customer</MudTh>
-                <MudTh>Type</MudTh>
+                <MudTh>Status</MudTh>
                 <MudTh>Pig Pens</MudTh>
                 <MudTh>Total Pigs</MudTh>
                 <MudTh>Investment</MudTh>
@@ -23,9 +23,9 @@
             </HeaderContent>
             <RowTemplate>
                 <MudTd DataLabel="Customer">@context.CustomerName</MudTd>
-                <MudTd DataLabel="Type">
-                    <MudChip Color="@GetCustomerTypeColor(context.CustomerType)" Size="Size.Small">
-                        @context.CustomerType
+                <MudTd DataLabel="Status">
+                    <MudChip Color="@GetCustomerStatusColor(context.CustomerStatus)" Size="Size.Small">
+                        @context.CustomerStatus
                     </MudChip>
                 </MudTd>
                 <MudTd DataLabel="Pig Pens">@context.PigPenCount</MudTd>
@@ -64,12 +64,12 @@
         return investment != 0 ? profit / investment : 0;
     }
 
-    private Color GetCustomerTypeColor(CustomerType type)
+    private Color GetCustomerStatusColor(CustomerStatus status)
     {
-        return type switch
+        return status switch
         {
-            CustomerType.Cash => Color.Success,
-            CustomerType.Project => Color.Info,
+            CustomerStatus.Active => Color.Success,
+            CustomerStatus.Inactive => Color.Error,
             _ => Color.Default
         };
     }

@@ -31,12 +31,12 @@
                              Immediate="true" />
             </MudItem>
             <MudItem xs="12" md="3">
-                <MudSelect T="CustomerType?" @bind-Value="selectedCustomerType" 
-                          Label="Filter by Type" 
+                <MudSelect T="CustomerStatus?" @bind-Value="selectedCustomerStatus" 
+                          Label="Filter by Status" 
                           Variant="Variant.Outlined"
                           Clearable="true">
-                    <MudSelectItem T="CustomerType?" Value="@CustomerType.Cash">Cash</MudSelectItem>
-                    <MudSelectItem T="CustomerType?" Value="@CustomerType.Project">Project</MudSelectItem>
+                    <MudSelectItem T="CustomerStatus?" Value="@CustomerStatus.Active">Active</MudSelectItem>
+                    <MudSelectItem T="CustomerStatus?" Value="@CustomerStatus.Inactive">Inactive</MudSelectItem>
                 </MudSelect>
             </MudItem>
             <MudItem xs="12" md="3" Class="text-right">
@@ -77,7 +77,7 @@
         {
             <MudItem xs="12">
                 <CustomerEmptyState OnAddCustomer="OpenAddCustomerDialog" 
-                                   HasFilters="@(!string.IsNullOrEmpty(searchText) || selectedCustomerType != null)" />
+                                   HasFilters="@(!string.IsNullOrEmpty(searchText) || selectedCustomerStatus != null)" />
             </MudItem>
         }
     </MudGrid>
@@ -95,7 +95,7 @@
     private List<PigPen> pigPens = new();
     private bool isLoading = true;
     private string searchText = "";
-    private CustomerType? selectedCustomerType = null;
+    private CustomerStatus? selectedCustomerStatus = null;
 
     protected override async Task OnInitializedAsync()
     {
@@ -135,7 +135,7 @@
             (string.IsNullOrEmpty(searchText) || 
              c.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
              c.Code.Contains(searchText, StringComparison.OrdinalIgnoreCase)) &&
-            (selectedCustomerType == null || c.Type == selectedCustomerType)
+            (selectedCustomerStatus == null || c.Status == selectedCustomerStatus)
         ).ToList();
     }
 

@@ -67,25 +67,18 @@ public class DashboardService : IDashboardService
         var allDeposits = await _depositRepository.GetAllAsync();
         var allHarvests = await _harvestRepository.GetAllAsync();
 
-        // Filter active pig pens (those without end date or end date in future)
-        var activePigPens = pigPens.Where(p => p.EndDate == null || p.EndDate > DateTime.Now).ToList();
-
-        // Group by customer type
-        var cashPigPens = activePigPens.Where(p => 
-            customers.FirstOrDefault(c => c.Id == p.CustomerId)?.Type == CustomerType.Cash).ToList();
-        var projectPigPens = activePigPens.Where(p => 
-            customers.FirstOrDefault(c => c.Id == p.CustomerId)?.Type == CustomerType.Project).ToList();
+        // Filter active pig pens (those without end date or end date in future) and with active customers
+        var activePigPens = pigPens.Where(p => 
+            (p.EndDate == null || p.EndDate > DateTime.Now) &&
+            customers.FirstOrDefault(c => c.Id == p.CustomerId)?.Status == CustomerStatus.Active).ToList();
 
         // Calculate totals
         int totalActivePigPens = activePigPens.Count;
-        int totalPigsCash = cashPigPens.Sum(p => p.PigQty);
-        int totalPigsProject = projectPigPens.Sum(p => p.PigQty);
+        int totalPigs = activePigPens.Sum(p => p.PigQty);
 
         // Calculate financial metrics
-        decimal totalInvestmentCash = await CalculateTotalInvestmentAsync(cashPigPens);
-        decimal totalInvestmentProject = await CalculateTotalInvestmentAsync(projectPigPens);
-        decimal totalProfitLossCash = await CalculateTotalProfitLossAsync(cashPigPens);
-        decimal totalProfitLossProject = await CalculateTotalProfitLossAsync(projectPigPens);
+        decimal totalInvestment = await CalculateTotalInvestmentAsync(activePigPens);
+        decimal totalProfitLoss = await CalculateTotalProfitLossAsync(activePigPens);
 
         // Calculate customer statistics
         var customerStats = new List<CustomerPigPenStats>();
@@ -100,7 +93,7 @@ public class DashboardService : IDashboardService
                 customerStats.Add(new CustomerPigPenStats(
                     customer.Id,
                     customer.Name,
-                    customer.Type,
+                    customer.Status,
                     customerPigPens.Count,
                     customerPigPens.Sum(p => p.PigQty),
                     customerInvestment,
@@ -111,12 +104,9 @@ public class DashboardService : IDashboardService
 
         return new DashboardOverview(
             totalActivePigPens,
-            totalPigsCash,
-            totalPigsProject,
-            totalInvestmentCash,
-            totalInvestmentProject,
-            totalProfitLossCash,
-            totalProfitLossProject,
+            totalPigs,
+            totalInvestment,
+            totalProfitLoss,
             customerStats
         );
     }

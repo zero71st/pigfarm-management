@@ -16,30 +16,15 @@
         </MudCard>
     </MudItem>
 
-    <!-- Cash Pig Pens -->
+    <!-- Total Pigs -->
     <MudItem xs="12" sm="6" md="3">
         <MudCard Elevation="3" Class="pa-4">
             <MudCardContent>
                 <div class="d-flex align-center">
-                    <MudIcon Icon="Icons.Material.Filled.AttachMoney" Color="Color.Success" Size="Size.Large" Class="mr-3" />
+                    <MudIcon Icon="Icons.Material.Filled.Pets" Color="Color.Success" Size="Size.Large" Class="mr-3" />
                     <div>
-                        <MudText Typo="Typo.h4" Color="Color.Success">@Overview.TotalPigsCash</MudText>
-                        <MudText Typo="Typo.body2" Color="Color.Secondary">Cash Pigs</MudText>
-                    </div>
-                </div>
-            </MudCardContent>
-        </MudCard>
-    </MudItem>
-
-    <!-- Project Pig Pens -->
-    <MudItem xs="12" sm="6" md="3">
-        <MudCard Elevation="3" Class="pa-4">
-            <MudCardContent>
-                <div class="d-flex align-center">
-                    <MudIcon Icon="Icons.Material.Filled.BusinessCenter" Color="Color.Info" Size="Size.Large" Class="mr-3" />
-                    <div>
-                        <MudText Typo="Typo.h4" Color="Color.Info">@Overview.TotalPigsProject</MudText>
-                        <MudText Typo="Typo.body2" Color="Color.Secondary">Project Pigs</MudText>
+                        <MudText Typo="Typo.h4" Color="Color.Success">@Overview.TotalPigs</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">Total Pigs</MudText>
                     </div>
                 </div>
             </MudCardContent>
@@ -51,10 +36,25 @@
         <MudCard Elevation="3" Class="pa-4">
             <MudCardContent>
                 <div class="d-flex align-center">
-                    <MudIcon Icon="Icons.Material.Filled.TrendingUp" Color="Color.Warning" Size="Size.Large" Class="mr-3" />
+                    <MudIcon Icon="Icons.Material.Filled.TrendingUp" Color="Color.Info" Size="Size.Large" Class="mr-3" />
                     <div>
-                        <MudText Typo="Typo.h4" Color="Color.Warning">@FormatCurrency(TotalInvestment)</MudText>
+                        <MudText Typo="Typo.h4" Color="Color.Info">@FormatCurrency(Overview.TotalInvestment)</MudText>
                         <MudText Typo="Typo.body2" Color="Color.Secondary">Total Investment</MudText>
+                    </div>
+                </div>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <!-- Total Profit/Loss -->
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard Elevation="3" Class="pa-4">
+            <MudCardContent>
+                <div class="d-flex align-center">
+                    <MudIcon Icon="@GetProfitLossIcon()" Color="@GetProfitLossColor()" Size="Size.Large" Class="mr-3" />
+                    <div>
+                        <MudText Typo="Typo.h4" Color="@GetProfitLossColor()">@FormatCurrency(Overview.TotalProfitLoss)</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">Total Profit/Loss</MudText>
                     </div>
                 </div>
             </MudCardContent>
@@ -62,62 +62,38 @@
     </MudItem>
 </MudGrid>
 
-<!-- Financial Summary by Type -->
+<!-- Overall Performance Summary -->
 <MudGrid Class="mt-4">
-    <MudItem xs="12" md="6">
+    <MudItem xs="12">
         <MudCard Elevation="3">
             <MudCardHeader>
                 <CardHeaderContent>
                     <MudText Typo="Typo.h6">
-                        <MudIcon Icon="Icons.Material.Filled.AttachMoney" Class="mr-2" />
-                        Cash Business Summary
+                        <MudIcon Icon="Icons.Material.Filled.Assessment" Class="mr-2" />
+                        Overall Business Performance
                     </MudText>
                 </CardHeaderContent>
             </MudCardHeader>
             <MudCardContent>
                 <MudList>
                     <MudListItem>
-                        <MudText><strong>Investment:</strong> @FormatCurrency(Overview.TotalInvestmentCash)</MudText>
+                        <MudText><strong>Active Pig Pens:</strong> @Overview.TotalActivePigPens</MudText>
+                    </MudListItem>
+                    <MudListItem>
+                        <MudText><strong>Total Pigs:</strong> @Overview.TotalPigs</MudText>
+                    </MudListItem>
+                    <MudListItem>
+                        <MudText><strong>Investment:</strong> @FormatCurrency(Overview.TotalInvestment)</MudText>
                     </MudListItem>
                     <MudListItem>
                         <MudText><strong>Profit/Loss:</strong> 
-                            <span style="color: @(Overview.TotalProfitLossCash >= 0 ? "green" : "red")">
-                                @FormatCurrency(Overview.TotalProfitLossCash)
+                            <span style="color: @(Overview.TotalProfitLoss >= 0 ? "green" : "red")">
+                                @FormatCurrency(Overview.TotalProfitLoss)
                             </span>
                         </MudText>
                     </MudListItem>
                     <MudListItem>
-                        <MudText><strong>ROI:</strong> @FormatPercentage(CalculateROI(Overview.TotalProfitLossCash, Overview.TotalInvestmentCash))</MudText>
-                    </MudListItem>
-                </MudList>
-            </MudCardContent>
-        </MudCard>
-    </MudItem>
-
-    <MudItem xs="12" md="6">
-        <MudCard Elevation="3">
-            <MudCardHeader>
-                <CardHeaderContent>
-                    <MudText Typo="Typo.h6">
-                        <MudIcon Icon="Icons.Material.Filled.BusinessCenter" Class="mr-2" />
-                        Project Business Summary
-                    </MudText>
-                </CardHeaderContent>
-            </MudCardHeader>
-            <MudCardContent>
-                <MudList>
-                    <MudListItem>
-                        <MudText><strong>Investment:</strong> @FormatCurrency(Overview.TotalInvestmentProject)</MudText>
-                    </MudListItem>
-                    <MudListItem>
-                        <MudText><strong>Profit/Loss:</strong> 
-                            <span style="color: @(Overview.TotalProfitLossProject >= 0 ? "green" : "red")">
-                                @FormatCurrency(Overview.TotalProfitLossProject)
-                            </span>
-                        </MudText>
-                    </MudListItem>
-                    <MudListItem>
-                        <MudText><strong>ROI:</strong> @FormatPercentage(CalculateROI(Overview.TotalProfitLossProject, Overview.TotalInvestmentProject))</MudText>
+                        <MudText><strong>ROI:</strong> @FormatPercentage(CalculateROI(Overview.TotalProfitLoss, Overview.TotalInvestment))</MudText>
                     </MudListItem>
                 </MudList>
             </MudCardContent>
@@ -127,8 +103,6 @@
 
 @code {
     [Parameter] public DashboardOverview Overview { get; set; } = null!;
-
-    private decimal TotalInvestment => Overview.TotalInvestmentCash + Overview.TotalInvestmentProject;
 
     private string FormatCurrency(decimal amount)
     {
@@ -143,5 +117,15 @@
     private decimal CalculateROI(decimal profit, decimal investment)
     {
         return investment != 0 ? profit / investment : 0;
+    }
+
+    private string GetProfitLossIcon()
+    {
+        return Overview.TotalProfitLoss >= 0 ? Icons.Material.Filled.TrendingUp : Icons.Material.Filled.TrendingDown;
+    }
+
+    private Color GetProfitLossColor()
+    {
+        return Overview.TotalProfitLoss >= 0 ? Color.Success : Color.Error;
     }
 }

@@ -13,14 +13,14 @@
         </MudItem>
         <MudItem xs="12" sm="6" md="3">
             <MudPaper Class="pa-3 text-center" Elevation="1">
-                <MudText Typo="Typo.h4" Color="Color.Success">@Customers.Count(c => c.Type == CustomerType.Cash)</MudText>
-                <MudText Typo="Typo.body2">Cash Customers</MudText>
+                <MudText Typo="Typo.h4" Color="Color.Success">@Customers.Count(c => c.Status == CustomerStatus.Active)</MudText>
+                <MudText Typo="Typo.body2">Active Customers</MudText>
             </MudPaper>
         </MudItem>
         <MudItem xs="12" sm="6" md="3">
             <MudPaper Class="pa-3 text-center" Elevation="1">
-                <MudText Typo="Typo.h4" Color="Color.Info">@Customers.Count(c => c.Type == CustomerType.Project)</MudText>
-                <MudText Typo="Typo.body2">Project Customers</MudText>
+                <MudText Typo="Typo.h4" Color="Color.Error">@Customers.Count(c => c.Status == CustomerStatus.Inactive)</MudText>
+                <MudText Typo="Typo.body2">Inactive Customers</MudText>
             </MudPaper>
         </MudItem>
         <MudItem xs="12" sm="6" md="3">

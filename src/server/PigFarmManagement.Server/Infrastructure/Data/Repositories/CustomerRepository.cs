@@ -47,7 +47,7 @@ public class CustomerRepository : ICustomerRepository
 
         entity.Code = customer.Code;
         entity.Name = customer.Name;
-        entity.Type = customer.Type;
+        entity.Status = customer.Status;
         entity.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();

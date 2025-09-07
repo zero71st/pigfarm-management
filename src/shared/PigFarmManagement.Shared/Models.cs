@@ -1,12 +1,12 @@
 namespace PigFarmManagement.Shared.Models;
 
-public enum CustomerType
+public enum CustomerStatus
 {
-    Cash,
-    Project
+    Active,
+    Inactive
 }
 
-public record Customer(Guid Id, string Code, string Name, CustomerType Type)
+public record Customer(Guid Id, string Code, string Name, CustomerStatus Status)
 {
     public string? ExternalId { get; init; }
     public string? KeyCardId { get; init; }
@@ -58,19 +58,16 @@ public record PigPenSummary(Guid PigPenId, decimal TotalFeedCost, decimal TotalD
 
 public record DashboardOverview(
     int TotalActivePigPens,
-    int TotalPigsCash,
-    int TotalPigsProject,
-    decimal TotalInvestmentCash,
-    decimal TotalInvestmentProject,
-    decimal TotalProfitLossCash,
-    decimal TotalProfitLossProject,
+    int TotalPigs,
+    decimal TotalInvestment,
+    decimal TotalProfitLoss,
     List<CustomerPigPenStats> CustomerStats
 );
 
 public record CustomerPigPenStats(
     Guid CustomerId,
     string CustomerName,
-    CustomerType CustomerType,
+    CustomerStatus CustomerStatus,
     int PigPenCount,
     int TotalPigs,
     decimal TotalInvestment,

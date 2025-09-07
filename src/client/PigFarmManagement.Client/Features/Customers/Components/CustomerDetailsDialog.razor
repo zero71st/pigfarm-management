@@ -11,14 +11,14 @@
                 <MudItem xs="12">
                     <MudPaper Class="pa-4 mb-4" Elevation="2">
                         <div class="d-flex align-center mb-3">
-                            <MudIcon Icon="@GetCustomerIcon(Customer.Type)" Size="Size.Large" Class="mr-3" />
+                            <MudIcon Icon="@GetCustomerIcon(Customer.Status)" Size="Size.Large" Class="mr-3" />
                             <div>
                                 <MudText Typo="Typo.h5">@Customer.Name</MudText>
                                 <MudText Typo="Typo.body2" Color="Color.Secondary">@Customer.Code</MudText>
                             </div>
                         </div>
-                        <MudChip Text="@Customer.Type.ToString()" 
-                                Color="@GetCustomerTypeColor(Customer.Type)" 
+                        <MudChip Text="@Customer.Status.ToString()" 
+                                Color="@GetCustomerStatusColor(Customer.Status)" 
                                 Size="Size.Medium" />
                     </MudPaper>
                 </MudItem>
@@ -141,22 +141,22 @@
 
     void Close() => MudDialog.Close();
 
-    private string GetCustomerIcon(CustomerType type)
+    private string GetCustomerIcon(CustomerStatus status)
     {
-        return type switch
+        return status switch
         {
-            CustomerType.Cash => Icons.Material.Filled.AccountBalanceWallet,
-            CustomerType.Project => Icons.Material.Filled.Work,
+            CustomerStatus.Active => Icons.Material.Filled.CheckCircle,
+            CustomerStatus.Inactive => Icons.Material.Filled.Cancel,
             _ => Icons.Material.Filled.Person
         };
     }
 
-    private Color GetCustomerTypeColor(CustomerType type)
+    private Color GetCustomerStatusColor(CustomerStatus status)
     {
-        return type switch
+        return status switch
         {
-            CustomerType.Cash => Color.Success,
-            CustomerType.Project => Color.Info,
+            CustomerStatus.Active => Color.Success,
+            CustomerStatus.Inactive => Color.Error,
             _ => Color.Default
         };
     }

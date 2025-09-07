@@ -27,7 +27,7 @@ public class PigFarmDbContext : DbContext
             entity.HasIndex(e => e.Code).IsUnique();
             entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
             entity.Property(e => e.Code).IsRequired().HasMaxLength(20);
-            entity.Property(e => e.Type).HasConversion<int>();
+            entity.Property(e => e.Status).HasConversion<int>();
         });
 
         // PigPen Configuration
@@ -100,7 +100,7 @@ public class PigFarmDbContext : DbContext
 
         // Generate 100 Customers
         var customers = new List<CustomerEntity>();
-        var customerTypes = Enum.GetValues<CustomerType>();
+        var customerStatuses = Enum.GetValues<CustomerStatus>();
         
         for (int i = 1; i <= 100; i++)
         {
@@ -109,7 +109,7 @@ public class PigFarmDbContext : DbContext
                 Id = Guid.NewGuid(),
                 Code = $"CUST-{i:D3}",
                 Name = GetRandomCustomerName(i, random),
-                Type = customerTypes[random.Next(customerTypes.Length)],
+                Status = customerStatuses[random.Next(customerStatuses.Length)],
                 CreatedAt = now.AddDays(-random.Next(1, 365)),
                 UpdatedAt = now.AddDays(-random.Next(1, 30))
             });
