@@ -1,5 +1,6 @@
 @page "/pigpens"
 @using System.Linq
+@using PigFarmManagement.Client.Features.PigPens.Components
 @inject ICustomerService CustomerService
 @inject IPigPenService PigPenService
 @inject IDialogService DialogService
@@ -259,7 +260,7 @@
         return customer?.Code ?? "";
     }
 
-    private async Task ShowFeedImportDialog()
+    private void ShowFeedImportDialog()
     {
         // This is the old general import - we can remove this or keep for bulk imports
         Snackbar.Add("Use the inline POSPOS import buttons for each pig pen instead", Severity.Info);
