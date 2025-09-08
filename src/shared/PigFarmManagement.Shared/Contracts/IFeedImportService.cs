@@ -48,4 +48,9 @@ public interface IFeedImportService
     /// Import POSPOS feed data by date range
     /// </summary>
     Task<FeedImportResult> ImportPosPosFeedByDateRangeAsync(DateTime fromDate, DateTime toDate);
+    
+    /// <summary>
+    /// Create demo feeds with complete product information for testing
+    /// </summary>
+    Task<FeedImportResult> CreateDemoFeedsWithProductInfoAsync(Guid pigPenId);
 }

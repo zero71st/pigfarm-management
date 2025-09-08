@@ -44,6 +44,9 @@ public class FeedService : IFeedService
             Guid.NewGuid(),
             pigPenId,
             dto.FeedType,
+            "", // ProductCode - empty for manually added feeds
+            dto.FeedType, // ProductName - use FeedType as product name
+            "", // InvoiceNumber - empty for manually added feeds
             dto.QuantityKg,
             dto.PricePerKg,
             totalCost,

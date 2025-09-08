@@ -57,7 +57,10 @@ public class FeedRepository : IFeedRepository
         return new FeedItem(
             feed.Id,
             feed.PigPenId,
-            feed.ProductType, // FeedType from ProductType
+            feed.ProductName, // FeedType from ProductName
+            feed.ProductCode, // ProductCode
+            feed.ProductName, // ProductName
+            feed.InvoiceNumber, // InvoiceNumber
             feed.Quantity,    // QuantityKg from Quantity (assuming same unit)
             feed.UnitPrice,   // PricePerKg from UnitPrice
             feed.TotalPrice,  // Cost from TotalPrice
@@ -78,6 +81,9 @@ public class FeedRepository : IFeedRepository
             Id = feedItem.Id,
             PigPenId = feedItem.PigPenId,
             ProductType = feedItem.FeedType,
+            ProductCode = feedItem.ProductCode, // Add ProductCode mapping
+            ProductName = feedItem.ProductName, // Add ProductName mapping
+            InvoiceNumber = feedItem.InvoiceNumber, // Add InvoiceNumber mapping
             Quantity = (int)feedItem.QuantityKg, // Convert decimal to int
             UnitPrice = feedItem.PricePerKg,
             TotalPrice = feedItem.Cost,

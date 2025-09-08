@@ -231,14 +231,22 @@
                     <MudTable Items="@feeds" Hover="true" Striped="true" Dense="true">
                         <HeaderContent>
                             <MudTh>Date</MudTh>
-                            <MudTh>Type</MudTh>
+                            <MudTh>Product Code</MudTh>
+                            <MudTh>Product Name</MudTh>
+                            <MudTh>Invoice No.</MudTh>
                             <MudTh Style="text-align: right">Quantity (kg)</MudTh>
                             <MudTh Style="text-align: right">Price per Kg</MudTh>
                             <MudTh Style="text-align: right">Total Cost</MudTh>
                         </HeaderContent>
                         <RowTemplate>
                             <MudTd DataLabel="Date">@context.Date.ToString("dd/MM/yyyy")</MudTd>
-                            <MudTd DataLabel="Type">@context.FeedType</MudTd>
+                            <MudTd DataLabel="Product Code">
+                                <MudChip Size="Size.Small" Color="Color.Primary">@context.ProductCode</MudChip>
+                            </MudTd>
+                            <MudTd DataLabel="Product Name">@context.ProductName</MudTd>
+                            <MudTd DataLabel="Invoice No.">
+                                <MudChip Size="Size.Small" Color="Color.Secondary">@context.InvoiceNumber</MudChip>
+                            </MudTd>
                             <MudTd DataLabel="Quantity" Style="text-align: right">@context.QuantityKg.ToString("N1")</MudTd>
                             <MudTd DataLabel="Price per Kg" Style="text-align: right">฿@context.PricePerKg.ToString("N2")</MudTd>
                             <MudTd DataLabel="Total Cost" Style="text-align: right">
@@ -412,8 +420,9 @@
                 // Load summary
                 summary = await Http.GetFromJsonAsync<PigPenSummary>($"/api/pigpens/{PigPenId}/summary");
 
-                // Load feeds
-                feeds = await Http.GetFromJsonAsync<List<FeedItem>>($"/api/pigpens/{PigPenId}/feeds") ?? new();
+                // Load feeds and group by product code
+                var allFeeds = await Http.GetFromJsonAsync<List<FeedItem>>($"/api/pigpens/{PigPenId}/feeds") ?? new();
+                feeds = allFeeds.OrderByDescending(f => f.Date).ThenBy(f => f.ProductCode).ToList();
 
                 // Load deposits
                 deposits = await Http.GetFromJsonAsync<List<Deposit>>($"/api/pigpens/{PigPenId}/deposits") ?? new();

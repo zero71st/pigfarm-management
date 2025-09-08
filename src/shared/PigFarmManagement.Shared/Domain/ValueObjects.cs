@@ -5,7 +5,17 @@ namespace PigFarmManagement.Shared.Models;
 /// Responsibility: Define data containers that are identified by their values, not identity
 /// </summary>
 
-public record FeedItem(Guid Id, Guid PigPenId, string FeedType, decimal QuantityKg, decimal PricePerKg, decimal Cost, DateTime Date)
+public record FeedItem(
+    Guid Id, 
+    Guid PigPenId, 
+    string FeedType, 
+    string ProductCode, 
+    string ProductName, 
+    string InvoiceNumber,
+    decimal QuantityKg, 
+    decimal PricePerKg, 
+    decimal Cost, 
+    DateTime Date)
 {
     public string? ExternalReference { get; init; }
     public string? Notes { get; init; }

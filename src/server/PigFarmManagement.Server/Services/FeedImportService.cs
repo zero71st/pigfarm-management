@@ -147,7 +147,11 @@ public class FeedImportService : IFeedImportService
 
     public async Task<List<PosPosFeedTransaction>> GetMockPosPosFeedDataAsync()
     {
-        // Mock data based on the POSPOS structure you provided
+        // Create PosPosFeedItems from products.json data with random stock
+        var random = new Random();
+        var posPosFeedItems = CreateMockFeedItemsFromProducts(random);
+
+        // Create mock transactions using the products data
         var mockTransactions = new List<PosPosFeedTransaction>
         {
             new()
@@ -157,26 +161,8 @@ public class FeedImportService : IFeedImportService
                 Timestamp = DateTime.Today.AddHours(-2), // Today, 2 hours ago
                 OrderList = new()
                 {
-                    new PosPosFeedItem
-                    {
-                        Stock = 50,
-                        Name = "Premium Pig Feed 20kg",
-                        Price = 850.00m,
-                        SpecialPrice = 800.00m,
-                        Code = "PF-20KG-001",
-                        TotalPriceIncludeDiscount = 800.00m,
-                        NoteInOrder = new() { "High protein content", "For growing pigs" }
-                    },
-                    new PosPosFeedItem
-                    {
-                        Stock = 25,
-                        Name = "Vitamin Supplement Mix",
-                        Price = 320.00m,
-                        SpecialPrice = 300.00m,
-                        Code = "VS-MIX-002",
-                        TotalPriceIncludeDiscount = 300.00m,
-                        NoteInOrder = new() { "Essential vitamins", "Mix with main feed" }
-                    }
+                    posPosFeedItems[0], // เจ็ท 105 หมูเล็ก 6-15 กก.
+                    posPosFeedItems[1]  // เจ็ท 108 หมูนม 15-25 กก.
                 },
                 BuyerDetail = new()
                 {
@@ -189,8 +175,8 @@ public class FeedImportService : IFeedImportService
                 {
                     Code = "REF-2024-001"
                 },
-                SubTotal = 1100.00m,
-                GrandTotal = 1100.00m,
+                SubTotal = posPosFeedItems[0].TotalPriceIncludeDiscount + posPosFeedItems[1].TotalPriceIncludeDiscount,
+                GrandTotal = posPosFeedItems[0].TotalPriceIncludeDiscount + posPosFeedItems[1].TotalPriceIncludeDiscount,
                 Status = "completed"
             },
             new()
@@ -200,16 +186,7 @@ public class FeedImportService : IFeedImportService
                 Timestamp = DateTime.Today.AddDays(-1).AddHours(-1), // Yesterday, 1 hour ago from midnight
                 OrderList = new()
                 {
-                    new PosPosFeedItem
-                    {
-                        Stock = 100,
-                        Name = "Starter Feed for Piglets",
-                        Price = 950.00m,
-                        SpecialPrice = 900.00m,
-                        Code = "SF-PIG-003",
-                        TotalPriceIncludeDiscount = 900.00m,
-                        NoteInOrder = new() { "For 3-8 weeks old piglets", "Easy to digest" }
-                    }
+                    posPosFeedItems[2] // เจ็ท 110 หมู 25-40 กก.
                 },
                 BuyerDetail = new()
                 {
@@ -222,8 +199,8 @@ public class FeedImportService : IFeedImportService
                 {
                     Code = "REF-2024-002"
                 },
-                SubTotal = 900.00m,
-                GrandTotal = 900.00m,
+                SubTotal = posPosFeedItems[2].TotalPriceIncludeDiscount,
+                GrandTotal = posPosFeedItems[2].TotalPriceIncludeDiscount,
                 Status = "completed"
             },
             new()
@@ -233,16 +210,7 @@ public class FeedImportService : IFeedImportService
                 Timestamp = DateTime.Today.AddDays(-3).AddHours(10), // 3 days ago, 10 AM
                 OrderList = new()
                 {
-                    new PosPosFeedItem
-                    {
-                        Stock = 30,
-                        Name = "Finisher Feed Premium",
-                        Price = 780.00m,
-                        SpecialPrice = 750.00m,
-                        Code = "FF-PREM-004",
-                        TotalPriceIncludeDiscount = 750.00m,
-                        NoteInOrder = new() { "For final growth phase", "High energy content" }
-                    }
+                    posPosFeedItems[3] // เจ็ท 111 หมู 0-15 กก.
                 },
                 BuyerDetail = new()
                 {
@@ -255,8 +223,8 @@ public class FeedImportService : IFeedImportService
                 {
                     Code = "REF-2024-003"
                 },
-                SubTotal = 750.00m,
-                GrandTotal = 750.00m,
+                SubTotal = posPosFeedItems[3].TotalPriceIncludeDiscount,
+                GrandTotal = posPosFeedItems[3].TotalPriceIncludeDiscount,
                 Status = "completed"
             },
             new()
@@ -266,26 +234,8 @@ public class FeedImportService : IFeedImportService
                 Timestamp = DateTime.Today.AddDays(-5).AddHours(14), // 5 days ago, 2 PM
                 OrderList = new()
                 {
-                    new PosPosFeedItem
-                    {
-                        Stock = 40,
-                        Name = "Grower Feed Standard",
-                        Price = 680.00m,
-                        SpecialPrice = 650.00m,
-                        Code = "GF-STD-005",
-                        TotalPriceIncludeDiscount = 650.00m,
-                        NoteInOrder = new() { "For medium-sized pigs", "Balanced nutrition" }
-                    },
-                    new PosPosFeedItem
-                    {
-                        Stock = 15,
-                        Name = "Mineral Supplement",
-                        Price = 280.00m,
-                        SpecialPrice = 260.00m,
-                        Code = "MS-MIX-006",
-                        TotalPriceIncludeDiscount = 260.00m,
-                        NoteInOrder = new() { "Essential minerals", "Add to feed" }
-                    }
+                    posPosFeedItems[4], // เจ็ท 120 หมู 40-60 กก.
+                    posPosFeedItems[5]  // เจ็ท 130 หมู 60-90 กก.
                 },
                 BuyerDetail = new()
                 {
@@ -298,8 +248,8 @@ public class FeedImportService : IFeedImportService
                 {
                     Code = "REF-2024-004"
                 },
-                SubTotal = 910.00m,
-                GrandTotal = 910.00m,
+                SubTotal = posPosFeedItems[4].TotalPriceIncludeDiscount + posPosFeedItems[5].TotalPriceIncludeDiscount,
+                GrandTotal = posPosFeedItems[4].TotalPriceIncludeDiscount + posPosFeedItems[5].TotalPriceIncludeDiscount,
                 Status = "completed"
             },
             new()
@@ -309,16 +259,7 @@ public class FeedImportService : IFeedImportService
                 Timestamp = DateTime.Today.AddDays(-7).AddHours(9), // 7 days ago, 9 AM
                 OrderList = new()
                 {
-                    new PosPosFeedItem
-                    {
-                        Stock = 60,
-                        Name = "Organic Feed Mix",
-                        Price = 1200.00m,
-                        SpecialPrice = 1100.00m,
-                        Code = "OF-MIX-007",
-                        TotalPriceIncludeDiscount = 1100.00m,
-                        NoteInOrder = new() { "Organic certified", "Premium quality" }
-                    }
+                    posPosFeedItems[6] // เจ็ท 153 หมู 90 กก. ขึ้นไป
                 },
                 BuyerDetail = new()
                 {
@@ -331,8 +272,8 @@ public class FeedImportService : IFeedImportService
                 {
                     Code = "REF-2024-005"
                 },
-                SubTotal = 1100.00m,
-                GrandTotal = 1100.00m,
+                SubTotal = posPosFeedItems[6].TotalPriceIncludeDiscount,
+                GrandTotal = posPosFeedItems[6].TotalPriceIncludeDiscount,
                 Status = "completed"
             },
             new()
@@ -342,26 +283,9 @@ public class FeedImportService : IFeedImportService
                 Timestamp = DateTime.Today.AddDays(-10).AddHours(16), // 10 days ago, 4 PM
                 OrderList = new()
                 {
-                    new PosPosFeedItem
-                    {
-                        Stock = 80,
-                        Name = "Feed Mix Economy",
-                        Price = 520.00m,
-                        SpecialPrice = 500.00m,
-                        Code = "FM-ECO-008",
-                        TotalPriceIncludeDiscount = 500.00m,
-                        NoteInOrder = new() { "Cost-effective option", "Good nutrition" }
-                    },
-                    new PosPosFeedItem
-                    {
-                        Stock = 20,
-                        Name = "Protein Booster",
-                        Price = 380.00m,
-                        SpecialPrice = 350.00m,
-                        Code = "PB-001",
-                        TotalPriceIncludeDiscount = 350.00m,
-                        NoteInOrder = new() { "High protein supplement" }
-                    }
+                    posPosFeedItems[0], // เจ็ท 105 หมูเล็ก 6-15 กก.
+                    posPosFeedItems[2], // เจ็ท 110 หมู 25-40 กก.
+                    posPosFeedItems[4]  // เจ็ท 120 หมู 40-60 กก.
                 },
                 BuyerDetail = new()
                 {
@@ -374,13 +298,62 @@ public class FeedImportService : IFeedImportService
                 {
                     Code = "REF-2024-006"
                 },
-                SubTotal = 850.00m,
-                GrandTotal = 850.00m,
+                SubTotal = posPosFeedItems[0].TotalPriceIncludeDiscount + posPosFeedItems[2].TotalPriceIncludeDiscount + posPosFeedItems[4].TotalPriceIncludeDiscount,
+                GrandTotal = posPosFeedItems[0].TotalPriceIncludeDiscount + posPosFeedItems[2].TotalPriceIncludeDiscount + posPosFeedItems[4].TotalPriceIncludeDiscount,
                 Status = "completed"
             }
         };
 
         return await Task.FromResult(mockTransactions);
+    }
+
+    /// <summary>
+    /// Creates mock PosPosFeedItem objects based on products.json data with random stock values
+    /// </summary>
+    private List<PosPosFeedItem> CreateMockFeedItemsFromProducts(Random random)
+    {
+        // Products data from products.json
+        var products = new[]
+        {
+            new { code = "PK64000158", name = "เจ็ท 105 หมูเล็ก 6-15 กก.", price = "฿850.00", cost = "฿755.00" },
+            new { code = "PK64000159", name = "เจ็ท 108 หมูนม 15-25 กก.", price = "฿750.00", cost = "฿650.00" },
+            new { code = "PK64000160", name = "เจ็ท 110 หมู 25-40 กก.", price = "฿690.00", cost = "฿595.00" },
+            new { code = "PK64000170", name = "เจ็ท 111 หมู 0-15 กก.", price = "฿775.00", cost = "฿738.30" },
+            new { code = "PK64000161", name = "เจ็ท 120 หมู 40-60 กก.", price = "฿630.00", cost = "฿533.00" },
+            new { code = "PK64000162", name = "เจ็ท 130 หมู 60-90 กก.", price = "฿598.00", cost = "฿505.00" },
+            new { code = "PK64000163", name = "เจ็ท 153 หมู 90 กก. ขึ้นไป", price = "฿545.00", cost = "฿485.00" }
+        };
+
+        var feedItems = new List<PosPosFeedItem>();
+
+        foreach (var product in products)
+        {
+            // Parse price by removing ฿ symbol and converting to decimal
+            var price = decimal.Parse(product.price.Replace("฿", "").Replace(",", ""));
+            var cost = decimal.Parse(product.cost.Replace("฿", "").Replace(",", ""));
+            
+            // Generate random stock between 10 and 100
+            var stock = random.Next(10, 101);
+            
+            // Calculate special price with some random discount (5-15% off)
+            var discountPercent = random.Next(5, 16) / 100.0m;
+            var specialPrice = Math.Round(price * (1 - discountPercent), 2);
+
+            var feedItem = new PosPosFeedItem
+            {
+                Stock = stock,
+                Name = product.name,
+                Price = price,
+                SpecialPrice = specialPrice,
+                Code = product.code,
+                TotalPriceIncludeDiscount = specialPrice,
+                NoteInOrder = new() { "อาหารสัตว์คุณภาพสูง", "สำหรับหมูในช่วงอายุที่กำหนด" }
+            };
+
+            feedItems.Add(feedItem);
+        }
+
+        return feedItems;
     }
 
     private async Task ProcessTransactionAsync(PosPosFeedTransaction transaction, FeedImportResult result)
@@ -414,7 +387,10 @@ public class FeedImportService : IFeedImportService
             {
                 Id = Guid.NewGuid(),
                 PigPenId = pigPen.Id,
-                ProductType = MapProductNameToType(item.Name),
+                ProductType = "อาหารสัตว์", // Use generic Thai category
+                ProductCode = item.Code, // Store the actual product code
+                ProductName = item.Name, // Store the actual product name
+                InvoiceNumber = transaction.Code, // Store the invoice number
                 Quantity = item.Stock,
                 UnitPrice = item.SpecialPrice > 0 ? item.SpecialPrice : item.Price,
                 TotalPrice = item.TotalPriceIncludeDiscount,
@@ -451,7 +427,10 @@ public class FeedImportService : IFeedImportService
             {
                 Id = Guid.NewGuid(),
                 PigPenId = pigPen.Id,
-                ProductType = MapProductNameToType(item.Name),
+                ProductType = "อาหารสัตว์", // Use generic Thai category
+                ProductCode = item.Code, // Store the actual product code
+                ProductName = item.Name, // Store the actual product name
+                InvoiceNumber = transaction.Code, // Store the invoice number
                 Quantity = item.Stock,
                 UnitPrice = item.SpecialPrice > 0 ? item.SpecialPrice : item.Price,
                 TotalPrice = item.TotalPriceIncludeDiscount,
@@ -579,5 +558,97 @@ public class FeedImportService : IFeedImportService
                 DateTime.Now.AddDays(-2)
             )
         });
+    }
+
+    /// <summary>
+    /// Creates hardcoded demo feed records with complete product information
+    /// Call this method to add sample feeds to demonstrate the product display feature
+    /// </summary>
+    public async Task<FeedImportResult> CreateDemoFeedsWithProductInfoAsync(Guid pigPenId)
+    {
+        var result = new FeedImportResult { TotalTransactions = 1 };
+
+        try
+        {
+            // Create hardcoded feed records with Thai product information
+            var demoFeeds = new[]
+            {
+                new Feed
+                {
+                    Id = Guid.NewGuid(),
+                    PigPenId = pigPenId,
+                    ProductType = "อาหารสัตว์",
+                    ProductCode = "PK64000158",
+                    ProductName = "เจ็ท 105 หมูเล็ก 6-15 กก.",
+                    InvoiceNumber = "INV-2024-001",
+                    Quantity = 50,
+                    UnitPrice = 755.00m,
+                    TotalPrice = 37750.00m,
+                    FeedDate = DateTime.Now.AddDays(-2),
+                    ExternalReference = "POSPOS-INV-2024-001-PK64000158",
+                    Notes = "อาหารสัตว์คุณภาพสูง, สำหรับหมูในช่วงอายุที่กำหนด",
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now
+                },
+                new Feed
+                {
+                    Id = Guid.NewGuid(),
+                    PigPenId = pigPenId,
+                    ProductType = "อาหารสัตว์",
+                    ProductCode = "PK64000159",
+                    ProductName = "เจ็ท 108 หมูนม 15-25 กก.",
+                    InvoiceNumber = "INV-2024-002",
+                    Quantity = 75,
+                    UnitPrice = 650.00m,
+                    TotalPrice = 48750.00m,
+                    FeedDate = DateTime.Now.AddDays(-5),
+                    ExternalReference = "POSPOS-INV-2024-002-PK64000159",
+                    Notes = "อาหารสัตว์สำหรับหมูนม",
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now
+                },
+                new Feed
+                {
+                    Id = Guid.NewGuid(),
+                    PigPenId = pigPenId,
+                    ProductType = "อาหารสัตว์",
+                    ProductCode = "PK64000160",
+                    ProductName = "เจ็ท 110 หมู 25-40 กก.",
+                    InvoiceNumber = "INV-2024-003",
+                    Quantity = 100,
+                    UnitPrice = 595.00m,
+                    TotalPrice = 59500.00m,
+                    FeedDate = DateTime.Now.AddDays(-7),
+                    ExternalReference = "POSPOS-INV-2024-003-PK64000160",
+                    Notes = "อาหารสัตว์สำหรับหมูโต",
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now
+                }
+            };
+
+            foreach (var feed in demoFeeds)
+            {
+                await _feedRepository.CreateAsync(feed);
+                result.TotalFeedItems++;
+            }
+
+            result.SuccessfulImports = 1;
+            result.ImportedFeeds.Add(new ImportedFeedSummary
+            {
+                InvoiceCode = "DEMO-BATCH",
+                CustomerName = "Demo Customer",
+                PigPenCode = "DEMO-PEN",
+                FeedItemsCount = demoFeeds.Length,
+                TotalAmount = demoFeeds.Sum(f => f.TotalPrice),
+                ImportDate = DateTime.Now
+            });
+        }
+        catch (Exception ex)
+        {
+            result.FailedImports = 1;
+            result.Errors.Add($"Demo feed creation error: {ex.Message}");
+        }
+
+        return result;
     }
 }

@@ -14,6 +14,15 @@ public class FeedEntity
     [MaxLength(100)]
     public string ProductType { get; set; } = string.Empty;
     
+    [MaxLength(50)]
+    public string ProductCode { get; set; } = string.Empty;
+    
+    [MaxLength(200)]
+    public string ProductName { get; set; } = string.Empty;
+    
+    [MaxLength(50)]
+    public string InvoiceNumber { get; set; } = string.Empty;
+    
     public int Quantity { get; set; }
     
     [Column(TypeName = "decimal(18,2)")]
@@ -42,6 +51,9 @@ public class FeedEntity
             Id = Id,
             PigPenId = PigPenId,
             ProductType = ProductType,
+            ProductCode = ProductCode,
+            ProductName = ProductName,
+            InvoiceNumber = InvoiceNumber,
             Quantity = Quantity,
             UnitPrice = UnitPrice,
             TotalPrice = TotalPrice,
@@ -61,6 +73,9 @@ public class FeedEntity
             Id = feed.Id,
             PigPenId = feed.PigPenId,
             ProductType = feed.ProductType,
+            ProductCode = feed.ProductCode,
+            ProductName = feed.ProductName,
+            InvoiceNumber = feed.InvoiceNumber,
             Quantity = feed.Quantity,
             UnitPrice = feed.UnitPrice,
             TotalPrice = feed.TotalPrice,

@@ -75,12 +75,21 @@ public class PigPenDetailService : IPigPenDetailService
         return feeds.Select(f => new FeedItem(
             f.Id, 
             f.PigPenId, 
-            f.ProductType, // Use ProductType instead of FeedType
+            f.ProductName, // Use ProductName as FeedType to show actual product name
+            f.ProductCode, // Pass the product code
+            f.ProductName, // Pass the product name
+            f.InvoiceNumber, // Pass the invoice number
             f.Quantity, 
             f.UnitPrice, // Use UnitPrice instead of PricePerKg
             f.TotalPrice, // Use TotalPrice instead of Cost
             f.FeedDate
-        )).ToList();
+        )
+        {
+            ExternalReference = f.ExternalReference,
+            Notes = f.Notes,
+            CreatedAt = f.CreatedAt,
+            UpdatedAt = f.UpdatedAt
+        }).ToList();
     }
 
     public async Task<List<Deposit>> GetPigPenDepositsAsync(Guid pigPenId)
