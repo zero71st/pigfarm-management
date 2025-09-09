@@ -92,24 +92,44 @@
                 </MudText>
             </MudTd>
             <MudTd DataLabel="Actions">
-                <MudButtonGroup Size="Size.Small" Variant="Variant.Text">
-                    <MudIconButton Icon="Icons.Material.Filled.CloudDownload" 
-                                  Color="Color.Info"
-                                  OnClick="() => ShowPosImportDialog(context.Id, GetCustomerName(context.CustomerId), context.PenCode, GetCustomerCode(context.CustomerId))"
-                                  Title="Import POSPOS feeds for this pig pen" />
-                    <MudIconButton Icon="Icons.Material.Filled.Visibility" 
-                                  Color="Color.Primary"
-                                  OnClick="() => NavigateToPigPenDetail(context.Id)"
-                                  Title="View pig pen details" />
-                    <MudIconButton Icon="Icons.Material.Filled.Edit" 
-                                  Color="Color.Warning"
-                                  OnClick="() => ShowEditDialog(context)"
-                                  Title="Edit pig pen" />
-                    <MudIconButton Icon="Icons.Material.Filled.Delete" 
-                                  Color="Color.Error"
-                                  OnClick="() => ShowDeleteDialog(context)"
-                                  Title="Delete pig pen" />
-                </MudButtonGroup>
+                <div class="d-flex gap-1">
+                    <MudButton Size="Size.Small"
+                              Variant="Variant.Text"
+                              Color="Color.Info"
+                              Class="pa-1"
+                              Style="min-width: 32px; font-size: 16px; line-height: 1;"
+                              OnClick="() => ShowPosImportDialog(context.Id, GetCustomerName(context.CustomerId), context.PenCode, GetCustomerCode(context.CustomerId))"
+                              Title="Import feeds">
+                        📥
+                    </MudButton>
+                    <MudButton Size="Size.Small"
+                              Variant="Variant.Text"
+                              Color="Color.Primary"
+                              Class="pa-1"
+                              Style="min-width: 32px; font-size: 16px; line-height: 1;"
+                              OnClick="() => NavigateToPigPenDetail(context.Id)"
+                              Title="View details">
+                        👁️
+                    </MudButton>
+                    <MudButton Size="Size.Small"
+                              Variant="Variant.Text"
+                              Color="Color.Warning"
+                              Class="pa-1"
+                              Style="min-width: 32px; font-size: 16px; line-height: 1;"
+                              OnClick="() => ShowEditDialog(context)"
+                              Title="Edit">
+                        ✏️
+                    </MudButton>
+                    <MudButton Size="Size.Small"
+                              Variant="Variant.Text"
+                              Color="Color.Error"
+                              Class="pa-1"
+                              Style="min-width: 32px; font-size: 16px; line-height: 1;"
+                              OnClick="() => ShowDeleteDialog(context)"
+                              Title="Delete">
+                        🗑️
+                    </MudButton>
+                </div>
             </MudTd>
         </RowTemplate>
     </MudTable>

@@ -40,7 +40,11 @@
                                    Required="true" />
                 </MudItem>
                 <MudItem xs="6">
-                    <MudDatePicker @bind-Date="startDate" Label="Start Date" Variant="Variant.Outlined" Required="true" />
+                    <MudDatePicker Date="startDate" 
+                                  DateChanged="@OnStartDateChanged"
+                                  Label="Start Date" 
+                                  Variant="Variant.Outlined" 
+                                  Required="true" />
                 </MudItem>
                 <MudItem xs="6">
                     <MudDatePicker @bind-Date="endDate" Label="End Date" Variant="Variant.Outlined" />
@@ -328,6 +332,25 @@
             Console.WriteLine($"[OnPigQuantityChanged] Recalculating feed formulas for brand: {selectedBrand}");
             await LoadFeedFormulasForBrand();
         }
+    }
+
+    private void OnStartDateChanged(DateTime? newStartDate)
+    {
+        startDate = newStartDate;
+        
+        // Automatically calculate estimated harvest date (start date + 120 days)
+        if (newStartDate.HasValue)
+        {
+            estimatedHarvestDate = newStartDate.Value.AddDays(120);
+            Console.WriteLine($"[OnStartDateChanged] Start date set to: {startDate?.ToString("yyyy-MM-dd")}, Estimated harvest date automatically set to: {estimatedHarvestDate?.ToString("yyyy-MM-dd")}");
+        }
+        else
+        {
+            estimatedHarvestDate = null;
+            Console.WriteLine($"[OnStartDateChanged] Start date cleared, estimated harvest date cleared");
+        }
+        
+        StateHasChanged();
     }
 
     void Cancel() => MudDialog.Cancel();
