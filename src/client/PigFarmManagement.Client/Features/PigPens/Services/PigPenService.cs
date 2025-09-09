@@ -10,6 +10,8 @@ public interface IPigPenService
     Task<PigPen?> GetPigPenByIdAsync(Guid id);
     Task<PigPenSummary?> GetPigPenSummaryAsync(Guid id);
     Task<PigPen> CreatePigPenAsync(PigPenCreateDto pigPen);
+    Task<PigPen> UpdatePigPenAsync(PigPen pigPen);
+    Task<bool> DeletePigPenAsync(Guid id);
     Task<List<FeedItem>> GetFeedItemsAsync(Guid pigPenId);
     Task<List<Deposit>> GetDepositsAsync(Guid pigPenId);
     Task<List<HarvestResult>> GetHarvestResultsAsync(Guid pigPenId);
@@ -49,6 +51,20 @@ public class PigPenService : IPigPenService
         response.EnsureSuccessStatusCode();
         var createdPigPen = await response.Content.ReadFromJsonAsync<PigPen>();
         return createdPigPen!;
+    }
+
+    public async Task<PigPen> UpdatePigPenAsync(PigPen pigPen)
+    {
+        var response = await _httpClient.PutAsJsonAsync($"api/pigpens/{pigPen.Id}", pigPen);
+        response.EnsureSuccessStatusCode();
+        var updatedPigPen = await response.Content.ReadFromJsonAsync<PigPen>();
+        return updatedPigPen!;
+    }
+
+    public async Task<bool> DeletePigPenAsync(Guid id)
+    {
+        var response = await _httpClient.DeleteAsync($"api/pigpens/{id}");
+        return response.IsSuccessStatusCode;
     }
 
     public async Task<List<FeedItem>> GetFeedItemsAsync(Guid pigPenId)

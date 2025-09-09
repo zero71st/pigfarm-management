@@ -263,82 +263,149 @@
                         </MudItem>
                     </MudGrid>
 
-                    <!-- Feed Estimation Calculator -->
+                    <!-- Feed Formula vs Actual Comparison -->
                     <MudDivider Class="my-4" />
                     <MudText Typo="Typo.h6" Class="mb-2">
-                        <MudIcon Icon="Icons.Material.Filled.Calculate" Class="mr-2" />
-                        Feed Estimation Calculator
+                        <MudIcon Icon="Icons.Material.Filled.Compare" Class="mr-2" />
+                        Feed Formula vs Actual Feed History
                     </MudText>
-                    <MudPaper Class="pa-4" Elevation="1">
-                        <MudGrid AlignItems="Center">
-                            <MudItem xs="12" sm="3">
-                                <MudText Typo="Typo.body1" Class="mb-2">
-                                    <strong>Current Pigs:</strong> @pigPen.PigQty
+                    <MudGrid>
+                        <!-- Left Panel: Feed Formula -->
+                        <MudItem xs="12" md="6">
+                            <MudPaper Class="pa-4" Elevation="2" Style="height: 100%;">
+                                <MudText Typo="Typo.h6" Class="mb-3" Color="Color.Primary">
+                                    <MudIcon Icon="Icons.Material.Filled.Science" Class="mr-2" />
+                                    Feed Formula (Expected)
                                 </MudText>
-                            </MudItem>
-                            <MudItem xs="12" sm="3">
-                                <MudNumericField @bind-Value="feedFactor" 
-                                                 Label="Feed Factor" 
-                                                 Variant="Variant.Outlined" 
-                                                 Step="0.1M" 
-                                                 Min="0.1M" 
-                                                 Max="20M"
-                                                 Format="N1"
-                                                 HelperText="bags per pig"
-                                                 Adornment="Adornment.End"
-                                                 AdornmentText="bags/pig" />
-                            </MudItem>
-                            <MudItem xs="12" sm="5">
-                                <MudPaper Class="pa-3" Elevation="2" Style="background: linear-gradient(45deg, #2196F3 30%, #21CBF3 90%);">
-                                    <MudText Typo="Typo.body2" Style="color: white;">Estimated Feed Needed</MudText>
-                                    <MudText Typo="Typo.h5" Style="color: white; font-weight: bold;">
-                                        @CalculateEstimatedFeed().ToString("N1") bags
-                                    </MudText>
-                                    <MudText Typo="Typo.caption" Style="color: rgba(255,255,255,0.8);">
-                                        @pigPen.PigQty pigs × @feedFactor bags
-                                    </MudText>
-                                </MudPaper>
-                            </MudItem>
-                        </MudGrid>
-                        
-                        <!-- Feed Comparison -->
-                        <MudDivider Class="my-3" />
-                        <MudGrid>
-                            <MudItem xs="12" sm="4">
-                                <MudAlert Severity="Severity.Info" Class="mb-0">
-                                    <div class="d-flex justify-space-between align-center">
-                                        <div>
-                                            <MudText Typo="Typo.body2">Current Stock</MudText>
-                                            <MudText Typo="Typo.h6">@groupedFeeds.Sum(f => f.TotalQuantity).ToString("N1") bags</MudText>
-                                        </div>
-                                        <MudIcon Icon="Icons.Material.Filled.Inventory" />
-                                    </div>
+                                
+                                <MudAlert Severity="Severity.Info" Class="mb-3">
+                                    <MudText Typo="Typo.body2">Current Pigs: <strong>@pigPen.PigQty</strong></MudText>
+                                    <MudText Typo="Typo.body2">Formula-based calculation</MudText>
                                 </MudAlert>
-                            </MudItem>
-                            <MudItem xs="12" sm="4">
-                                <MudAlert Severity="@GetStockStatusSeverity()" Class="mb-0">
-                                    <div class="d-flex justify-space-between align-center">
-                                        <div>
-                                            <MudText Typo="Typo.body2">@GetStockStatusText()</MudText>
-                                            <MudText Typo="Typo.h6">@Math.Abs(GetStockDifference()).ToString("N1") bags</MudText>
-                                        </div>
-                                        <MudIcon Icon="@GetStockStatusIcon()" />
-                                    </div>
+
+                                <!-- Feed Formula Metrics -->
+                                <MudSimpleTable Dense="true" Class="mb-3">
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>Total Expected:</strong></td>
+                                            <td class="text-right">
+                                                <MudText Color="Color.Primary" Style="font-weight: bold;">
+                                                    [Formula Feed] bags
+                                                </MudText>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Per Pig Expected:</strong></td>
+                                            <td class="text-right">
+                                                <MudText Color="Color.Secondary">
+                                                    [Formula Per Pig] bags/pig
+                                                </MudText>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Formula Types:</strong></td>
+                                            <td class="text-right">
+                                                <MudChip Size="Size.Small" Color="Color.Info">
+                                                    [Formula Count] products
+                                                </MudChip>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </MudSimpleTable>
+
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                    * Based on feed formula calculations from pig pen setup
+                                </MudText>
+                            </MudPaper>
+                        </MudItem>
+
+                        <!-- Right Panel: Actual Feed History -->
+                        <MudItem xs="12" md="6">
+                            <MudPaper Class="pa-4" Elevation="2" Style="height: 100%;">
+                                <MudText Typo="Typo.h6" Class="mb-3" Color="Color.Success">
+                                    <MudIcon Icon="Icons.Material.Filled.Inventory" Class="mr-2" />
+                                    Actual Feed History
+                                </MudText>
+
+                                <MudAlert Severity="Severity.Success" Class="mb-3">
+                                    <MudText Typo="Typo.body2">Recorded Feeds: <strong>@feeds.Count entries</strong></MudText>
+                                    <MudText Typo="Typo.body2">Actual usage tracking</MudText>
                                 </MudAlert>
-                            </MudItem>
-                            <MudItem xs="12" sm="4">
-                                <MudAlert Severity="Severity.Success" Class="mb-0">
-                                    <div class="d-flex justify-space-between align-center">
-                                        <div>
-                                            <MudText Typo="Typo.body2">Stock Ratio</MudText>
-                                            <MudText Typo="Typo.h6">@CalculateDaysCoverage().ToString("N1")x</MudText>
-                                        </div>
-                                        <MudIcon Icon="Icons.Material.Filled.Schedule" />
+
+                                <!-- Actual Feed Metrics -->
+                                <MudSimpleTable Dense="true" Class="mb-3">
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>Total Actual:</strong></td>
+                                            <td class="text-right">
+                                                <MudText Color="Color.Success" Style="font-weight: bold;">
+                                                    @groupedFeeds.Sum(f => f.TotalQuantity).ToString("N1") bags
+                                                </MudText>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Per Pig Actual:</strong></td>
+                                            <td class="text-right">
+                                                <MudText Color="Color.Secondary">
+                                                    @(pigPen.PigQty > 0 ? (groupedFeeds.Sum(f => f.TotalQuantity) / pigPen.PigQty).ToString("N1") : "0") bags/pig
+                                                </MudText>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Product Types:</strong></td>
+                                            <td class="text-right">
+                                                <MudChip Size="Size.Small" Color="Color.Success">
+                                                    @groupedFeeds.Count products
+                                                </MudChip>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </MudSimpleTable>
+
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                    * Based on imported feed records and usage history
+                                </MudText>
+                            </MudPaper>
+                        </MudItem>
+                    </MudGrid>
+
+                    <!-- Comparison Summary -->
+                    <MudDivider Class="my-3" />
+                    <MudGrid>
+                        <MudItem xs="12" sm="4">
+                            <MudAlert Severity="Severity.Info" Class="mb-0">
+                                <div class="d-flex justify-space-between align-center">
+                                    <div>
+                                        <MudText Typo="Typo.body2">Formula vs Actual</MudText>
+                                        <MudText Typo="Typo.h6">[Comparison] bags</MudText>
                                     </div>
-                                </MudAlert>
-                            </MudItem>
-                        </MudGrid>
-                    </MudPaper>
+                                    <MudIcon Icon="Icons.Material.Filled.CompareArrows" />
+                                </div>
+                            </MudAlert>
+                        </MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudAlert Severity="Severity.Warning" Class="mb-0">
+                                <div class="d-flex justify-space-between align-center">
+                                    <div>
+                                        <MudText Typo="Typo.body2">Variance</MudText>
+                                        <MudText Typo="Typo.h6">[Variance]%</MudText>
+                                    </div>
+                                    <MudIcon Icon="Icons.Material.Filled.TrendingUp" />
+                                </div>
+                            </MudAlert>
+                        </MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudAlert Severity="Severity.Success" Class="mb-0">
+                                <div class="d-flex justify-space-between align-center">
+                                    <div>
+                                        <MudText Typo="Typo.body2">Efficiency</MudText>
+                                        <MudText Typo="Typo.h6">[Efficiency]%</MudText>
+                                    </div>
+                                    <MudIcon Icon="Icons.Material.Filled.Speed" />
+                                </div>
+                            </MudAlert>
+                        </MudItem>
+                    </MudGrid>
                 }
                 else
                 {
@@ -460,9 +527,6 @@
     private List<Deposit> deposits = new();
     private List<HarvestResult> harvests = new();
 
-    // Feed estimation variables
-    private decimal feedFactor = 6.5m; // Default 6.5 bags per pig
-
     private List<BreadcrumbItem> breadcrumbItems = new();
 
     protected override async Task OnInitializedAsync()
@@ -568,75 +632,6 @@
     private void DeleteHarvest(HarvestResult harvest)
     {
         Snackbar.Add($"Delete harvest {harvest.Id} coming soon", Severity.Info);
-    }
-
-    // Feed estimation methods
-    private decimal CalculateEstimatedFeed()
-    {
-        if (pigPen == null) return 0;
-        return pigPen.PigQty * feedFactor;
-    }
-
-    private decimal GetCurrentStock()
-    {
-        return groupedFeeds.Sum(f => f.TotalQuantity);
-    }
-
-    private decimal GetStockDifference()
-    {
-        return GetCurrentStock() - CalculateEstimatedFeed();
-    }
-
-    private Severity GetStockStatusSeverity()
-    {
-        var currentStock = GetCurrentStock();
-        var estimatedFeed = CalculateEstimatedFeed();
-        var difference = GetStockDifference();
-        
-        if (difference > 0)
-        {
-            // Over estimated - show red (error)
-            return Severity.Error;
-        }
-        else if (difference == 0)
-        {
-            // Exact match - show blue (info)
-            return Severity.Info;
-        }
-        else
-        {
-            // Buy feed scenario - calculate percentage
-            var stockPercentage = estimatedFeed > 0 ? (currentStock / estimatedFeed) * 100 : 0;
-            
-            if (stockPercentage >= 90) // 90-100% coverage
-                return Severity.Warning; // Yellow
-            else // 0-90% coverage  
-                return Severity.Success; // Green
-        }
-    }
-
-    private string GetStockStatusText()
-    {
-        var difference = GetStockDifference();
-        if (difference > 0) return "Over Estimated Feed";
-        if (difference == 0) return "Exact Match";
-        return "Buy Feed";
-    }
-
-    private string GetStockStatusIcon()
-    {
-        var difference = GetStockDifference();
-        if (difference > 0) return Icons.Material.Filled.CheckCircle; // Remaining stock
-        if (difference == 0) return Icons.Material.Filled.Balance; // Exact match
-        return Icons.Material.Filled.ShoppingCart; // Need to buy
-    }
-
-    private decimal CalculateDaysCoverage()
-    {
-        if (pigPen == null || pigPen.PigQty == 0 || feedFactor == 0) return 0;
-        var estimatedFeedNeeded = CalculateEstimatedFeed();
-        var currentStock = GetCurrentStock();
-        return estimatedFeedNeeded > 0 ? currentStock / estimatedFeedNeeded : 0;
     }
 
     public class GroupedFeedItem

@@ -8,7 +8,6 @@
 @inject ICustomerService CustomerService
 @inject IPigPenService PigPenService
 @inject IFeedFormulaCalculationService FeedFormulaCalculationService
-@inject IFeedFormulaCalculationService FeedFormulaCalculationService
 
 <MudDialog>
     <DialogContent>
@@ -33,12 +32,12 @@
                     </MudSelect>
                 </MudItem>
                 <MudItem xs="6">
-                    <MudNumericField @bind-Value="pigQty" 
+                    <MudNumericField Value="pigQty" 
+                                   ValueChanged="@((int value) => OnPigQuantityChanged(value))"
                                    Label="Pig Quantity" 
                                    Variant="Variant.Outlined" 
                                    Min="1" 
-                                   Required="true"
-                                   @onchange="OnPigQuantityChanged" />
+                                   Required="true" />
                 </MudItem>
                 <MudItem xs="6">
                     <MudDatePicker @bind-Date="startDate" Label="Start Date" Variant="Variant.Outlined" Required="true" />
@@ -55,72 +54,111 @@
                     <MudDivider DividerType="DividerType.FullWidth" />
                     <MudText Typo="Typo.h6" Class="mt-3 mb-2">Feed Formula Selection</MudText>
                 </MudItem>
+                
                 <MudItem xs="12">
-                    <MudSelect T="string" @bind-Value="selectedBrand" Label="Brand" Variant="Variant.Outlined" @onchange="OnBrandChanged">
+                    <MudSelect T="string" 
+                             Value="selectedBrand" 
+                             ValueChanged="OnBrandSelectionChanged"
+                             Label="Brand" 
+                             Variant="Variant.Outlined">
                         <MudSelectItem T="string" Value="@((string?)null)">-- Select Brand --</MudSelectItem>
-                        <MudSelectItem T="string" Value="@("เจ็ท")">เจ็ท</MudSelectItem>
-                        <MudSelectItem T="string" Value="@("เพียว")">เพียว</MudSelectItem>
+                        <MudSelectItem T="string" Value="@JetBrand">@JetBrand</MudSelectItem>
+                        <MudSelectItem T="string" Value="@PureBrand">@PureBrand</MudSelectItem>
                     </MudSelect>
                 </MudItem>
                 
-                @if (feedFormulasWithCalculation.Any())
+                @if (!string.IsNullOrEmpty(selectedBrand))
                 {
                     <MudItem xs="12">
                         <MudText Typo="Typo.subtitle2" Class="mb-3">Available Feed Formulas for @selectedBrand:</MudText>
-                        <MudPaper Elevation="1" Class="pa-2">
-                            <MudTable Items="@feedFormulasWithCalculation" 
-                                    Dense="true" 
-                                    Hover="true" 
-                                    Striped="true"
-                                    T="FeedFormulaWithCalculationResponse"
-                                    RowClassFunc="@((formula, index) => selectedFeedFormulaId == formula.Id ? "mud-selected-item" : "")">
-                                <HeaderContent>
-                                    <MudTh>Product Code</MudTh>
-                                    <MudTh>Product Name</MudTh>
-                                    <MudTh Style="text-align: center;">Bags/Pig</MudTh>
-                                    <MudTh Style="text-align: center;">Estimated Feed Consumption</MudTh>
-                                    <MudTh Style="text-align: center;">Select</MudTh>
-                                </HeaderContent>
-                                <RowTemplate>
-                                    <MudTd DataLabel="Product Code">
-                                        <MudText Typo="Typo.body2" Style="font-weight: 500;">@context.ProductCode</MudText>
-                                    </MudTd>
-                                    <MudTd DataLabel="Product Name">
-                                        <MudText Typo="Typo.body2">@context.ProductName</MudText>
-                                    </MudTd>
-                                    <MudTd DataLabel="Bags/Pig" Style="text-align: center;">
-                                        <MudChip Size="Size.Small" Color="Color.Info" Variant="Variant.Text">
-                                            @context.BagPerPig.ToString("F1")
-                                        </MudChip>
-                                    </MudTd>
-                                    <MudTd DataLabel="Estimated Consumption" Style="text-align: center;">
-                                        <MudChip Size="Size.Small" Color="Color.Success" Variant="Variant.Filled">
-                                            @context.TotalBagsRequired.ToString("F1") bags
-                                        </MudChip>
-                                        <br />
-                                        <MudText Typo="Typo.caption" Color="Color.Secondary">
-                                            (@pigQty pigs × @context.BagPerPig.ToString("F1") bags/pig)
-                                        </MudText>
-                                    </MudTd>
-                                    <MudTd DataLabel="Select" Style="text-align: center;">
-                                        <MudRadio T="Guid?" 
-                                                Value="@context.Id" 
-                                                @bind-SelectedOption="selectedFeedFormulaId"
-                                                Color="Color.Primary" />
-                                    </MudTd>
-                                </RowTemplate>
-                            </MudTable>
-                        </MudPaper>
                         
-                        @if (selectedFeedFormulaId.HasValue)
+                        @if (feedFormulasWithCalculation.Any())
                         {
-                            var selectedFormula = feedFormulasWithCalculation.FirstOrDefault(f => f.Id == selectedFeedFormulaId.Value);
-                            if (selectedFormula != null)
+                            <MudPaper Elevation="1" Class="pa-2">
+                                <MudText Typo="Typo.h6" Class="mb-2">Feed Formulas for @selectedBrand (@feedFormulasWithCalculation.Count items)</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-3">All feed formulas from this brand will be applied to the pig pen</MudText>
+                                
+                                @foreach (var formula in feedFormulasWithCalculation)
+                                {
+                                    <MudCard Class="mb-2" Elevation="1">
+                                        <MudCardContent>
+                                            <MudGrid>
+                                                <MudItem xs="3">
+                                                    <MudText Typo="Typo.subtitle2" Style="font-weight: 600;">@formula.ProductCode</MudText>
+                                                </MudItem>
+                                                <MudItem xs="4">
+                                                    <MudText Typo="Typo.body2">@formula.ProductName</MudText>
+                                                </MudItem>
+                                                <MudItem xs="2">
+                                                    <MudChip Size="Size.Small" Color="Color.Info" Variant="Variant.Text">
+                                                        @formula.BagPerPig.ToString("F1")
+                                                    </MudChip>
+                                                </MudItem>
+                                                <MudItem xs="3">
+                                                    <MudChip Size="Size.Small" Color="Color.Success" Variant="Variant.Filled">
+                                                        @formula.TotalBagsRequired.ToString("F1") total bags
+                                                    </MudChip>
+                                                    <br />
+                                                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                        (@pigQty pigs × @formula.BagPerPig.ToString("F1"))
+                                                    </MudText>
+                                                </MudItem>
+                                            </MudGrid>
+                                        </MudCardContent>
+                                    </MudCard>
+                                }
+                            </MudPaper>
+                            
+                            <!-- Feed Formula Totals -->
+                            <MudGrid Class="mt-3">
+                                <MudItem xs="12" md="6">
+                                    <MudAlert Severity="Severity.Info" Class="pa-3">
+                                        <MudText Typo="Typo.h6" Class="mb-2">📊 Per Pig</MudText>
+                                        <MudText Typo="Typo.h3" Class="text-center" Style="font-weight: bold; color: #1976d2;">
+                                            @feedFormulasWithCalculation.Sum(f => f.BagPerPig).ToString("F1")
+                                        </MudText>
+                                        <MudText Typo="Typo.caption" Class="text-center">per pig</MudText>
+                                    </MudAlert>
+                                </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudAlert Severity="Severity.Success" Class="pa-3">
+                                        <MudText Typo="Typo.h6" Class="mb-2">🏭 Pig Pen</MudText>
+                                        <MudText Typo="Typo.h3" Class="text-center" Style="font-weight: bold; color: #2e7d32;">
+                                            @feedFormulasWithCalculation.Sum(f => f.TotalBagsRequired).ToString("F1")
+                                        </MudText>
+                                        <MudText Typo="Typo.caption" Class="text-center">total required</MudText>
+                                    </MudAlert>
+                                </MudItem>
+                            </MudGrid>
+                            
+                            <!-- Brand Summary -->
+                            <MudAlert Severity="Severity.Normal" Class="mt-3">
+                                <MudText Typo="Typo.subtitle1"><strong>📋 Summary for @selectedBrand Brand</strong></MudText>
+                                <MudText Typo="Typo.body2">Selected Products: @string.Join(", ", feedFormulasWithCalculation.Select(f => f.ProductCode))</MudText>
+                                <MudText Typo="Typo.body2">This feed formula selection will be applied to the pig pen automatically.</MudText>
+                            </MudAlert>
+                        }
+                        else
+                        {
+                            @if (isLoadingFeedFormulas)
                             {
-                                <MudAlert Severity="Severity.Info" Class="mt-3">
-                                    <strong>Selected:</strong> @selectedFormula.ProductCode - @selectedFormula.ProductName
+                                <MudAlert Severity="Severity.Info" Class="mt-2">
+                                    <MudProgressCircular Color="Color.Primary" Size="Size.Small" Indeterminate="true" />
+                                    Loading feed formulas for @selectedBrand...
+                                </MudAlert>
+                            }
+                            else if (!string.IsNullOrEmpty(feedFormulaError))
+                            {
+                                <MudAlert Severity="Severity.Error" Class="mt-2">
+                                    <strong>Error loading feed formulas:</strong> @feedFormulaError
+                                </MudAlert>
+                            }
+                            else
+                            {
+                                <MudAlert Severity="Severity.Warning" Class="mt-2">
+                                    <strong>No feed formulas found for brand "@selectedBrand".</strong>
                                     <br />
-                                    <strong>Total Feed Required:</strong> @selectedFormula.TotalBagsRequired.ToString("F1") bags for @pigQty pigs
+                                    Please check if there are feed formulas available for this brand.
                                 </MudAlert>
                             }
                         }
@@ -154,8 +192,13 @@
     
     // Feed formula selection properties
     private string? selectedBrand;
-    private Guid? selectedFeedFormulaId;
     private List<FeedFormulaWithCalculationResponse> feedFormulasWithCalculation = new();
+    private bool isLoadingFeedFormulas = false;
+    private string? feedFormulaError;
+
+    // Brand constants
+    private const string JetBrand = "เจ็ท";
+    private const string PureBrand = "เพียว";
 
     protected override async Task OnInitializedAsync()
     {
@@ -174,42 +217,115 @@
         }
     }
 
+    private async Task OnBrandSelectionChanged(string brand)
+    {
+        selectedBrand = brand;
+        feedFormulasWithCalculation.Clear();
+
+        Console.WriteLine($"[OnBrandSelectionChanged] Brand changed to: '{selectedBrand}'");
+        Console.WriteLine($"[OnBrandSelectionChanged] Feed formulas cleared, count: {feedFormulasWithCalculation.Count}");
+
+        // Force UI update
+        StateHasChanged();
+
+        if (!string.IsNullOrEmpty(selectedBrand))
+        {
+            Console.WriteLine($"[OnBrandSelectionChanged] About to load feed formulas...");
+            await LoadFeedFormulasForBrand();
+            Console.WriteLine($"[OnBrandSelectionChanged] After loading, feed formulas count: {feedFormulasWithCalculation.Count}");
+        }
+        else
+        {
+            Console.WriteLine("[OnBrandSelectionChanged] Brand is empty, clearing feed formulas");
+        }
+        
+        // Force UI update again
+        StateHasChanged();
+    }
+
     private async Task OnBrandChanged(ChangeEventArgs e)
     {
         selectedBrand = e.Value?.ToString();
-        selectedFeedFormulaId = null;
         feedFormulasWithCalculation.Clear();
 
-        if (!string.IsNullOrEmpty(selectedBrand) && pigQty > 0)
+        Console.WriteLine($"[OnBrandChanged] Brand changed to: '{selectedBrand}'");
+        Console.WriteLine($"[OnBrandChanged] Feed formulas cleared, count: {feedFormulasWithCalculation.Count}");
+
+        // Force UI update
+        StateHasChanged();
+
+        if (!string.IsNullOrEmpty(selectedBrand))
         {
+            Console.WriteLine($"[OnBrandChanged] About to load feed formulas...");
             await LoadFeedFormulasForBrand();
+            Console.WriteLine($"[OnBrandChanged] After loading, feed formulas count: {feedFormulasWithCalculation.Count}");
         }
+        else
+        {
+            Console.WriteLine("[OnBrandChanged] Brand is empty, clearing feed formulas");
+        }
+        
+        // Force UI update again
+        StateHasChanged();
     }
 
     private async Task LoadFeedFormulasForBrand()
     {
-        if (string.IsNullOrEmpty(selectedBrand) || pigQty <= 0)
+        if (string.IsNullOrEmpty(selectedBrand))
         {
+            Console.WriteLine("[LoadFeedFormulasForBrand] Brand is null or empty, clearing feed formulas");
             feedFormulasWithCalculation.Clear();
             return;
         }
 
         try
         {
-            feedFormulasWithCalculation = (await FeedFormulaCalculationService.GetFeedFormulasByBrandAsync(selectedBrand, pigQty)).ToList();
+            isLoadingFeedFormulas = true;
+            feedFormulaError = null;
+            Console.WriteLine($"[LoadFeedFormulasForBrand] Starting load for brand: '{selectedBrand}'");
             StateHasChanged();
+
+            // Use pigQty if > 0, otherwise default to 1 for calculation purposes
+            int calculationPigQty = pigQty > 0 ? pigQty : 1;
+            
+            Console.WriteLine($"[LoadFeedFormulasForBrand] Loading feed formulas for brand: '{selectedBrand}', pigQty: {calculationPigQty}");
+            
+            var result = await FeedFormulaCalculationService.GetFeedFormulasByBrandAsync(selectedBrand, calculationPigQty);
+            feedFormulasWithCalculation = result.ToList();
+            
+            // Debug info
+            Console.WriteLine($"[LoadFeedFormulasForBrand] Loaded {feedFormulasWithCalculation.Count} feed formulas for brand {selectedBrand}");
+            foreach (var formula in feedFormulasWithCalculation)
+            {
+                Console.WriteLine($"[LoadFeedFormulasForBrand]   - {formula.ProductCode}: {formula.ProductName} ({formula.Brand}) - Bags: {formula.BagPerPig}");
+            }
+
+            Console.WriteLine($"[LoadFeedFormulasForBrand] feedFormulasWithCalculation.Any() = {feedFormulasWithCalculation.Any()}");
+            Console.WriteLine($"[LoadFeedFormulasForBrand] selectedBrand is null or empty = {string.IsNullOrEmpty(selectedBrand)}");
         }
-        catch
+        catch (Exception ex)
         {
-            // Handle error silently for now
+            feedFormulaError = ex.Message;
             feedFormulasWithCalculation.Clear();
+            Console.WriteLine($"[LoadFeedFormulasForBrand] Error loading feed formulas: {ex.Message}");
+            Console.WriteLine($"[LoadFeedFormulasForBrand] Stack trace: {ex.StackTrace}");
+        }
+        finally
+        {
+            isLoadingFeedFormulas = false;
+            Console.WriteLine($"[LoadFeedFormulasForBrand] Finally block - feedFormulasWithCalculation.Count: {feedFormulasWithCalculation.Count}");
+            StateHasChanged();
         }
     }
 
-    private async Task OnPigQuantityChanged()
+    private async Task OnPigQuantityChanged(int newPigQty)
     {
+        pigQty = newPigQty;
+        Console.WriteLine($"[OnPigQuantityChanged] Pig quantity changed to: {pigQty}");
+        
         if (!string.IsNullOrEmpty(selectedBrand))
         {
+            Console.WriteLine($"[OnPigQuantityChanged] Recalculating feed formulas for brand: {selectedBrand}");
             await LoadFeedFormulasForBrand();
         }
     }
@@ -239,7 +355,7 @@
                 endDate,
                 estimatedHarvestDate,
                 selectedType,
-                selectedFeedFormulaId
+                null // No longer using individual feed formula selection
             );
 
             var createdPigPen = await PigPenService.CreatePigPenAsync(pigPenDto);

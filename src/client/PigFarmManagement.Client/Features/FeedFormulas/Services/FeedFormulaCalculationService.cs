@@ -62,11 +62,30 @@ public class FeedFormulaCalculationService : IFeedFormulaCalculationService
             url += $"?pigCount={pigCount.Value}";
         }
 
-        var response = await _httpClient.GetAsync(url);
-        response.EnsureSuccessStatusCode();
-        
-        var json = await response.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<IEnumerable<FeedFormulaWithCalculationResponse>>(json, _jsonOptions) ?? [];
+        Console.WriteLine($"[FeedFormulaCalculationService] Calling URL: {_httpClient.BaseAddress}{url}");
+        Console.WriteLine($"[FeedFormulaCalculationService] Escaped brand: {Uri.EscapeDataString(brand)}");
+
+        try
+        {
+            var response = await _httpClient.GetAsync(url);
+            Console.WriteLine($"[FeedFormulaCalculationService] Response status: {response.StatusCode}");
+            
+            response.EnsureSuccessStatusCode();
+            
+            var json = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"[FeedFormulaCalculationService] Response JSON: {json}");
+            
+            var result = JsonSerializer.Deserialize<IEnumerable<FeedFormulaWithCalculationResponse>>(json, _jsonOptions) ?? [];
+            Console.WriteLine($"[FeedFormulaCalculationService] Deserialized {result.Count()} items");
+            
+            return result;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[FeedFormulaCalculationService] Error: {ex.Message}");
+            Console.WriteLine($"[FeedFormulaCalculationService] Stack trace: {ex.StackTrace}");
+            throw;
+        }
     }
 
     public async Task<FeedCalculationResponse> CalculateFeedRequirementsAsync(FeedCalculationRequest request)

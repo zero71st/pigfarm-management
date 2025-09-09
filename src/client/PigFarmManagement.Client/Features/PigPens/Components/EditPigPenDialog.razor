@@ -1,0 +1,113 @@
+@inject ICustomerService CustomerService
+@inject IPigPenService PigPenService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudContainer Style="max-width: 500px;">
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudSelect T="Guid?" @bind-Value="selectedCustomerId" Label="Customer" Variant="Variant.Outlined" Required="true">
+                        <MudSelectItem T="Guid?" Value="@((Guid?)null)">-- Select Customer --</MudSelectItem>
+                        @foreach (var customer in customers)
+                        {
+                            <MudSelectItem T="Guid?" Value="@((Guid?)customer.Id)">@customer.Name (@customer.Status)</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="penCode" Label="Pen Code" Variant="Variant.Outlined" Required="true" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudSelect T="PigPenType" @bind-Value="selectedType" Label="Pig Pen Type" Variant="Variant.Outlined" Required="true">
+                        <MudSelectItem T="PigPenType" Value="PigPenType.Cash">Cash</MudSelectItem>
+                        <MudSelectItem T="PigPenType" Value="PigPenType.Project">Project</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudNumericField @bind-Value="pigQty" Label="Pig Quantity" Variant="Variant.Outlined" Min="1" Required="true" />
+                </MudItem>
+                <MudItem xs="6">
+                    <MudDatePicker @bind-Date="startDate" Label="Start Date" Variant="Variant.Outlined" Required="true" />
+                </MudItem>
+                <MudItem xs="6">
+                    <MudDatePicker @bind-Date="endDate" Label="End Date" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="6">
+                    <MudDatePicker @bind-Date="estimatedHarvestDate" Label="Estimated Harvest Date" Variant="Variant.Outlined" />
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save" Disabled="@(!IsFormValid())">
+            Update Pig Pen
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public PigPen PigPen { get; set; } = default!;
+
+    private List<Customer> customers = new();
+    private Guid? selectedCustomerId;
+    private string penCode = "";
+    private PigPenType selectedType = PigPenType.Cash;
+    private int pigQty = 1;
+    private DateTime? startDate = DateTime.Today;
+    private DateTime? endDate;
+    private DateTime? estimatedHarvestDate;
+
+    protected override async Task OnInitializedAsync()
+    {
+        customers = await CustomerService.GetCustomersAsync();
+        
+        // Populate form with existing pig pen data
+        selectedCustomerId = PigPen.CustomerId;
+        penCode = PigPen.PenCode;
+        selectedType = PigPen.Type;
+        pigQty = PigPen.PigQty;
+        startDate = PigPen.StartDate;
+        endDate = PigPen.EndDate;
+        estimatedHarvestDate = PigPen.EstimatedHarvestDate;
+    }
+
+    private bool IsFormValid()
+    {
+        return selectedCustomerId.HasValue && 
+               !string.IsNullOrWhiteSpace(penCode) && 
+               pigQty > 0 && 
+               startDate.HasValue;
+    }
+
+    private async Task Save()
+    {
+        if (!IsFormValid() || !selectedCustomerId.HasValue || !startDate.HasValue)
+            return;
+
+        var updatedPigPen = PigPen with
+        {
+            CustomerId = selectedCustomerId.Value,
+            PenCode = penCode,
+            Type = selectedType,
+            PigQty = pigQty,
+            StartDate = startDate.Value,
+            EndDate = endDate,
+            EstimatedHarvestDate = estimatedHarvestDate
+        };
+
+        try
+        {
+            await PigPenService.UpdatePigPenAsync(updatedPigPen);
+            MudDialog.Close(DialogResult.Ok(updatedPigPen));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error updating pig pen: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

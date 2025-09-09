@@ -7,7 +7,7 @@
 @inject ISnackbar Snackbar
 @inject NavigationManager NavigationManager
 
-<PageTitle>PigTrack Pro - Pig Pens</PageTitle>
+<PageTitle>PIG PEN MANAGEMENT - Pig Pens</PageTitle>
 
 <MudText Typo="Typo.h4" GutterBottom="true">Pig Pen Management</MudText>
 
@@ -42,10 +42,6 @@
     <div class="d-flex justify-space-between align-center mb-4">
         <MudText Typo="Typo.h6">Pig Pen List</MudText>
         <div class="d-flex gap-2">
-            <MudButton Variant="Variant.Filled" Color="Color.Secondary" 
-                       StartIcon="Icons.Material.Filled.CloudDownload" OnClick="ShowFeedImportDialog">
-                Import POSPOS Feeds
-            </MudButton>
             <MudButton Variant="Variant.Filled" Color="Color.Primary" 
                        StartIcon="Icons.Material.Filled.Add" OnClick="ShowAddDialog">
                 Add New Pig Pen
@@ -61,9 +57,7 @@
             <MudTh>Quantity</MudTh>
             <MudTh>Start Date</MudTh>
             <MudTh>Est. Harvest</MudTh>
-            <MudTh>Feed Cost</MudTh>
-            <MudTh>Investment</MudTh>
-            <MudTh>Profit/Loss</MudTh>
+            <MudTh>Days Remaining</MudTh>
             <MudTh>Last Updated</MudTh>
             <MudTh>Actions</MudTh>
         </HeaderContent>
@@ -79,12 +73,18 @@
             <MudTd DataLabel="Quantity">@context.PigQty</MudTd>
             <MudTd DataLabel="Start Date">@context.StartDate.ToString("yyyy-MM-dd")</MudTd>
             <MudTd DataLabel="Est. Harvest">@(context.EstimatedHarvestDate?.ToString("yyyy-MM-dd") ?? "N/A")</MudTd>
-            <MudTd DataLabel="Feed Cost">$@context.FeedCost.ToString("N2")</MudTd>
-            <MudTd DataLabel="Investment">$@context.Investment.ToString("N2")</MudTd>
-            <MudTd DataLabel="Profit/Loss">
-                <MudText Color="@(context.ProfitLoss >= 0 ? Color.Success : Color.Error)">
-                    $@context.ProfitLoss.ToString("N2")
-                </MudText>
+            <MudTd DataLabel="Days Remaining">
+                @if (context.EstimatedHarvestDate.HasValue)
+                {
+                    var daysRemaining = (context.EstimatedHarvestDate.Value - DateTime.Now).Days;
+                    <MudText Color="@(daysRemaining > 30 ? Color.Success : daysRemaining > 7 ? Color.Warning : Color.Error)">
+                        @daysRemaining days
+                    </MudText>
+                }
+                else
+                {
+                    <MudText Color="Color.Secondary">N/A</MudText>
+                }
             </MudTd>
             <MudTd DataLabel="Last Updated">
                 <MudText Typo="Typo.body2" Color="@(IsRecentlyUpdated(context.UpdatedAt) ? Color.Primary : Color.Secondary)">
@@ -93,19 +93,22 @@
             </MudTd>
             <MudTd DataLabel="Actions">
                 <MudButtonGroup Size="Size.Small" Variant="Variant.Text">
-                    <MudButton Color="Color.Info" StartIcon="Icons.Material.Filled.CloudDownload"
-                              OnClick="() => ShowPosImportDialog(context.Id, GetCustomerName(context.CustomerId), context.PenCode, GetCustomerCode(context.CustomerId))"
-                              Title="Import POSPOS feeds for this pig pen">
-                        POSPOS
-                    </MudButton>
-                    <MudButton Color="Color.Success" StartIcon="Icons.Material.Filled.Add"
-                              OnClick="() => ShowAddFeedDialog(context.Id, GetCustomerName(context.CustomerId), context.PenCode)">
-                        Add Feed
-                    </MudButton>
-                    <MudButton Color="Color.Primary" StartIcon="Icons.Material.Filled.Visibility"
-                              OnClick="() => NavigateToPigPenDetail(context.Id)">
-                        Details
-                    </MudButton>
+                    <MudIconButton Icon="Icons.Material.Filled.CloudDownload" 
+                                  Color="Color.Info"
+                                  OnClick="() => ShowPosImportDialog(context.Id, GetCustomerName(context.CustomerId), context.PenCode, GetCustomerCode(context.CustomerId))"
+                                  Title="Import POSPOS feeds for this pig pen" />
+                    <MudIconButton Icon="Icons.Material.Filled.Visibility" 
+                                  Color="Color.Primary"
+                                  OnClick="() => NavigateToPigPenDetail(context.Id)"
+                                  Title="View pig pen details" />
+                    <MudIconButton Icon="Icons.Material.Filled.Edit" 
+                                  Color="Color.Warning"
+                                  OnClick="() => ShowEditDialog(context)"
+                                  Title="Edit pig pen" />
+                    <MudIconButton Icon="Icons.Material.Filled.Delete" 
+                                  Color="Color.Error"
+                                  OnClick="() => ShowDeleteDialog(context)"
+                                  Title="Delete pig pen" />
                 </MudButtonGroup>
             </MudTd>
         </RowTemplate>
@@ -210,25 +213,6 @@
         }
     }
 
-    private async Task ShowAddFeedDialog(Guid pigPenId, string customerName, string penCode)
-    {
-        var parameters = new DialogParameters<AddFeedDialog>
-        {
-            { x => x.PigPenId, pigPenId },
-            { x => x.CustomerName, customerName },
-            { x => x.PenCode, penCode }
-        };
-
-        var dialog = await DialogService.ShowAsync<AddFeedDialog>("Add Feed", parameters);
-        var result = await dialog.Result;
-
-        if (!result.Canceled)
-        {
-            await LoadData(); // Refresh the list to show updated feed costs
-            Snackbar.Add("Feed added successfully!", Severity.Success);
-        }
-    }
-
     private async Task ShowPosImportDialog(Guid pigPenId, string customerName, string penCode, string customerCode)
     {
         var parameters = new DialogParameters
@@ -260,12 +244,6 @@
         return customer?.Code ?? "";
     }
 
-    private void ShowFeedImportDialog()
-    {
-        // This is the old general import - we can remove this or keep for bulk imports
-        Snackbar.Add("Use the inline POSPOS import buttons for each pig pen instead", Severity.Info);
-    }
-
     private void NavigateToPigPenDetail(Guid pigPenId)
     {
         NavigationManager.NavigateTo($"/pigpens/{pigPenId}/detail");
@@ -290,5 +268,54 @@
             return $"{(int)timeSpan.TotalDays} day{((int)timeSpan.TotalDays == 1 ? "" : "s")} ago";
         
         return dateTime.ToString("MMM dd, yyyy");
+    }
+
+    private async Task ShowEditDialog(PigPen pigPen)
+    {
+        var parameters = new DialogParameters<EditPigPenDialog>
+        {
+            { x => x.PigPen, pigPen }
+        };
+
+        var dialog = await DialogService.ShowAsync<EditPigPenDialog>("Edit Pig Pen", parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await LoadData();
+            Snackbar.Add("Pig pen updated successfully!", Severity.Success);
+        }
+    }
+
+    private async Task ShowDeleteDialog(PigPen pigPen)
+    {
+        var parameters = new DialogParameters
+        {
+            { "ContentText", $"Are you sure you want to delete pig pen '{pigPen.PenCode}'? This action cannot be undone." }
+        };
+
+        var dialog = await DialogService.ShowAsync<DeleteConfirmationDialog>("Delete Pig Pen", parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            try
+            {
+                var success = await PigPenService.DeletePigPenAsync(pigPen.Id);
+                if (success)
+                {
+                    await LoadData();
+                    Snackbar.Add("Pig pen deleted successfully!", Severity.Success);
+                }
+                else
+                {
+                    Snackbar.Add("Failed to delete pig pen.", Severity.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting pig pen: {ex.Message}", Severity.Error);
+            }
+        }
     }
 }
