@@ -1,0 +1,149 @@
+@using MudBlazor
+@using PigFarmManagement.Client.Features.FeedFormulas.Services
+@inject IFeedFormulaService FeedFormulaService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudContainer Style="max-width: 600px;">
+            @if (loading)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="ma-2" />
+                <MudText>Loading feed formula...</MudText>
+            }
+            else if (feedFormula != null)
+            {
+                <MudForm @ref="form" @bind-IsValid="@isValid" @bind-Errors="@errors">
+                    <MudTextField @bind-Value="productCode"
+                                 Label="Product Code"
+                                 Required="true"
+                                 RequiredError="Product code is required"
+                                 For="@(() => productCode)" />
+
+                    <MudTextField @bind-Value="productName"
+                                 Label="Product Name"
+                                 Required="true"
+                                 RequiredError="Product name is required"
+                                 For="@(() => productName)" />
+
+                    <MudTextField @bind-Value="brand"
+                                 Label="Brand"
+                                 Required="true"
+                                 RequiredError="Brand is required"
+                                 For="@(() => brand)" />
+
+                    <MudNumericField @bind-Value="bagPerPig"
+                                   Label="Bags per Pig"
+                                   Required="true"
+                                   RequiredError="Bags per pig is required"
+                                   Min="0.1m"
+                                   Max="10.0m"
+                                   Step="0.1m"
+                                   Format="F1"
+                                   For="@(() => bagPerPig)" />
+
+                    <MudText Typo="Typo.caption" Class="mt-2">
+                        Consumption rate: @bagPerPig.ToString("F1") bags/pig
+                    </MudText>
+                </MudForm>
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Error">
+                    Feed formula not found.
+                </MudAlert>
+            }
+        </MudContainer>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" 
+                  Variant="Variant.Filled" 
+                  OnClick="Submit" 
+                  Disabled="@(!isValid || saving || loading || feedFormula == null)">
+            @if (saving)
+            {
+                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/>
+                <MudText Class="ms-2">Updating...</MudText>
+            }
+            else
+            {
+                <MudText>Update Feed Formula</MudText>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public Guid FeedFormulaId { get; set; }
+
+    private MudForm form = null!;
+    private bool isValid;
+    private string[] errors = Array.Empty<string>();
+    private bool loading = true;
+    private bool saving = false;
+
+    private FeedFormulaResponse? feedFormula;
+    private string productCode = "";
+    private string productName = "";
+    private string brand = "";
+    private decimal bagPerPig = 1.0m;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadFeedFormula();
+    }
+
+    private async Task LoadFeedFormula()
+    {
+        try
+        {
+            loading = true;
+            feedFormula = await FeedFormulaService.GetFeedFormulaByIdAsync(FeedFormulaId);
+            
+            if (feedFormula != null)
+            {
+                productCode = feedFormula.ProductCode;
+                productName = feedFormula.ProductName;
+                brand = feedFormula.Brand;
+                bagPerPig = feedFormula.BagPerPig;
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading feed formula: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Submit()
+    {
+        try
+        {
+            saving = true;
+            await form.Validate();
+
+            if (!isValid || feedFormula == null)
+                return;
+
+            var dto = new FeedFormulaUpdateDto(productCode, productName, brand, bagPerPig);
+            await FeedFormulaService.UpdateFeedFormulaAsync(FeedFormulaId, dto);
+            
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error updating feed formula: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+}

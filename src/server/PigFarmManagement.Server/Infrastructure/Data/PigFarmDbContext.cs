@@ -15,6 +15,7 @@ public class PigFarmDbContext : DbContext
     public DbSet<FeedEntity> Feeds { get; set; }
     public DbSet<DepositEntity> Deposits { get; set; }
     public DbSet<HarvestEntity> Harvests { get; set; }
+    public DbSet<FeedFormulaEntity> FeedFormulas { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -45,6 +46,11 @@ public class PigFarmDbContext : DbContext
                   .WithMany(e => e.PigPens)
                   .HasForeignKey(e => e.CustomerId)
                   .OnDelete(DeleteBehavior.Restrict);
+                  
+            entity.HasOne(e => e.FeedFormula)
+                  .WithMany()
+                  .HasForeignKey(e => e.FeedFormulaId)
+                  .OnDelete(DeleteBehavior.SetNull);
         });
 
         // Feed Configuration
@@ -88,6 +94,17 @@ public class PigFarmDbContext : DbContext
                   .WithMany(e => e.Harvests)
                   .HasForeignKey(e => e.PigPenId)
                   .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // FeedFormula Configuration
+        modelBuilder.Entity<FeedFormulaEntity>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.ProductCode).IsUnique();
+            entity.Property(e => e.ProductCode).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.ProductName).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Brand).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.BagPerPig).HasColumnType("decimal(18,2)");
         });
 
         // Seed Data
@@ -147,6 +164,72 @@ public class PigFarmDbContext : DbContext
             });
         }
         modelBuilder.Entity<PigPenEntity>().HasData(pigPens);
+
+        // Generate Feed Formulas
+        var feedFormulas = new List<FeedFormulaEntity>
+        {
+            new FeedFormulaEntity
+            {
+                Id = Guid.NewGuid(),
+                ProductCode = "JET001",
+                ProductName = "เจ็ท สตาร์ทเออร์",
+                Brand = "เจ็ท",
+                BagPerPig = 1.5m,
+                CreatedAt = now.AddDays(-365),
+                UpdatedAt = now.AddDays(-30)
+            },
+            new FeedFormulaEntity
+            {
+                Id = Guid.NewGuid(),
+                ProductCode = "JET002",
+                ProductName = "เจ็ท โกรเวอร์",
+                Brand = "เจ็ท",
+                BagPerPig = 2.0m,
+                CreatedAt = now.AddDays(-365),
+                UpdatedAt = now.AddDays(-30)
+            },
+            new FeedFormulaEntity
+            {
+                Id = Guid.NewGuid(),
+                ProductCode = "JET003",
+                ProductName = "เจ็ท ฟีนิชเชอร์",
+                Brand = "เจ็ท",
+                BagPerPig = 2.3m,
+                CreatedAt = now.AddDays(-365),
+                UpdatedAt = now.AddDays(-30)
+            },
+            new FeedFormulaEntity
+            {
+                Id = Guid.NewGuid(),
+                ProductCode = "PURE001",
+                ProductName = "เพียว บรีดเดอร์",
+                Brand = "เพียว",
+                BagPerPig = 2.8m,
+                CreatedAt = now.AddDays(-365),
+                UpdatedAt = now.AddDays(-30)
+            },
+            new FeedFormulaEntity
+            {
+                Id = Guid.NewGuid(),
+                ProductCode = "PURE002",
+                ProductName = "เพียว พรีเมียม",
+                Brand = "เพียว",
+                BagPerPig = 1.8m,
+                CreatedAt = now.AddDays(-365),
+                UpdatedAt = now.AddDays(-30)
+            },
+            new FeedFormulaEntity
+            {
+                Id = Guid.NewGuid(),
+                ProductCode = "PURE003",
+                ProductName = "เพียว ออร์แกนิก",
+                Brand = "เพียว",
+                BagPerPig = 2.5m,
+                CreatedAt = now.AddDays(-365),
+                UpdatedAt = now.AddDays(-30)
+            }
+        };
+        modelBuilder.Entity<FeedFormulaEntity>().HasData(feedFormulas);
 
         // Generate 100 Feeds
         var feeds = new List<FeedEntity>();

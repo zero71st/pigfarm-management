@@ -31,12 +31,17 @@ public class PigPenEntity
     
     public PigPenType Type { get; set; }
     
+    public Guid? FeedFormulaId { get; set; }
+    
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     
     // Navigation Properties
     [ForeignKey("CustomerId")]
     public virtual CustomerEntity Customer { get; set; } = null!;
+    
+    [ForeignKey("FeedFormulaId")]
+    public virtual FeedFormulaEntity? FeedFormula { get; set; }
     
     public virtual ICollection<FeedEntity> Feeds { get; set; } = new List<FeedEntity>();
     public virtual ICollection<DepositEntity> Deposits { get; set; } = new List<DepositEntity>();
@@ -57,6 +62,7 @@ public class PigPenEntity
             Investment, 
             ProfitLoss, 
             Type,
+            FeedFormulaId,
             CreatedAt, 
             UpdatedAt
         );
@@ -78,6 +84,7 @@ public class PigPenEntity
             Investment = pigPen.Investment,
             ProfitLoss = pigPen.ProfitLoss,
             Type = pigPen.Type,
+            FeedFormulaId = pigPen.FeedFormulaId,
             CreatedAt = pigPen.CreatedAt,
             UpdatedAt = pigPen.UpdatedAt
         };

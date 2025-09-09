@@ -5,6 +5,7 @@ using PigFarmManagement.Client.Features.Customers.Services;
 using PigFarmManagement.Client.Features.PigPens.Services;
 using PigFarmManagement.Client.Features.Dashboard.Services;
 using PigFarmManagement.Client.Features.Feeds.Services;
+using PigFarmManagement.Client.Features.FeedFormulas.Services;
 using MudBlazor.Services;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -33,6 +34,8 @@ builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IPigPenService, PigPenService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IFeedService, FeedService>();
+builder.Services.AddScoped<IFeedFormulaService, FeedFormulaService>();
+builder.Services.AddScoped<IFeedFormulaCalculationService, FeedFormulaCalculationService>();
 builder.Services.AddScoped<IFeedImportService, FeedImportService>();
 
 await builder.Build().RunAsync();

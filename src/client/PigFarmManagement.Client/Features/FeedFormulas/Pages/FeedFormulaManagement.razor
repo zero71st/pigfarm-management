@@ -1,0 +1,337 @@
+@page "/feed-formulas"
+@using MudBlazor
+@using PigFarmManagement.Client.Features.FeedFormulas.Services
+@using PigFarmManagement.Client.Features.FeedFormulas.Components
+@inject IFeedFormulaService FeedFormulaService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>Feed Formula Management - PigTrack Pro</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-4">
+    <MudText Typo="Typo.h4" GutterBottom="true" Class="mb-4">
+        <MudIcon Icon="Icons.Material.Filled.Science" Class="mr-2" />
+        Feed Formula Management
+    </MudText>
+
+    @if (loading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="ma-2" />
+        <MudText>Loading feed formulas...</MudText>
+    }
+    else
+    {
+        <!-- Brand Statistics Cards -->
+        <MudGrid Class="mb-4">
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard Elevation="2">
+                    <MudCardContent>
+                        <div style="display: flex; align-items: center;">
+                            <MudIcon Icon="Icons.Material.Filled.Science" Color="Color.Primary" Style="margin-right: 8px;" />
+                            <div>
+                                <MudText Typo="Typo.h6">Total Feed Formulas</MudText>
+                                <MudText Typo="Typo.h4" Color="Color.Primary">@feedFormulas.Count</MudText>
+                            </div>
+                        </div>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard Elevation="2">
+                    <MudCardContent>
+                        <div style="display: flex; align-items: center;">
+                            <MudIcon Icon="Icons.Material.Filled.LocalShipping" Color="Color.Primary" Style="margin-right: 8px;" />
+                            <div>
+                                <MudText Typo="Typo.h6">เจ็ท Brand</MudText>
+                                <MudText Typo="Typo.h4" Color="Color.Primary">@GetBrandCount("เจ็ท")</MudText>
+                            </div>
+                        </div>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard Elevation="2">
+                    <MudCardContent>
+                        <div style="display: flex; align-items: center;">
+                            <MudIcon Icon="Icons.Material.Filled.LocalShipping" Color="Color.Secondary" Style="margin-right: 8px;" />
+                            <div>
+                                <MudText Typo="Typo.h6">เพียว Brand</MudText>
+                                <MudText Typo="Typo.h4" Color="Color.Secondary">@GetBrandCount("เพียว")</MudText>
+                            </div>
+                        </div>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+
+        <MudStack Class="mb-4">
+            <MudGrid>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudSelect T="string" 
+                             @bind-Value="selectedBrandFilter" 
+                             Label="Filter by Brand" 
+                             Variant="Variant.Outlined"
+                             Clearable="true"
+                             @onchange="OnBrandFilterChanged">
+                        <MudSelectItem T="string" Value="@((string?)null)">All Brands</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("เจ็ท")">เจ็ท (@GetBrandCount("เจ็ท"))</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("เพียว")">เพียว (@GetBrandCount("เพียว"))</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="2">
+                    <MudButtonGroup Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small">
+                        <MudButton OnClick="@(() => QuickFilterBrand("เจ็ท"))" 
+                                  Color="@(selectedBrandFilter == "เจ็ท" ? Color.Primary : Color.Default)"
+                                  Variant="@(selectedBrandFilter == "เจ็ท" ? Variant.Filled : Variant.Outlined)">
+                            เจ็ท
+                        </MudButton>
+                        <MudButton OnClick="@(() => QuickFilterBrand("เพียว"))" 
+                                  Color="@(selectedBrandFilter == "เพียว" ? Color.Secondary : Color.Default)"
+                                  Variant="@(selectedBrandFilter == "เพียว" ? Variant.Filled : Variant.Outlined)">
+                            เพียว
+                        </MudButton>
+                    </MudButtonGroup>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="2">
+                    <MudStack Row Spacing="1">
+                        <MudButton Variant="Variant.Outlined" 
+                                  Color="Color.Secondary" 
+                                  StartIcon="@Icons.Material.Filled.Clear"
+                                  OnClick="ClearFilter"
+                                  Size="Size.Small"
+                                  Disabled="@(string.IsNullOrEmpty(selectedBrandFilter))">
+                            Clear
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined" 
+                                  Color="Color.Default" 
+                                  StartIcon="@Icons.Material.Filled.Refresh"
+                                  OnClick="RefreshData"
+                                  Size="Size.Small">
+                            Refresh
+                        </MudButton>
+                    </MudStack>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="2">
+                    <MudButton Variant="Variant.Filled" 
+                              Color="Color.Primary" 
+                              StartIcon="@Icons.Material.Filled.Add"
+                              OnClick="@(() => OpenCreateDialog())">
+                        Add New Feed Formula
+                    </MudButton>
+                </MudItem>
+                <MudItem xs="12" md="3" Class="d-flex align-center">
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        Showing @filteredFeedFormulas.Count of @feedFormulas.Count feed formulas
+                        @if (!string.IsNullOrEmpty(selectedBrandFilter))
+                        {
+                            <text> for brand "@selectedBrandFilter"</text>
+                        }
+                    </MudText>
+                </MudItem>
+            </MudGrid>
+        </MudStack>
+
+        <MudDataGrid T="FeedFormulaResponse" 
+                     Items="@filteredFeedFormulas" 
+                     Dense="true" 
+                     Hover="true" 
+                     Bordered="true" 
+                     Striped="true"
+                     FilterMode="DataGridFilterMode.ColumnFilterRow"
+                     SortMode="@SortMode.Multiple"
+                     Groupable="false">
+            
+            <Columns>
+                <PropertyColumn Property="x => x.ProductCode" Title="Product Code" />
+                <TemplateColumn Title="Brand" Sortable="false" Filterable="true">
+                    <CellTemplate>
+                        <MudChip Color="@GetBrandColor(context.Item.Brand)" 
+                                Size="Size.Small" 
+                                Variant="Variant.Filled">
+                            @context.Item.Brand
+                        </MudChip>
+                    </CellTemplate>
+                </TemplateColumn>
+                <PropertyColumn Property="x => x.ProductName" Title="Product Name" />
+                <PropertyColumn Property="x => x.BagPerPig" Title="Bags/Pig" Format="F1" />
+                <PropertyColumn Property="x => x.ConsumptionRate" Title="Consumption Rate" />
+                <PropertyColumn Property="x => x.CreatedAt" Title="Created" Format="yyyy-MM-dd" />
+                <PropertyColumn Property="x => x.UpdatedAt" Title="Updated" Format="yyyy-MM-dd" />
+                
+                <TemplateColumn Title="Actions" CellClass="d-flex justify-end" Sortable="false" Filterable="false">
+                    <CellTemplate>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn btn-sm btn-primary" @onclick="@(() => OpenEditDialog(context.Item))" title="Edit">
+                                ✏️ Edit
+                            </button>
+                            <button class="btn btn-sm btn-danger" @onclick="@(() => DeleteFeedFormula(context.Item))" title="Delete">
+                                🗑️ Delete
+                            </button>
+                        </div>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+            
+            <NoRecordsContent>
+                <MudText>No feed formulas found. Click "Add New Feed Formula" to create one.</MudText>
+            </NoRecordsContent>
+        </MudDataGrid>
+    }
+</MudContainer>
+
+@code {
+    private List<FeedFormulaResponse> feedFormulas = new();
+    private List<FeedFormulaResponse> filteredFeedFormulas = new();
+    private bool loading = true;
+    private string? selectedBrandFilter;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadFeedFormulas();
+    }
+
+    private async Task LoadFeedFormulas()
+    {
+        try
+        {
+            loading = true;
+            var result = await FeedFormulaService.GetAllFeedFormulasAsync();
+            feedFormulas = result.ToList();
+            ApplyBrandFilter();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading feed formulas: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private void OnBrandFilterChanged()
+    {
+        ApplyBrandFilter();
+    }
+
+    private void ApplyBrandFilter()
+    {
+        if (string.IsNullOrEmpty(selectedBrandFilter))
+        {
+            filteredFeedFormulas = feedFormulas.ToList();
+        }
+        else
+        {
+            filteredFeedFormulas = feedFormulas
+                .Where(f => f.Brand.Equals(selectedBrandFilter, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+        StateHasChanged();
+    }
+
+    private void ClearFilter()
+    {
+        selectedBrandFilter = null;
+        ApplyBrandFilter();
+    }
+
+    private int GetBrandCount(string brand)
+    {
+        return feedFormulas.Count(f => f.Brand.Equals(brand, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private Color GetBrandColor(string brand)
+    {
+        return brand switch
+        {
+            "เจ็ท" => Color.Primary,
+            "เพียว" => Color.Secondary,
+            _ => Color.Default
+        };
+    }
+
+    private void QuickFilterBrand(string brand)
+    {
+        selectedBrandFilter = selectedBrandFilter == brand ? null : brand;
+        ApplyBrandFilter();
+    }
+
+    private async Task RefreshData()
+    {
+        await LoadFeedFormulas();
+        Snackbar.Add("Feed formulas refreshed", Severity.Info);
+    }
+
+    private async Task OpenCreateDialog()
+    {
+        var parameters = new DialogParameters<AddFeedFormulaDialog>();
+        
+        var dialog = await DialogService.ShowAsync<AddFeedFormulaDialog>("Add New Feed Formula", parameters, new DialogOptions
+        {
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        });
+
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await LoadFeedFormulas();
+            Snackbar.Add("Feed formula created successfully", Severity.Success);
+        }
+    }
+
+    private async Task OpenEditDialog(FeedFormulaResponse feedFormula)
+    {
+        var parameters = new DialogParameters<EditFeedFormulaDialog>
+        {
+            { x => x.FeedFormulaId, feedFormula.Id }
+        };
+        
+        var dialog = await DialogService.ShowAsync<EditFeedFormulaDialog>("Edit Feed Formula", parameters, new DialogOptions
+        {
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        });
+
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await LoadFeedFormulas();
+            Snackbar.Add("Feed formula updated successfully", Severity.Success);
+        }
+    }
+
+    private async Task DeleteFeedFormula(FeedFormulaResponse feedFormula)
+    {
+        var parameters = new DialogParameters<MudDialog>
+        {
+            { "ContentText", $"Are you sure you want to delete '{feedFormula.DisplayName}'? This action cannot be undone." },
+            { "ButtonText", "Delete" },
+            { "Color", Color.Error }
+        };
+
+        var dialog = await DialogService.ShowAsync<MudDialog>("Delete Feed Formula", parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            try
+            {
+                var deleted = await FeedFormulaService.DeleteFeedFormulaAsync(feedFormula.Id);
+                if (deleted)
+                {
+                    await LoadFeedFormulas();
+                    Snackbar.Add("Feed formula deleted successfully", Severity.Success);
+                }
+                else
+                {
+                    Snackbar.Add("Feed formula not found", Severity.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting feed formula: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+}

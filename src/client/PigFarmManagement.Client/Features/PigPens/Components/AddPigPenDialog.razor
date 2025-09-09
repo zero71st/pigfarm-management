@@ -3,8 +3,12 @@
 @using PigFarmManagement.Shared.Models
 @using PigFarmManagement.Client.Features.Customers.Services
 @using PigFarmManagement.Client.Features.PigPens.Services
+@using PigFarmManagement.Client.Features.FeedFormulas.Services
+@using PigFarmManagement.Shared
 @inject ICustomerService CustomerService
 @inject IPigPenService PigPenService
+@inject IFeedFormulaCalculationService FeedFormulaCalculationService
+@inject IFeedFormulaCalculationService FeedFormulaCalculationService
 
 <MudDialog>
     <DialogContent>
@@ -29,7 +33,12 @@
                     </MudSelect>
                 </MudItem>
                 <MudItem xs="6">
-                    <MudNumericField @bind-Value="pigQty" Label="Pig Quantity" Variant="Variant.Outlined" Min="1" Required="true" />
+                    <MudNumericField @bind-Value="pigQty" 
+                                   Label="Pig Quantity" 
+                                   Variant="Variant.Outlined" 
+                                   Min="1" 
+                                   Required="true"
+                                   @onchange="OnPigQuantityChanged" />
                 </MudItem>
                 <MudItem xs="6">
                     <MudDatePicker @bind-Date="startDate" Label="Start Date" Variant="Variant.Outlined" Required="true" />
@@ -40,6 +49,83 @@
                 <MudItem xs="6">
                     <MudDatePicker @bind-Date="estimatedHarvestDate" Label="Estimated Harvest Date" Variant="Variant.Outlined" />
                 </MudItem>
+                
+                <!-- Feed Formula Selection -->
+                <MudItem xs="12">
+                    <MudDivider DividerType="DividerType.FullWidth" />
+                    <MudText Typo="Typo.h6" Class="mt-3 mb-2">Feed Formula Selection</MudText>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudSelect T="string" @bind-Value="selectedBrand" Label="Brand" Variant="Variant.Outlined" @onchange="OnBrandChanged">
+                        <MudSelectItem T="string" Value="@((string?)null)">-- Select Brand --</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("เจ็ท")">เจ็ท</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("เพียว")">เพียว</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                
+                @if (feedFormulasWithCalculation.Any())
+                {
+                    <MudItem xs="12">
+                        <MudText Typo="Typo.subtitle2" Class="mb-3">Available Feed Formulas for @selectedBrand:</MudText>
+                        <MudPaper Elevation="1" Class="pa-2">
+                            <MudTable Items="@feedFormulasWithCalculation" 
+                                    Dense="true" 
+                                    Hover="true" 
+                                    Striped="true"
+                                    T="FeedFormulaWithCalculationResponse"
+                                    RowClassFunc="@((formula, index) => selectedFeedFormulaId == formula.Id ? "mud-selected-item" : "")">
+                                <HeaderContent>
+                                    <MudTh>Product Code</MudTh>
+                                    <MudTh>Product Name</MudTh>
+                                    <MudTh Style="text-align: center;">Bags/Pig</MudTh>
+                                    <MudTh Style="text-align: center;">Estimated Feed Consumption</MudTh>
+                                    <MudTh Style="text-align: center;">Select</MudTh>
+                                </HeaderContent>
+                                <RowTemplate>
+                                    <MudTd DataLabel="Product Code">
+                                        <MudText Typo="Typo.body2" Style="font-weight: 500;">@context.ProductCode</MudText>
+                                    </MudTd>
+                                    <MudTd DataLabel="Product Name">
+                                        <MudText Typo="Typo.body2">@context.ProductName</MudText>
+                                    </MudTd>
+                                    <MudTd DataLabel="Bags/Pig" Style="text-align: center;">
+                                        <MudChip Size="Size.Small" Color="Color.Info" Variant="Variant.Text">
+                                            @context.BagPerPig.ToString("F1")
+                                        </MudChip>
+                                    </MudTd>
+                                    <MudTd DataLabel="Estimated Consumption" Style="text-align: center;">
+                                        <MudChip Size="Size.Small" Color="Color.Success" Variant="Variant.Filled">
+                                            @context.TotalBagsRequired.ToString("F1") bags
+                                        </MudChip>
+                                        <br />
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                            (@pigQty pigs × @context.BagPerPig.ToString("F1") bags/pig)
+                                        </MudText>
+                                    </MudTd>
+                                    <MudTd DataLabel="Select" Style="text-align: center;">
+                                        <MudRadio T="Guid?" 
+                                                Value="@context.Id" 
+                                                @bind-SelectedOption="selectedFeedFormulaId"
+                                                Color="Color.Primary" />
+                                    </MudTd>
+                                </RowTemplate>
+                            </MudTable>
+                        </MudPaper>
+                        
+                        @if (selectedFeedFormulaId.HasValue)
+                        {
+                            var selectedFormula = feedFormulasWithCalculation.FirstOrDefault(f => f.Id == selectedFeedFormulaId.Value);
+                            if (selectedFormula != null)
+                            {
+                                <MudAlert Severity="Severity.Info" Class="mt-3">
+                                    <strong>Selected:</strong> @selectedFormula.ProductCode - @selectedFormula.ProductName
+                                    <br />
+                                    <strong>Total Feed Required:</strong> @selectedFormula.TotalBagsRequired.ToString("F1") bags for @pigQty pigs
+                                </MudAlert>
+                            }
+                        }
+                    </MudItem>
+                }
             </MudGrid>
         </MudContainer>
     </DialogContent>
@@ -65,6 +151,11 @@
     private DateTime? startDate = DateTime.Today;
     private DateTime? endDate;
     private DateTime? estimatedHarvestDate;
+    
+    // Feed formula selection properties
+    private string? selectedBrand;
+    private Guid? selectedFeedFormulaId;
+    private List<FeedFormulaWithCalculationResponse> feedFormulasWithCalculation = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -80,6 +171,46 @@
         catch
         {
             customers = new();
+        }
+    }
+
+    private async Task OnBrandChanged(ChangeEventArgs e)
+    {
+        selectedBrand = e.Value?.ToString();
+        selectedFeedFormulaId = null;
+        feedFormulasWithCalculation.Clear();
+
+        if (!string.IsNullOrEmpty(selectedBrand) && pigQty > 0)
+        {
+            await LoadFeedFormulasForBrand();
+        }
+    }
+
+    private async Task LoadFeedFormulasForBrand()
+    {
+        if (string.IsNullOrEmpty(selectedBrand) || pigQty <= 0)
+        {
+            feedFormulasWithCalculation.Clear();
+            return;
+        }
+
+        try
+        {
+            feedFormulasWithCalculation = (await FeedFormulaCalculationService.GetFeedFormulasByBrandAsync(selectedBrand, pigQty)).ToList();
+            StateHasChanged();
+        }
+        catch
+        {
+            // Handle error silently for now
+            feedFormulasWithCalculation.Clear();
+        }
+    }
+
+    private async Task OnPigQuantityChanged()
+    {
+        if (!string.IsNullOrEmpty(selectedBrand))
+        {
+            await LoadFeedFormulasForBrand();
         }
     }
 
@@ -107,7 +238,8 @@
                 startDate!.Value,
                 endDate,
                 estimatedHarvestDate,
-                selectedType
+                selectedType,
+                selectedFeedFormulaId
             );
 
             var createdPigPen = await PigPenService.CreatePigPenAsync(pigPenDto);

@@ -1,0 +1,123 @@
+@using MudBlazor
+@using PigFarmManagement.Client.Features.FeedFormulas.Services
+@inject IFeedFormulaService FeedFormulaService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudContainer Style="max-width: 600px;">
+            <MudForm @ref="form" @bind-IsValid="@isValid" @bind-Errors="@errors">
+                <MudTextField @bind-Value="productCode"
+                             Label="Product Code"
+                             Required="true"
+                             RequiredError="Product code is required"
+                             Validation="@(new Func<string, Task<string>>(ValidateProductCode))"
+                             Immediate="true"
+                             For="@(() => productCode)" />
+
+                <MudTextField @bind-Value="productName"
+                             Label="Product Name"
+                             Required="true"
+                             RequiredError="Product name is required"
+                             For="@(() => productName)" />
+
+                <MudTextField @bind-Value="brand"
+                             Label="Brand"
+                             Required="true"
+                             RequiredError="Brand is required"
+                             For="@(() => brand)" />
+
+                <MudNumericField @bind-Value="bagPerPig"
+                               Label="Bags per Pig"
+                               Required="true"
+                               RequiredError="Bags per pig is required"
+                               Min="0.1m"
+                               Max="10.0m"
+                               Step="0.1m"
+                               Format="F1"
+                               For="@(() => bagPerPig)" />
+
+                <MudText Typo="Typo.caption" Class="mt-2">
+                    Consumption rate: @bagPerPig.ToString("F1") bags/pig
+                </MudText>
+            </MudForm>
+        </MudContainer>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" 
+                  Variant="Variant.Filled" 
+                  OnClick="Submit" 
+                  Disabled="@(!isValid || saving)">
+            @if (saving)
+            {
+                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/>
+                <MudText Class="ms-2">Creating...</MudText>
+            }
+            else
+            {
+                <MudText>Create Feed Formula</MudText>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
+
+    private MudForm form = null!;
+    private bool isValid;
+    private string[] errors = Array.Empty<string>();
+    private bool saving = false;
+
+    private string productCode = "";
+    private string productName = "";
+    private string brand = "";
+    private decimal bagPerPig = 1.0m;
+
+    private async Task<string> ValidateProductCode(string code)
+    {
+        if (string.IsNullOrWhiteSpace(code))
+            return "Product code is required";
+
+        try
+        {
+            var exists = await FeedFormulaService.ExistsAsync(code);
+            if (exists)
+                return "Product code already exists";
+        }
+        catch
+        {
+            // If validation fails, we'll let the main submit handle the error
+        }
+
+        return string.Empty;
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Submit()
+    {
+        try
+        {
+            saving = true;
+            await form.Validate();
+
+            if (!isValid)
+                return;
+
+            var dto = new FeedFormulaCreateDto(productCode, productName, brand, bagPerPig);
+            await FeedFormulaService.CreateFeedFormulaAsync(dto);
+            
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error creating feed formula: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+}

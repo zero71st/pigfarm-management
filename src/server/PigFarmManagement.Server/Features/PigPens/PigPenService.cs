@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace PigFarmManagement.Server.Features.PigPens;
 
-public record PigPenCreateDto(Guid CustomerId, string PenCode, int PigQty, DateTime StartDate, DateTime? EndDate, DateTime? EstimatedHarvestDate, PigPenType Type);
+public record PigPenCreateDto(Guid CustomerId, string PenCode, int PigQty, DateTime StartDate, DateTime? EndDate, DateTime? EstimatedHarvestDate, PigPenType Type, Guid? FeedFormulaId);
 
 public interface IPigPenService
 {
@@ -49,6 +49,7 @@ public class PigPenService : IPigPenService
             dto.EstimatedHarvestDate, 
             0, 0, 0, // Initial values for FeedCost, Investment, ProfitLoss
             dto.Type, // PigPenType
+            dto.FeedFormulaId, // FeedFormulaId
             now, // CreatedAt
             now); // UpdatedAt
 

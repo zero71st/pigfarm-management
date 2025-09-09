@@ -1,6 +1,7 @@
 using PigFarmManagement.Server.Features.Customers;
 using PigFarmManagement.Server.Features.PigPens;
 using PigFarmManagement.Server.Features.Feeds;
+using PigFarmManagement.Server.Features.FeedFormulas;
 using PigFarmManagement.Server.Features.Dashboard;
 
 namespace PigFarmManagement.Server.Infrastructure.Extensions;
@@ -13,6 +14,8 @@ public static class WebApplicationExtensions
         app.MapCustomerEndpoints();
         app.MapPigPenEndpoints();
         app.MapFeedEndpoints();
+        app.MapFeedFormulaEndpoints();
+        app.MapFeedFormulaCalculationEndpoints();
         app.MapFeedImportEndpoints();
         app.MapDashboardEndpoints();
 
