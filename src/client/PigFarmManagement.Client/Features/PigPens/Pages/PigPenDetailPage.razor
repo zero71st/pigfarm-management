@@ -249,6 +249,30 @@
                         <MudText>Pig pen brand: "@(pigPen?.SelectedBrand ?? "NULL")"</MudText>
                         <MudText>Pig pen pig count: @(pigPen?.PigQty ?? 0)</MudText>
                         <MudText>Pig pen ID: @(pigPen?.Id.ToString() ?? "NULL")</MudText>
+                        @if (feeds.Any())
+                        {
+                            <MudText><strong>Feed Records Details:</strong></MudText>
+                            @foreach (var feed in feeds.Take(3))
+                            {
+                                <MudText>- Product: @feed.ProductCode, Invoice: "@(feed.InvoiceNumber ?? "EMPTY")", Qty: @feed.QuantityKg kg</MudText>
+                            }
+                            @if (feeds.Count > 3)
+                            {
+                                <MudText>... and @(feeds.Count - 3) more</MudText>
+                            }
+                        }
+                        @if (comparisonData?.Any() == true)
+                        {
+                            <MudText><strong>Comparison Data:</strong></MudText>
+                            @foreach (var comp in comparisonData.Take(2))
+                            {
+                                <MudText>- @comp.ProductCode: @comp.FeedHistoryEntries.Count invoice(s)</MudText>
+                                @foreach (var entry in comp.FeedHistoryEntries.Take(2))
+                                {
+                                    <MudText>&nbsp;&nbsp;Invoice: "@entry.InvoiceNumber", Qty: @entry.Quantity</MudText>
+                                }
+                            }
+                        }
                     </div>
                 </MudAlert>
 
@@ -283,6 +307,15 @@
                 <!-- Table matching the provided image structure -->
                 @if (feedFormulaCalculations != null && feedFormulaCalculations.Any())
                 {
+                    <!-- Debug table rows -->
+                    <MudAlert Severity="Severity.Info" Class="mb-3">
+                        <MudText><strong>Table Rows Debug:</strong></MudText>
+                        @foreach (var row in GetTableRows().Take(5))
+                        {
+                            <MudText>Row: Code="@row.ProductCode", Name="@row.ProductName", Invoice="@row.InvoiceNo", PerInvoice="@row.PerInvoiceBags", IsSubTotal=@row.IsSubTotal</MudText>
+                        }
+                    </MudAlert>
+
                     <MudTable Items="@GetTableRows()" Dense="true" Hover="false" Striped="false" 
                              FixedHeader="true" Class="comparison-table" Style="border-collapse: collapse;">
                         <HeaderContent>
@@ -604,11 +637,10 @@
             
             // Group by invoice number for detailed breakdown
             var feedHistoryEntries = matchingFeeds
-                .Where(f => !string.IsNullOrEmpty(f.InvoiceNumber))
-                .GroupBy(f => f.InvoiceNumber)
+                .GroupBy(f => string.IsNullOrEmpty(f.InvoiceNumber) ? "N/A" : f.InvoiceNumber)
                 .Select(g => new FeedHistoryEntry
                 {
-                    InvoiceNumber = g.Key ?? "Unknown",
+                    InvoiceNumber = g.Key ?? "N/A",
                     Quantity = g.Sum(f => f.QuantityKg)
                 })
                 .ToList();
@@ -681,45 +713,63 @@
 
         foreach (var comparison in comparisonData)
         {
-            // First add the main product row with first invoice or empty values
-            var firstInvoice = comparison.FeedHistoryEntries.FirstOrDefault();
-            rows.Add(new TableRowData
+            // Check if there are any feed history entries
+            if (comparison.FeedHistoryEntries.Any())
             {
-                ProductCode = comparison.ProductCode,
-                ProductName = comparison.ProductName,
-                PerPigBags = comparison.FormulaPerPig.ToString("F1"),
-                PerPigPenBags = comparison.FormulaTotal.ToString("0"),
-                InvoiceNo = firstInvoice?.InvoiceNumber ?? "",
-                PerInvoiceBags = firstInvoice?.Quantity.ToString("0") ?? "",
-                IsSubTotal = false
-            });
+                // First add the main product row with first invoice
+                var firstInvoice = comparison.FeedHistoryEntries.First();
+                rows.Add(new TableRowData
+                {
+                    ProductCode = comparison.ProductCode,
+                    ProductName = comparison.ProductName,
+                    PerPigBags = comparison.FormulaPerPig.ToString("F1"),
+                    PerPigPenBags = comparison.FormulaTotal.ToString("0"),
+                    InvoiceNo = firstInvoice.InvoiceNumber,
+                    PerInvoiceBags = firstInvoice.Quantity.ToString("0"),
+                    IsSubTotal = false
+                });
 
-            // Add additional invoices for this product (from second invoice onwards)
-            foreach (var invoice in comparison.FeedHistoryEntries.Skip(1))
-            {
+                // Add additional invoices for this product (from second invoice onwards)
+                foreach (var invoice in comparison.FeedHistoryEntries.Skip(1))
+                {
+                    rows.Add(new TableRowData
+                    {
+                        ProductCode = "",
+                        ProductName = "",
+                        PerPigBags = "",
+                        PerPigPenBags = "",
+                        InvoiceNo = invoice.InvoiceNumber,
+                        PerInvoiceBags = invoice.Quantity.ToString("0"),
+                        IsSubTotal = false
+                    });
+                }
+
+                // Add Sub Total row for this product
                 rows.Add(new TableRowData
                 {
                     ProductCode = "",
                     ProductName = "",
                     PerPigBags = "",
                     PerPigPenBags = "",
-                    InvoiceNo = invoice.InvoiceNumber,
-                    PerInvoiceBags = invoice.Quantity.ToString("0"),
+                    InvoiceNo = "Sub Total",
+                    PerInvoiceBags = comparison.ActualTotal.ToString("0"),
+                    IsSubTotal = true
+                });
+            }
+            else
+            {
+                // No feed history - show only formula data with "No Feeds" indicator
+                rows.Add(new TableRowData
+                {
+                    ProductCode = comparison.ProductCode,
+                    ProductName = comparison.ProductName,
+                    PerPigBags = comparison.FormulaPerPig.ToString("F1"),
+                    PerPigPenBags = comparison.FormulaTotal.ToString("0"),
+                    InvoiceNo = "No Feeds",
+                    PerInvoiceBags = "0",
                     IsSubTotal = false
                 });
             }
-
-            // Add Sub Total row for this product
-            rows.Add(new TableRowData
-            {
-                ProductCode = "",
-                ProductName = "",
-                PerPigBags = "",
-                PerPigPenBags = "",
-                InvoiceNo = "Sub Total",
-                PerInvoiceBags = comparison.ActualTotal.ToString("0"),
-                IsSubTotal = true
-            });
         }
 
         return rows;
