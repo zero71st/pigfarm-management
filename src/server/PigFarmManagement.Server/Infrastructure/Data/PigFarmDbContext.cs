@@ -172,8 +172,8 @@ public class PigFarmDbContext : DbContext
             new FeedFormulaEntity
             {
                 Id = Guid.NewGuid(),
-                ProductCode = "JET001",
-                ProductName = "เจ็ท สตาร์ทเออร์",
+                ProductCode = "PK64000158",
+                ProductName = "เจ็ท 105 หมูเล็ก 6-15 กก.",
                 Brand = "เจ็ท",
                 BagPerPig = 1.5m,
                 CreatedAt = now.AddDays(-365),
@@ -182,8 +182,18 @@ public class PigFarmDbContext : DbContext
             new FeedFormulaEntity
             {
                 Id = Guid.NewGuid(),
-                ProductCode = "JET002",
-                ProductName = "เจ็ท โกรเวอร์",
+                ProductCode = "PK64000159",
+                ProductName = "เจ็ท 108 หมูนม 15-25 กก.",
+                Brand = "เจ็ท",
+                BagPerPig = 1.8m,
+                CreatedAt = now.AddDays(-365),
+                UpdatedAt = now.AddDays(-30)
+            },
+            new FeedFormulaEntity
+            {
+                Id = Guid.NewGuid(),
+                ProductCode = "PK64000160",
+                ProductName = "เจ็ท 110 หมู 25-40 กก.",
                 Brand = "เจ็ท",
                 BagPerPig = 2.0m,
                 CreatedAt = now.AddDays(-365),
@@ -192,10 +202,30 @@ public class PigFarmDbContext : DbContext
             new FeedFormulaEntity
             {
                 Id = Guid.NewGuid(),
-                ProductCode = "JET003",
-                ProductName = "เจ็ท ฟีนิชเชอร์",
+                ProductCode = "PK64000161",
+                ProductName = "เจ็ท 120 หมู 40-60 กก.",
                 Brand = "เจ็ท",
-                BagPerPig = 2.3m,
+                BagPerPig = 2.2m,
+                CreatedAt = now.AddDays(-365),
+                UpdatedAt = now.AddDays(-30)
+            },
+            new FeedFormulaEntity
+            {
+                Id = Guid.NewGuid(),
+                ProductCode = "PK64000162",
+                ProductName = "เจ็ท 130 หมู 60-90 กก.",
+                Brand = "เจ็ท",
+                BagPerPig = 2.5m,
+                CreatedAt = now.AddDays(-365),
+                UpdatedAt = now.AddDays(-30)
+            },
+            new FeedFormulaEntity
+            {
+                Id = Guid.NewGuid(),
+                ProductCode = "PK64000163",
+                ProductName = "เจ็ท 153 หมู 90 กก. ขึ้นไป",
+                Brand = "เจ็ท",
+                BagPerPig = 2.8m,
                 CreatedAt = now.AddDays(-365),
                 UpdatedAt = now.AddDays(-30)
             },
