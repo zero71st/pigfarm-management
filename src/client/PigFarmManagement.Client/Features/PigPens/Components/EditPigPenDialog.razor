@@ -8,6 +8,7 @@
 @inject ICustomerService CustomerService
 @inject IPigPenService PigPenService
 @inject IFeedFormulaCalculationService FeedFormulaCalculationService
+@inject IFeedFormulaService FeedFormulaService
 @inject ISnackbar Snackbar
 
 <MudDialog>
@@ -207,6 +208,46 @@
         registerDate = PigPen.RegisterDate;
         actualHarvestDate = PigPen.ActHarvestDate;
         estimatedHarvestDate = PigPen.EstimatedHarvestDate;
+        
+        // Initialize feed formula selection based on existing data
+        await InitializeFeedFormulaSelection();
+    }
+
+    private async Task InitializeFeedFormulaSelection()
+    {
+        // First, try to get the brand from the pig pen's SelectedBrand property
+        if (!string.IsNullOrEmpty(PigPen.SelectedBrand))
+        {
+            selectedBrand = PigPen.SelectedBrand;
+            Console.WriteLine($"[EditPigPen - InitializeFeedFormulaSelection] Found saved brand: {selectedBrand}");
+            await LoadFeedFormulasForBrand();
+            return;
+        }
+        
+        // Fallback: Try to get the brand from existing feed formula if available
+        if (PigPen.FeedFormulaId.HasValue)
+        {
+            try
+            {
+                var feedFormula = await FeedFormulaService.GetFeedFormulaByIdAsync(PigPen.FeedFormulaId.Value);
+                if (feedFormula != null && !string.IsNullOrEmpty(feedFormula.Brand))
+                {
+                    selectedBrand = feedFormula.Brand;
+                    Console.WriteLine($"[EditPigPen - InitializeFeedFormulaSelection] Found existing feed formula brand: {selectedBrand}");
+                    await LoadFeedFormulasForBrand();
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[EditPigPen - InitializeFeedFormulaSelection] Error loading existing feed formula: {ex.Message}");
+            }
+        }
+        
+        // Final fallback: Auto-select Jet brand as default to show feed formulas
+        Console.WriteLine($"[EditPigPen - InitializeFeedFormulaSelection] No saved brand information. Auto-selecting default brand: {JetBrand}");
+        selectedBrand = JetBrand; // Default to เจ็ท brand
+        await LoadFeedFormulasForBrand();
     }
 
     private async Task OnBrandSelectionChanged(string brand)
@@ -336,7 +377,8 @@
             PigQty = pigQty,
             RegisterDate = registerDate.Value,
             ActHarvestDate = actualHarvestDate,
-            EstimatedHarvestDate = estimatedHarvestDate
+            EstimatedHarvestDate = estimatedHarvestDate,
+            SelectedBrand = selectedBrand // Save the selected brand
         };
 
         try

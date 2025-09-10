@@ -33,6 +33,8 @@ public class PigPenEntity
     
     public Guid? FeedFormulaId { get; set; }
     
+    public string? SelectedBrand { get; set; }
+    
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     
@@ -65,7 +67,10 @@ public class PigPenEntity
             FeedFormulaId,
             CreatedAt, 
             UpdatedAt
-        );
+        )
+        {
+            SelectedBrand = SelectedBrand
+        };
     }
     
     // Create from shared model
@@ -85,6 +90,7 @@ public class PigPenEntity
             ProfitLoss = pigPen.ProfitLoss,
             Type = pigPen.Type,
             FeedFormulaId = pigPen.FeedFormulaId,
+            SelectedBrand = pigPen.SelectedBrand,
             CreatedAt = pigPen.CreatedAt,
             UpdatedAt = pigPen.UpdatedAt
         };

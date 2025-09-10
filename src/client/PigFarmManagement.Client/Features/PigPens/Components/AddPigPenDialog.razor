@@ -370,7 +370,8 @@
                 actualHarvestDate,
                 estimatedHarvestDate,
                 selectedType,
-                null // No longer using individual feed formula selection
+                null, // No longer using individual feed formula selection
+                selectedBrand // Save the selected brand
             );
 
             var createdPigPen = await PigPenService.CreatePigPenAsync(pigPenDto);

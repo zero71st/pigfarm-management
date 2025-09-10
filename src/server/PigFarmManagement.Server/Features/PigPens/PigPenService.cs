@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace PigFarmManagement.Server.Features.PigPens;
 
-public record PigPenCreateDto(Guid CustomerId, string PenCode, int PigQty, DateTime RegisterDate, DateTime? ActHarvestDate, DateTime? EstimatedHarvestDate, PigPenType Type, Guid? FeedFormulaId);
+public record PigPenCreateDto(Guid CustomerId, string PenCode, int PigQty, DateTime RegisterDate, DateTime? ActHarvestDate, DateTime? EstimatedHarvestDate, PigPenType Type, Guid? FeedFormulaId, string? SelectedBrand);
 
 public interface IPigPenService
 {
@@ -51,7 +51,10 @@ public class PigPenService : IPigPenService
             dto.Type, // PigPenType
             dto.FeedFormulaId, // FeedFormulaId
             now, // CreatedAt
-            now); // UpdatedAt
+            now) // UpdatedAt
+        {
+            SelectedBrand = dto.SelectedBrand // Store the selected brand
+        };
 
         return await _pigPenRepository.CreateAsync(pigPen);
     }

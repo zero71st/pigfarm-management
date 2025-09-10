@@ -41,6 +41,7 @@ public class PigFarmDbContext : DbContext
             entity.Property(e => e.Investment).HasColumnType("decimal(18,2)");
             entity.Property(e => e.ProfitLoss).HasColumnType("decimal(18,2)");
             entity.Property(e => e.Type).HasConversion<int>();
+            entity.Property(e => e.SelectedBrand).HasMaxLength(100);
 
             entity.HasOne(e => e.Customer)
                   .WithMany(e => e.PigPens)

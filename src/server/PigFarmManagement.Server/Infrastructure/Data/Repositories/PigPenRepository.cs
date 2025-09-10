@@ -75,6 +75,7 @@ public class PigPenRepository : IPigPenRepository
         entity.FeedCost = pigPen.FeedCost;
         entity.Investment = pigPen.Investment;
         entity.ProfitLoss = pigPen.ProfitLoss;
+        entity.SelectedBrand = pigPen.SelectedBrand;
         entity.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();

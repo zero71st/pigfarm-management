@@ -24,6 +24,9 @@ public record PigPen(Guid Id, Guid CustomerId, string PenCode, int PigQty,
     decimal FeedCost, decimal Investment, decimal ProfitLoss, 
     PigPenType Type, Guid? FeedFormulaId, DateTime CreatedAt, DateTime UpdatedAt)
 {
+    // Feed formula brand selection (for display purposes)
+    public string? SelectedBrand { get; init; }
+    
     // Business computed properties
     public string Name => $"Pen {PenCode}";
     public string Code => PenCode;
