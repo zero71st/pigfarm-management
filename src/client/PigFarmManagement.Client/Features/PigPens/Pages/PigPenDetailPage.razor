@@ -230,12 +230,6 @@
             <MudCardContent>
                 @if (feeds.Any())
                 {
-                    <!-- Feed Formula vs Actual Comparison -->
-                    <MudDivider Class="my-4" />
-                    <MudText Typo="Typo.h6" Class="mb-3">
-                        <MudIcon Icon="Icons.Material.Filled.Compare" Class="mr-2" />
-                        Feed Formula vs Actual Feed History Comparison
-                    </MudText>
                     <MudText Typo="Typo.body2" Class="mb-3" Color="Color.Secondary">
                         Total Pigs: @(pigPen?.CurrentPigCount ?? 0)
                     </MudText>
