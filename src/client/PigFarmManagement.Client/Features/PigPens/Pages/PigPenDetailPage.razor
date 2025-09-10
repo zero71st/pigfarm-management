@@ -228,70 +228,109 @@
                 </CardHeaderActions>
             </MudCardHeader>
             <MudCardContent>
+                <!-- Always show debug info and comparison section -->
+                <MudDivider Class="my-4" />
+                <MudText Typo="Typo.h6" Class="mb-3">
+                    <MudIcon Icon="Icons.Material.Filled.Compare" Class="mr-2" />
+                    Feed Formula vs Actual Feed History Comparison
+                </MudText>
+                <MudText Typo="Typo.body2" Class="mb-3" Color="Color.Secondary">
+                    Total Pigs: @(pigPen?.CurrentPigCount ?? 0)
+                </MudText>
+
+                <!-- Debug Information -->
+                <MudAlert Severity="Severity.Info" Class="mb-3">
+                    <div>
+                        <MudText>Debug Info:</MudText>
+                        <MudText>Feeds count: @feeds.Count</MudText>
+                        <MudText>Feed formulas count: @(feedFormulaCalculations?.Count() ?? 0)</MudText>
+                        <MudText>Comparison data count: @(comparisonData?.Count ?? 0)</MudText>
+                        <MudText>Table rows count: @GetTableRows().Count</MudText>
+                        <MudText>Pig pen brand: "@(pigPen?.SelectedBrand ?? "NULL")"</MudText>
+                        <MudText>Pig pen pig count: @(pigPen?.PigQty ?? 0)</MudText>
+                        <MudText>Pig pen ID: @(pigPen?.Id.ToString() ?? "NULL")</MudText>
+                    </div>
+                </MudAlert>
+
+                <!-- Quick Brand Test -->
+                @if (pigPen != null && string.IsNullOrEmpty(pigPen.SelectedBrand))
+                {
+                    <MudAlert Severity="Severity.Warning" Class="mb-3">
+                        <MudText><strong>Issue:</strong> This pig pen doesn't have a feed formula brand selected.</MudText>
+                        <MudText>Please edit the pig pen and select a brand to enable feed formula comparison.</MudText>
+                        <MudButton StartIcon="Icons.Material.Filled.Edit" 
+                                  Color="Color.Primary" 
+                                  Variant="Variant.Filled" 
+                                  Class="mt-2"
+                                  OnClick="@(() => Snackbar.Add("Go to Pig Pens page and click Edit to select a brand", Severity.Info))">
+                            How to Fix
+                        </MudButton>
+                    </MudAlert>
+                }
+
+                <!-- Show feed status -->
                 @if (feeds.Any())
                 {
-                    <MudText Typo="Typo.body2" Class="mb-3" Color="Color.Secondary">
-                        Total Pigs: @(pigPen?.CurrentPigCount ?? 0)
-                    </MudText>
-
-                    <!-- Table matching the provided image structure -->
-                    @if (feedFormulaCalculations != null && feedFormulaCalculations.Any())
-                    {
-                        <MudTable Items="@GetTableRows()" Dense="true" Hover="false" Striped="false" 
-                                 FixedHeader="true" Class="comparison-table" Style="border-collapse: collapse;">
-                            <HeaderContent>
-                                <MudTh Style="border: 1px solid #000; text-align: center; font-weight: bold; padding: 8px; background-color: #f8f9fa;">Product Code</MudTh>
-                                <MudTh Style="border: 1px solid #000; text-align: center; font-weight: bold; padding: 8px; background-color: #f8f9fa;">Product Name</MudTh>
-                                <MudTh Style="border: 1px solid #000; text-align: center; font-weight: bold; padding: 8px; background-color: #e3f2fd;" colspan="2">Feed Formula</MudTh>
-                                <MudTh Style="border: 1px solid #000; text-align: center; font-weight: bold; padding: 8px; background-color: #e8f5e8;" colspan="2">Feed History</MudTh>
-                            </HeaderContent>
-                            <HeaderContent>
-                                <MudTh Style="border: 1px solid #000; padding: 8px;"></MudTh>
-                                <MudTh Style="border: 1px solid #000; padding: 8px;"></MudTh>
-                                <MudTh Style="border: 1px solid #000; text-align: center; font-size: 0.85rem; padding: 8px; background-color: #e3f2fd;">Per Pig (Bags)</MudTh>
-                                <MudTh Style="border: 1px solid #000; text-align: center; font-size: 0.85rem; padding: 8px; background-color: #e3f2fd;">Per Pig Pen (Bags)</MudTh>
-                                <MudTh Style="border: 1px solid #000; text-align: center; font-size: 0.85rem; padding: 8px; background-color: #e8f5e8;">Invoice No</MudTh>
-                                <MudTh Style="border: 1px solid #000; text-align: center; font-size: 0.85rem; padding: 8px; background-color: #e8f5e8;">Per Invoice (Bags)</MudTh>
-                            </HeaderContent>
-                            <RowTemplate>
-                                @{
-                                    var row = context as TableRowData;
-                                    var baseStyle = "border: 1px solid #000; padding: 8px;";
-                                    var subTotalStyle = row.IsSubTotal ? " font-weight: bold; background-color: #f9f9f9;" : "";
-                                    var centerStyle = " text-align: center;";
-                                }
-                                <MudTd Style="@(baseStyle + subTotalStyle)">
-                                    @row.ProductCode
-                                </MudTd>
-                                <MudTd Style="@(baseStyle + subTotalStyle)">
-                                    @row.ProductName
-                                </MudTd>
-                                <MudTd Style="@(baseStyle + centerStyle + subTotalStyle)">
-                                    @row.PerPigBags
-                                </MudTd>
-                                <MudTd Style="@(baseStyle + centerStyle + subTotalStyle)">
-                                    @row.PerPigPenBags
-                                </MudTd>
-                                <MudTd Style="@(baseStyle + centerStyle + subTotalStyle)">
-                                    @row.InvoiceNo
-                                </MudTd>
-                                <MudTd Style="@(baseStyle + centerStyle + subTotalStyle)">
-                                    @row.PerInvoiceBags
-                                </MudTd>
-                            </RowTemplate>
-                        </MudTable>
-                    }
-                    else
-                    {
-                        <MudAlert Severity="Severity.Warning">
-                            <MudText>No feed formula found for this pig pen. Please set up feed formulas to enable comparison.</MudText>
-                        </MudAlert>
-                    }
+                    <MudText Class="mb-3" Color="Color.Success">✓ Found @feeds.Count feed records for this pig pen.</MudText>
                 }
                 else
                 {
-                    <MudAlert Severity="Severity.Info">
-                        <MudText>No feed records found for this pig pen.</MudText>
+                    <MudAlert Severity="Severity.Info" Class="mb-3">
+                        <MudText>No feed records found for this pig pen. The comparison will show formula data only.</MudText>
+                    </MudAlert>
+                }
+
+                <!-- Table matching the provided image structure -->
+                @if (feedFormulaCalculations != null && feedFormulaCalculations.Any())
+                {
+                    <MudTable Items="@GetTableRows()" Dense="true" Hover="false" Striped="false" 
+                             FixedHeader="true" Class="comparison-table" Style="border-collapse: collapse;">
+                        <HeaderContent>
+                            <MudTh Style="border: 1px solid #000; text-align: center; font-weight: bold; padding: 8px; background-color: #f8f9fa;">Product Code</MudTh>
+                            <MudTh Style="border: 1px solid #000; text-align: center; font-weight: bold; padding: 8px; background-color: #f8f9fa;">Product Name</MudTh>
+                            <MudTh Style="border: 1px solid #000; text-align: center; font-weight: bold; padding: 8px; background-color: #e3f2fd;" colspan="2">Feed Formula</MudTh>
+                            <MudTh Style="border: 1px solid #000; text-align: center; font-weight: bold; padding: 8px; background-color: #e8f5e8;" colspan="2">Feed History</MudTh>
+                        </HeaderContent>
+                        <HeaderContent>
+                            <MudTh Style="border: 1px solid #000; padding: 8px;"></MudTh>
+                            <MudTh Style="border: 1px solid #000; padding: 8px;"></MudTh>
+                            <MudTh Style="border: 1px solid #000; text-align: center; font-size: 0.85rem; padding: 8px; background-color: #e3f2fd;">Per Pig (Bags)</MudTh>
+                            <MudTh Style="border: 1px solid #000; text-align: center; font-size: 0.85rem; padding: 8px; background-color: #e3f2fd;">Per Pig Pen (Bags)</MudTh>
+                            <MudTh Style="border: 1px solid #000; text-align: center; font-size: 0.85rem; padding: 8px; background-color: #e8f5e8;">Invoice No</MudTh>
+                            <MudTh Style="border: 1px solid #000; text-align: center; font-size: 0.85rem; padding: 8px; background-color: #e8f5e8;">Per Invoice (Bags)</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            @{
+                                var row = context as TableRowData;
+                                var baseStyle = "border: 1px solid #000; padding: 8px;";
+                                var subTotalStyle = row.IsSubTotal ? " font-weight: bold; background-color: #f9f9f9;" : "";
+                                var centerStyle = " text-align: center;";
+                            }
+                            <MudTd Style="@(baseStyle + subTotalStyle)">
+                                @row.ProductCode
+                            </MudTd>
+                            <MudTd Style="@(baseStyle + subTotalStyle)">
+                                @row.ProductName
+                            </MudTd>
+                            <MudTd Style="@(baseStyle + centerStyle + subTotalStyle)">
+                                @row.PerPigBags
+                            </MudTd>
+                            <MudTd Style="@(baseStyle + centerStyle + subTotalStyle)">
+                                @row.PerPigPenBags
+                            </MudTd>
+                            <MudTd Style="@(baseStyle + centerStyle + subTotalStyle)">
+                                @row.InvoiceNo
+                            </MudTd>
+                            <MudTd Style="@(baseStyle + centerStyle + subTotalStyle)">
+                                @row.PerInvoiceBags
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+                else
+                {
+                    <MudAlert Severity="Severity.Warning">
+                        <MudText>No feed formula found for this pig pen. Please set up feed formulas to enable comparison.</MudText>
                     </MudAlert>
                 }
             </MudCardContent>
@@ -461,10 +500,25 @@
                 // Load feed formula calculations if there's a selected brand
                 if (!string.IsNullOrEmpty(pigPen.SelectedBrand))
                 {
-                    feedFormulaCalculations = await FeedFormulaCalculationService.GetFeedFormulasByBrandAsync(pigPen.SelectedBrand, pigPen.PigQty);
-                    
-                    // Build comparison data
-                    BuildComparisonData();
+                    try
+                    {
+                        Console.WriteLine($"Loading feed formulas for brand: {pigPen.SelectedBrand}, pig count: {pigPen.PigQty}");
+                        feedFormulaCalculations = await FeedFormulaCalculationService.GetFeedFormulasByBrandAsync(pigPen.SelectedBrand, pigPen.PigQty);
+                        Console.WriteLine($"Loaded {feedFormulaCalculations?.Count() ?? 0} feed formulas");
+                        
+                        // Build comparison data
+                        BuildComparisonData();
+                        Console.WriteLine($"Built comparison data: {comparisonData?.Count ?? 0} items");
+                    }
+                    catch (Exception feedEx)
+                    {
+                        Console.WriteLine($"Error loading feed formulas: {feedEx.Message}");
+                        Snackbar.Add($"Error loading feed formulas: {feedEx.Message}", Severity.Warning);
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("No brand selected for pig pen");
                 }
             }
         }
@@ -530,12 +584,23 @@
 
     private void BuildComparisonData()
     {
-        if (feedFormulaCalculations == null || pigPen == null) return;
+        Console.WriteLine($"BuildComparisonData called - feedFormulaCalculations null: {feedFormulaCalculations == null}, pigPen null: {pigPen == null}");
+        
+        if (feedFormulaCalculations == null || pigPen == null) 
+        {
+            Console.WriteLine("Exiting BuildComparisonData - missing data");
+            return;
+        }
+
+        Console.WriteLine($"Processing {feedFormulaCalculations.Count()} feed formulas");
 
         comparisonData = feedFormulaCalculations.Select(formula =>
         {
+            Console.WriteLine($"Processing formula: {formula.ProductCode} - {formula.ProductName}");
+            
             // Find matching feed history entries by product code
             var matchingFeeds = feeds.Where(f => f.ProductCode == formula.ProductCode).ToList();
+            Console.WriteLine($"Found {matchingFeeds.Count} matching feeds for {formula.ProductCode}");
             
             // Group by invoice number for detailed breakdown
             var feedHistoryEntries = matchingFeeds
@@ -548,7 +613,7 @@
                 })
                 .ToList();
 
-            return new FeedComparisonData
+            var result = new FeedComparisonData
             {
                 ProductCode = formula.ProductCode,
                 ProductName = formula.ProductName,
@@ -557,7 +622,12 @@
                 ActualTotal = matchingFeeds.Sum(f => f.QuantityKg),
                 FeedHistoryEntries = feedHistoryEntries
             };
+            
+            Console.WriteLine($"Created comparison data: {result.ProductCode}, FormulaPerPig: {result.FormulaPerPig}, FormulaTotal: {result.FormulaTotal}");
+            return result;
         }).ToList();
+        
+        Console.WriteLine($"BuildComparisonData completed - created {comparisonData.Count} comparison items");
     }
 
     private decimal GetOverallVariance()
@@ -617,7 +687,7 @@
             {
                 ProductCode = comparison.ProductCode,
                 ProductName = comparison.ProductName,
-                PerPigBags = comparison.FormulaPerPig.ToString("0"),
+                PerPigBags = comparison.FormulaPerPig.ToString("F1"),
                 PerPigPenBags = comparison.FormulaTotal.ToString("0"),
                 InvoiceNo = firstInvoice?.InvoiceNumber ?? "",
                 PerInvoiceBags = firstInvoice?.Quantity.ToString("0") ?? "",
