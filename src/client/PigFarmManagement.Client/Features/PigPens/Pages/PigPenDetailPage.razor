@@ -265,24 +265,26 @@
                                 var row = context as TableRowData;
                                 var baseStyle = "border: 1px solid #000; padding: 8px;";
                                 var subTotalStyle = row.IsSubTotal ? " font-weight: bold; background-color: #f9f9f9;" : "";
+                                var grandTotalStyle = row.IsGrandTotal ? " font-weight: bold; background-color: #e3f2fd; color: #1976d2;" : "";
                                 var centerStyle = " text-align: center;";
+                                var cellStyle = baseStyle + centerStyle + subTotalStyle + grandTotalStyle;
                             }
-                            <MudTd Style="@(baseStyle + subTotalStyle)">
+                            <MudTd Style="@(baseStyle + subTotalStyle + grandTotalStyle)">
                                 @row.ProductCode
                             </MudTd>
-                            <MudTd Style="@(baseStyle + subTotalStyle)">
+                            <MudTd Style="@(baseStyle + subTotalStyle + grandTotalStyle)">
                                 @row.ProductName
                             </MudTd>
-                            <MudTd Style="@(baseStyle + centerStyle + subTotalStyle)">
+                            <MudTd Style="@cellStyle">
                                 @row.PerPigBags
                             </MudTd>
-                            <MudTd Style="@(baseStyle + centerStyle + subTotalStyle)">
+                            <MudTd Style="@cellStyle">
                                 @row.PerPigPenBags
                             </MudTd>
-                            <MudTd Style="@(baseStyle + centerStyle + subTotalStyle)">
+                            <MudTd Style="@cellStyle">
                                 @row.InvoiceNo
                             </MudTd>
-                            <MudTd Style="@(baseStyle + centerStyle + subTotalStyle)">
+                            <MudTd Style="@cellStyle">
                                 @row.PerInvoiceBags
                             </MudTd>
                         </RowTemplate>
@@ -700,6 +702,24 @@
             }
         }
 
+        // Calculate grand totals
+        var grandTotalPerPig = comparisonData.Sum(c => c.FormulaPerPig);
+        var grandTotalPerPigPen = comparisonData.Sum(c => c.FormulaTotal);
+        var grandTotalPerInvoice = comparisonData.Sum(c => c.ActualTotal);
+
+        // Add Grand Total row
+        rows.Add(new TableRowData
+        {
+            ProductCode = "",
+            ProductName = "",
+            PerPigBags = grandTotalPerPig.ToString("F1"),
+            PerPigPenBags = grandTotalPerPigPen.ToString("0"),
+            InvoiceNo = "Grand Total",
+            PerInvoiceBags = grandTotalPerInvoice.ToString("0"),
+            IsSubTotal = false,
+            IsGrandTotal = true
+        });
+
         return rows;
     }
 
@@ -712,6 +732,7 @@
         public string InvoiceNo { get; set; } = "";
         public string PerInvoiceBags { get; set; } = "";
         public bool IsSubTotal { get; set; }
+        public bool IsGrandTotal { get; set; }
     }
 
     public class FeedComparisonData
