@@ -40,14 +40,14 @@
                                    Required="true" />
                 </MudItem>
                 <MudItem xs="6">
-                    <MudDatePicker Date="startDate" 
-                                  DateChanged="@OnStartDateChanged"
-                                  Label="Start Date" 
+                    <MudDatePicker Date="registerDate" 
+                                  DateChanged="@OnRegisterDateChanged"
+                                  Label="Register Date" 
                                   Variant="Variant.Outlined" 
                                   Required="true" />
                 </MudItem>
                 <MudItem xs="6">
-                    <MudDatePicker @bind-Date="endDate" Label="End Date" Variant="Variant.Outlined" />
+                    <MudDatePicker @bind-Date="actualHarvestDate" Label="Actual Harvest Date" Variant="Variant.Outlined" />
                 </MudItem>
                 <MudItem xs="6">
                     <MudDatePicker @bind-Date="estimatedHarvestDate" Label="Estimated Harvest Date" Variant="Variant.Outlined" />
@@ -80,7 +80,6 @@
                         {
                             <MudPaper Elevation="1" Class="pa-2">
                                 <MudText Typo="Typo.h6" Class="mb-2">Feed Formulas for @selectedBrand (@feedFormulasWithCalculation.Count items)</MudText>
-                                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-3">All feed formulas from this brand will be applied to the pig pen</MudText>
                                 
                                 @foreach (var formula in feedFormulasWithCalculation)
                                 {
@@ -134,13 +133,6 @@
                                     </MudAlert>
                                 </MudItem>
                             </MudGrid>
-                            
-                            <!-- Brand Summary -->
-                            <MudAlert Severity="Severity.Normal" Class="mt-3">
-                                <MudText Typo="Typo.subtitle1"><strong>📋 Summary for @selectedBrand Brand</strong></MudText>
-                                <MudText Typo="Typo.body2">Selected Products: @string.Join(", ", feedFormulasWithCalculation.Select(f => f.ProductCode))</MudText>
-                                <MudText Typo="Typo.body2">This feed formula selection will be applied to the pig pen automatically.</MudText>
-                            </MudAlert>
                         }
                         else
                         {
@@ -190,8 +182,8 @@
     private string penCode = "";
     private PigPenType selectedType = PigPenType.Cash;
     private int pigQty = 1;
-    private DateTime? startDate = DateTime.Today;
-    private DateTime? endDate;
+    private DateTime? registerDate = DateTime.Today;
+    private DateTime? actualHarvestDate;
     private DateTime? estimatedHarvestDate;
     
     // Feed formula selection properties
@@ -334,20 +326,20 @@
         }
     }
 
-    private void OnStartDateChanged(DateTime? newStartDate)
+    private void OnRegisterDateChanged(DateTime? newRegisterDate)
     {
-        startDate = newStartDate;
+        registerDate = newRegisterDate;
         
-        // Automatically calculate estimated harvest date (start date + 120 days)
-        if (newStartDate.HasValue)
+        // Automatically calculate estimated harvest date (register date + 120 days)
+        if (newRegisterDate.HasValue)
         {
-            estimatedHarvestDate = newStartDate.Value.AddDays(120);
-            Console.WriteLine($"[OnStartDateChanged] Start date set to: {startDate?.ToString("yyyy-MM-dd")}, Estimated harvest date automatically set to: {estimatedHarvestDate?.ToString("yyyy-MM-dd")}");
+            estimatedHarvestDate = newRegisterDate.Value.AddDays(120);
+            Console.WriteLine($"[OnRegisterDateChanged] Register date set to: {registerDate?.ToString("yyyy-MM-dd")}, Estimated harvest date automatically set to: {estimatedHarvestDate?.ToString("yyyy-MM-dd")}");
         }
         else
         {
             estimatedHarvestDate = null;
-            Console.WriteLine($"[OnStartDateChanged] Start date cleared, estimated harvest date cleared");
+            Console.WriteLine($"[OnRegisterDateChanged] Register date cleared, estimated harvest date cleared");
         }
         
         StateHasChanged();
@@ -360,7 +352,7 @@
         return selectedCustomerId.HasValue && 
                !string.IsNullOrWhiteSpace(penCode) && 
                pigQty > 0 && 
-               startDate.HasValue;
+               registerDate.HasValue;
     }
 
     async Task Submit()
@@ -374,8 +366,8 @@
                 selectedCustomerId!.Value,
                 penCode,
                 pigQty,
-                startDate!.Value,
-                endDate,
+                registerDate!.Value,
+                actualHarvestDate,
                 estimatedHarvestDate,
                 selectedType,
                 null // No longer using individual feed formula selection

@@ -67,9 +67,9 @@ public class DashboardService : IDashboardService
         var allDeposits = await _depositRepository.GetAllAsync();
         var allHarvests = await _harvestRepository.GetAllAsync();
 
-        // Filter active pig pens (those without end date or end date in future) and with active customers
+        // Filter active pig pens (those without actual harvest date or actual harvest date in future) and with active customers
         var activePigPens = pigPens.Where(p => 
-            (p.EndDate == null || p.EndDate > DateTime.Now) &&
+            (p.ActHarvestDate == null || p.ActHarvestDate > DateTime.Now) &&
             customers.FirstOrDefault(c => c.Id == p.CustomerId)?.Status == CustomerStatus.Active).ToList();
 
         // Group by pig pen type

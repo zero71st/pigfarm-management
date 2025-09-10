@@ -111,6 +111,6 @@ public class PigPenService : IPigPenService
 }
 
 // DTOs that should be moved to shared project later
-public record PigPenCreateDto(Guid CustomerId, string PenCode, int PigQty, DateTime StartDate, DateTime? EndDate, DateTime? EstimatedHarvestDate, PigPenType Type, Guid? FeedFormulaId);
+public record PigPenCreateDto(Guid CustomerId, string PenCode, int PigQty, DateTime RegisterDate, DateTime? ActHarvestDate, DateTime? EstimatedHarvestDate, PigPenType Type, Guid? FeedFormulaId);
 public record DepositCreateDto(decimal Amount, DateTime Date, string? Remark);
 public record HarvestCreateDto(DateTime HarvestDate, int PigCount, decimal AvgWeight, decimal MinWeight, decimal MaxWeight, decimal SalePricePerKg);

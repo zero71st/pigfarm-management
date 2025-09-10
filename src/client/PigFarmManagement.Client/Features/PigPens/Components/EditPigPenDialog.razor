@@ -28,10 +28,10 @@
                     <MudNumericField @bind-Value="pigQty" Label="Pig Quantity" Variant="Variant.Outlined" Min="1" Required="true" />
                 </MudItem>
                 <MudItem xs="6">
-                    <MudDatePicker @bind-Date="startDate" Label="Start Date" Variant="Variant.Outlined" Required="true" />
+                    <MudDatePicker @bind-Date="registerDate" Label="Register Date" Variant="Variant.Outlined" Required="true" />
                 </MudItem>
                 <MudItem xs="6">
-                    <MudDatePicker @bind-Date="endDate" Label="End Date" Variant="Variant.Outlined" />
+                    <MudDatePicker @bind-Date="actualHarvestDate" Label="Actual Harvest Date" Variant="Variant.Outlined" />
                 </MudItem>
                 <MudItem xs="6">
                     <MudDatePicker @bind-Date="estimatedHarvestDate" Label="Estimated Harvest Date" Variant="Variant.Outlined" />
@@ -56,8 +56,8 @@
     private string penCode = "";
     private PigPenType selectedType = PigPenType.Cash;
     private int pigQty = 1;
-    private DateTime? startDate = DateTime.Today;
-    private DateTime? endDate;
+    private DateTime? registerDate = DateTime.Today;
+    private DateTime? actualHarvestDate;
     private DateTime? estimatedHarvestDate;
 
     protected override async Task OnInitializedAsync()
@@ -69,8 +69,8 @@
         penCode = PigPen.PenCode;
         selectedType = PigPen.Type;
         pigQty = PigPen.PigQty;
-        startDate = PigPen.StartDate;
-        endDate = PigPen.EndDate;
+        registerDate = PigPen.RegisterDate;
+        actualHarvestDate = PigPen.ActHarvestDate;
         estimatedHarvestDate = PigPen.EstimatedHarvestDate;
     }
 
@@ -79,12 +79,12 @@
         return selectedCustomerId.HasValue && 
                !string.IsNullOrWhiteSpace(penCode) && 
                pigQty > 0 && 
-               startDate.HasValue;
+               registerDate.HasValue;
     }
 
     private async Task Save()
     {
-        if (!IsFormValid() || !selectedCustomerId.HasValue || !startDate.HasValue)
+        if (!IsFormValid() || !selectedCustomerId.HasValue || !registerDate.HasValue)
             return;
 
         var updatedPigPen = PigPen with
@@ -93,8 +93,8 @@
             PenCode = penCode,
             Type = selectedType,
             PigQty = pigQty,
-            StartDate = startDate.Value,
-            EndDate = endDate,
+            RegisterDate = registerDate.Value,
+            ActHarvestDate = actualHarvestDate,
             EstimatedHarvestDate = estimatedHarvestDate
         };
 

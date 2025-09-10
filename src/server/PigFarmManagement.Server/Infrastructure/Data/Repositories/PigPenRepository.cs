@@ -69,8 +69,8 @@ public class PigPenRepository : IPigPenRepository
         entity.CustomerId = pigPen.CustomerId;
         entity.PenCode = pigPen.PenCode;
         entity.PigQty = pigPen.PigQty;
-        entity.StartDate = pigPen.StartDate;
-        entity.EndDate = pigPen.EndDate;
+        entity.RegisterDate = pigPen.RegisterDate;
+        entity.ActHarvestDate = pigPen.ActHarvestDate;
         entity.EstimatedHarvestDate = pigPen.EstimatedHarvestDate;
         entity.FeedCost = pigPen.FeedCost;
         entity.Investment = pigPen.Investment;

@@ -16,8 +16,8 @@ public class PigPenEntity
     
     public int PigQty { get; set; }
     
-    public DateTime StartDate { get; set; }
-    public DateTime? EndDate { get; set; }
+    public DateTime RegisterDate { get; set; }
+    public DateTime? ActHarvestDate { get; set; }
     public DateTime? EstimatedHarvestDate { get; set; }
     
     [Column(TypeName = "decimal(18,2)")]
@@ -55,8 +55,8 @@ public class PigPenEntity
             CustomerId, 
             PenCode, 
             PigQty, 
-            StartDate, 
-            EndDate, 
+            RegisterDate, 
+            ActHarvestDate, 
             EstimatedHarvestDate, 
             FeedCost, 
             Investment, 
@@ -77,8 +77,8 @@ public class PigPenEntity
             CustomerId = pigPen.CustomerId,
             PenCode = pigPen.PenCode,
             PigQty = pigPen.PigQty,
-            StartDate = pigPen.StartDate,
-            EndDate = pigPen.EndDate,
+            RegisterDate = pigPen.RegisterDate,
+            ActHarvestDate = pigPen.ActHarvestDate,
             EstimatedHarvestDate = pigPen.EstimatedHarvestDate,
             FeedCost = pigPen.FeedCost,
             Investment = pigPen.Investment,

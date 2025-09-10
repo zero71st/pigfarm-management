@@ -152,8 +152,8 @@ public class PigFarmDbContext : DbContext
                 CustomerId = customer.Id,
                 PenCode = $"P{i:D3}",
                 PigQty = pigQty,
-                StartDate = now.AddDays(-startDaysAgo),
-                EndDate = random.Next(0, 10) == 0 ? now.AddDays(-random.Next(1, startDaysAgo)) : null, // 10% chance of being completed
+                RegisterDate = now.AddDays(-startDaysAgo),
+                ActHarvestDate = random.Next(0, 10) == 0 ? now.AddDays(-random.Next(1, startDaysAgo)) : null, // 10% chance of being completed
                 EstimatedHarvestDate = now.AddDays(random.Next(30, 120)),
                 FeedCost = pigQty * feedCostPerPig + random.Next(-500, 500),
                 Investment = pigQty * investmentPerPig + random.Next(-2000, 2000),

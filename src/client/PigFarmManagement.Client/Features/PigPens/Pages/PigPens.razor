@@ -55,7 +55,7 @@
             <MudTh>Pen Code</MudTh>
             <MudTh>Type</MudTh>
             <MudTh>Quantity</MudTh>
-            <MudTh>Start Date</MudTh>
+            <MudTh>Register Date</MudTh>
             <MudTh>Est. Harvest</MudTh>
             <MudTh>Days Remaining</MudTh>
             <MudTh>Last Updated</MudTh>
@@ -71,7 +71,7 @@
                 </MudChip>
             </MudTd>
             <MudTd DataLabel="Quantity">@context.PigQty</MudTd>
-            <MudTd DataLabel="Start Date">@context.StartDate.ToString("yyyy-MM-dd")</MudTd>
+            <MudTd DataLabel="Register Date">@context.RegisterDate.ToString("yyyy-MM-dd")</MudTd>
             <MudTd DataLabel="Est. Harvest">@(context.EstimatedHarvestDate?.ToString("yyyy-MM-dd") ?? "N/A")</MudTd>
             <MudTd DataLabel="Days Remaining">
                 @if (context.EstimatedHarvestDate.HasValue)

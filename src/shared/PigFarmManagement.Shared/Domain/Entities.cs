@@ -20,7 +20,7 @@ public record Customer(Guid Id, string Code, string Name, CustomerStatus Status)
 };
 
 public record PigPen(Guid Id, Guid CustomerId, string PenCode, int PigQty,
-    DateTime StartDate, DateTime? EndDate, DateTime? EstimatedHarvestDate,
+    DateTime RegisterDate, DateTime? ActHarvestDate, DateTime? EstimatedHarvestDate,
     decimal FeedCost, decimal Investment, decimal ProfitLoss, 
     PigPenType Type, Guid? FeedFormulaId, DateTime CreatedAt, DateTime UpdatedAt)
 {
@@ -31,7 +31,7 @@ public record PigPen(Guid Id, Guid CustomerId, string PenCode, int PigQty,
     public int MaxCapacity => (int)(PigQty * 1.2); // 20% buffer for capacity
     
     // Business logic
-    public bool IsActive => EndDate == null || EndDate > DateTime.Now;
+    public bool IsActive => ActHarvestDate == null || ActHarvestDate > DateTime.Now;
     public bool IsReadyForHarvest => EstimatedHarvestDate <= DateTime.Now;
     public decimal ProfitMargin => Investment != 0 ? (ProfitLoss / Investment) * 100 : 0;
     
