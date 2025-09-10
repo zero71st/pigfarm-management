@@ -2,6 +2,8 @@
 @inject HttpClient Http
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
+@using PigFarmManagement.Client.Features.FeedFormulas.Services
+@inject IFeedFormulaCalculationService FeedFormulaCalculationService
 
 <PageTitle>Pig Pen Detail</PageTitle>
 
@@ -228,184 +230,69 @@
             <MudCardContent>
                 @if (feeds.Any())
                 {
-                    <MudTable Items="@groupedFeeds" Hover="true" Striped="true" Dense="true">
-                        <HeaderContent>
-                            <MudTh>Product Code</MudTh>
-                            <MudTh>Product Name</MudTh>
-                            <MudTh Style="text-align: right">Total Quantity</MudTh>
-                            <MudTh Style="text-align: right">Feed Count</MudTh>
-                        </HeaderContent>
-                        <RowTemplate>
-                            <MudTd DataLabel="Product Code">
-                                <MudChip Size="Size.Small" Color="Color.Primary">@context.ProductCode</MudChip>
-                            </MudTd>
-                            <MudTd DataLabel="Product Name">@context.ProductName</MudTd>
-                            <MudTd DataLabel="Total Quantity" Style="text-align: right">@context.TotalQuantity.ToString("N1")</MudTd>
-                            <MudTd DataLabel="Feed Count" Style="text-align: right">@context.FeedCount</MudTd>
-                        </RowTemplate>
-                    </MudTable>
-                    
-                    <!-- Feed Summary -->
-                    <MudDivider Class="my-4" />
-                    <MudText Typo="Typo.h6" Class="mb-2">Feed Summary</MudText>
-                    <MudGrid>
-                        <MudItem xs="12" sm="6">
-                            <MudPaper Class="pa-3" Elevation="1">
-                                <MudText Typo="Typo.body2" Color="Color.Secondary">Product Types</MudText>
-                                <MudText Typo="Typo.h6">@groupedFeeds.Count</MudText>
-                            </MudPaper>
-                        </MudItem>
-                        <MudItem xs="12" sm="6">
-                            <MudPaper Class="pa-3" Elevation="1">
-                                <MudText Typo="Typo.body2" Color="Color.Secondary">Total Quantity</MudText>
-                                <MudText Typo="Typo.h6">@groupedFeeds.Sum(f => f.TotalQuantity).ToString("N1")</MudText>
-                            </MudPaper>
-                        </MudItem>
-                    </MudGrid>
-
                     <!-- Feed Formula vs Actual Comparison -->
                     <MudDivider Class="my-4" />
-                    <MudText Typo="Typo.h6" Class="mb-2">
+                    <MudText Typo="Typo.h6" Class="mb-3">
                         <MudIcon Icon="Icons.Material.Filled.Compare" Class="mr-2" />
-                        Feed Formula vs Actual Feed History
+                        Feed Formula vs Actual Feed History Comparison
                     </MudText>
-                    <MudGrid>
-                        <!-- Left Panel: Feed Formula -->
-                        <MudItem xs="12" md="6">
-                            <MudPaper Class="pa-4" Elevation="2" Style="height: 100%;">
-                                <MudText Typo="Typo.h6" Class="mb-3" Color="Color.Primary">
-                                    <MudIcon Icon="Icons.Material.Filled.Science" Class="mr-2" />
-                                    Feed Formula (Expected)
-                                </MudText>
-                                
-                                <MudAlert Severity="Severity.Info" Class="mb-3">
-                                    <MudText Typo="Typo.body2">Current Pigs: <strong>@pigPen.PigQty</strong></MudText>
-                                    <MudText Typo="Typo.body2">Formula-based calculation</MudText>
-                                </MudAlert>
+                    <MudText Typo="Typo.body2" Class="mb-3" Color="Color.Secondary">
+                        Total Pigs: @(pigPen?.CurrentPigCount ?? 0)
+                    </MudText>
 
-                                <!-- Feed Formula Metrics -->
-                                <MudSimpleTable Dense="true" Class="mb-3">
-                                    <tbody>
-                                        <tr>
-                                            <td><strong>Total Expected:</strong></td>
-                                            <td class="text-right">
-                                                <MudText Color="Color.Primary" Style="font-weight: bold;">
-                                                    [Formula Feed] bags
-                                                </MudText>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td><strong>Per Pig Expected:</strong></td>
-                                            <td class="text-right">
-                                                <MudText Color="Color.Secondary">
-                                                    [Formula Per Pig] bags/pig
-                                                </MudText>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td><strong>Formula Types:</strong></td>
-                                            <td class="text-right">
-                                                <MudChip Size="Size.Small" Color="Color.Info">
-                                                    [Formula Count] products
-                                                </MudChip>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </MudSimpleTable>
-
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">
-                                    * Based on feed formula calculations from pig pen setup
-                                </MudText>
-                            </MudPaper>
-                        </MudItem>
-
-                        <!-- Right Panel: Actual Feed History -->
-                        <MudItem xs="12" md="6">
-                            <MudPaper Class="pa-4" Elevation="2" Style="height: 100%;">
-                                <MudText Typo="Typo.h6" Class="mb-3" Color="Color.Success">
-                                    <MudIcon Icon="Icons.Material.Filled.Inventory" Class="mr-2" />
-                                    Actual Feed History
-                                </MudText>
-
-                                <MudAlert Severity="Severity.Success" Class="mb-3">
-                                    <MudText Typo="Typo.body2">Recorded Feeds: <strong>@feeds.Count entries</strong></MudText>
-                                    <MudText Typo="Typo.body2">Actual usage tracking</MudText>
-                                </MudAlert>
-
-                                <!-- Actual Feed Metrics -->
-                                <MudSimpleTable Dense="true" Class="mb-3">
-                                    <tbody>
-                                        <tr>
-                                            <td><strong>Total Actual:</strong></td>
-                                            <td class="text-right">
-                                                <MudText Color="Color.Success" Style="font-weight: bold;">
-                                                    @groupedFeeds.Sum(f => f.TotalQuantity).ToString("N1") bags
-                                                </MudText>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td><strong>Per Pig Actual:</strong></td>
-                                            <td class="text-right">
-                                                <MudText Color="Color.Secondary">
-                                                    @(pigPen.PigQty > 0 ? (groupedFeeds.Sum(f => f.TotalQuantity) / pigPen.PigQty).ToString("N1") : "0") bags/pig
-                                                </MudText>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td><strong>Product Types:</strong></td>
-                                            <td class="text-right">
-                                                <MudChip Size="Size.Small" Color="Color.Success">
-                                                    @groupedFeeds.Count products
-                                                </MudChip>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </MudSimpleTable>
-
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">
-                                    * Based on imported feed records and usage history
-                                </MudText>
-                            </MudPaper>
-                        </MudItem>
-                    </MudGrid>
-
-                    <!-- Comparison Summary -->
-                    <MudDivider Class="my-3" />
-                    <MudGrid>
-                        <MudItem xs="12" sm="4">
-                            <MudAlert Severity="Severity.Info" Class="mb-0">
-                                <div class="d-flex justify-space-between align-center">
-                                    <div>
-                                        <MudText Typo="Typo.body2">Formula vs Actual</MudText>
-                                        <MudText Typo="Typo.h6">[Comparison] bags</MudText>
-                                    </div>
-                                    <MudIcon Icon="Icons.Material.Filled.CompareArrows" />
-                                </div>
-                            </MudAlert>
-                        </MudItem>
-                        <MudItem xs="12" sm="4">
-                            <MudAlert Severity="Severity.Warning" Class="mb-0">
-                                <div class="d-flex justify-space-between align-center">
-                                    <div>
-                                        <MudText Typo="Typo.body2">Variance</MudText>
-                                        <MudText Typo="Typo.h6">[Variance]%</MudText>
-                                    </div>
-                                    <MudIcon Icon="Icons.Material.Filled.TrendingUp" />
-                                </div>
-                            </MudAlert>
-                        </MudItem>
-                        <MudItem xs="12" sm="4">
-                            <MudAlert Severity="Severity.Success" Class="mb-0">
-                                <div class="d-flex justify-space-between align-center">
-                                    <div>
-                                        <MudText Typo="Typo.body2">Efficiency</MudText>
-                                        <MudText Typo="Typo.h6">[Efficiency]%</MudText>
-                                    </div>
-                                    <MudIcon Icon="Icons.Material.Filled.Speed" />
-                                </div>
-                            </MudAlert>
-                        </MudItem>
-                    </MudGrid>
+                    <!-- Table matching the provided image structure -->
+                    @if (feedFormulaCalculations != null && feedFormulaCalculations.Any())
+                    {
+                        <MudTable Items="@GetTableRows()" Dense="true" Hover="false" Striped="false" 
+                                 FixedHeader="true" Class="comparison-table" Style="border-collapse: collapse;">
+                            <HeaderContent>
+                                <MudTh Style="border: 1px solid #000; text-align: center; font-weight: bold; padding: 8px; background-color: #f8f9fa;">Product Code</MudTh>
+                                <MudTh Style="border: 1px solid #000; text-align: center; font-weight: bold; padding: 8px; background-color: #f8f9fa;">Product Name</MudTh>
+                                <MudTh Style="border: 1px solid #000; text-align: center; font-weight: bold; padding: 8px; background-color: #e3f2fd;" colspan="2">Feed Formula</MudTh>
+                                <MudTh Style="border: 1px solid #000; text-align: center; font-weight: bold; padding: 8px; background-color: #e8f5e8;" colspan="2">Feed History</MudTh>
+                            </HeaderContent>
+                            <HeaderContent>
+                                <MudTh Style="border: 1px solid #000; padding: 8px;"></MudTh>
+                                <MudTh Style="border: 1px solid #000; padding: 8px;"></MudTh>
+                                <MudTh Style="border: 1px solid #000; text-align: center; font-size: 0.85rem; padding: 8px; background-color: #e3f2fd;">Per Pig (Bags)</MudTh>
+                                <MudTh Style="border: 1px solid #000; text-align: center; font-size: 0.85rem; padding: 8px; background-color: #e3f2fd;">Per Pig Pen (Bags)</MudTh>
+                                <MudTh Style="border: 1px solid #000; text-align: center; font-size: 0.85rem; padding: 8px; background-color: #e8f5e8;">Invoice No</MudTh>
+                                <MudTh Style="border: 1px solid #000; text-align: center; font-size: 0.85rem; padding: 8px; background-color: #e8f5e8;">Per Invoice (Bags)</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                @{
+                                    var row = context as TableRowData;
+                                    var baseStyle = "border: 1px solid #000; padding: 8px;";
+                                    var subTotalStyle = row.IsSubTotal ? " font-weight: bold; background-color: #f9f9f9;" : "";
+                                    var centerStyle = " text-align: center;";
+                                }
+                                <MudTd Style="@(baseStyle + subTotalStyle)">
+                                    @row.ProductCode
+                                </MudTd>
+                                <MudTd Style="@(baseStyle + subTotalStyle)">
+                                    @row.ProductName
+                                </MudTd>
+                                <MudTd Style="@(baseStyle + centerStyle + subTotalStyle)">
+                                    @row.PerPigBags
+                                </MudTd>
+                                <MudTd Style="@(baseStyle + centerStyle + subTotalStyle)">
+                                    @row.PerPigPenBags
+                                </MudTd>
+                                <MudTd Style="@(baseStyle + centerStyle + subTotalStyle)">
+                                    @row.InvoiceNo
+                                </MudTd>
+                                <MudTd Style="@(baseStyle + centerStyle + subTotalStyle)">
+                                    @row.PerInvoiceBags
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Warning">
+                            <MudText>No feed formula found for this pig pen. Please set up feed formulas to enable comparison.</MudText>
+                        </MudAlert>
+                    }
                 }
                 else
                 {
@@ -526,6 +413,10 @@
     private List<GroupedFeedItem> groupedFeeds = new();
     private List<Deposit> deposits = new();
     private List<HarvestResult> harvests = new();
+    
+    // Feed formula comparison data
+    private IEnumerable<FeedFormulaWithCalculationResponse>? feedFormulaCalculations;
+    private List<FeedComparisonData> comparisonData = new();
 
     private List<BreadcrumbItem> breadcrumbItems = new();
 
@@ -572,6 +463,15 @@
 
                 // Load harvests
                 harvests = await Http.GetFromJsonAsync<List<HarvestResult>>($"/api/pigpens/{PigPenId}/harvests") ?? new();
+
+                // Load feed formula calculations if there's a selected brand
+                if (!string.IsNullOrEmpty(pigPen.SelectedBrand))
+                {
+                    feedFormulaCalculations = await FeedFormulaCalculationService.GetFeedFormulasByBrandAsync(pigPen.SelectedBrand, pigPen.PigQty);
+                    
+                    // Build comparison data
+                    BuildComparisonData();
+                }
             }
         }
         catch (Exception ex)
@@ -634,11 +534,157 @@
         Snackbar.Add($"Delete harvest {harvest.Id} coming soon", Severity.Info);
     }
 
+    private void BuildComparisonData()
+    {
+        if (feedFormulaCalculations == null || pigPen == null) return;
+
+        comparisonData = feedFormulaCalculations.Select(formula =>
+        {
+            // Find matching feed history entries by product code
+            var matchingFeeds = feeds.Where(f => f.ProductCode == formula.ProductCode).ToList();
+            
+            // Group by invoice number for detailed breakdown
+            var feedHistoryEntries = matchingFeeds
+                .Where(f => !string.IsNullOrEmpty(f.InvoiceNumber))
+                .GroupBy(f => f.InvoiceNumber)
+                .Select(g => new FeedHistoryEntry
+                {
+                    InvoiceNumber = g.Key ?? "Unknown",
+                    Quantity = g.Sum(f => f.QuantityKg)
+                })
+                .ToList();
+
+            return new FeedComparisonData
+            {
+                ProductCode = formula.ProductCode,
+                ProductName = formula.ProductName,
+                FormulaPerPig = formula.BagPerPig,
+                FormulaTotal = formula.TotalBagsRequired,
+                ActualTotal = matchingFeeds.Sum(f => f.QuantityKg),
+                FeedHistoryEntries = feedHistoryEntries
+            };
+        }).ToList();
+    }
+
+    private decimal GetOverallVariance()
+    {
+        if (!comparisonData.Any()) return 0;
+        return comparisonData.Sum(c => c.ActualTotal) - comparisonData.Sum(c => c.FormulaTotal);
+    }
+
+    private Severity GetOverallVarianceAlertSeverity()
+    {
+        var variance = GetOverallVariance();
+        var percentage = comparisonData.Sum(c => c.FormulaTotal) > 0 
+            ? Math.Abs(variance) / comparisonData.Sum(c => c.FormulaTotal) * 100 
+            : 0;
+        
+        return percentage > 10 ? Severity.Error : percentage > 5 ? Severity.Warning : Severity.Success;
+    }
+
+    private decimal GetEfficiencyPercentage()
+    {
+        if (!comparisonData.Any() || comparisonData.Sum(c => c.FormulaTotal) == 0) return 100;
+        
+        var actualTotal = comparisonData.Sum(c => c.ActualTotal);
+        var formulaTotal = comparisonData.Sum(c => c.FormulaTotal);
+        
+        // Efficiency: lower actual usage = higher efficiency
+        return formulaTotal > 0 ? Math.Max(0, (2 * formulaTotal - actualTotal) / formulaTotal * 100) : 100;
+    }
+
+    private Severity GetEfficiencyAlertSeverity()
+    {
+        var efficiency = GetEfficiencyPercentage();
+        return efficiency >= 95 ? Severity.Success : efficiency >= 85 ? Severity.Warning : Severity.Error;
+    }
+
     public class GroupedFeedItem
     {
         public string ProductCode { get; set; } = "";
         public string ProductName { get; set; } = "";
         public decimal TotalQuantity { get; set; }
         public int FeedCount { get; set; }
+    }
+
+    // Method to create table rows that match the provided image structure
+    private List<TableRowData> GetTableRows()
+    {
+        var rows = new List<TableRowData>();
+
+        if (comparisonData?.Any() != true)
+            return rows;
+
+        foreach (var comparison in comparisonData)
+        {
+            // First add the main product row with first invoice or empty values
+            var firstInvoice = comparison.FeedHistoryEntries.FirstOrDefault();
+            rows.Add(new TableRowData
+            {
+                ProductCode = comparison.ProductCode,
+                ProductName = comparison.ProductName,
+                PerPigBags = comparison.FormulaPerPig.ToString("0"),
+                PerPigPenBags = comparison.FormulaTotal.ToString("0"),
+                InvoiceNo = firstInvoice?.InvoiceNumber ?? "",
+                PerInvoiceBags = firstInvoice?.Quantity.ToString("0") ?? "",
+                IsSubTotal = false
+            });
+
+            // Add additional invoices for this product (from second invoice onwards)
+            foreach (var invoice in comparison.FeedHistoryEntries.Skip(1))
+            {
+                rows.Add(new TableRowData
+                {
+                    ProductCode = "",
+                    ProductName = "",
+                    PerPigBags = "",
+                    PerPigPenBags = "",
+                    InvoiceNo = invoice.InvoiceNumber,
+                    PerInvoiceBags = invoice.Quantity.ToString("0"),
+                    IsSubTotal = false
+                });
+            }
+
+            // Add Sub Total row for this product
+            rows.Add(new TableRowData
+            {
+                ProductCode = "",
+                ProductName = "",
+                PerPigBags = "",
+                PerPigPenBags = "",
+                InvoiceNo = "Sub Total",
+                PerInvoiceBags = comparison.ActualTotal.ToString("0"),
+                IsSubTotal = true
+            });
+        }
+
+        return rows;
+    }
+
+    public class TableRowData
+    {
+        public string ProductCode { get; set; } = "";
+        public string ProductName { get; set; } = "";
+        public string PerPigBags { get; set; } = "";
+        public string PerPigPenBags { get; set; } = "";
+        public string InvoiceNo { get; set; } = "";
+        public string PerInvoiceBags { get; set; } = "";
+        public bool IsSubTotal { get; set; }
+    }
+
+    public class FeedComparisonData
+    {
+        public string ProductCode { get; set; } = "";
+        public string ProductName { get; set; } = "";
+        public decimal FormulaPerPig { get; set; }
+        public decimal FormulaTotal { get; set; }
+        public decimal ActualTotal { get; set; }
+        public List<FeedHistoryEntry> FeedHistoryEntries { get; set; } = new();
+    }
+
+    public class FeedHistoryEntry
+    {
+        public string InvoiceNumber { get; set; } = "";
+        public decimal Quantity { get; set; }
     }
 }
