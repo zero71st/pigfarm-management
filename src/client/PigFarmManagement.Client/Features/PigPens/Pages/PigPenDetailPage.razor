@@ -244,51 +244,82 @@
                 <!-- Table matching the provided image structure -->
                 @if (feedFormulaCalculations != null && feedFormulaCalculations.Any())
                 {
-                    <MudTable Items="@GetTableRows()" Dense="true" Hover="false" Striped="false" 
-                             FixedHeader="true" Class="comparison-table" Style="border-collapse: collapse;">
-                        <HeaderContent>
-                            <MudTh Style="border: 1px solid #000; text-align: center; font-weight: bold; padding: 8px; background-color: #f8f9fa;">Product Code</MudTh>
-                            <MudTh Style="border: 1px solid #000; text-align: center; font-weight: bold; padding: 8px; background-color: #f8f9fa;">Product Name</MudTh>
-                            <MudTh Style="border: 1px solid #000; text-align: center; font-weight: bold; padding: 8px; background-color: #e3f2fd;" colspan="2">Feed Formula</MudTh>
-                            <MudTh Style="border: 1px solid #000; text-align: center; font-weight: bold; padding: 8px; background-color: #e8f5e8;" colspan="2">Feed History</MudTh>
-                        </HeaderContent>
-                        <HeaderContent>
-                            <MudTh Style="border: 1px solid #000; padding: 8px;"></MudTh>
-                            <MudTh Style="border: 1px solid #000; padding: 8px;"></MudTh>
-                            <MudTh Style="border: 1px solid #000; text-align: center; font-size: 0.85rem; padding: 8px; background-color: #e3f2fd;">Per Pig (Bags)</MudTh>
-                            <MudTh Style="border: 1px solid #000; text-align: center; font-size: 0.85rem; padding: 8px; background-color: #e3f2fd;">Per Pig Pen (Bags)</MudTh>
-                            <MudTh Style="border: 1px solid #000; text-align: center; font-size: 0.85rem; padding: 8px; background-color: #e8f5e8;">Invoice No</MudTh>
-                            <MudTh Style="border: 1px solid #000; text-align: center; font-size: 0.85rem; padding: 8px; background-color: #e8f5e8;">Per Invoice (Bags)</MudTh>
-                        </HeaderContent>
-                        <RowTemplate>
-                            @{
-                                var row = context as TableRowData;
-                                var baseStyle = "border: 1px solid #000; padding: 8px;";
-                                var subTotalStyle = row.IsSubTotal ? " font-weight: bold; background-color: #f9f9f9;" : "";
-                                var grandTotalStyle = row.IsGrandTotal ? " font-weight: bold; background-color: #e3f2fd; color: #1976d2;" : "";
-                                var centerStyle = " text-align: center;";
-                                var cellStyle = baseStyle + centerStyle + subTotalStyle + grandTotalStyle;
-                            }
-                            <MudTd Style="@(baseStyle + subTotalStyle + grandTotalStyle)">
-                                @row.ProductCode
-                            </MudTd>
-                            <MudTd Style="@(baseStyle + subTotalStyle + grandTotalStyle)">
-                                @row.ProductName
-                            </MudTd>
-                            <MudTd Style="@cellStyle">
-                                @row.PerPigBags
-                            </MudTd>
-                            <MudTd Style="@cellStyle">
-                                @row.PerPigPenBags
-                            </MudTd>
-                            <MudTd Style="@cellStyle">
-                                @row.InvoiceNo
-                            </MudTd>
-                            <MudTd Style="@cellStyle">
-                                @row.PerInvoiceBags
-                            </MudTd>
-                        </RowTemplate>
-                    </MudTable>
+                    <MudPaper Elevation="3" Class="pa-4 ma-2" Style="border-radius: 12px; overflow: hidden;">
+                        <MudTable Items="@GetTableRows()" Dense="false" Hover="true" Striped="false" 
+                                 FixedHeader="true" Class="comparison-table" 
+                                 Style="border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <HeaderContent>
+                                <MudTh Style="border: none; text-align: center; font-weight: 600; padding: 16px 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-size: 0.9rem;">Product Code</MudTh>
+                                <MudTh Style="border: none; text-align: center; font-weight: 600; padding: 16px 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-size: 0.9rem;">Product Name</MudTh>
+                                <MudTh Style="border: none; text-align: center; font-weight: 600; padding: 16px 12px; background: linear-gradient(135deg, #2196f3 0%, #21cbf3 100%); color: white; font-size: 0.9rem;" colspan="2">📊 Feed Formula</MudTh>
+                                <MudTh Style="border: none; text-align: center; font-weight: 600; padding: 16px 12px; background: linear-gradient(135deg, #4caf50 0%, #8bc34a 100%); color: white; font-size: 0.9rem;" colspan="2">📋 Feed History</MudTh>
+                            </HeaderContent>
+                            <HeaderContent>
+                                <MudTh Style="border: none; padding: 12px; background-color: #f8f9fa;"></MudTh>
+                                <MudTh Style="border: none; padding: 12px; background-color: #f8f9fa;"></MudTh>
+                                <MudTh Style="border: none; text-align: center; font-size: 0.8rem; padding: 12px; background-color: #e3f2fd; color: #1565c0; font-weight: 500;">Per Pig (Bags)</MudTh>
+                                <MudTh Style="border: none; text-align: center; font-size: 0.8rem; padding: 12px; background-color: #e3f2fd; color: #1565c0; font-weight: 500;">Per Pig Pen (Bags)</MudTh>
+                                <MudTh Style="border: none; text-align: center; font-size: 0.8rem; padding: 12px; background-color: #e8f5e8; color: #2e7d32; font-weight: 500;">Invoice No</MudTh>
+                                <MudTh Style="border: none; text-align: center; font-size: 0.8rem; padding: 12px; background-color: #e8f5e8; color: #2e7d32; font-weight: 500;">Per Invoice (Bags)</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                @{
+                                    var row = context as TableRowData;
+                                    var baseStyle = "border: none; border-bottom: 1px solid #e0e0e0; padding: 14px 12px; transition: all 0.2s ease;";
+                                    var subTotalStyle = row.IsSubTotal ? " font-weight: 600; background: linear-gradient(90deg, #fff3e0 0%, #ffe0b2 100%); border-bottom: 2px solid #ff9800;" : "";
+                                    var grandTotalStyle = row.IsGrandTotal ? " font-weight: 700; background: linear-gradient(90deg, #e8eaf6 0%, #c5cae9 100%); color: #3f51b5; border-bottom: 3px solid #3f51b5; font-size: 1.05em;" : "";
+                                    var centerStyle = " text-align: center;";
+                                    var leftStyle = " text-align: left;";
+                                    var regularRowStyle = !row.IsSubTotal && !row.IsGrandTotal ? " background-color: white;" : "";
+                                    
+                                    var productCodeStyle = baseStyle + leftStyle + subTotalStyle + grandTotalStyle + regularRowStyle;
+                                    var productNameStyle = baseStyle + leftStyle + subTotalStyle + grandTotalStyle + regularRowStyle;
+                                    var cellStyle = baseStyle + centerStyle + subTotalStyle + grandTotalStyle + regularRowStyle;
+                                }
+                                <MudTd Style="@productCodeStyle">
+                                    <span style="font-family: 'Roboto Mono', monospace;">@row.ProductCode</span>
+                                </MudTd>
+                                <MudTd Style="@productNameStyle">
+                                    <span style="font-weight: 500;">@row.ProductName</span>
+                                </MudTd>
+                                <MudTd Style="@cellStyle">
+                                    <MudChip Size="Size.Small" Color="Color.Primary" Variant="Variant.Text" Style="@(row.IsGrandTotal ? "font-weight: 700;" : "")">
+                                        @row.PerPigBags
+                                    </MudChip>
+                                </MudTd>
+                                <MudTd Style="@cellStyle">
+                                    <MudChip Size="Size.Small" Color="Color.Primary" Variant="Variant.Text" Style="@(row.IsGrandTotal ? "font-weight: 700;" : "")">
+                                        @row.PerPigPenBags
+                                    </MudChip>
+                                </MudTd>
+                                <MudTd Style="@cellStyle">
+                                    @if (row.IsSubTotal)
+                                    {
+                                        <MudChip Size="Size.Small" Color="Color.Warning" Variant="Variant.Filled" Style="font-weight: 600;">
+                                            @row.InvoiceNo
+                                        </MudChip>
+                                    }
+                                    else if (row.IsGrandTotal)
+                                    {
+                                        <MudChip Size="Size.Medium" Color="Color.Primary" Variant="Variant.Filled" Style="font-weight: 700; font-size: 0.9rem;">
+                                            🎯 @row.InvoiceNo
+                                        </MudChip>
+                                    }
+                                    else
+                                    {
+                                        <span style="font-family: 'Roboto Mono', monospace; padding: 4px 8px; background-color: #f5f5f5; border-radius: 4px; font-size: 0.85rem;">
+                                            @row.InvoiceNo
+                                        </span>
+                                    }
+                                </MudTd>
+                                <MudTd Style="@cellStyle">
+                                    <MudChip Size="Size.Small" Color="Color.Success" Variant="Variant.Text" Style="@(row.IsGrandTotal ? "font-weight: 700;" : "")">
+                                        @row.PerInvoiceBags
+                                    </MudChip>
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    </MudPaper>
                 }
                 else
                 {
