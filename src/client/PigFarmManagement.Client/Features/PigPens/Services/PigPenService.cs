@@ -87,7 +87,7 @@ public class PigPenService : IPigPenService
 
     public async Task<FeedItem> AddFeedItemAsync(Guid pigPenId, FeedCreateDto feedItem)
     {
-        var response = await _httpClient.PostAsJsonAsync($"api/pigpens/{pigPenId}/feed", feedItem);
+        var response = await _httpClient.PostAsJsonAsync($"api/pigpens/{pigPenId}/feeds", feedItem);
         response.EnsureSuccessStatusCode();
         var createdFeedItem = await response.Content.ReadFromJsonAsync<FeedItem>();
         return createdFeedItem!;
@@ -95,7 +95,7 @@ public class PigPenService : IPigPenService
 
     public async Task<Deposit> AddDepositAsync(Guid pigPenId, DepositCreateDto deposit)
     {
-        var response = await _httpClient.PostAsJsonAsync($"api/pigpens/{pigPenId}/deposit", deposit);
+        var response = await _httpClient.PostAsJsonAsync($"api/pigpens/{pigPenId}/deposits", deposit);
         response.EnsureSuccessStatusCode();
         var createdDeposit = await response.Content.ReadFromJsonAsync<Deposit>();
         return createdDeposit!;
@@ -103,7 +103,7 @@ public class PigPenService : IPigPenService
 
     public async Task<HarvestResult> AddHarvestResultAsync(Guid pigPenId, HarvestCreateDto harvest)
     {
-        var response = await _httpClient.PostAsJsonAsync($"api/pigpens/{pigPenId}/harvest", harvest);
+        var response = await _httpClient.PostAsJsonAsync($"api/pigpens/{pigPenId}/harvests", harvest);
         response.EnsureSuccessStatusCode();
         var createdHarvest = await response.Content.ReadFromJsonAsync<HarvestResult>();
         return createdHarvest!;

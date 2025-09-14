@@ -2,6 +2,7 @@
 @inject HttpClient Http
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
+@inject IDialogService DialogService
 @using PigFarmManagement.Client.Features.FeedFormulas.Services
 @inject IFeedFormulaCalculationService FeedFormulaCalculationService
 
@@ -536,14 +537,56 @@
         };
     }
 
+    private async Task LoadDeposits()
+    {
+        if (pigPen == null) return;
+        
+        try
+        {
+            deposits = await Http.GetFromJsonAsync<List<Deposit>>($"/api/pigpens/{PigPenId}/deposits") ?? new();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading deposits: {ex.Message}", Severity.Error);
+        }
+    }
+
     private void EditPigPen()
     {
         Snackbar.Add("Edit pig pen functionality coming soon", Severity.Info);
     }
 
-    private void AddDeposit()
+    private async Task AddDeposit()
     {
-        Snackbar.Add("Add deposit dialog coming soon", Severity.Info);
+        if (pigPen == null) return;
+
+        var parameters = new DialogParameters<AddDepositDialog>
+        {
+            { x => x.PigPenId, pigPen.Id }
+        };
+
+        var options = new DialogOptions() 
+        { 
+            CloseButton = true, 
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<AddDepositDialog>("Add Deposit", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            // Refresh deposits list
+            await LoadDeposits();
+            
+            // Refresh summary to update total deposits
+            if (summary != null)
+            {
+                summary = await Http.GetFromJsonAsync<PigPenSummary>($"/api/pigpens/{PigPenId}/summary");
+                StateHasChanged();
+            }
+        }
     }
 
     private void EditDeposit(Deposit deposit)
