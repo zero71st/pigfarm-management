@@ -5,6 +5,7 @@
 @inject IDialogService DialogService
 @inject IPigPenService PigPenService
 @using PigFarmManagement.Client.Features.FeedFormulas.Services
+@using PigFarmManagement.Client.Features.PigPens.Components
 @inject IFeedFormulaCalculationService FeedFormulaCalculationService
 
 <PageTitle>Pig Pen Detail</PageTitle>
@@ -637,9 +638,54 @@
         }
     }
 
-    private void EditPigPen()
+    private async Task EditPigPen()
     {
-        Snackbar.Add("Edit pig pen functionality coming soon", Severity.Info);
+        Console.WriteLine("[EditPigPen] Method called");
+        
+        if (pigPen == null) 
+        {
+            Console.WriteLine("[EditPigPen] pigPen is null, returning");
+            Snackbar.Add("No pig pen data available", Severity.Error);
+            return;
+        }
+
+        Console.WriteLine($"[EditPigPen] About to open dialog for pig pen: {pigPen.PenCode}");
+
+        try
+        {
+            var parameters = new DialogParameters<EditPigPenDialog>
+            {
+                { x => x.PigPen, pigPen }
+            };
+
+            Console.WriteLine("[EditPigPen] Parameters created, showing dialog");
+            var dialog = await DialogService.ShowAsync<EditPigPenDialog>("Edit Pig Pen", parameters);
+            Console.WriteLine("[EditPigPen] Dialog shown, waiting for result");
+            
+            var result = await dialog.Result;
+            Console.WriteLine($"[EditPigPen] Dialog result: Canceled={result.Canceled}");
+
+            if (!result.Canceled && result.Data is PigPen updatedPigPen)
+            {
+                Console.WriteLine("[EditPigPen] Dialog result successful, updating data");
+                // Update the local pig pen data
+                pigPen = updatedPigPen;
+                
+                // Refresh the page data to show updates
+                await LoadData();
+                
+                Snackbar.Add("Pig pen updated successfully", Severity.Success);
+            }
+            else
+            {
+                Console.WriteLine("[EditPigPen] Dialog was canceled or no data returned");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[EditPigPen] Error: {ex.Message}");
+            Snackbar.Add($"Error opening edit dialog: {ex.Message}", Severity.Error);
+        }
     }
 
     private async Task AddDeposit()
