@@ -75,6 +75,9 @@ public class PigPenRepository : IPigPenRepository
         entity.FeedCost = pigPen.FeedCost;
         entity.Investment = pigPen.Investment;
         entity.ProfitLoss = pigPen.ProfitLoss;
+        entity.Type = pigPen.Type;
+        entity.FeedFormulaId = pigPen.FeedFormulaId;
+        entity.DepositPerPig = pigPen.DepositPerPig;
         entity.SelectedBrand = pigPen.SelectedBrand;
         entity.UpdatedAt = DateTime.UtcNow;
 

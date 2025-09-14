@@ -539,9 +539,10 @@ public class FeedImportService : IFeedImportService
                 5000.00m,
                 -800.00m,
                 PigPenType.Cash,
-                null, // FeedFormulaId
-                DateTime.Now.AddDays(-10), // CreatedAt
-                DateTime.Now.AddDays(-1) // UpdatedAt
+                null,
+                1500m,
+                DateTime.Now.AddDays(-10),
+                DateTime.Now.AddDays(-1)
             ),
             new PigPen(
                 Guid.NewGuid(),
@@ -555,9 +556,10 @@ public class FeedImportService : IFeedImportService
                 4200.00m,
                 -650.00m,
                 PigPenType.Project,
-                null, // FeedFormulaId
-                DateTime.Now.AddDays(-8), // CreatedAt
-                DateTime.Now.AddDays(-2) // UpdatedAt
+                null,
+                1000m,
+                DateTime.Now.AddDays(-8),
+                DateTime.Now.AddDays(-2)
             )
         });
     }

@@ -40,6 +40,17 @@
                                    Required="true" />
                 </MudItem>
                 <MudItem xs="6">
+                    <MudNumericField @bind-Value="depositPerPig" 
+                                   Label="Deposit Per Pig (บาท)" 
+                                   Variant="Variant.Outlined" 
+                                   Min="0" 
+                                   Step="100"
+                                   Format="N0"
+                                   Required="true" 
+                                   Adornment="Adornment.End" 
+                                   AdornmentText="฿" />
+                </MudItem>
+                <MudItem xs="6">
                     <MudDatePicker Date="registerDate" 
                                   DateChanged="@OnRegisterDateChanged"
                                   Label="Register Date" 
@@ -182,6 +193,7 @@
     private string penCode = "";
     private PigPenType selectedType = PigPenType.Cash;
     private int pigQty = 1;
+    private decimal depositPerPig = 1500m;
     private DateTime? registerDate = DateTime.Today;
     private DateTime? actualHarvestDate;
     private DateTime? estimatedHarvestDate;
@@ -371,7 +383,8 @@
                 estimatedHarvestDate,
                 selectedType,
                 null, // No longer using individual feed formula selection
-                selectedBrand // Save the selected brand
+                selectedBrand, // Save the selected brand
+                depositPerPig // Custom deposit per pig amount
             );
 
             var createdPigPen = await PigPenService.CreatePigPenAsync(pigPenDto);

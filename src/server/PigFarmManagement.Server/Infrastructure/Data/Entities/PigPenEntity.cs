@@ -33,6 +33,9 @@ public class PigPenEntity
     
     public Guid? FeedFormulaId { get; set; }
     
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal DepositPerPig { get; set; } = 1500m; // Default value
+    
     public string? SelectedBrand { get; set; }
     
     public DateTime CreatedAt { get; set; }
@@ -65,6 +68,7 @@ public class PigPenEntity
             ProfitLoss, 
             Type,
             FeedFormulaId,
+            DepositPerPig,
             CreatedAt, 
             UpdatedAt
         )
@@ -90,6 +94,7 @@ public class PigPenEntity
             ProfitLoss = pigPen.ProfitLoss,
             Type = pigPen.Type,
             FeedFormulaId = pigPen.FeedFormulaId,
+            DepositPerPig = pigPen.DepositPerPig,
             SelectedBrand = pigPen.SelectedBrand,
             CreatedAt = pigPen.CreatedAt,
             UpdatedAt = pigPen.UpdatedAt

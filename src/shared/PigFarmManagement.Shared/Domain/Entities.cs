@@ -22,7 +22,7 @@ public record Customer(Guid Id, string Code, string Name, CustomerStatus Status)
 public record PigPen(Guid Id, Guid CustomerId, string PenCode, int PigQty,
     DateTime RegisterDate, DateTime? ActHarvestDate, DateTime? EstimatedHarvestDate,
     decimal FeedCost, decimal Investment, decimal ProfitLoss, 
-    PigPenType Type, Guid? FeedFormulaId, DateTime CreatedAt, DateTime UpdatedAt)
+    PigPenType Type, Guid? FeedFormulaId, decimal DepositPerPig, DateTime CreatedAt, DateTime UpdatedAt)
 {
     // Feed formula brand selection (for display purposes)
     public string? SelectedBrand { get; init; }

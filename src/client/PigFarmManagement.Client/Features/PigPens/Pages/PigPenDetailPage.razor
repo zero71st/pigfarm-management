@@ -112,7 +112,25 @@
                                     <tr>
                                         <td><strong>Total Deposits:</strong></td>
                                         <td class="text-right">
-                                            <MudText Color="Color.Secondary">฿@summary.TotalDeposit.ToString("N0")</MudText>
+                                            @if (depositCalculationInfo != null)
+                                            {
+                                                <div>
+                                                    <MudText Color="@GetDepositStatusColor()">
+                                                        <strong>@depositCalculationInfo.CurrentTotalDepositsFormatted</strong>
+                                                    </MudText>
+                                                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                        of @depositCalculationInfo.ExpectedTotalDepositFormatted expected
+                                                    </MudText>
+                                                    <br />
+                                                    <MudChip Size="Size.Small" Color="@GetStatusChipColor()" Variant="Variant.Filled">
+                                                        @depositCalculationInfo.CompletionPercentageFormatted
+                                                    </MudChip>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <MudText Color="Color.Secondary">฿@summary.TotalDeposit.ToString("N0")</MudText>
+                                            }
                                         </td>
                                     </tr>
                                     <tr>
@@ -172,6 +190,49 @@
                 </CardHeaderActions>
             </MudCardHeader>
             <MudCardContent>
+                <!-- Deposit Progress Card -->
+                @if (pigPen != null && depositCalculationInfo != null)
+                {
+                    <MudCard Class="mb-4" Style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);">
+                        <MudCardContent>
+                            <MudGrid>
+                                <MudItem xs="12" sm="8">
+                                    <MudText Typo="Typo.subtitle1" Class="mb-2">
+                                        💰 Deposit Progress
+                                    </MudText>
+                                    <MudProgressLinear Value="@((double)(depositCalculationInfo.CompletionPercentage * 100))" 
+                                                     Color="@GetProgressColor()" 
+                                                     Size="Size.Large" 
+                                                     Class="mb-2" />
+                                    <MudText Typo="Typo.body2" Class="mb-1">
+                                        <strong>@depositCalculationInfo.CurrentTotalDepositsFormatted</strong> of <strong>@depositCalculationInfo.ExpectedTotalDepositFormatted</strong> collected
+                                    </MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                        Based on @depositCalculationInfo.PigQuantity pigs × @depositCalculationInfo.DepositPerPigFormatted per pig
+                                    </MudText>
+                                </MudItem>
+                                <MudItem xs="12" sm="4" Class="d-flex flex-column justify-center">
+                                    <MudChip Color="@GetStatusChipColor()" Size="Size.Large" Class="ma-1">
+                                        @GetStatusText()
+                                    </MudChip>
+                                    @if (depositCalculationInfo.RemainingDeposit > 0)
+                                    {
+                                        <MudText Typo="Typo.body2" Class="text-center mt-2">
+                                            <strong>@depositCalculationInfo.RemainingDepositFormatted</strong> remaining
+                                        </MudText>
+                                    }
+                                    else
+                                    {
+                                        <MudText Typo="Typo.body2" Class="text-center mt-2" Style="color: #4caf50;">
+                                            ✅ Complete!
+                                        </MudText>
+                                    }
+                                </MudItem>
+                            </MudGrid>
+                        </MudCardContent>
+                    </MudCard>
+                }
+                
                 @if (deposits.Any())
                 {
                     <MudTable Items="@deposits" Hover="true" Striped="true" Dense="true">
@@ -449,6 +510,9 @@
     private List<Deposit> deposits = new();
     private List<HarvestResult> harvests = new();
     
+    // Deposit calculation information
+    private DepositCalculationInfo? depositCalculationInfo;
+    
     // Feed formula comparison data
     private IEnumerable<FeedFormulaWithCalculationResponse>? feedFormulaCalculations;
     private List<FeedComparisonData> comparisonData = new();
@@ -495,6 +559,12 @@
 
                 // Load deposits
                 deposits = await Http.GetFromJsonAsync<List<Deposit>>($"/api/pigpens/{PigPenId}/deposits") ?? new();
+
+                // Calculate deposit information
+                if (pigPen != null)
+                {
+                    depositCalculationInfo = DepositCalculationInfo.Create(pigPen, deposits);
+                }
 
                 // Load harvests
                 harvests = await Http.GetFromJsonAsync<List<HarvestResult>>($"/api/pigpens/{PigPenId}/harvests") ?? new();
@@ -569,7 +639,9 @@
 
         var parameters = new DialogParameters<AddDepositDialog>
         {
-            { x => x.PigPenId, pigPen.Id }
+            { x => x.PigPenId, pigPen.Id },
+            { x => x.PigPen, pigPen },
+            { x => x.CurrentDeposits, deposits ?? new List<Deposit>() }
         };
 
         var options = new DialogOptions() 
@@ -585,7 +657,7 @@
         if (!result.Canceled)
         {
             // Refresh deposits list
-            await LoadDeposits();
+            await RefreshDeposits();
             
             // Refresh summary to update total deposits
             if (summary != null)
@@ -600,7 +672,9 @@
     {
         var parameters = new DialogParameters<EditDepositDialog>
         {
-            { x => x.DepositToEdit, deposit }
+            { x => x.DepositToEdit, deposit },
+            { x => x.PigPen, pigPen },
+            { x => x.CurrentDeposits, deposits ?? new List<Deposit>() }
         };
 
         var options = new DialogOptions() 
@@ -616,7 +690,7 @@
         if (!result.Canceled)
         {
             // Refresh deposits list
-            await LoadDeposits();
+            await RefreshDeposits();
             
             // Refresh summary to update total deposits
             if (summary != null)
@@ -655,7 +729,7 @@
                     Snackbar.Add($"Deposit of ฿{deposit.Amount:N2} deleted successfully", Severity.Success);
                     
                     // Refresh deposits list
-                    await LoadDeposits();
+                    await RefreshDeposits();
                     
                     // Refresh summary to update total deposits
                     if (summary != null)
@@ -900,5 +974,78 @@
     {
         public string InvoiceNumber { get; set; } = "";
         public decimal Quantity { get; set; }
+    }
+
+    // Deposit-related helper methods
+    private Color GetProgressColor()
+    {
+        if (depositCalculationInfo == null) return Color.Default;
+        
+        return depositCalculationInfo.Status switch
+        {
+            DepositCompletionStatus.Complete => Color.Success,
+            DepositCompletionStatus.Partial => Color.Warning,
+            DepositCompletionStatus.Started => Color.Info,
+            _ => Color.Error
+        };
+    }
+
+    private Color GetStatusChipColor()
+    {
+        if (depositCalculationInfo == null) return Color.Default;
+        
+        return depositCalculationInfo.Status switch
+        {
+            DepositCompletionStatus.Complete => Color.Success,
+            DepositCompletionStatus.Partial => Color.Warning,
+            DepositCompletionStatus.Started => Color.Info,
+            _ => Color.Error
+        };
+    }
+
+    private string GetStatusText()
+    {
+        if (depositCalculationInfo == null) return "Unknown";
+        
+        return depositCalculationInfo.Status switch
+        {
+            DepositCompletionStatus.Complete => "✅ Complete",
+            DepositCompletionStatus.Partial => "🟡 Partial",
+            DepositCompletionStatus.Started => "🔵 Started",
+            _ => "🔴 No Deposits"
+        };
+    }
+
+    private Color GetDepositStatusColor()
+    {
+        if (depositCalculationInfo == null) return Color.Secondary;
+        
+        return depositCalculationInfo.Status switch
+        {
+            DepositCompletionStatus.Complete => Color.Success,
+            DepositCompletionStatus.Partial => Color.Warning,
+            DepositCompletionStatus.Started => Color.Info,
+            _ => Color.Error
+        };
+    }
+
+    private async Task RefreshDeposits()
+    {
+        try
+        {
+            deposits = await Http.GetFromJsonAsync<List<Deposit>>($"/api/pigpens/{PigPenId}/deposits") ?? new();
+            
+            // Recalculate deposit information
+            if (pigPen != null)
+            {
+                depositCalculationInfo = DepositCalculationInfo.Create(pigPen, deposits);
+            }
+            
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading deposits: {ex.Message}", Severity.Error);
+        }
     }
 }

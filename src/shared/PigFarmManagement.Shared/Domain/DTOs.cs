@@ -35,3 +35,47 @@ public class Feed
                UnitPrice > 0;
     }
 }
+
+/// <summary>
+/// DTO for deposit calculation information used in dialogs
+/// </summary>
+public record DepositCalculationInfo
+{
+    public int PigQuantity { get; init; }
+    public decimal DepositPerPig { get; init; }
+    public decimal ExpectedTotalDeposit { get; init; }
+    public decimal CurrentTotalDeposits { get; init; }
+    public decimal RemainingDeposit { get; init; }
+    public decimal CompletionPercentage { get; init; }
+    public DepositCompletionStatus Status { get; init; }
+    
+    // Display properties
+    public string ExpectedTotalDepositFormatted => ExpectedTotalDeposit.FormatThaiBaht();
+    public string CurrentTotalDepositsFormatted => CurrentTotalDeposits.FormatThaiBaht();
+    public string RemainingDepositFormatted => RemainingDeposit.FormatThaiBaht();
+    public string CompletionPercentageFormatted => $"{CompletionPercentage:P0}";
+    public string DepositPerPigFormatted => DepositPerPig.FormatThaiBaht();
+    
+    /// <summary>
+    /// Create deposit calculation info from pig pen and deposits
+    /// </summary>
+    public static DepositCalculationInfo Create(PigPen pigPen, IEnumerable<Deposit> deposits)
+    {
+        var expectedTotal = pigPen.CalculateExpectedDepositAmount();
+        var currentTotal = deposits.CalculateTotalDeposits();
+        var remaining = pigPen.CalculateRemainingDeposit(deposits);
+        var completion = pigPen.CalculateDepositCompletionPercentage(deposits);
+        var status = pigPen.GetDepositStatus(deposits);
+        
+        return new DepositCalculationInfo
+        {
+            PigQuantity = pigPen.PigQty,
+            DepositPerPig = pigPen.DepositPerPig,
+            ExpectedTotalDeposit = expectedTotal,
+            CurrentTotalDeposits = currentTotal,
+            RemainingDeposit = remaining,
+            CompletionPercentage = completion,
+            Status = status
+        };
+    }
+}

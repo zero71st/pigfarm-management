@@ -28,6 +28,20 @@ This document outlines the pending tasks and features that need to be implemente
   - ✅ API integration for deletion
   - ✅ Data refresh after successful deletion
 
+- [ ] **Configurable Deposit Per Pig**
+  - Add DepositPerPig field to pig pen entity (customizable per pen)
+  - Update Add/Edit Pig Pen dialogs with deposit configuration
+  - Allow different customers to have different deposit rates (1000, 1500, etc.)
+  - Update all deposit calculations to use custom amounts
+  - Maintain backward compatibility with existing pig pens
+
+- [ ] **Deposit Calculation Enhancement**
+  - Add deposit per pig configuration (1500 baht default)
+  - Show expected deposit amount (pig qty × deposit per pig)
+  - Display current total deposits and remaining amount
+  - Add visual progress indicators for deposit completion
+  - Update Add/Edit Deposit dialogs with calculation display
+
 - [ ] **Add Harvest Dialog**
   - Form for recording harvest results
   - Fields: date, pig count, weights, price per kg

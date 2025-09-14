@@ -16,6 +16,61 @@
                     </MudText>
                 </MudItem>
                 
+                <!-- Deposit Calculation Info Card -->
+                @if (calculationInfo != null)
+                {
+                    <MudItem xs="12">
+                        <MudCard Class="mb-4" Style="background-color: #f8f9fa;">
+                            <MudCardContent>
+                                <MudGrid>
+                                    <MudItem xs="12">
+                                        <MudText Typo="Typo.subtitle2" Class="mb-2">
+                                            💰 Deposit Information
+                                        </MudText>
+                                    </MudItem>
+                                    <MudItem xs="6">
+                                        <MudText Typo="Typo.body2" Class="text-muted">
+                                            Expected Total:
+                                        </MudText>
+                                        <MudText Typo="Typo.body1" Style="font-weight: 600;">
+                                            @calculationInfo.ExpectedTotalDepositFormatted
+                                        </MudText>
+                                        <MudText Typo="Typo.caption" Class="text-muted">
+                                            (@calculationInfo.PigQuantity pigs × @calculationInfo.DepositPerPigFormatted)
+                                        </MudText>
+                                    </MudItem>
+                                    <MudItem xs="6">
+                                        <MudText Typo="Typo.body2" Class="text-muted">
+                                            Current Total:
+                                        </MudText>
+                                        <MudText Typo="Typo.body1" Style="font-weight: 600;">
+                                            @calculationInfo.CurrentTotalDepositsFormatted
+                                        </MudText>
+                                        <MudText Typo="Typo.caption" Class="text-muted">
+                                            (@calculationInfo.CompletionPercentageFormatted complete)
+                                        </MudText>
+                                    </MudItem>
+                                    <MudItem xs="12">
+                                        <MudDivider Class="my-2" />
+                                        <MudText Typo="Typo.body2" Class="text-muted">
+                                            Remaining Needed:
+                                        </MudText>
+                                        <MudText Typo="Typo.h6" Style="@($"color: {GetRemainingAmountColor()}")">
+                                            @calculationInfo.RemainingDepositFormatted
+                                        </MudText>
+                                        @if (calculationInfo.RemainingDeposit == 0)
+                                        {
+                                            <MudText Typo="Typo.caption" Style="color: #4caf50;">
+                                                ✅ Deposit requirement fulfilled
+                                            </MudText>
+                                        }
+                                    </MudItem>
+                                </MudGrid>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+                }
+                
                 <MudItem xs="12">
                     <MudNumericField @bind-Value="amount" 
                                    Label="Amount (฿)" 
@@ -73,18 +128,39 @@
 </MudDialog>
 
 @code {
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = default!;
     [Parameter] public Guid PigPenId { get; set; }
+    [Parameter] public PigPen? PigPen { get; set; }
+    [Parameter] public List<Deposit>? CurrentDeposits { get; set; }
 
     private decimal amount = 0;
     private DateTime? depositDate = DateTime.Today;
     private string remark = "";
     private bool isSubmitting = false;
+    private DepositCalculationInfo? calculationInfo;
 
     protected override void OnInitialized()
     {
         // Set default date to today
         depositDate = DateTime.Today;
+        
+        // Calculate deposit information if pig pen and deposits are provided
+        if (PigPen != null && CurrentDeposits != null)
+        {
+            calculationInfo = DepositCalculationInfo.Create(PigPen, CurrentDeposits);
+        }
+    }
+
+    private string GetRemainingAmountColor()
+    {
+        if (calculationInfo == null) return "#666";
+        
+        return calculationInfo.RemainingDeposit switch
+        {
+            0 => "#4caf50", // Green - complete
+            > 0 when calculationInfo.CompletionPercentage >= 0.5m => "#ff9800", // Orange - partial
+            _ => "#f44336" // Red - needs attention
+        };
     }
 
     private bool IsAmountValid()
