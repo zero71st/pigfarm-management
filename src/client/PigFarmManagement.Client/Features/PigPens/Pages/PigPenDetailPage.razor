@@ -113,24 +113,33 @@
                                     <tr>
                                         <td><strong>Total Deposits:</strong></td>
                                         <td class="text-right">
-                                            @if (depositCalculationInfo != null)
+                                            @if (pigPen?.Type == PigPenType.Project)
                                             {
-                                                <div>
-                                                    <MudText Color="@GetDepositStatusColor()">
-                                                        <strong>@depositCalculationInfo.CurrentTotalDepositsFormatted</strong>
-                                                    </MudText>
-                                                    <MudText Typo="Typo.caption" Color="Color.Secondary">
-                                                        of @depositCalculationInfo.ExpectedTotalDepositFormatted expected
-                                                    </MudText>
-                                                    <br />
-                                                    <MudChip Size="Size.Small" Color="@GetStatusChipColor()" Variant="Variant.Filled">
-                                                        @depositCalculationInfo.CompletionPercentageFormatted
-                                                    </MudChip>
-                                                </div>
+                                                @if (depositCalculationInfo != null)
+                                                {
+                                                    <div>
+                                                        <MudText Color="@GetDepositStatusColor()">
+                                                            <strong>@depositCalculationInfo.CurrentTotalDepositsFormatted</strong>
+                                                        </MudText>
+                                                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                            of @depositCalculationInfo.ExpectedTotalDepositFormatted expected
+                                                        </MudText>
+                                                        <br />
+                                                        <MudChip Size="Size.Small" Color="@GetStatusChipColor()" Variant="Variant.Filled">
+                                                            @depositCalculationInfo.CompletionPercentageFormatted
+                                                        </MudChip>
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <MudText Color="Color.Secondary">฿@summary.TotalDeposit.ToString("N0")</MudText>
+                                                }
                                             }
                                             else
                                             {
-                                                <MudText Color="Color.Secondary">฿@summary.TotalDeposit.ToString("N0")</MudText>
+                                                <MudText Color="Color.Secondary" Style="font-style: italic;">
+                                                    N/A (Cash Type)
+                                                </MudText>
                                             }
                                         </td>
                                     </tr>
@@ -172,24 +181,26 @@
             </MudCardContent>
         </MudCard>
 
-        <!-- Section 2: Deposits List -->
-        <MudCard Elevation="2" Class="mb-6">
-            <MudCardHeader>
-                <CardHeaderContent>
-                    <MudText Typo="Typo.h5">
-                        <MudIcon Icon="Icons.Material.Filled.AccountBalance" Class="mr-2" />
-                        Deposits (@deposits.Count)
-                    </MudText>
-                </CardHeaderContent>
-                <CardHeaderActions>
-                    <MudButton Variant="Variant.Filled" 
-                               Color="Color.Primary"
-                               StartIcon="Icons.Material.Filled.Add"
-                               OnClick="AddDeposit">
-                        Add Deposit
-                    </MudButton>
-                </CardHeaderActions>
-            </MudCardHeader>
+        <!-- Section 2: Deposits List (Project Type Only) -->
+        @if (pigPen?.Type == PigPenType.Project)
+        {
+            <MudCard Elevation="2" Class="mb-6">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h5">
+                            <MudIcon Icon="Icons.Material.Filled.AccountBalance" Class="mr-2" />
+                            Deposits (@deposits.Count)
+                        </MudText>
+                    </CardHeaderContent>
+                    <CardHeaderActions>
+                        <MudButton Variant="Variant.Filled" 
+                                   Color="Color.Primary"
+                                   StartIcon="Icons.Material.Filled.Add"
+                                   OnClick="AddDeposit">
+                            Add Deposit
+                        </MudButton>
+                    </CardHeaderActions>
+                </MudCardHeader>
             <MudCardContent>
                 <!-- Deposit Progress Card -->
                 @if (pigPen != null && depositCalculationInfo != null)
@@ -278,6 +289,24 @@
                 }
             </MudCardContent>
         </MudCard>
+        }
+        @if (pigPen?.Type == PigPenType.Cash)
+        {
+            <!-- Information Card for Cash Type Pig Pens -->
+            <MudCard Elevation="2" Class="mb-6">
+                <MudCardContent>
+                    <MudAlert Severity="Severity.Info" Dense="true">
+                        <MudText Typo="Typo.subtitle2" Class="mb-2">
+                            <MudIcon Icon="Icons.Material.Filled.Info" Class="mr-2" />
+                            Cash Type Pig Pen
+                        </MudText>
+                        <MudText Typo="Typo.body2">
+                            Deposits are not applicable for Cash type pig pens. All transactions are handled as direct cash payments.
+                        </MudText>
+                    </MudAlert>
+                </MudCardContent>
+            </MudCard>
+        }
 
         <!-- Section 3: Feed History -->
         <MudCard Elevation="2" Class="mb-6">
@@ -650,13 +679,18 @@
                     .OrderBy(g => g.ProductCode)
                     .ToList();
 
-                // Load deposits
-                deposits = await Http.GetFromJsonAsync<List<Deposit>>($"/api/pigpens/{PigPenId}/deposits") ?? new();
-
-                // Calculate deposit information
-                if (pigPen != null)
+                // Load deposits (only for Project type pig pens)
+                if (pigPen?.Type == PigPenType.Project)
                 {
+                    deposits = await Http.GetFromJsonAsync<List<Deposit>>($"/api/pigpens/{PigPenId}/deposits") ?? new();
+                    
+                    // Calculate deposit information
                     depositCalculationInfo = DepositCalculationInfo.Create(pigPen, deposits);
+                }
+                else
+                {
+                    deposits = new();
+                    depositCalculationInfo = null;
                 }
 
                 // Load harvests
@@ -791,7 +825,11 @@
 
     private async Task AddDeposit()
     {
-        if (pigPen == null) return;
+        if (pigPen == null || pigPen.Type != PigPenType.Project) 
+        {
+            Snackbar.Add("Deposits are only available for Project type pig pens", Severity.Warning);
+            return;
+        }
 
         var parameters = new DialogParameters<AddDepositDialog>
         {
@@ -826,6 +864,12 @@
 
     private async Task EditDeposit(Deposit deposit)
     {
+        if (pigPen?.Type != PigPenType.Project) 
+        {
+            Snackbar.Add("Deposits are only available for Project type pig pens", Severity.Warning);
+            return;
+        }
+        
         var parameters = new DialogParameters<EditDepositDialog>
         {
             { x => x.DepositToEdit, deposit },
@@ -859,6 +903,12 @@
 
     private async Task DeleteDeposit(Deposit deposit)
     {
+        if (pigPen?.Type != PigPenType.Project) 
+        {
+            Snackbar.Add("Deposits are only available for Project type pig pens", Severity.Warning);
+            return;
+        }
+        
         var parameters = new DialogParameters<DeleteDepositConfirmationDialog>
         {
             { x => x.DepositToDelete, deposit }
@@ -1362,12 +1412,18 @@
     {
         try
         {
-            deposits = await Http.GetFromJsonAsync<List<Deposit>>($"/api/pigpens/{PigPenId}/deposits") ?? new();
-            
-            // Recalculate deposit information
-            if (pigPen != null)
+            // Only load deposits for Project type pig pens
+            if (pigPen?.Type == PigPenType.Project)
             {
+                deposits = await Http.GetFromJsonAsync<List<Deposit>>($"/api/pigpens/{PigPenId}/deposits") ?? new();
+                
+                // Recalculate deposit information
                 depositCalculationInfo = DepositCalculationInfo.Create(pigPen, deposits);
+            }
+            else
+            {
+                deposits = new();
+                depositCalculationInfo = null;
             }
             
             StateHasChanged();
