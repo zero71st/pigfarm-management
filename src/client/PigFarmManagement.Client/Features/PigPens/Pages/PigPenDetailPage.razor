@@ -805,9 +805,39 @@
         }
     }
 
-    private void ImportFeeds()
+    private async Task ImportFeeds()
     {
-        Snackbar.Add("Import feeds functionality coming soon", Severity.Info);
+        if (pigPen == null) return;
+
+        // Find customer information from the loaded customers list or make API call
+        var customersResponse = await Http.GetFromJsonAsync<List<Customer>>("/api/customers") ?? new();
+        var customer = customersResponse.FirstOrDefault(c => c.Id == pigPen.CustomerId);
+
+        var parameters = new DialogParameters<PigPenPosImportDialog>
+        {
+            { x => x.PigPenId, pigPen.Id },
+            { x => x.CustomerName, customer?.Name ?? "Unknown Customer" },
+            { x => x.PenCode, pigPen.PenCode },
+            { x => x.CustomerCode, customer?.Code ?? "" }
+        };
+
+        var options = new DialogOptions() 
+        { 
+            CloseButton = true, 
+            MaxWidth = MaxWidth.Large,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<PigPenPosImportDialog>("Import POSPOS Feed Data", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is FeedImportResult importResult)
+        {
+            // Refresh feeds list after successful import
+            await RefreshFeeds();
+            
+            Snackbar.Add($"Successfully imported {importResult.SuccessfulImports} feed transaction(s)", Severity.Success);
+        }
     }
 
     private void AddHarvest()
@@ -1101,6 +1131,49 @@
         catch (Exception ex)
         {
             Snackbar.Add($"Error loading deposits: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task RefreshFeeds()
+    {
+        try
+        {
+            // Reload feeds
+            var allFeeds = await Http.GetFromJsonAsync<List<FeedItem>>($"/api/pigpens/{PigPenId}/feeds") ?? new();
+            feeds = allFeeds.OrderByDescending(f => f.Date).ThenBy(f => f.ProductCode).ToList();
+            
+            // Regroup feeds by product code
+            groupedFeeds = feeds
+                .Where(f => !string.IsNullOrEmpty(f.ProductCode))
+                .GroupBy(f => f.ProductCode)
+                .Select(g => new GroupedFeedItem
+                {
+                    ProductCode = g.Key,
+                    ProductName = g.First().ProductName ?? g.Key,
+                    TotalQuantity = g.Sum(f => f.QuantityKg),
+                    FeedCount = g.Count()
+                })
+                .OrderBy(g => g.ProductCode)
+                .ToList();
+
+            // Rebuild comparison data
+            BuildComparisonData();
+            
+            // Refresh feed progress summary
+            try
+            {
+                feedProgressSummary = await Http.GetFromJsonAsync<FeedProgressSummary>($"/api/pigpens/{PigPenId}/feed-progress");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading feed progress: {ex.Message}");
+            }
+            
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading feeds: {ex.Message}", Severity.Error);
         }
     }
 

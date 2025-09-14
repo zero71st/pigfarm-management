@@ -1,5 +1,6 @@
 @inject HttpClient Http
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 
 <MudDialog>
     <DialogContent>
@@ -114,8 +115,8 @@
 
                         <div class="d-flex justify-end mb-4">
                             <MudButton Variant="Variant.Filled" Color="Color.Primary" 
-                                       StartIcon="Icons.Material.Filled.Add" OnClick="AddFeed">
-                                Add Feed
+                                       StartIcon="Icons.Material.Filled.Upload" OnClick="AddFeed">
+                                Import Feeds
                             </MudButton>
                         </div>
 
@@ -266,9 +267,56 @@
         };
     }
 
-    private void AddFeed()
+    private async void AddFeed()
     {
-        Snackbar.Add("Feed dialog not implemented yet", Severity.Info);
+        try
+        {
+            if (pigPen == null)
+            {
+                Snackbar.Add("Pig pen information not loaded yet", Severity.Warning);
+                return;
+            }
+
+            // Get customer information
+            var customers = await Http.GetFromJsonAsync<List<Customer>>("/api/customers") ?? new();
+            var customer = customers.FirstOrDefault(c => c.Id == pigPen.CustomerId);
+            
+            if (customer == null)
+            {
+                Snackbar.Add("Customer information not found", Severity.Error);
+                return;
+            }
+
+            var parameters = new DialogParameters<PigPenPosImportDialog>
+            {
+                { x => x.PigPenId, PigPenId },
+                { x => x.CustomerName, customer.Name },
+                { x => x.PenCode, pigPen.PenCode },
+                { x => x.CustomerCode, customer.Code }
+            };
+
+            var options = new DialogOptions
+            {
+                MaxWidth = MaxWidth.Large,
+                FullWidth = true,
+                CloseButton = true,
+                DisableBackdropClick = true
+            };
+
+            var dialog = await DialogService.ShowAsync<PigPenPosImportDialog>("Import POSPOS Feeds", parameters, options);
+            var result = await dialog.Result;
+
+            if (!result.Canceled && result.Data != null)
+            {
+                // Refresh feed data after successful import
+                await LoadData();
+                Snackbar.Add("Feed data refreshed after import", Severity.Success);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error opening import dialog: {ex.Message}", Severity.Error);
+        }
     }
 
     private void AddDeposit()

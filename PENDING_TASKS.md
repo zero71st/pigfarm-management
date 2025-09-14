@@ -10,56 +10,23 @@ This document outlines the pending tasks and features that need to be implemente
 ## 🔥 **High Priority Tasks**
 
 ### **1. Dialog/Modal Implementations**
-- [x] **Add Deposit Dialog** ✅ **COMPLETED**
-  - ✅ Create modal for adding new deposits
-  - ✅ Form validation for amount and date
-  - ✅ Integration with deposits API
-  - ✅ Fixed 404 endpoint mismatch issue
+- [ ] **Add Deposit Dialog** 
+  - Create modal for adding new deposits
+  - Form validation for amount and date
+  - Integration with deposits API
+  - Currently shows: "Add deposit dialog coming soon"
 
-- [x] **Edit Deposit Dialog** ✅ **COMPLETED**
-  - ✅ Modal for editing existing deposits
-  - ✅ Pre-populate form with current values
-  - ✅ Update API integration
-  - ✅ Form validation and error handling
+- [ ] **Edit Deposit Dialog**
+  - Modal for editing existing deposits
+  - Pre-populate form with current values
+  - Update API integration
+  - Currently shows: "Edit deposit coming soon"
 
-- [x] **Delete Deposit Confirmation** ✅ **COMPLETED**
-  - ✅ Confirmation dialog before deletion
-  - ✅ Display deposit details in confirmation
-  - ✅ API integration for deletion
-  - ✅ Data refresh after successful deletion
-
-- [x] **Configurable Deposit Per Pig** ✅ **COMPLETED**
-  - ✅ Add DepositPerPig field to pig pen entity (customizable per pen)
-  - ✅ Update Add/Edit Pig Pen dialogs with deposit configuration
-  - ✅ Allow different customers to have different deposit rates (1000, 1500, etc.)
-  - ✅ Update all deposit calculations to use custom amounts
-  - ✅ Maintain backward compatibility with existing pig pens
-
-- [x] **Deposit Calculation Enhancement** ✅ **COMPLETED**
-  - ✅ Add deposit per pig configuration (1500 baht default)
-  - ✅ Show expected deposit amount (pig qty × deposit per pig)
-  - ✅ Display current total deposits and remaining amount
-  - ✅ Add visual progress indicators for deposit completion
-  - ✅ Update Add/Edit Deposit dialogs with calculation display
-
-- [x] **Feed Formula vs Actual Feed Visualization** ✅ **COMPLETED**
-  - ✅ Created backend API endpoints for feed progress data
-  - ✅ Implemented FeedProgressService with bag conversion logic
-  - ✅ Added progress calculation algorithms (required vs actual bags)
-  - ✅ Created status indicators (On track, Over-feeding, Under-fed, etc.)
-  - ✅ Fixed feed progress cards display in PigPenDetailPage.razor
-  - ✅ Corrected API endpoint URL mismatch issue
-  - ✅ Implemented horizontal progress bar matching deposit progress style
-  - ✅ Added proper status chips and remaining amount display
-  - ✅ Created color-coded progress indicators with consistent styling
-
-- [x] **🔧 FIX: Feed Progress Calculation Error** ✅ **COMPLETED**
-  - ✅ **Issue**: Feed progress shows individual feed formula bags per pig (2.0) instead of total combined requirement (12.5)
-  - ✅ **Expected**: Should sum all feed formulas for the pig pen to show total bags per pig requirement
-  - ✅ **Root Cause**: FeedProgressService was using single formula instead of aggregating all applicable formulas
-  - ✅ **Fix Implemented**: Updated FeedProgressService calculation logic to sum all feed formula requirements for accurate total
-  - ✅ **Verification**: Tested with เจ็ท brand formulas (1.5+1.8+2.0+2.2+2.5+2.8 = 12.8 bags per pig)
-  - ✅ **Results**: P011 (28 pigs) = 358.4 bags, P098 (48 pigs) = 614.4 bags - calculations now correct
+- [ ] **Delete Deposit Confirmation**
+  - Confirmation dialog before deletion
+  - Soft delete vs hard delete consideration
+  - API integration for deletion
+  - Currently shows: "Delete deposit coming soon"
 
 - [ ] **Add Harvest Dialog**
   - Form for recording harvest results
@@ -78,15 +45,11 @@ This document outlines the pending tasks and features that need to be implemente
   - Impact assessment on ROI calculations
   - Currently shows: "Delete harvest coming soon"
 
-- [x] **Edit Pig Pen Dialog** ✅ **COMPLETED**
-  - ✅ Edit pig pen basic information (pen code, type, customer)
-  - ✅ Update pig quantity, dates, type with proper validation
-  - ✅ Recalculate feed formulas on changes (dynamic calculation)
-  - ✅ Pre-populate form with existing pig pen data
-  - ✅ Brand selection and feed formula preview
-  - ✅ Integration with PigPenDetailPage edit button
-  - ✅ Data refresh after successful update
-  - ✅ Form validation and error handling
+- [ ] **Edit Pig Pen Dialog**
+  - Edit pig pen basic information
+  - Update pig quantity, dates, type
+  - Recalculate feed formulas on changes
+  - Currently shows: "Edit pig pen functionality coming soon"
 
 ### **2. Feed Import System**
 - [ ] **Import Feeds Dialog**
@@ -229,33 +192,16 @@ This document outlines the pending tasks and features that need to be implemente
 - Feed history and deposit listings
 - Harvest records management UI
 - ROI and financial summary calculations
-- **Add Deposit Dialog** with validation and API integration
-- **Edit Deposit Dialog** with pre-populated forms and update functionality
-- **Delete Deposit Confirmation** with detailed confirmation dialog and deletion
-- **Configurable Deposit Per Pig** with customizable rates per pig pen (1000, 1500 baht, etc.)
-- **Deposit Calculation Enhancement** with visual progress indicators and expected vs actual tracking
-- **Feed Formula vs Actual Feed Visualization** with horizontal progress bars matching deposit progress style
-- **Feed Progress Calculation Fix** with proper formula aggregation (summing all brand formulas for accurate total requirements)
-- **Edit Pig Pen Dialog** with full form editing, validation, and data refresh
 
 ### 🚧 **In Progress**
 - Table styling improvements
 - User interface refinements
 
 ### ⏳ **Next Steps**
-1. ✅ ~~Implement Add Deposit Dialog~~ **COMPLETED**
-2. ✅ ~~Implement Edit Deposit Dialog~~ **COMPLETED**
-3. ✅ ~~Implement Delete Deposit Confirmation~~ **COMPLETED**
-4. ✅ ~~Implement Configurable Deposit Per Pig~~ **COMPLETED**
-5. ✅ ~~Implement Deposit Calculation Enhancement~~ **COMPLETED**
-6. ✅ ~~FIX: Feed Progress Visualization Not Displaying~~ **COMPLETED**
-7. ✅ ~~Complete Feed Formula vs Actual Feed Visualization implementation~~ **COMPLETED**
-8. ✅ ~~FIX: Feed Progress Calculation Error~~ **COMPLETED**
-9. ✅ ~~Implement Edit Pig Pen Dialog~~ **COMPLETED**
-10. Implement Add Harvest Dialog
-11. Create Import Feeds functionality
-12. Add comprehensive error handling
-13. Implement export features
+1. Implement Add Deposit Dialog
+2. Create Import Feeds functionality
+3. Add comprehensive error handling
+4. Implement export features
 
 ---
 
@@ -263,7 +209,7 @@ This document outlines the pending tasks and features that need to be implemente
 
 | Task | Impact | Effort | Priority |
 |------|--------|--------|----------|
-| Add Harvest Dialog | High | Medium | 🔥 Critical |
+| Add Deposit Dialog | High | Medium | 🔥 Critical |
 | Import Feeds | High | High | 🔥 Critical |
 | Edit Dialogs | Medium | Medium | 🎯 Important |
 | Export Features | Medium | Low | 🎯 Important |
