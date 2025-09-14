@@ -24,3 +24,11 @@ public enum DepositCompletionStatus
     Partial,   // 50% or more but not complete
     Complete   // 100% or more of expected deposit
 }
+
+public enum HarvestCompletionStatus
+{
+    None,      // No harvests made
+    Started,   // Some pigs harvested but less than 50%
+    Partial,   // 50% or more but not complete
+    Complete   // All pigs harvested
+}

@@ -80,6 +80,57 @@ public record DepositCalculationInfo
     }
 }
 
+/// <summary>
+/// DTO for harvest calculation information used in dialogs and progress display
+/// </summary>
+public record HarvestCalculationInfo
+{
+    public int TotalPigQuantity { get; init; }
+    public int HarvestedPigQuantity { get; init; }
+    public int RemainingPigQuantity { get; init; }
+    public decimal CompletionPercentage { get; init; }
+    public decimal TotalRevenue { get; init; }
+    public decimal AveragePricePerKg { get; init; }
+    public HarvestCompletionStatus Status { get; init; }
+    
+    // Display properties
+    public string TotalRevenueFormatted => TotalRevenue.FormatThaiBaht();
+    public string AveragePricePerKgFormatted => AveragePricePerKg.FormatThaiBaht();
+    public string CompletionPercentageFormatted => $"{CompletionPercentage:P0}";
+    
+    /// <summary>
+    /// Create harvest calculation info from pig pen and harvest results
+    /// </summary>
+    public static HarvestCalculationInfo Create(PigPen pigPen, IEnumerable<HarvestResult> harvests)
+    {
+        var harvestList = harvests.ToList();
+        var totalHarvested = harvestList.Sum(h => h.PigCount);
+        var remaining = pigPen.PigQty - totalHarvested;
+        var completionPercentage = pigPen.PigQty == 0 ? 0m : (decimal)totalHarvested / pigPen.PigQty;
+        var totalRevenue = harvestList.Sum(h => h.Revenue);
+        var avgPricePerKg = harvestList.Any() ? harvestList.Average(h => h.SalePricePerKg) : 0m;
+        
+        var status = completionPercentage switch
+        {
+            >= 1.0m => HarvestCompletionStatus.Complete,
+            >= 0.5m => HarvestCompletionStatus.Partial,
+            > 0m => HarvestCompletionStatus.Started,
+            _ => HarvestCompletionStatus.None
+        };
+        
+        return new HarvestCalculationInfo
+        {
+            TotalPigQuantity = pigPen.PigQty,
+            HarvestedPigQuantity = totalHarvested,
+            RemainingPigQuantity = Math.Max(0, remaining),
+            CompletionPercentage = completionPercentage,
+            TotalRevenue = totalRevenue,
+            AveragePricePerKg = avgPricePerKg,
+            Status = status
+        };
+    }
+}
+
 // New DTOs for feed progress visualization
 public record FeedProgress(
     decimal RequiredBags,

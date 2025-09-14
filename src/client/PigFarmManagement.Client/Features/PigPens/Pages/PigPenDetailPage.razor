@@ -438,6 +438,67 @@
                 </CardHeaderActions>
             </MudCardHeader>
             <MudCardContent>
+                
+                <!-- Harvest Progress Card -->
+                @if (pigPen != null && harvestCalculationInfo != null)
+                {
+                    <MudCard Elevation="1" Class="mb-4" Style="background: linear-gradient(135deg, #e8f5e8 0%, #f0f8ff 100%);">
+                        <MudCardContent Class="pa-4">
+                            <MudGrid AlignItems="Center.Center" Spacing="2">
+                                <MudItem xs="12" sm="6" md="3">
+                                    <MudText Typo="Typo.subtitle2" Class="mb-1">🐷 Harvest Progress</MudText>
+                                    <MudProgressLinear Value="@((double)(harvestCalculationInfo.CompletionPercentage * 100))" 
+                                                     Color="@GetHarvestProgressColor()" 
+                                                     Size="Size.Medium" 
+                                                     Class="mb-2" />
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                        <strong>@harvestCalculationInfo.HarvestedPigQuantity</strong> of <strong>@harvestCalculationInfo.TotalPigQuantity</strong> pigs sold
+                                    </MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                        @harvestCalculationInfo.CompletionPercentageFormatted complete
+                                    </MudText>
+                                </MudItem>
+                                
+                                <MudItem xs="12" sm="6" md="3">
+                                    <MudText Typo="Typo.body2" Class="text-muted">Remaining Pigs:</MudText>
+                                    @if (harvestCalculationInfo.RemainingPigQuantity > 0)
+                                    {
+                                        <MudText Typo="Typo.h6" Color="@GetHarvestStatusColor()">
+                                            <strong>@harvestCalculationInfo.RemainingPigQuantity</strong> pigs left
+                                        </MudText>
+                                    }
+                                    else
+                                    {
+                                        <MudText Typo="Typo.h6" Style="color: #4caf50;">
+                                            ✅ All pigs harvested
+                                        </MudText>
+                                    }
+                                </MudItem>
+                                
+                                <MudItem xs="12" sm="6" md="3">
+                                    <MudText Typo="Typo.body2" Class="text-muted">Total Revenue:</MudText>
+                                    <MudText Typo="Typo.h6" Color="Color.Success">
+                                        @harvestCalculationInfo.TotalRevenueFormatted
+                                    </MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                        @harvests.Count harvest(s)
+                                    </MudText>
+                                </MudItem>
+                                
+                                <MudItem xs="12" sm="6" md="3">
+                                    <MudText Typo="Typo.body2" Class="text-muted">Avg Price/Kg:</MudText>
+                                    <MudText Typo="Typo.h6" Color="Color.Info">
+                                        @harvestCalculationInfo.AveragePricePerKgFormatted
+                                    </MudText>
+                                    <MudChip Size="Size.Small" Color="@GetHarvestStatusChipColor()" Variant="Variant.Filled">
+                                        @harvestCalculationInfo.Status
+                                    </MudChip>
+                                </MudItem>
+                            </MudGrid>
+                        </MudCardContent>
+                    </MudCard>
+                }
+                
                 @if (harvests.Any())
                 {
                     <MudTable Items="@harvests" Hover="true" Striped="true" Dense="true">
@@ -539,6 +600,9 @@
     // Deposit calculation information
     private DepositCalculationInfo? depositCalculationInfo;
     
+    // Harvest calculation information
+    private HarvestCalculationInfo? harvestCalculationInfo;
+    
     // Feed formula comparison data
     private IEnumerable<FeedFormulaWithCalculationResponse>? feedFormulaCalculations;
     private List<FeedComparisonData> comparisonData = new();
@@ -597,6 +661,12 @@
 
                 // Load harvests
                 harvests = await Http.GetFromJsonAsync<List<HarvestResult>>($"/api/pigpens/{PigPenId}/harvests") ?? new();
+
+                // Calculate harvest information
+                if (pigPen != null)
+                {
+                    harvestCalculationInfo = HarvestCalculationInfo.Create(pigPen, harvests);
+                }
 
                 // Load feed progress summary
                 try
@@ -1249,6 +1319,45 @@
         };
     }
 
+    // Harvest progress color methods
+    private Color GetHarvestProgressColor()
+    {
+        if (harvestCalculationInfo == null) return Color.Default;
+        
+        return harvestCalculationInfo.Status switch
+        {
+            HarvestCompletionStatus.Complete => Color.Success,
+            HarvestCompletionStatus.Partial => Color.Warning,
+            HarvestCompletionStatus.Started => Color.Info,
+            _ => Color.Secondary
+        };
+    }
+
+    private Color GetHarvestStatusColor()
+    {
+        if (harvestCalculationInfo == null) return Color.Default;
+        
+        return harvestCalculationInfo.RemainingPigQuantity switch
+        {
+            0 => Color.Success,
+            > 0 when harvestCalculationInfo.CompletionPercentage >= 0.5m => Color.Warning,
+            _ => Color.Info
+        };
+    }
+
+    private Color GetHarvestStatusChipColor()
+    {
+        if (harvestCalculationInfo == null) return Color.Default;
+        
+        return harvestCalculationInfo.Status switch
+        {
+            HarvestCompletionStatus.Complete => Color.Success,
+            HarvestCompletionStatus.Partial => Color.Warning,
+            HarvestCompletionStatus.Started => Color.Info,
+            _ => Color.Secondary
+        };
+    }
+
     private async Task RefreshDeposits()
     {
         try
@@ -1319,6 +1428,13 @@
         try
         {
             harvests = await Http.GetFromJsonAsync<List<HarvestResult>>($"/api/pigpens/{PigPenId}/harvests") ?? new();
+            
+            // Recalculate harvest information
+            if (pigPen != null)
+            {
+                harvestCalculationInfo = HarvestCalculationInfo.Create(pigPen, harvests);
+            }
+            
             StateHasChanged();
         }
         catch (Exception ex)
