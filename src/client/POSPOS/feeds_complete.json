@@ -1,0 +1,887 @@
+[
+    {
+        "_id": "68b7fd1d092fdfe725b5e45c",
+        "discount": 0,
+        "tax_percent": 0,
+        "code": "TR68000001",
+        "order_list": [
+            {
+                "stock": 24,
+                "name": "เจ็ท 120 หมู 40-60 กก.",
+                "price": 580,
+                "special_price": 580,
+                "discount_type": 1,
+                "cost_discount_price": 5,
+                "code": "PK64000161",
+                "sku_list": [],
+                "topping_in_order": [],
+                "total_price_include_discount": 13920,
+                "note_in_order": [
+                    "คลังฟาร์ม A"
+                ]
+            },
+            {
+                "stock": 15,
+                "name": "เจ็ท 130 หมู 60-90 กก.",
+                "price": 565,
+                "special_price": 565,
+                "discount_type": 1,
+                "cost_discount_price": 5,
+                "code": "PK64000162",
+                "sku_list": [],
+                "topping_in_order": [],
+                "total_price_include_discount": 8475,
+                "note_in_order": [
+                    "คลังฟาร์ม A"
+                ]
+            }
+        ],
+        "timestamp": "2025-09-10T10:15:27.270Z",
+        "comment": "",
+        "return_date": null,
+        "register_vat": false,
+        "segment_type": 4,
+        "sub_total": 22395,
+        "sub_total_exclude_vat": 0,
+        "grand_total": 22395,
+        "cash_register": null,
+        "buyer_detail": {
+            "code": "M000001",
+            "firstname": "Robert Ranch 1",
+            "lastname": "",
+            "phone": "081-234-5678"
+        },
+        "shop_detail": {
+            "shop_id": "shop001",
+            "shop_name": "ร้านอาหารสัตว์เจ็ท สาขา 1"
+        }
+    },
+    {
+        "_id": "68b7fd1d092fdfe725b5e45d",
+        "discount": 0,
+        "tax_percent": 0,
+        "code": "TR68000002",
+        "order_list": [
+            {
+                "stock": 18,
+                "name": "เจ็ท 108 หมูนม 15-25 กก.",
+                "price": 650,
+                "special_price": 650,
+                "discount_type": 1,
+                "cost_discount_price": 8,
+                "code": "PK64000159",
+                "sku_list": [],
+                "topping_in_order": [],
+                "total_price_include_discount": 11700,
+                "note_in_order": [
+                    "คลังฟาร์ม B"
+                ]
+            }
+        ],
+        "timestamp": "2025-09-09T14:30:45.150Z",
+        "comment": "",
+        "return_date": null,
+        "register_vat": false,
+        "segment_type": 4,
+        "sub_total": 11700,
+        "sub_total_exclude_vat": 0,
+        "grand_total": 11700,
+        "cash_register": null,
+        "buyer_detail": {
+            "code": "M000002",
+            "firstname": "Siriporn Agricultural 2",
+            "lastname": "",
+            "phone": "082-345-6789"
+        },
+        "shop_detail": {
+            "shop_id": "shop001",
+            "shop_name": "ร้านอาหารสัตว์เจ็ท สาขา 1"
+        }
+    },
+    {
+        "_id": "68b7fd1d092fdfe725b5e45e",
+        "discount": 0,
+        "tax_percent": 0,
+        "code": "TR68000003",
+        "order_list": [
+            {
+                "stock": 65,
+                "name": "เจ็ท 130 หมู 60-90 กก.",
+                "price": 565,
+                "special_price": 565,
+                "discount_type": 1,
+                "cost_discount_price": 10,
+                "code": "PK64000162",
+                "sku_list": [],
+                "topping_in_order": [],
+                "total_price_include_discount": 36725,
+                "note_in_order": [
+                    "คลังฟาร์ม C"
+                ]
+            },
+            {
+                "stock": 35,
+                "name": "เจ็ท 153 หมู 90 กก. ขึ้นไป",
+                "price": 550,
+                "special_price": 550,
+                "discount_type": 1,
+                "cost_discount_price": 10,
+                "code": "PK64000163",
+                "sku_list": [],
+                "topping_in_order": [],
+                "total_price_include_discount": 19250,
+                "note_in_order": [
+                    "คลังฟาร์ม C"
+                ]
+            }
+        ],
+        "timestamp": "2025-09-08T09:45:12.890Z",
+        "comment": "",
+        "return_date": null,
+        "register_vat": false,
+        "segment_type": 4,
+        "sub_total": 55975,
+        "sub_total_exclude_vat": 0,
+        "grand_total": 55975,
+        "cash_register": null,
+        "buyer_detail": {
+            "code": "M000003",
+            "firstname": "Siriporn Agriculture 3",
+            "lastname": "",
+            "phone": "083-456-7890"
+        },
+        "shop_detail": {
+            "shop_id": "shop002",
+            "shop_name": "ร้านอาหารสัตว์เจ็ท สาขา 2"
+        }
+    },
+    {
+        "_id": "68b7fd1d092fdfe725b5e45f",
+        "discount": 0,
+        "tax_percent": 0,
+        "code": "TR68000004",
+        "order_list": [
+            {
+                "stock": 48,
+                "name": "เจ็ท 120 หมู 40-60 กก.",
+                "price": 580,
+                "special_price": 580,
+                "discount_type": 1,
+                "cost_discount_price": 8,
+                "code": "PK64000161",
+                "sku_list": [],
+                "topping_in_order": [],
+                "total_price_include_discount": 27840,
+                "note_in_order": [
+                    "คลังฟาร์ม D"
+                ]
+            }
+        ],
+        "timestamp": "2025-09-07T16:20:33.220Z",
+        "comment": "",
+        "return_date": null,
+        "register_vat": false,
+        "segment_type": 4,
+        "sub_total": 27840,
+        "sub_total_exclude_vat": 0,
+        "grand_total": 27840,
+        "cash_register": null,
+        "buyer_detail": {
+            "code": "M000004",
+            "firstname": "Siriporn Pig Farm 4",
+            "lastname": "",
+            "phone": "084-567-8901"
+        },
+        "shop_detail": {
+            "shop_id": "shop002",
+            "shop_name": "ร้านอาหารสัตว์เจ็ท สาขา 2"
+        }
+    },
+    {
+        "_id": "68b7fd1d092fdfe725b5e460",
+        "discount": 0,
+        "tax_percent": 0,
+        "code": "TR68000005",
+        "order_list": [
+            {
+                "stock": 32,
+                "name": "เจ็ท 110 หมู 25-40 กก.",
+                "price": 595,
+                "special_price": 595,
+                "discount_type": 1,
+                "cost_discount_price": 5,
+                "code": "PK64000160",
+                "sku_list": [],
+                "topping_in_order": [],
+                "total_price_include_discount": 19040,
+                "note_in_order": [
+                    "คลังฟาร์ม E"
+                ]
+            }
+        ],
+        "timestamp": "2025-09-06T11:55:18.440Z",
+        "comment": "",
+        "return_date": null,
+        "register_vat": false,
+        "segment_type": 4,
+        "sub_total": 19040,
+        "sub_total_exclude_vat": 0,
+        "grand_total": 19040,
+        "cash_register": null,
+        "buyer_detail": {
+            "code": "M000005",
+            "firstname": "Sarah Ranch 5",
+            "lastname": "",
+            "phone": "085-678-9012"
+        },
+        "shop_detail": {
+            "shop_id": "shop003",
+            "shop_name": "ร้านอาหารสัตว์เจ็ท สาขา 3"
+        }
+    },
+    {
+        "_id": "68b7fd1d092fdfe725b5e461",
+        "discount": 0,
+        "tax_percent": 0,
+        "code": "TR68000006",
+        "order_list": [
+            {
+                "stock": 58,
+                "name": "เจ็ท 130 หมู 60-90 กก.",
+                "price": 565,
+                "special_price": 565,
+                "discount_type": 1,
+                "cost_discount_price": 12,
+                "code": "PK64000162",
+                "sku_list": [],
+                "topping_in_order": [],
+                "total_price_include_discount": 32770,
+                "note_in_order": [
+                    "คลังฟาร์ม F"
+                ]
+            }
+        ],
+        "timestamp": "2025-09-05T13:10:55.780Z",
+        "comment": "",
+        "return_date": null,
+        "register_vat": false,
+        "segment_type": 4,
+        "sub_total": 32770,
+        "sub_total_exclude_vat": 0,
+        "grand_total": 32770,
+        "cash_register": null,
+        "buyer_detail": {
+            "code": "M000006",
+            "firstname": "Niran Farm 6",
+            "lastname": "",
+            "phone": "086-789-0123"
+        },
+        "shop_detail": {
+            "shop_id": "shop003",
+            "shop_name": "ร้านอาหารสัตว์เจ็ท สาขา 3"
+        }
+    },
+    {
+        "_id": "68b7fd1d092fdfe725b5e462",
+        "discount": 0,
+        "tax_percent": 0,
+        "code": "TR68000007",
+        "order_list": [
+            {
+                "stock": 35,
+                "name": "เจ็ท 108 หมูนม 15-25 กก.",
+                "price": 650,
+                "special_price": 650,
+                "discount_type": 1,
+                "cost_discount_price": 6,
+                "code": "PK64000159",
+                "sku_list": [],
+                "topping_in_order": [],
+                "total_price_include_discount": 22750,
+                "note_in_order": [
+                    "คลังฟาร์ม G"
+                ]
+            },
+            {
+                "stock": 25,
+                "name": "เจ็ท 120 หมู 40-60 กก.",
+                "price": 580,
+                "special_price": 580,
+                "discount_type": 1,
+                "cost_discount_price": 6,
+                "code": "PK64000161",
+                "sku_list": [],
+                "topping_in_order": [],
+                "total_price_include_discount": 14500,
+                "note_in_order": [
+                    "คลังฟาร์ม G"
+                ]
+            }
+        ],
+        "timestamp": "2025-09-04T08:25:41.320Z",
+        "comment": "",
+        "return_date": null,
+        "register_vat": false,
+        "segment_type": 4,
+        "sub_total": 37250,
+        "sub_total_exclude_vat": 0,
+        "grand_total": 37250,
+        "cash_register": null,
+        "buyer_detail": {
+            "code": "M000007",
+            "firstname": "Robert Pig Farm 7",
+            "lastname": "",
+            "phone": "087-890-1234"
+        },
+        "shop_detail": {
+            "shop_id": "shop004",
+            "shop_name": "ร้านอาหารสัตว์เจ็ท สาขา 4"
+        }
+    },
+    {
+        "_id": "68b7fd1d092fdfe725b5e463",
+        "discount": 0,
+        "tax_percent": 0,
+        "code": "TR68000008",
+        "order_list": [
+            {
+                "stock": 42,
+                "name": "เจ็ท 120 หมู 40-60 กก.",
+                "price": 580,
+                "special_price": 580,
+                "discount_type": 1,
+                "cost_discount_price": 7,
+                "code": "PK64000161",
+                "sku_list": [],
+                "topping_in_order": [],
+                "total_price_include_discount": 24360,
+                "note_in_order": [
+                    "คลังฟาร์ม H"
+                ]
+            }
+        ],
+        "timestamp": "2025-09-03T15:40:28.660Z",
+        "comment": "",
+        "return_date": null,
+        "register_vat": false,
+        "segment_type": 4,
+        "sub_total": 24360,
+        "sub_total_exclude_vat": 0,
+        "grand_total": 24360,
+        "cash_register": null,
+        "buyer_detail": {
+            "code": "M000008",
+            "firstname": "Niran Livestock Ltd 8",
+            "lastname": "",
+            "phone": "088-901-2345"
+        },
+        "shop_detail": {
+            "shop_id": "shop004",
+            "shop_name": "ร้านอาหารสัตว์เจ็ท สาขา 4"
+        }
+    },
+    {
+        "_id": "68b7fd1d092fdfe725b5e464",
+        "discount": 0,
+        "tax_percent": 0,
+        "code": "TR68000009",
+        "order_list": [
+            {
+                "stock": 28,
+                "name": "เจ็ท 110 หมู 25-40 กก.",
+                "price": 595,
+                "special_price": 595,
+                "discount_type": 1,
+                "cost_discount_price": 4,
+                "code": "PK64000160",
+                "sku_list": [],
+                "topping_in_order": [],
+                "total_price_include_discount": 16660,
+                "note_in_order": [
+                    "คลังฟาร์ม I"
+                ]
+            }
+        ],
+        "timestamp": "2025-09-02T12:15:07.890Z",
+        "comment": "",
+        "return_date": null,
+        "register_vat": false,
+        "segment_type": 4,
+        "sub_total": 16660,
+        "sub_total_exclude_vat": 0,
+        "grand_total": 16660,
+        "cash_register": null,
+        "buyer_detail": {
+            "code": "M000009",
+            "firstname": "Jennifer Livestock 9",
+            "lastname": "",
+            "phone": "089-012-3456"
+        },
+        "shop_detail": {
+            "shop_id": "shop005",
+            "shop_name": "ร้านอาหารสัตว์เจ็ท สาขา 5"
+        }
+    },
+    {
+        "_id": "68b7fd1d092fdfe725b5e465",
+        "discount": 0,
+        "tax_percent": 0,
+        "code": "TR68000010",
+        "order_list": [
+            {
+                "stock": 22,
+                "name": "เจ็ท 105 หมูเล็ก 6-15 กก.",
+                "price": 755,
+                "special_price": 755,
+                "discount_type": 1,
+                "cost_discount_price": 5,
+                "code": "PK64000158",
+                "sku_list": [],
+                "topping_in_order": [],
+                "total_price_include_discount": 16610,
+                "note_in_order": [
+                    "คลังฟาร์ม J"
+                ]
+            }
+        ],
+        "timestamp": "2025-09-01T17:30:44.110Z",
+        "comment": "",
+        "return_date": null,
+        "register_vat": false,
+        "segment_type": 4,
+        "sub_total": 16610,
+        "sub_total_exclude_vat": 0,
+        "grand_total": 16610,
+        "cash_register": null,
+        "buyer_detail": {
+            "code": "M000010",
+            "firstname": "Jennifer Swine Ranch 10",
+            "lastname": "",
+            "phone": "090-123-4567"
+        },
+        "shop_detail": {
+            "shop_id": "shop005",
+            "shop_name": "ร้านอาหารสัตว์เจ็ท สาขา 5"
+        }
+    },
+    {
+        "_id": "68b7fd1d092fdfe725b5e466",
+        "discount": 0,
+        "tax_percent": 0,
+        "code": "TR68000011",
+        "order_list": [
+            {
+                "stock": 52,
+                "name": "เจ็ท 130 หมู 60-90 กก.",
+                "price": 565,
+                "special_price": 565,
+                "discount_type": 1,
+                "cost_discount_price": 9,
+                "code": "PK64000162",
+                "sku_list": [],
+                "topping_in_order": [],
+                "total_price_include_discount": 29380,
+                "note_in_order": [
+                    "คลังฟาร์ม K"
+                ]
+            }
+        ],
+        "timestamp": "2025-08-31T10:45:21.550Z",
+        "comment": "",
+        "return_date": null,
+        "register_vat": false,
+        "segment_type": 4,
+        "sub_total": 29380,
+        "sub_total_exclude_vat": 0,
+        "grand_total": 29380,
+        "cash_register": null,
+        "buyer_detail": {
+            "code": "M000011",
+            "firstname": "David Swine Ranch 11",
+            "lastname": "",
+            "phone": "091-234-5678"
+        },
+        "shop_detail": {
+            "shop_id": "shop006",
+            "shop_name": "ร้านอาหารสัตว์เจ็ท สาขา 6"
+        }
+    },
+    {
+        "_id": "68b7fd1d092fdfe725b5e467",
+        "discount": 0,
+        "tax_percent": 0,
+        "code": "TR68000012",
+        "order_list": [
+            {
+                "stock": 38,
+                "name": "เจ็ท 108 หมูนม 15-25 กก.",
+                "price": 650,
+                "special_price": 650,
+                "discount_type": 1,
+                "cost_discount_price": 7,
+                "code": "PK64000159",
+                "sku_list": [],
+                "topping_in_order": [],
+                "total_price_include_discount": 24700,
+                "note_in_order": [
+                    "คลังฟาร์ม L"
+                ]
+            }
+        ],
+        "timestamp": "2025-08-30T14:20:58.990Z",
+        "comment": "",
+        "return_date": null,
+        "register_vat": false,
+        "segment_type": 4,
+        "sub_total": 24700,
+        "sub_total_exclude_vat": 0,
+        "grand_total": 24700,
+        "cash_register": null,
+        "buyer_detail": {
+            "code": "M000012",
+            "firstname": "Lisa Farm 12",
+            "lastname": "",
+            "phone": "092-345-6789"
+        },
+        "shop_detail": {
+            "shop_id": "shop006",
+            "shop_name": "ร้านอาหารสัตว์เจ็ท สาขา 6"
+        }
+    },
+    {
+        "_id": "68b7fd1d092fdfe725b5e468",
+        "discount": 0,
+        "tax_percent": 0,
+        "code": "TR68000013",
+        "order_list": [
+            {
+                "stock": 26,
+                "name": "เจ็ท 105 หมูเล็ก 6-15 กก.",
+                "price": 755,
+                "special_price": 755,
+                "discount_type": 1,
+                "cost_discount_price": 4,
+                "code": "PK64000158",
+                "sku_list": [],
+                "topping_in_order": [],
+                "total_price_include_discount": 19630,
+                "note_in_order": [
+                    "คลังฟาร์ม M"
+                ]
+            }
+        ],
+        "timestamp": "2025-08-29T09:05:35.330Z",
+        "comment": "",
+        "return_date": null,
+        "register_vat": false,
+        "segment_type": 4,
+        "sub_total": 19630,
+        "sub_total_exclude_vat": 0,
+        "grand_total": 19630,
+        "cash_register": null,
+        "buyer_detail": {
+            "code": "M000013",
+            "firstname": "Siriporn Farm 13",
+            "lastname": "",
+            "phone": "093-456-7890"
+        },
+        "shop_detail": {
+            "shop_id": "shop007",
+            "shop_name": "ร้านอาหารสัตว์เจ็ท สาขา 7"
+        }
+    },
+    {
+        "_id": "68b7fd1d092fdfe725b5e469",
+        "discount": 0,
+        "tax_percent": 0,
+        "code": "TR68000014",
+        "order_list": [
+            {
+                "stock": 75,
+                "name": "เจ็ท 153 หมู 90 กก. ขึ้นไป",
+                "price": 550,
+                "special_price": 550,
+                "discount_type": 1,
+                "cost_discount_price": 15,
+                "code": "PK64000163",
+                "sku_list": [],
+                "topping_in_order": [],
+                "total_price_include_discount": 41250,
+                "note_in_order": [
+                    "คลังฟาร์ม N"
+                ]
+            }
+        ],
+        "timestamp": "2025-08-28T16:35:12.770Z",
+        "comment": "",
+        "return_date": null,
+        "register_vat": false,
+        "segment_type": 4,
+        "sub_total": 41250,
+        "sub_total_exclude_vat": 0,
+        "grand_total": 41250,
+        "cash_register": null,
+        "buyer_detail": {
+            "code": "M000014",
+            "firstname": "Robert Farm 14",
+            "lastname": "",
+            "phone": "094-567-8901"
+        },
+        "shop_detail": {
+            "shop_id": "shop007",
+            "shop_name": "ร้านอาหารสัตว์เจ็ท สาขา 7"
+        }
+    },
+    {
+        "_id": "68b7fd1d092fdfe725b5e46a",
+        "discount": 0,
+        "tax_percent": 0,
+        "code": "TR68000015",
+        "order_list": [
+            {
+                "stock": 45,
+                "name": "เจ็ท 120 หมู 40-60 กก.",
+                "price": 580,
+                "special_price": 580,
+                "discount_type": 1,
+                "cost_discount_price": 8,
+                "code": "PK64000161",
+                "sku_list": [],
+                "topping_in_order": [],
+                "total_price_include_discount": 26100,
+                "note_in_order": [
+                    "คลังฟาร์ม O"
+                ]
+            }
+        ],
+        "timestamp": "2025-08-27T11:50:49.210Z",
+        "comment": "",
+        "return_date": null,
+        "register_vat": false,
+        "segment_type": 4,
+        "sub_total": 26100,
+        "sub_total_exclude_vat": 0,
+        "grand_total": 26100,
+        "cash_register": null,
+        "buyer_detail": {
+            "code": "M000015",
+            "firstname": "Michael Pig Farm 15",
+            "lastname": "",
+            "phone": "095-678-9012"
+        },
+        "shop_detail": {
+            "shop_id": "shop008",
+            "shop_name": "ร้านอาหารสัตว์เจ็ท สาขา 8"
+        }
+    },
+    {
+        "_id": "68b7fd1d092fdfe725b5e46b",
+        "discount": 0,
+        "tax_percent": 0,
+        "code": "TR68000016",
+        "order_list": [
+            {
+                "stock": 36,
+                "name": "เจ็ท 110 หมู 25-40 กก.",
+                "price": 595,
+                "special_price": 595,
+                "discount_type": 1,
+                "cost_discount_price": 6,
+                "code": "PK64000160",
+                "sku_list": [],
+                "topping_in_order": [],
+                "total_price_include_discount": 21420,
+                "note_in_order": [
+                    "คลังฟาร์ม P"
+                ]
+            }
+        ],
+        "timestamp": "2025-08-26T13:25:26.650Z",
+        "comment": "",
+        "return_date": null,
+        "register_vat": false,
+        "segment_type": 4,
+        "sub_total": 21420,
+        "sub_total_exclude_vat": 0,
+        "grand_total": 21420,
+        "cash_register": null,
+        "buyer_detail": {
+            "code": "M000016",
+            "firstname": "John Farm 16",
+            "lastname": "",
+            "phone": "096-789-0123"
+        },
+        "shop_detail": {
+            "shop_id": "shop008",
+            "shop_name": "ร้านอาหารสัตว์เจ็ท สาขา 8"
+        }
+    },
+    {
+        "_id": "68b7fd1d092fdfe725b5e46c",
+        "discount": 0,
+        "tax_percent": 0,
+        "code": "TR68000017",
+        "order_list": [
+            {
+                "stock": 30,
+                "name": "เจ็ท 108 หมูนม 15-25 กก.",
+                "price": 650,
+                "special_price": 650,
+                "discount_type": 1,
+                "cost_discount_price": 5,
+                "code": "PK64000159",
+                "sku_list": [],
+                "topping_in_order": [],
+                "total_price_include_discount": 19500,
+                "note_in_order": [
+                    "คลังฟาร์ม Q"
+                ]
+            }
+        ],
+        "timestamp": "2025-08-25T08:40:03.090Z",
+        "comment": "",
+        "return_date": null,
+        "register_vat": false,
+        "segment_type": 4,
+        "sub_total": 19500,
+        "sub_total_exclude_vat": 0,
+        "grand_total": 19500,
+        "cash_register": null,
+        "buyer_detail": {
+            "code": "M000017",
+            "firstname": "Malee Farm Corp 17",
+            "lastname": "",
+            "phone": "097-890-1234"
+        },
+        "shop_detail": {
+            "shop_id": "shop009",
+            "shop_name": "ร้านอาหารสัตว์เจ็ท สาขา 9"
+        }
+    },
+    {
+        "_id": "68b7fd1d092fdfe725b5e46d",
+        "discount": 0,
+        "tax_percent": 0,
+        "code": "TR68000018",
+        "order_list": [
+            {
+                "stock": 40,
+                "name": "เจ็ท 130 หมู 60-90 กก.",
+                "price": 565,
+                "special_price": 565,
+                "discount_type": 1,
+                "cost_discount_price": 7,
+                "code": "PK64000162",
+                "sku_list": [],
+                "topping_in_order": [],
+                "total_price_include_discount": 22600,
+                "note_in_order": [
+                    "คลังฟาร์ม R"
+                ]
+            }
+        ],
+        "timestamp": "2025-08-24T15:15:40.530Z",
+        "comment": "",
+        "return_date": null,
+        "register_vat": false,
+        "segment_type": 4,
+        "sub_total": 22600,
+        "sub_total_exclude_vat": 0,
+        "grand_total": 22600,
+        "cash_register": null,
+        "buyer_detail": {
+            "code": "M000018",
+            "firstname": "John Livestock 18",
+            "lastname": "",
+            "phone": "098-901-2345"
+        },
+        "shop_detail": {
+            "shop_id": "shop009",
+            "shop_name": "ร้านอาหารสัตว์เจ็ท สาขา 9"
+        }
+    },
+    {
+        "_id": "68b7fd1d092fdfe725b5e46e",
+        "discount": 0,
+        "tax_percent": 0,
+        "code": "TR68000019",
+        "order_list": [
+            {
+                "stock": 48,
+                "name": "เจ็ท 120 หมู 40-60 กก.",
+                "price": 580,
+                "special_price": 580,
+                "discount_type": 1,
+                "cost_discount_price": 8,
+                "code": "PK64000161",
+                "sku_list": [],
+                "topping_in_order": [],
+                "total_price_include_discount": 27840,
+                "note_in_order": [
+                    "คลังฟาร์ม S"
+                ]
+            }
+        ],
+        "timestamp": "2025-08-23T12:50:17.970Z",
+        "comment": "",
+        "return_date": null,
+        "register_vat": false,
+        "segment_type": 4,
+        "sub_total": 27840,
+        "sub_total_exclude_vat": 0,
+        "grand_total": 27840,
+        "cash_register": null,
+        "buyer_detail": {
+            "code": "M000019",
+            "firstname": "Lisa Farming Co 19",
+            "lastname": "",
+            "phone": "099-012-3456"
+        },
+        "shop_detail": {
+            "shop_id": "shop010",
+            "shop_name": "ร้านอาหารสัตว์เจ็ท สาขา 10"
+        }
+    },
+    {
+        "_id": "68b7fd1d092fdfe725b5e46f",
+        "discount": 0,
+        "tax_percent": 0,
+        "code": "TR68000020",
+        "order_list": [
+            {
+                "stock": 34,
+                "name": "เจ็ท 105 หมูเล็ก 6-15 กก.",
+                "price": 755,
+                "special_price": 755,
+                "discount_type": 1,
+                "cost_discount_price": 6,
+                "code": "PK64000158",
+                "sku_list": [],
+                "topping_in_order": [],
+                "total_price_include_discount": 25670,
+                "note_in_order": [
+                    "คลังฟาร์ม T"
+                ]
+            }
+        ],
+        "timestamp": "2025-08-22T18:25:54.410Z",
+        "comment": "",
+        "return_date": null,
+        "register_vat": false,
+        "segment_type": 4,
+        "sub_total": 25670,
+        "sub_total_exclude_vat": 0,
+        "grand_total": 25670,
+        "cash_register": null,
+        "buyer_detail": {
+            "code": "M000020",
+            "firstname": "Jennifer Farm 20",
+            "lastname": "",
+            "phone": "020-123-4567"
+        },
+        "shop_detail": {
+            "shop_id": "shop010",
+            "shop_name": "ร้านอาหารสัตว์เจ็ท สาขา 10"
+        }
+    }
+]
