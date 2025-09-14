@@ -61,8 +61,8 @@ public class FeedRepository : IFeedRepository
             feed.ProductCode, // ProductCode
             feed.ProductName, // ProductName
             feed.InvoiceNumber, // InvoiceNumber
-            feed.Quantity,    // QuantityKg from Quantity (assuming same unit)
-            feed.UnitPrice,   // PricePerKg from UnitPrice
+            feed.Quantity * 25m,    // Convert bags to kg (25kg per bag)
+            feed.UnitPrice / 25m,   // Convert price per bag to price per kg
             feed.TotalPrice,  // Cost from TotalPrice
             feed.FeedDate     // Date from FeedDate
         )

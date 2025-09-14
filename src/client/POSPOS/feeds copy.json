@@ -2,7 +2,7 @@
             "_id": "68b7fd1d092fdfe725b5e45c",
             "discount": 0,
             "tax_percent": 0,
-            "code": "TR68017651",
+            "code": "TR68000001",
             "order_list": [
                 {
                     "stock": 4,
@@ -93,10 +93,10 @@
             },
             "cash_register": null,
             "buyer_detail": {
-                "code": "M000204",
-                "firstname": "คุณเมฆ0924031794บ้านดงเค้ง",
+                "code": "M000001",
+                "firstname": "ฟาร์มสุวินัยคลองห้า",
                 "lastname": "",
-                "key_card_id": "M000204"
+                "key_card_id": "M000001"
             },
             "status": "success",
             "segment_detail_type": {
@@ -145,7 +145,7 @@
             "rounding_rule_value": 1,
             "rounding_amount": 0,
             "reference_tax_invoice_abbreviate": {
-                "code": "ST68017651"
+                "code": "ST68000001"
             },
             "actual_staff_detail": {
                 "firstname": "หน้าร้าน",

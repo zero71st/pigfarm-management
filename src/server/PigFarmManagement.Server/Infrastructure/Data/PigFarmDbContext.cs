@@ -126,7 +126,7 @@ public class PigFarmDbContext : DbContext
             customers.Add(new CustomerEntity
             {
                 Id = Guid.NewGuid(),
-                Code = $"CUST-{i:D3}",
+                Code = $"M{i:D6}",
                 Name = GetRandomCustomerName(i, random),
                 Status = customerStatuses[random.Next(customerStatuses.Length)],
                 CreatedAt = now.AddDays(-random.Next(1, 365)),
@@ -283,12 +283,12 @@ public class PigFarmDbContext : DbContext
                 ProductType = "อาหารสัตว์",
                 ProductCode = product.Code,
                 ProductName = product.Name,
-                InvoiceNumber = $"INV-2024-{i:D3}",
+                InvoiceNumber = $"ST68{i:D6}",
                 Quantity = quantity,
                 UnitPrice = unitPrice,
                 TotalPrice = quantity * unitPrice,
                 FeedDate = now.AddDays(-random.Next(1, 90)),
-                ExternalReference = $"POSPOS-INV-2024-{i:D3}-{product.Code}",
+                ExternalReference = $"POSPOS-ST68{i:D6}-{product.Code}",
                 Notes = random.Next(0, 3) == 0 ? $"อาหารสัตว์คุณภาพสูง, {product.Type}" : null,
                 CreatedAt = now.AddDays(-random.Next(1, 90)),
                 UpdatedAt = now.AddDays(-random.Next(1, 30))

@@ -1,8 +1,9 @@
+[
         {
             "_id": "68b7fd1d092fdfe725b5e45c",
             "discount": 0,
             "tax_percent": 0,
-            "code": "TR68017651",
+            "code": "TR68000001",
             "order_list": [
                 {
                     "stock": 4,
@@ -16,7 +17,7 @@
                     "topping_in_order": [],
                     "total_price_include_discount": 2480,
                     "note_in_order": [
-                        "เมฆ"
+                        "คลังฟาร์ม A"
                     ]
                 },
                 {
@@ -31,7 +32,7 @@
                     "topping_in_order": [],
                     "total_price_include_discount": 1176,
                     "note_in_order": [
-                        "เมฆ"
+                        "คลังฟาร์ม A"
                     ]
                 }
             ],
@@ -45,17 +46,247 @@
             "grand_total": 3656,
             "cash_register": null,
             "buyer_detail": {
-                "code": "M000204",
-                "firstname": "คุณเมฆ0924031794บ้านดงเค้ง",
+                "code": "M000001",
+                "firstname": "ฟาร์มสุวินัยคลองห้า",
                 "lastname": "",
-                "key_card_id": "M000204"
+                "key_card_id": "M000001"
             },
             "status": "success",
             "rounding_rule": 0,
             "rounding_rule_value": 1,
             "rounding_amount": 0,
             "reference_tax_invoice_abbreviate": {
-                "code": "ST68017651"
+                "code": "ST68000001"
+            },
+            "number_of_order_list": 2
+        },
+        {
+            "_id": "68b7fd1d092fdfe725b5e46d",
+            "discount": 0,
+            "tax_percent": 0,
+            "code": "TR68000002",
+            "order_list": [
+                {
+                    "stock": 3,
+                    "name": "เจ็ท 105 หมูเล็ก 6-15 กก.",
+                    "price": 785,
+                    "special_price": 785,
+                    "discount_type": 1,
+                    "cost_discount_price": 15,
+                    "code": "PK64000158",
+                    "sku_list": [],
+                    "topping_in_order": [],
+                    "total_price_include_discount": 2310,
+                    "note_in_order": [
+                        "คลังฟาร์ม B"
+                    ]
+                },
+                {
+                    "stock": 5,
+                    "name": "เจ็ท 108 หมูนม 15-25 กก.",
+                    "price": 720,
+                    "special_price": 720,
+                    "discount_type": 1,
+                    "cost_discount_price": 5,
+                    "code": "PK64000159",
+                    "sku_list": [],
+                    "topping_in_order": [],
+                    "total_price_include_discount": 3575,
+                    "note_in_order": [
+                        "คลังฟาร์ม B"
+                    ]
+                }
+            ],
+            "timestamp": "2025-09-02T14:15:33.180Z",
+            "comment": "",
+            "return_date": null,
+            "register_vat": false,
+            "segment_type": 4,
+            "sub_total": 5885,
+            "sub_total_exclude_vat": 0,
+            "grand_total": 5885,
+            "cash_register": null,
+            "buyer_detail": {
+                "code": "M000002",
+                "firstname": "ฟาร์มทองคำรังสิต",
+                "lastname": "",
+                "key_card_id": "M000002"
+            },
+            "status": "success",
+            "rounding_rule": 0,
+            "rounding_rule_value": 1,
+            "rounding_amount": 0,
+            "reference_tax_invoice_abbreviate": {
+                "code": "ST68000002"
+            },
+            "number_of_order_list": 2
+        },
+        {
+            "_id": "68b7fd1d092fdfe725b5e47e",
+            "discount": 0,
+            "tax_percent": 0,
+            "code": "TR68000003",
+            "order_list": [
+                {
+                    "stock": 6,
+                    "name": "เจ็ท 110 หมู 25-40 กก.",
+                    "price": 655,
+                    "special_price": 655,
+                    "discount_type": 1,
+                    "cost_discount_price": 12,
+                    "code": "PK64000160",
+                    "sku_list": [],
+                    "topping_in_order": [],
+                    "total_price_include_discount": 3858,
+                    "note_in_order": [
+                        "คลังฟาร์ม C"
+                    ]
+                }
+            ],
+            "timestamp": "2025-09-01T09:45:12.950Z",
+            "comment": "",
+            "return_date": null,
+            "register_vat": false,
+            "segment_type": 4,
+            "sub_total": 3858,
+            "sub_total_exclude_vat": 0,
+            "grand_total": 3858,
+            "cash_register": null,
+            "buyer_detail": {
+                "code": "M000003",
+                "firstname": "ฟาร์มสายลมลาดกระบัง",
+                "lastname": "",
+                "key_card_id": "M000003"
+            },
+            "status": "success",
+            "rounding_rule": 0,
+            "rounding_rule_value": 1,
+            "rounding_amount": 0,
+            "reference_tax_invoice_abbreviate": {
+                "code": "ST68000003"
+            },
+            "number_of_order_list": 1
+        },
+        {
+            "_id": "68b7fd1d092fdfe725b5e48f",
+            "discount": 0,
+            "tax_percent": 0,
+            "code": "TR68000004",
+            "order_list": [
+                {
+                    "stock": 8,
+                    "name": "เจ็ท 153 หมู 90 กก. ขึ้นไป",
+                    "price": 525,
+                    "special_price": 525,
+                    "discount_type": 1,
+                    "cost_discount_price": 8,
+                    "code": "PK64000163",
+                    "sku_list": [],
+                    "topping_in_order": [],
+                    "total_price_include_discount": 4136,
+                    "note_in_order": [
+                        "คลังฟาร์ม D"
+                    ]
+                },
+                {
+                    "stock": 4,
+                    "name": "เจ็ท 120 หมู 40-60 กก.",
+                    "price": 630,
+                    "special_price": 630,
+                    "discount_type": 1,
+                    "cost_discount_price": 10,
+                    "code": "PK64000161",
+                    "sku_list": [],
+                    "topping_in_order": [],
+                    "total_price_include_discount": 2480,
+                    "note_in_order": [
+                        "คลังฟาร์ม D"
+                    ]
+                }
+            ],
+            "timestamp": "2025-08-31T16:22:45.420Z",
+            "comment": "",
+            "return_date": null,
+            "register_vat": false,
+            "segment_type": 4,
+            "sub_total": 6616,
+            "sub_total_exclude_vat": 0,
+            "grand_total": 6616,
+            "cash_register": null,
+            "buyer_detail": {
+                "code": "M000004",
+                "firstname": "ฟาร์มบ้านไร่พระราม 2",
+                "lastname": "",
+                "key_card_id": "M000004"
+            },
+            "status": "success",
+            "rounding_rule": 0,
+            "rounding_rule_value": 1,
+            "rounding_amount": 0,
+            "reference_tax_invoice_abbreviate": {
+                "code": "ST68000004"
+            },
+            "number_of_order_list": 2
+        },
+        {
+            "_id": "68b7fd1d092fdfe725b5e49g",
+            "discount": 0,
+            "tax_percent": 0,
+            "code": "TR68000005",
+            "order_list": [
+                {
+                    "stock": 7,
+                    "name": "เจ็ท 130 หมู 60-90 กก.",
+                    "price": 598,
+                    "special_price": 598,
+                    "discount_type": 1,
+                    "cost_discount_price": 12,
+                    "code": "PK64000162",
+                    "sku_list": [],
+                    "topping_in_order": [],
+                    "total_price_include_discount": 4102,
+                    "note_in_order": [
+                        "คลังฟาร์ม E"
+                    ]
+                },
+                {
+                    "stock": 3,
+                    "name": "เจ็ท 105 หมูเล็ก 6-15 กก.",
+                    "price": 785,
+                    "special_price": 785,
+                    "discount_type": 1,
+                    "cost_discount_price": 15,
+                    "code": "PK64000158",
+                    "sku_list": [],
+                    "topping_in_order": [],
+                    "total_price_include_discount": 2310,
+                    "note_in_order": [
+                        "คลังฟาร์ม E"
+                    ]
+                }
+            ],
+            "timestamp": "2025-08-30T11:08:18.750Z",
+            "comment": "",
+            "return_date": null,
+            "register_vat": false,
+            "segment_type": 4,
+            "sub_total": 6412,
+            "sub_total_exclude_vat": 0,
+            "grand_total": 6412,
+            "cash_register": null,
+            "buyer_detail": {
+                "code": "M000005",
+                "firstname": "ฟาร์มแสงประทีปบางนา",
+                "lastname": "",
+                "key_card_id": "M000005"
+            },
+            "status": "success",
+            "rounding_rule": 0,
+            "rounding_rule_value": 1,
+            "rounding_amount": 0,
+            "reference_tax_invoice_abbreviate": {
+                "code": "ST68000005"
             },
             "number_of_order_list": 2
         }
+    ]
