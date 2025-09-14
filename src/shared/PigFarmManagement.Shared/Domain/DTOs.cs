@@ -79,3 +79,30 @@ public record DepositCalculationInfo
         };
     }
 }
+
+// New DTOs for feed progress visualization
+public record FeedProgress(
+    decimal RequiredBags,
+    decimal ActualBags,
+    decimal PercentageComplete,
+    bool IsOnTrack,
+    bool IsOverFeeding,
+    string Status
+);
+
+public record FeedProgressSummary(
+    Guid PigPenId,
+    string PenCode,
+    int PigCount,
+    FeedFormula? FeedFormula,
+    FeedProgress Progress,
+    List<FeedBagUsage> RecentFeeds
+);
+
+public record FeedBagUsage(
+    DateTime Date,
+    string ProductName,
+    decimal BagsUsed,
+    decimal CostPerBag,
+    decimal TotalCost
+);

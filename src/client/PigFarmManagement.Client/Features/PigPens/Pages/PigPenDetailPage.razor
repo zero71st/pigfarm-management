@@ -310,6 +310,72 @@
                     </MudAlert>
                 }
 
+                <!-- Feed Progress Summary Cards -->
+                @if (feedProgressSummary != null)
+                {
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <MudCard Elevation="4" Class="feed-progress-card" Style="border-radius: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                                <MudCardContent Class="pa-4">
+                                    <div class="d-flex align-center mb-3">
+                                        <MudIcon Icon="Icons.Material.Filled.Calculate" Size="Size.Large" Class="mr-3" />
+                                        <div>
+                                            <MudText Typo="Typo.h6" Style="font-weight: 600;">Formula Required</MudText>
+                                            <MudText Typo="Typo.caption" Style="opacity: 0.9;">Total bags needed</MudText>
+                                        </div>
+                                    </div>
+                                    <MudText Typo="Typo.h4" Style="font-weight: 700;">
+                                        @feedProgressSummary.Progress.RequiredBags.ToString("F1")
+                                    </MudText>
+                                    <MudText Typo="Typo.body2" Style="opacity: 0.8;">
+                                        @($"{feedProgressSummary.Progress.RequiredBags / feedProgressSummary.PigCount:F1} bags per pig")
+                                    </MudText>
+                                </MudCardContent>
+                            </MudCard>
+                        </div>
+
+                        <div class="col-md-4">
+                            <MudCard Elevation="4" Class="feed-progress-card" Style="border-radius: 12px; background: linear-gradient(135deg, #4caf50 0%, #8bc34a 100%); color: white;">
+                                <MudCardContent Class="pa-4">
+                                    <div class="d-flex align-center mb-3">
+                                        <MudIcon Icon="Icons.Material.Filled.Inventory" Size="Size.Large" Class="mr-3" />
+                                        <div>
+                                            <MudText Typo="Typo.h6" Style="font-weight: 600;">Actual Used</MudText>
+                                            <MudText Typo="Typo.caption" Style="opacity: 0.9;">Total bags consumed</MudText>
+                                        </div>
+                                    </div>
+                                    <MudText Typo="Typo.h4" Style="font-weight: 700;">
+                                        @feedProgressSummary.Progress.ActualBags.ToString("F1")
+                                    </MudText>
+                                    <MudText Typo="Typo.body2" Style="opacity: 0.8;">
+                                        @($"{feedProgressSummary.Progress.ActualBags / feedProgressSummary.PigCount:F1} bags per pig")
+                                    </MudText>
+                                </MudCardContent>
+                            </MudCard>
+                        </div>
+
+                        <div class="col-md-4">
+                            <MudCard Elevation="4" Class="feed-progress-card" Style="border-radius: 12px; background: linear-gradient(135deg, #ff9800 0%, #ff5722 100%); color: white;">
+                                <MudCardContent Class="pa-4">
+                                    <div class="d-flex align-center mb-3">
+                                        <MudIcon Icon="@GetFeedProgressIcon()" Size="Size.Large" Class="mr-3" />
+                                        <div>
+                                            <MudText Typo="Typo.h6" Style="font-weight: 600;">Progress</MudText>
+                                            <MudText Typo="Typo.caption" Style="opacity: 0.9;">@feedProgressSummary.Progress.Status</MudText>
+                                        </div>
+                                    </div>
+                                    <MudText Typo="Typo.h4" Style="font-weight: 700;" Class="mb-2">
+                                        @feedProgressSummary.Progress.PercentageComplete.ToString("F0")%
+                                    </MudText>
+                                    <MudProgressLinear Value="@((double)feedProgressSummary.Progress.PercentageComplete)" 
+                                                     Color="Color.Warning" 
+                                                     Style="height: 8px; border-radius: 4px; background-color: rgba(255,255,255,0.3);" />
+                                </MudCardContent>
+                            </MudCard>
+                        </div>
+                    </div>
+                }
+
                 <!-- Table matching the provided image structure -->
                 @if (feedFormulaCalculations != null && feedFormulaCalculations.Any())
                 {
@@ -516,6 +582,9 @@
     // Feed formula comparison data
     private IEnumerable<FeedFormulaWithCalculationResponse>? feedFormulaCalculations;
     private List<FeedComparisonData> comparisonData = new();
+    
+    // Feed progress data
+    private FeedProgressSummary? feedProgressSummary;
 
     private List<BreadcrumbItem> breadcrumbItems = new();
 
@@ -569,8 +638,20 @@
                 // Load harvests
                 harvests = await Http.GetFromJsonAsync<List<HarvestResult>>($"/api/pigpens/{PigPenId}/harvests") ?? new();
 
+                // Load feed progress summary
+                try
+                {
+                    feedProgressSummary = await Http.GetFromJsonAsync<FeedProgressSummary>($"/api/feed-progress/summary/{PigPenId}");
+                    Console.WriteLine($"Loaded feed progress: {feedProgressSummary?.Progress?.Status ?? "No data"}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error loading feed progress: {ex.Message}");
+                    Snackbar.Add($"Error loading feed progress: {ex.Message}", Severity.Warning);
+                }
+
                 // Load feed formula calculations if there's a selected brand
-                if (!string.IsNullOrEmpty(pigPen.SelectedBrand))
+                if (pigPen != null && !string.IsNullOrEmpty(pigPen.SelectedBrand))
                 {
                     try
                     {
@@ -1047,5 +1128,20 @@
         {
             Snackbar.Add($"Error loading deposits: {ex.Message}", Severity.Error);
         }
+    }
+
+    // Feed progress helper methods
+    private string GetFeedProgressIcon()
+    {
+        if (feedProgressSummary?.Progress == null) return Icons.Material.Filled.HelpOutline;
+        
+        return feedProgressSummary.Progress.Status switch
+        {
+            "Complete" => Icons.Material.Filled.CheckCircle,
+            "On Track" => Icons.Material.Filled.TrendingUp,
+            "Over Feeding" => Icons.Material.Filled.Warning,
+            "Behind Schedule" => Icons.Material.Filled.Schedule,
+            _ => Icons.Material.Filled.Info
+        };
     }
 }

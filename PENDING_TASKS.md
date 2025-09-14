@@ -28,19 +28,19 @@ This document outlines the pending tasks and features that need to be implemente
   - ✅ API integration for deletion
   - ✅ Data refresh after successful deletion
 
-- [ ] **Configurable Deposit Per Pig**
-  - Add DepositPerPig field to pig pen entity (customizable per pen)
-  - Update Add/Edit Pig Pen dialogs with deposit configuration
-  - Allow different customers to have different deposit rates (1000, 1500, etc.)
-  - Update all deposit calculations to use custom amounts
-  - Maintain backward compatibility with existing pig pens
+- [x] **Configurable Deposit Per Pig** ✅ **COMPLETED**
+  - ✅ Add DepositPerPig field to pig pen entity (customizable per pen)
+  - ✅ Update Add/Edit Pig Pen dialogs with deposit configuration
+  - ✅ Allow different customers to have different deposit rates (1000, 1500, etc.)
+  - ✅ Update all deposit calculations to use custom amounts
+  - ✅ Maintain backward compatibility with existing pig pens
 
-- [ ] **Deposit Calculation Enhancement**
-  - Add deposit per pig configuration (1500 baht default)
-  - Show expected deposit amount (pig qty × deposit per pig)
-  - Display current total deposits and remaining amount
-  - Add visual progress indicators for deposit completion
-  - Update Add/Edit Deposit dialogs with calculation display
+- [x] **Deposit Calculation Enhancement** ✅ **COMPLETED**
+  - ✅ Add deposit per pig configuration (1500 baht default)
+  - ✅ Show expected deposit amount (pig qty × deposit per pig)
+  - ✅ Display current total deposits and remaining amount
+  - ✅ Add visual progress indicators for deposit completion
+  - ✅ Update Add/Edit Deposit dialogs with calculation display
 
 - [ ] **Add Harvest Dialog**
   - Form for recording harvest results
@@ -209,6 +209,9 @@ This document outlines the pending tasks and features that need to be implemente
 - **Add Deposit Dialog** with validation and API integration
 - **Edit Deposit Dialog** with pre-populated forms and update functionality
 - **Delete Deposit Confirmation** with detailed confirmation dialog and deletion
+- **Configurable Deposit Per Pig** with customizable rates per pig pen (1000, 1500 baht, etc.)
+- **Deposit Calculation Enhancement** with visual progress indicators and expected vs actual tracking
+- **Feed Formula vs Actual Feed Visualization** with progress bars and bag conversion tracking
 
 ### 🚧 **In Progress**
 - Table styling improvements
@@ -218,10 +221,13 @@ This document outlines the pending tasks and features that need to be implemente
 1. ✅ ~~Implement Add Deposit Dialog~~ **COMPLETED**
 2. ✅ ~~Implement Edit Deposit Dialog~~ **COMPLETED**
 3. ✅ ~~Implement Delete Deposit Confirmation~~ **COMPLETED**
-4. Implement Add Harvest Dialog
-5. Create Import Feeds functionality
-6. Add comprehensive error handling
-7. Implement export features
+4. ✅ ~~Implement Configurable Deposit Per Pig~~ **COMPLETED**
+5. ✅ ~~Implement Deposit Calculation Enhancement~~ **COMPLETED**
+6. ✅ ~~Implement Feed Formula vs Actual Feed Visualization~~ **COMPLETED**
+7. Implement Add Harvest Dialog
+8. Create Import Feeds functionality
+9. Add comprehensive error handling
+10. Implement export features
 
 ---
 

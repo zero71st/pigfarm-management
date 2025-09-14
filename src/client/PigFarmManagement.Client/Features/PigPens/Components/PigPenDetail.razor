@@ -48,24 +48,103 @@
                     </MudTabPanel>
 
                     <MudTabPanel Text="Feed History" Icon="Icons.Material.Filled.Fastfood">
+                        <!-- Feed Progress Summary Cards -->
+                        @if (feedProgress != null)
+                        {
+                            <MudGrid Class="mb-4">
+                                <MudItem xs="12" md="6">
+                                    <MudCard Elevation="3">
+                                        <MudCardContent>
+                                            <MudText Typo="Typo.h6" Class="mb-2">Feed Formula vs Actual</MudText>
+                                            @if (feedProgress.FeedFormula != null)
+                                            {
+                                                <MudText Class="mb-2"><strong>Formula:</strong> @feedProgress.FeedFormula.DisplayName</MudText>
+                                                <MudText Class="mb-2"><strong>Rate:</strong> @feedProgress.FeedFormula.ConsumptionRate</MudText>
+                                            }
+                                            else
+                                            {
+                                                <MudText Color="Color.Warning" Class="mb-2">⚠️ No feed formula assigned</MudText>
+                                            }
+                                            
+                                            <MudProgressLinear Value="@((double)feedProgress.Progress.PercentageComplete)" 
+                                                             Max="120" 
+                                                             Color="@GetProgressColor(feedProgress.Progress)" 
+                                                             Class="mb-2" />
+                                            <MudText Typo="Typo.body2" Class="mb-1">
+                                                <strong>Progress:</strong> @feedProgress.Progress.PercentageComplete.ToString("F1")% - @feedProgress.Progress.Status
+                                            </MudText>
+                                            <MudText Typo="Typo.body2">
+                                                <strong>Required:</strong> @feedProgress.Progress.RequiredBags.ToString("F1") bags | 
+                                                <strong>Actual:</strong> @feedProgress.Progress.ActualBags.ToString("F1") bags
+                                            </MudText>
+                                        </MudCardContent>
+                                    </MudCard>
+                                </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudCard Elevation="3">
+                                        <MudCardContent>
+                                            <MudText Typo="Typo.h6" Class="mb-2">Feed Status</MudText>
+                                            <MudChip Color="@GetStatusColor(feedProgress.Progress)" 
+                                                     Size="Size.Medium" 
+                                                     Variant="Variant.Filled" 
+                                                     Class="mb-2">
+                                                @feedProgress.Progress.Status
+                                            </MudChip>
+                                            <br />
+                                            @if (feedProgress.Progress.IsOverFeeding)
+                                            {
+                                                <MudText Color="Color.Warning" Typo="Typo.body2" Class="mb-1">
+                                                    ⚠️ Over-feeding detected
+                                                </MudText>
+                                            }
+                                            @if (feedProgress.Progress.IsOnTrack)
+                                            {
+                                                <MudText Color="Color.Success" Typo="Typo.body2" Class="mb-1">
+                                                    ✅ Feed consumption on track
+                                                </MudText>
+                                            }
+                                            <MudText Typo="Typo.body2">
+                                                <strong>Total Records:</strong> @feeds.Count feeds
+                                            </MudText>
+                                        </MudCardContent>
+                                    </MudCard>
+                                </MudItem>
+                            </MudGrid>
+                        }
+
                         <div class="d-flex justify-end mb-4">
                             <MudButton Variant="Variant.Filled" Color="Color.Primary" 
                                        StartIcon="Icons.Material.Filled.Add" OnClick="AddFeed">
                                 Add Feed
                             </MudButton>
                         </div>
+
+                        <!-- Enhanced Feed Table with Bag Conversion -->
                         <MudTable Items="@feeds" Hover="true" Striped="true">
                             <HeaderContent>
                                 <MudTh>Date</MudTh>
-                                <MudTh>Type</MudTh>
-                                <MudTh>Quantity</MudTh>
-                                <MudTh>Price per Unit</MudTh>
+                                <MudTh>Product</MudTh>
+                                <MudTh>Quantity (Kg)</MudTh>
+                                <MudTh>Bags Equivalent</MudTh>
+                                <MudTh>Price per Kg</MudTh>
                                 <MudTh>Total Cost</MudTh>
                             </HeaderContent>
                             <RowTemplate>
                                 <MudTd>@context.Date.ToString("dd/MM/yyyy")</MudTd>
-                                <MudTd>@context.FeedType</MudTd>
-                                <MudTd>@context.QuantityKg</MudTd>
+                                <MudTd>
+                                    <div>
+                                        <MudText Typo="Typo.body2">@context.ProductName</MudText>
+                                        @if (!string.IsNullOrEmpty(context.ProductCode))
+                                        {
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary">@context.ProductCode</MudText>
+                                        }
+                                    </div>
+                                </MudTd>
+                                <MudTd>@context.QuantityKg.ToString("N1")</MudTd>
+                                <MudTd>
+                                    <MudText Typo="Typo.body2">@((context.QuantityKg / 25m).ToString("N2")) bags</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">(25kg/bag)</MudText>
+                                </MudTd>
                                 <MudTd>฿@context.PricePerKg.ToString("N2")</MudTd>
                                 <MudTd>฿@context.Cost.ToString("N2")</MudTd>
                             </RowTemplate>
@@ -137,6 +216,7 @@
 
     private PigPen? pigPen;
     private PigPenSummary? summary;
+    private FeedProgressSummary? feedProgress;
     private List<FeedItem> feeds = new();
     private List<Deposit> deposits = new();
     private List<HarvestResult> harvests = new();
@@ -155,6 +235,9 @@
             deposits = await Http.GetFromJsonAsync<List<Deposit>>($"/api/pigpens/{PigPenId}/deposits") ?? new();
             harvests = await Http.GetFromJsonAsync<List<HarvestResult>>($"/api/pigpens/{PigPenId}/harvests") ?? new();
             
+            // Load feed progress data
+            feedProgress = await Http.GetFromJsonAsync<FeedProgressSummary>($"/api/pigpens/{PigPenId}/feed-progress/summary");
+            
             // Get pen details from current list or API call
             var pigPens = await Http.GetFromJsonAsync<List<PigPen>>("/api/pigpens") ?? new();
             pigPen = pigPens.FirstOrDefault(p => p.Id == PigPenId);
@@ -163,6 +246,27 @@
         {
             Snackbar.Add($"Error loading data: {ex.Message}", Severity.Error);
         }
+    }
+
+    private Color GetProgressColor(FeedProgress progress)
+    {
+        if (progress.PercentageComplete < 50) return Color.Error;
+        if (progress.PercentageComplete < 80) return Color.Warning;
+        if (progress.PercentageComplete <= 110) return Color.Success;
+        return Color.Error; // Over-feeding
+    }
+
+    private Color GetStatusColor(FeedProgress progress)
+    {
+        return progress.Status switch
+        {
+            "Under-fed" => Color.Error,
+            "Below target" => Color.Warning,
+            "On track" => Color.Success,
+            "Over-feeding" => Color.Warning,
+            "Severely over-feeding" => Color.Error,
+            _ => Color.Info
+        };
     }
 
     private void AddFeed()
