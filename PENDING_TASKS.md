@@ -42,6 +42,17 @@ This document outlines the pending tasks and features that need to be implemente
   - ✅ Add visual progress indicators for deposit completion
   - ✅ Update Add/Edit Deposit dialogs with calculation display
 
+- [x] **Feed Formula vs Actual Feed Visualization** ✅ **COMPLETED**
+  - ✅ Created backend API endpoints for feed progress data
+  - ✅ Implemented FeedProgressService with bag conversion logic
+  - ✅ Added progress calculation algorithms (required vs actual bags)
+  - ✅ Created status indicators (On track, Over-feeding, Under-fed, etc.)
+  - ✅ Fixed feed progress cards display in PigPenDetailPage.razor
+  - ✅ Corrected API endpoint URL mismatch issue
+  - ✅ Implemented horizontal progress bar matching deposit progress style
+  - ✅ Added proper status chips and remaining amount display
+  - ✅ Created color-coded progress indicators with consistent styling
+
 - [ ] **Add Harvest Dialog**
   - Form for recording harvest results
   - Fields: date, pig count, weights, price per kg
@@ -211,7 +222,7 @@ This document outlines the pending tasks and features that need to be implemente
 - **Delete Deposit Confirmation** with detailed confirmation dialog and deletion
 - **Configurable Deposit Per Pig** with customizable rates per pig pen (1000, 1500 baht, etc.)
 - **Deposit Calculation Enhancement** with visual progress indicators and expected vs actual tracking
-- **Feed Formula vs Actual Feed Visualization** with progress bars and bag conversion tracking
+- **Feed Formula vs Actual Feed Visualization** with horizontal progress bars matching deposit progress style
 
 ### 🚧 **In Progress**
 - Table styling improvements
@@ -223,11 +234,12 @@ This document outlines the pending tasks and features that need to be implemente
 3. ✅ ~~Implement Delete Deposit Confirmation~~ **COMPLETED**
 4. ✅ ~~Implement Configurable Deposit Per Pig~~ **COMPLETED**
 5. ✅ ~~Implement Deposit Calculation Enhancement~~ **COMPLETED**
-6. ✅ ~~Implement Feed Formula vs Actual Feed Visualization~~ **COMPLETED**
-7. Implement Add Harvest Dialog
-8. Create Import Feeds functionality
-9. Add comprehensive error handling
-10. Implement export features
+6. ✅ ~~FIX: Feed Progress Visualization Not Displaying~~ **COMPLETED**
+7. ✅ ~~Complete Feed Formula vs Actual Feed Visualization implementation~~ **COMPLETED**
+8. Implement Add Harvest Dialog
+9. Create Import Feeds functionality
+10. Add comprehensive error handling
+11. Implement export features
 
 ---
 
