@@ -34,16 +34,37 @@ public class FeedProgressService : IFeedProgressService
         if (pigPen == null)
             throw new InvalidOperationException("Pig pen not found");
 
-        FeedFormula? feedFormula = null;
-        if (pigPen.FeedFormulaId.HasValue)
+        // Get ALL feed formulas for the pig pen's selected brand
+        var feedFormulas = new List<FeedFormula>();
+        FeedFormula? primaryFeedFormula = null;
+        
+        if (!string.IsNullOrEmpty(pigPen.SelectedBrand))
         {
-            feedFormula = await _feedFormulaService.GetFeedFormulaByIdAsync(pigPen.FeedFormulaId.Value);
+            // Get all feed formulas for the brand (like client-side does)
+            var allFormulas = await _feedFormulaService.GetAllFeedFormulasAsync();
+            feedFormulas = allFormulas
+                .Where(f => f.Brand.Equals(pigPen.SelectedBrand, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+                
+            // Keep the primary formula for reference
+            if (pigPen.FeedFormulaId.HasValue)
+            {
+                primaryFeedFormula = feedFormulas.FirstOrDefault(f => f.Id == pigPen.FeedFormulaId.Value)
+                    ?? await _feedFormulaService.GetFeedFormulaByIdAsync(pigPen.FeedFormulaId.Value);
+            }
+        }
+        else if (pigPen.FeedFormulaId.HasValue)
+        {
+            // Fallback to single formula if no brand is selected
+            primaryFeedFormula = await _feedFormulaService.GetFeedFormulaByIdAsync(pigPen.FeedFormulaId.Value);
+            if (primaryFeedFormula != null)
+                feedFormulas.Add(primaryFeedFormula);
         }
 
         var feeds = await _feedService.GetFeedsByPigPenIdAsync(pigPenId);
         
-        // Calculate feed progress
-        var progress = CalculateFeedProgress(pigPen, feedFormula, feeds);
+        // Calculate feed progress using ALL formulas for the brand
+        var progress = CalculateFeedProgress(pigPen, feedFormulas, feeds);
         
         // Get recent feed usage
         var recentFeeds = CalculateFeedBagUsage(feeds);
@@ -52,7 +73,7 @@ public class FeedProgressService : IFeedProgressService
             pigPen.Id,
             pigPen.PenCode,
             pigPen.PigQty,
-            feedFormula,
+            primaryFeedFormula, // Keep primary formula for display reference
             progress,
             recentFeeds
         );
@@ -64,9 +85,9 @@ public class FeedProgressService : IFeedProgressService
         return CalculateFeedBagUsage(feeds);
     }
 
-    private FeedProgressModel CalculateFeedProgress(PigPen pigPen, FeedFormula? feedFormula, List<FeedItem> feeds)
+    private FeedProgressModel CalculateFeedProgress(PigPen pigPen, List<FeedFormula> feedFormulas, List<FeedItem> feeds)
     {
-        if (feedFormula == null)
+        if (!feedFormulas.Any())
         {
             return new FeedProgressModel(
                 RequiredBags: 0,
@@ -78,8 +99,9 @@ public class FeedProgressService : IFeedProgressService
             );
         }
 
-        // Calculate required bags based on feed formula
-        var requiredBags = feedFormula.CalculateTotalBags(pigPen.PigQty);
+        // Calculate TOTAL required bags by summing ALL feed formulas for the brand
+        var totalBagPerPig = feedFormulas.Sum(f => f.BagPerPig);
+        var requiredBags = totalBagPerPig * pigPen.PigQty;
         
         // Calculate actual bags consumed
         // Assuming standard feed bag size is 25kg

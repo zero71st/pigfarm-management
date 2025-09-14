@@ -860,7 +860,7 @@
                 .Select(g => new FeedHistoryEntry
                 {
                     InvoiceNumber = g.Key ?? "N/A",
-                    Quantity = g.Sum(f => f.QuantityKg)
+                    Quantity = g.Sum(f => f.QuantityKg) / 25m // Convert KG to bags
                 })
                 .ToList();
 
@@ -870,7 +870,7 @@
                 ProductName = formula.ProductName,
                 FormulaPerPig = formula.BagPerPig,
                 FormulaTotal = formula.TotalBagsRequired,
-                ActualTotal = matchingFeeds.Sum(f => f.QuantityKg),
+                ActualTotal = matchingFeeds.Sum(f => f.QuantityKg) / 25m, // Convert KG to bags
                 FeedHistoryEntries = feedHistoryEntries
             };
             

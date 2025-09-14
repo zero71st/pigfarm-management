@@ -135,100 +135,40 @@ public class PigFarmDbContext : DbContext
         }
         modelBuilder.Entity<CustomerEntity>().HasData(customers);
 
-        // Generate 100 PigPens
-        var pigPens = new List<PigPenEntity>();
-        var pigPenTypes = Enum.GetValues<PigPenType>();
+        // Generate Feed Formulas first
+        var feedFormulas = new List<FeedFormulaEntity>();
+        var jetFeedFormulaIds = new List<Guid>();
         
-        for (int i = 1; i <= 100; i++)
+        // เจ็ท feed formulas
+        var jetFormulas = new[]
         {
-            var customer = customers[random.Next(customers.Count)];
-            var startDaysAgo = random.Next(1, 180);
-            var pigQty = random.Next(10, 50);
-            var feedCostPerPig = random.Next(30, 100);
-            var investmentPerPig = random.Next(400, 800);
-            
-            pigPens.Add(new PigPenEntity
+            new { Code = "PK64000158", Name = "เจ็ท 105 หมูเล็ก 6-15 กก.", BagPerPig = 1.5m },
+            new { Code = "PK64000159", Name = "เจ็ท 108 หมูนม 15-25 กก.", BagPerPig = 1.8m },
+            new { Code = "PK64000160", Name = "เจ็ท 110 หมู 25-40 กก.", BagPerPig = 2.0m },
+            new { Code = "PK64000161", Name = "เจ็ท 120 หมู 40-60 กก.", BagPerPig = 2.2m },
+            new { Code = "PK64000162", Name = "เจ็ท 130 หมู 60-90 กก.", BagPerPig = 2.5m },
+            new { Code = "PK64000163", Name = "เจ็ท 153 หมู 90 กก. ขึ้นไป", BagPerPig = 2.8m }
+        };
+        
+        foreach (var formula in jetFormulas)
+        {
+            var id = Guid.NewGuid();
+            jetFeedFormulaIds.Add(id);
+            feedFormulas.Add(new FeedFormulaEntity
             {
-                Id = Guid.NewGuid(),
-                CustomerId = customer.Id,
-                PenCode = $"P{i:D3}",
-                PigQty = pigQty,
-                RegisterDate = now.AddDays(-startDaysAgo),
-                ActHarvestDate = random.Next(0, 10) == 0 ? now.AddDays(-random.Next(1, startDaysAgo)) : null, // 10% chance of being completed
-                EstimatedHarvestDate = now.AddDays(random.Next(30, 120)),
-                FeedCost = pigQty * feedCostPerPig + random.Next(-500, 500),
-                Investment = pigQty * investmentPerPig + random.Next(-2000, 2000),
-                ProfitLoss = random.Next(-5000, 2000),
-                Type = pigPenTypes[random.Next(pigPenTypes.Length)],
-                CreatedAt = now.AddDays(-startDaysAgo),
-                UpdatedAt = now.AddDays(-random.Next(1, 30))
+                Id = id,
+                ProductCode = formula.Code,
+                ProductName = formula.Name,
+                Brand = "เจ็ท",
+                BagPerPig = formula.BagPerPig,
+                CreatedAt = now.AddDays(-365),
+                UpdatedAt = now.AddDays(-30)
             });
         }
-        modelBuilder.Entity<PigPenEntity>().HasData(pigPens);
-
-        // Generate Feed Formulas
-        var feedFormulas = new List<FeedFormulaEntity>
+        
+        // Other brands
+        feedFormulas.AddRange(new[]
         {
-            new FeedFormulaEntity
-            {
-                Id = Guid.NewGuid(),
-                ProductCode = "PK64000158",
-                ProductName = "เจ็ท 105 หมูเล็ก 6-15 กก.",
-                Brand = "เจ็ท",
-                BagPerPig = 1.5m,
-                CreatedAt = now.AddDays(-365),
-                UpdatedAt = now.AddDays(-30)
-            },
-            new FeedFormulaEntity
-            {
-                Id = Guid.NewGuid(),
-                ProductCode = "PK64000159",
-                ProductName = "เจ็ท 108 หมูนม 15-25 กก.",
-                Brand = "เจ็ท",
-                BagPerPig = 1.8m,
-                CreatedAt = now.AddDays(-365),
-                UpdatedAt = now.AddDays(-30)
-            },
-            new FeedFormulaEntity
-            {
-                Id = Guid.NewGuid(),
-                ProductCode = "PK64000160",
-                ProductName = "เจ็ท 110 หมู 25-40 กก.",
-                Brand = "เจ็ท",
-                BagPerPig = 2.0m,
-                CreatedAt = now.AddDays(-365),
-                UpdatedAt = now.AddDays(-30)
-            },
-            new FeedFormulaEntity
-            {
-                Id = Guid.NewGuid(),
-                ProductCode = "PK64000161",
-                ProductName = "เจ็ท 120 หมู 40-60 กก.",
-                Brand = "เจ็ท",
-                BagPerPig = 2.2m,
-                CreatedAt = now.AddDays(-365),
-                UpdatedAt = now.AddDays(-30)
-            },
-            new FeedFormulaEntity
-            {
-                Id = Guid.NewGuid(),
-                ProductCode = "PK64000162",
-                ProductName = "เจ็ท 130 หมู 60-90 กก.",
-                Brand = "เจ็ท",
-                BagPerPig = 2.5m,
-                CreatedAt = now.AddDays(-365),
-                UpdatedAt = now.AddDays(-30)
-            },
-            new FeedFormulaEntity
-            {
-                Id = Guid.NewGuid(),
-                ProductCode = "PK64000163",
-                ProductName = "เจ็ท 153 หมู 90 กก. ขึ้นไป",
-                Brand = "เจ็ท",
-                BagPerPig = 2.8m,
-                CreatedAt = now.AddDays(-365),
-                UpdatedAt = now.AddDays(-30)
-            },
             new FeedFormulaEntity
             {
                 Id = Guid.NewGuid(),
@@ -259,30 +199,97 @@ public class PigFarmDbContext : DbContext
                 CreatedAt = now.AddDays(-365),
                 UpdatedAt = now.AddDays(-30)
             }
-        };
+        });
+
+        // Generate 100 PigPens with เจ็ท as default brand
+        var pigPens = new List<PigPenEntity>();
+        var pigPenTypes = Enum.GetValues<PigPenType>();
+        
+        for (int i = 1; i <= 100; i++)
+        {
+            var customer = customers[random.Next(customers.Count)];
+            var startDaysAgo = random.Next(1, 180);
+            var pigQty = random.Next(10, 50);
+            var feedCostPerPig = random.Next(30, 100);
+            var investmentPerPig = random.Next(400, 800);
+            
+            // 80% use เจ็ท, 20% use other brands or no formula
+            Guid? selectedFeedFormulaId = null;
+            string selectedBrand = "เจ็ท";
+            
+            if (random.Next(0, 100) < 80) // 80% use เจ็ท
+            {
+                selectedFeedFormulaId = jetFeedFormulaIds[random.Next(jetFeedFormulaIds.Count)];
+                selectedBrand = "เจ็ท";
+            }
+            else if (random.Next(0, 100) < 60) // 12% use เพียว
+            {
+                var pureFormulas = feedFormulas.Where(f => f.Brand == "เพียว").ToList();
+                if (pureFormulas.Any())
+                {
+                    selectedFeedFormulaId = pureFormulas[random.Next(pureFormulas.Count)].Id;
+                    selectedBrand = "เพียว";
+                }
+            }
+            // 8% have no formula assigned but still default to เจ็ท brand
+            
+            pigPens.Add(new PigPenEntity
+            {
+                Id = Guid.NewGuid(),
+                CustomerId = customer.Id,
+                PenCode = $"P{i:D3}",
+                PigQty = pigQty,
+                RegisterDate = now.AddDays(-startDaysAgo),
+                ActHarvestDate = random.Next(0, 10) == 0 ? now.AddDays(-random.Next(1, startDaysAgo)) : null, // 10% chance of being completed
+                EstimatedHarvestDate = now.AddDays(random.Next(30, 120)),
+                FeedCost = pigQty * feedCostPerPig + random.Next(-500, 500),
+                Investment = pigQty * investmentPerPig + random.Next(-2000, 2000),
+                ProfitLoss = random.Next(-5000, 2000),
+                Type = pigPenTypes[random.Next(pigPenTypes.Length)],
+                FeedFormulaId = selectedFeedFormulaId,
+                SelectedBrand = selectedBrand,
+                DepositPerPig = random.Next(0, 100) < 30 ? 1000m : 1500m, // 30% use 1000, 70% use 1500
+                CreatedAt = now.AddDays(-startDaysAgo),
+                UpdatedAt = now.AddDays(-random.Next(1, 30))
+            });
+        }
+        modelBuilder.Entity<PigPenEntity>().HasData(pigPens);
         modelBuilder.Entity<FeedFormulaEntity>().HasData(feedFormulas);
 
-        // Generate 100 Feeds
+        // Generate 100 Feeds with เจ็ท products
         var feeds = new List<FeedEntity>();
-        var productTypes = new[] { "Starter Feed", "Grower Feed", "Finisher Feed", "Sow Feed", "Premium Mix", "Organic Feed", "Vitamin Supplement" };
+        var jetProducts = new[]
+        {
+            new { Code = "PK64000158", Name = "เจ็ท 105 หมูเล็ก 6-15 กก.", Type = "อาหารหมูเล็ก", BasePrice = 755m },
+            new { Code = "PK64000159", Name = "เจ็ท 108 หมูนม 15-25 กก.", Type = "อาหารหมูนม", BasePrice = 650m },
+            new { Code = "PK64000160", Name = "เจ็ท 110 หมู 25-40 กก.", Type = "อาหารหมูโต", BasePrice = 595m },
+            new { Code = "PK64000161", Name = "เจ็ท 120 หมู 40-60 กก.", Type = "อาหารหมูโต", BasePrice = 580m },
+            new { Code = "PK64000162", Name = "เจ็ท 130 หมู 60-90 กก.", Type = "อาหารหมูขุน", BasePrice = 565m },
+            new { Code = "PK64000163", Name = "เจ็ท 153 หมู 90 กก. ขึ้นไป", Type = "อาหารหมูขุน", BasePrice = 550m }
+        };
         
         for (int i = 1; i <= 100; i++)
         {
             var pigPen = pigPens[random.Next(pigPens.Count)];
-            var quantity = random.Next(50, 500);
-            var unitPrice = random.Next(15, 45);
+            var quantity = random.Next(25, 200); // bags (25kg each)
+            var product = jetProducts[random.Next(jetProducts.Length)];
+            var priceVariation = random.Next(-50, 51); // ±50 baht price variation
+            var unitPrice = product.BasePrice + priceVariation;
             
             feeds.Add(new FeedEntity
             {
                 Id = Guid.NewGuid(),
                 PigPenId = pigPen.Id,
-                ProductType = productTypes[random.Next(productTypes.Length)],
+                ProductType = "อาหารสัตว์",
+                ProductCode = product.Code,
+                ProductName = product.Name,
+                InvoiceNumber = $"INV-2024-{i:D3}",
                 Quantity = quantity,
                 UnitPrice = unitPrice,
                 TotalPrice = quantity * unitPrice,
                 FeedDate = now.AddDays(-random.Next(1, 90)),
-                ExternalReference = $"INV-{random.Next(10000, 99999)}",
-                Notes = random.Next(0, 3) == 0 ? GetRandomFeedNote(random) : null,
+                ExternalReference = $"POSPOS-INV-2024-{i:D3}-{product.Code}",
+                Notes = random.Next(0, 3) == 0 ? $"อาหารสัตว์คุณภาพสูง, {product.Type}" : null,
                 CreatedAt = now.AddDays(-random.Next(1, 90)),
                 UpdatedAt = now.AddDays(-random.Next(1, 30))
             });

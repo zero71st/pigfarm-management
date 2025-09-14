@@ -53,6 +53,14 @@ This document outlines the pending tasks and features that need to be implemente
   - ✅ Added proper status chips and remaining amount display
   - ✅ Created color-coded progress indicators with consistent styling
 
+- [x] **🔧 FIX: Feed Progress Calculation Error** ✅ **COMPLETED**
+  - ✅ **Issue**: Feed progress shows individual feed formula bags per pig (2.0) instead of total combined requirement (12.5)
+  - ✅ **Expected**: Should sum all feed formulas for the pig pen to show total bags per pig requirement
+  - ✅ **Root Cause**: FeedProgressService was using single formula instead of aggregating all applicable formulas
+  - ✅ **Fix Implemented**: Updated FeedProgressService calculation logic to sum all feed formula requirements for accurate total
+  - ✅ **Verification**: Tested with เจ็ท brand formulas (1.5+1.8+2.0+2.2+2.5+2.8 = 12.8 bags per pig)
+  - ✅ **Results**: P011 (28 pigs) = 358.4 bags, P098 (48 pigs) = 614.4 bags - calculations now correct
+
 - [ ] **Add Harvest Dialog**
   - Form for recording harvest results
   - Fields: date, pig count, weights, price per kg
@@ -223,6 +231,7 @@ This document outlines the pending tasks and features that need to be implemente
 - **Configurable Deposit Per Pig** with customizable rates per pig pen (1000, 1500 baht, etc.)
 - **Deposit Calculation Enhancement** with visual progress indicators and expected vs actual tracking
 - **Feed Formula vs Actual Feed Visualization** with horizontal progress bars matching deposit progress style
+- **Feed Progress Calculation Fix** with proper formula aggregation (summing all brand formulas for accurate total requirements)
 
 ### 🚧 **In Progress**
 - Table styling improvements
@@ -236,10 +245,11 @@ This document outlines the pending tasks and features that need to be implemente
 5. ✅ ~~Implement Deposit Calculation Enhancement~~ **COMPLETED**
 6. ✅ ~~FIX: Feed Progress Visualization Not Displaying~~ **COMPLETED**
 7. ✅ ~~Complete Feed Formula vs Actual Feed Visualization implementation~~ **COMPLETED**
-8. Implement Add Harvest Dialog
-9. Create Import Feeds functionality
-10. Add comprehensive error handling
-11. Implement export features
+8. ✅ ~~FIX: Feed Progress Calculation Error~~ **COMPLETED**
+9. Implement Add Harvest Dialog
+10. Create Import Feeds functionality
+11. Add comprehensive error handling
+12. Implement export features
 
 ---
 
@@ -247,7 +257,7 @@ This document outlines the pending tasks and features that need to be implemente
 
 | Task | Impact | Effort | Priority |
 |------|--------|--------|----------|
-| Add Deposit Dialog | High | Medium | 🔥 Critical |
+| Add Harvest Dialog | High | Medium | 🔥 Critical |
 | Import Feeds | High | High | 🔥 Critical |
 | Edit Dialogs | Medium | Medium | 🎯 Important |
 | Export Features | Medium | Low | 🎯 Important |
