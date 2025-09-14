@@ -10,23 +10,23 @@ This document outlines the pending tasks and features that need to be implemente
 ## 🔥 **High Priority Tasks**
 
 ### **1. Dialog/Modal Implementations**
-- [ ] **Add Deposit Dialog** 
-  - Create modal for adding new deposits
-  - Form validation for amount and date
-  - Integration with deposits API
-  - Currently shows: "Add deposit dialog coming soon"
+- [x] **Add Deposit Dialog** ✅ **COMPLETED**
+  - ✅ Create modal for adding new deposits
+  - ✅ Form validation for amount and date
+  - ✅ Integration with deposits API
+  - ✅ Fixed 404 endpoint mismatch issue
 
-- [ ] **Edit Deposit Dialog**
-  - Modal for editing existing deposits
-  - Pre-populate form with current values
-  - Update API integration
-  - Currently shows: "Edit deposit coming soon"
+- [x] **Edit Deposit Dialog** ✅ **COMPLETED**
+  - ✅ Modal for editing existing deposits
+  - ✅ Pre-populate form with current values
+  - ✅ Update API integration
+  - ✅ Form validation and error handling
 
-- [ ] **Delete Deposit Confirmation**
-  - Confirmation dialog before deletion
-  - Soft delete vs hard delete consideration
-  - API integration for deletion
-  - Currently shows: "Delete deposit coming soon"
+- [x] **Delete Deposit Confirmation** ✅ **COMPLETED**
+  - ✅ Confirmation dialog before deletion
+  - ✅ Display deposit details in confirmation
+  - ✅ API integration for deletion
+  - ✅ Data refresh after successful deletion
 
 - [ ] **Add Harvest Dialog**
   - Form for recording harvest results
@@ -192,16 +192,22 @@ This document outlines the pending tasks and features that need to be implemente
 - Feed history and deposit listings
 - Harvest records management UI
 - ROI and financial summary calculations
+- **Add Deposit Dialog** with validation and API integration
+- **Edit Deposit Dialog** with pre-populated forms and update functionality
+- **Delete Deposit Confirmation** with detailed confirmation dialog and deletion
 
 ### 🚧 **In Progress**
 - Table styling improvements
 - User interface refinements
 
 ### ⏳ **Next Steps**
-1. Implement Add Deposit Dialog
-2. Create Import Feeds functionality
-3. Add comprehensive error handling
-4. Implement export features
+1. ✅ ~~Implement Add Deposit Dialog~~ **COMPLETED**
+2. ✅ ~~Implement Edit Deposit Dialog~~ **COMPLETED**
+3. ✅ ~~Implement Delete Deposit Confirmation~~ **COMPLETED**
+4. Implement Add Harvest Dialog
+5. Create Import Feeds functionality
+6. Add comprehensive error handling
+7. Implement export features
 
 ---
 

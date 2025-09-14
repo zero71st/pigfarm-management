@@ -17,6 +17,8 @@ public interface IPigPenService
     Task<List<HarvestResult>> GetHarvestResultsAsync(Guid pigPenId);
     Task<FeedItem> AddFeedItemAsync(Guid pigPenId, FeedCreateDto feedItem);
     Task<Deposit> AddDepositAsync(Guid pigPenId, DepositCreateDto deposit);
+    Task<Deposit> UpdateDepositAsync(Deposit deposit);
+    Task<bool> DeleteDepositAsync(Guid pigPenId, Guid depositId);
     Task<HarvestResult> AddHarvestResultAsync(Guid pigPenId, HarvestCreateDto harvest);
 }
 
@@ -99,6 +101,20 @@ public class PigPenService : IPigPenService
         response.EnsureSuccessStatusCode();
         var createdDeposit = await response.Content.ReadFromJsonAsync<Deposit>();
         return createdDeposit!;
+    }
+
+    public async Task<Deposit> UpdateDepositAsync(Deposit deposit)
+    {
+        var response = await _httpClient.PutAsJsonAsync($"api/pigpens/{deposit.PigPenId}/deposits/{deposit.Id}", deposit);
+        response.EnsureSuccessStatusCode();
+        var updatedDeposit = await response.Content.ReadFromJsonAsync<Deposit>();
+        return updatedDeposit!;
+    }
+
+    public async Task<bool> DeleteDepositAsync(Guid pigPenId, Guid depositId)
+    {
+        var response = await _httpClient.DeleteAsync($"api/pigpens/{pigPenId}/deposits/{depositId}");
+        return response.IsSuccessStatusCode;
     }
 
     public async Task<HarvestResult> AddHarvestResultAsync(Guid pigPenId, HarvestCreateDto harvest)

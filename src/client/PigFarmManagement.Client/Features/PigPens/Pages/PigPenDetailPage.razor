@@ -3,6 +3,7 @@
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
 @inject IDialogService DialogService
+@inject IPigPenService PigPenService
 @using PigFarmManagement.Client.Features.FeedFormulas.Services
 @inject IFeedFormulaCalculationService FeedFormulaCalculationService
 
@@ -188,14 +189,20 @@
                             <MudTd DataLabel="Notes">@(context.Remark ?? "-")</MudTd>
                             <MudTd DataLabel="Actions" Style="text-align: center">
                                 <MudButtonGroup Size="Size.Small" Variant="Variant.Outlined">
-                                    <MudIconButton Icon="Icons.Material.Filled.Edit" 
-                                                   Color="Color.Primary" 
-                                                   Size="Size.Small"
-                                                   OnClick="@(() => EditDeposit(context))" />
-                                    <MudIconButton Icon="Icons.Material.Filled.Delete" 
-                                                   Color="Color.Error" 
-                                                   Size="Size.Small"
-                                                   OnClick="@(() => DeleteDeposit(context))" />
+                                    <MudButton Color="Color.Primary" 
+                                             Size="Size.Small"
+                                             Variant="Variant.Outlined"
+                                             Title="Edit Deposit"
+                                             OnClick="@(() => EditDeposit(context))">
+                                        ✏️ Edit
+                                    </MudButton>
+                                    <MudButton Color="Color.Error" 
+                                             Size="Size.Small"
+                                             Variant="Variant.Outlined"
+                                             Title="Delete Deposit"
+                                             OnClick="@(() => DeleteDeposit(context))">
+                                        🗑️ Delete
+                                    </MudButton>
                                 </MudButtonGroup>
                             </MudTd>
                         </RowTemplate>
@@ -589,14 +596,84 @@
         }
     }
 
-    private void EditDeposit(Deposit deposit)
+    private async Task EditDeposit(Deposit deposit)
     {
-        Snackbar.Add($"Edit deposit {deposit.Id} coming soon", Severity.Info);
+        var parameters = new DialogParameters<EditDepositDialog>
+        {
+            { x => x.DepositToEdit, deposit }
+        };
+
+        var options = new DialogOptions() 
+        { 
+            CloseButton = true, 
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<EditDepositDialog>("Edit Deposit", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            // Refresh deposits list
+            await LoadDeposits();
+            
+            // Refresh summary to update total deposits
+            if (summary != null)
+            {
+                summary = await Http.GetFromJsonAsync<PigPenSummary>($"/api/pigpens/{PigPenId}/summary");
+                StateHasChanged();
+            }
+        }
     }
 
-    private void DeleteDeposit(Deposit deposit)
+    private async Task DeleteDeposit(Deposit deposit)
     {
-        Snackbar.Add($"Delete deposit {deposit.Id} coming soon", Severity.Info);
+        var parameters = new DialogParameters<DeleteDepositConfirmationDialog>
+        {
+            { x => x.DepositToDelete, deposit }
+        };
+
+        var options = new DialogOptions() 
+        { 
+            CloseButton = true, 
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<DeleteDepositConfirmationDialog>("Confirm Delete", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is bool confirmed && confirmed)
+        {
+            try
+            {
+                var success = await PigPenService.DeleteDepositAsync(deposit.PigPenId, deposit.Id);
+                
+                if (success)
+                {
+                    Snackbar.Add($"Deposit of ฿{deposit.Amount:N2} deleted successfully", Severity.Success);
+                    
+                    // Refresh deposits list
+                    await LoadDeposits();
+                    
+                    // Refresh summary to update total deposits
+                    if (summary != null)
+                    {
+                        summary = await Http.GetFromJsonAsync<PigPenSummary>($"/api/pigpens/{PigPenId}/summary");
+                        StateHasChanged();
+                    }
+                }
+                else
+                {
+                    Snackbar.Add("Failed to delete deposit", Severity.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting deposit: {ex.Message}", Severity.Error);
+            }
+        }
     }
 
     private void ImportFeeds()
