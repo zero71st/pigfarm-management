@@ -119,32 +119,29 @@
                             </MudButton>
                         </div>
 
-                        <!-- Enhanced Feed Table with Bag Conversion -->
+                        <!-- Simple Feed Table -->
                         <MudTable Items="@feeds" Hover="true" Striped="true">
                             <HeaderContent>
                                 <MudTh>Date</MudTh>
                                 <MudTh>Product</MudTh>
+                                <MudTh>Invoice</MudTh>
                                 <MudTh>Quantity (Kg)</MudTh>
-                                <MudTh>Bags Equivalent</MudTh>
+                                <MudTh>Bags</MudTh>
                                 <MudTh>Price per Kg</MudTh>
                                 <MudTh>Total Cost</MudTh>
                             </HeaderContent>
                             <RowTemplate>
                                 <MudTd>@context.Date.ToString("dd/MM/yyyy")</MudTd>
                                 <MudTd>
-                                    <div>
-                                        <MudText Typo="Typo.body2">@context.ProductName</MudText>
-                                        @if (!string.IsNullOrEmpty(context.ProductCode))
-                                        {
-                                            <MudText Typo="Typo.caption" Color="Color.Secondary">@context.ProductCode</MudText>
-                                        }
-                                    </div>
+                                    @context.ProductName
+                                    @if (!string.IsNullOrEmpty(context.ProductCode))
+                                    {
+                                        <br/>@context.ProductCode
+                                    }
                                 </MudTd>
+                                <MudTd>@context.InvoiceNumber</MudTd>
                                 <MudTd>@context.QuantityKg.ToString("N1")</MudTd>
-                                <MudTd>
-                                    <MudText Typo="Typo.body2">@((context.QuantityKg / 25m).ToString("N2")) bags</MudText>
-                                    <MudText Typo="Typo.caption" Color="Color.Secondary">(25kg/bag)</MudText>
-                                </MudTd>
+                                <MudTd>@((context.QuantityKg / 25m).ToString("N2"))</MudTd>
                                 <MudTd>฿@context.PricePerKg.ToString("N2")</MudTd>
                                 <MudTd>฿@context.Cost.ToString("N2")</MudTd>
                             </RowTemplate>
