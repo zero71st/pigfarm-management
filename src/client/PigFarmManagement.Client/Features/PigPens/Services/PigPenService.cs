@@ -20,6 +20,8 @@ public interface IPigPenService
     Task<Deposit> UpdateDepositAsync(Deposit deposit);
     Task<bool> DeleteDepositAsync(Guid pigPenId, Guid depositId);
     Task<HarvestResult> AddHarvestResultAsync(Guid pigPenId, HarvestCreateDto harvest);
+    Task<HarvestResult> UpdateHarvestResultAsync(HarvestResult harvest);
+    Task<bool> DeleteHarvestResultAsync(Guid pigPenId, Guid harvestId);
 }
 
 public class PigPenService : IPigPenService
@@ -124,9 +126,23 @@ public class PigPenService : IPigPenService
         var createdHarvest = await response.Content.ReadFromJsonAsync<HarvestResult>();
         return createdHarvest!;
     }
+
+    public async Task<HarvestResult> UpdateHarvestResultAsync(HarvestResult harvest)
+    {
+        var response = await _httpClient.PutAsJsonAsync($"api/pigpens/{harvest.PigPenId}/harvests/{harvest.Id}", harvest);
+        response.EnsureSuccessStatusCode();
+        var updatedHarvest = await response.Content.ReadFromJsonAsync<HarvestResult>();
+        return updatedHarvest!;
+    }
+
+    public async Task<bool> DeleteHarvestResultAsync(Guid pigPenId, Guid harvestId)
+    {
+        var response = await _httpClient.DeleteAsync($"api/pigpens/{pigPenId}/harvests/{harvestId}");
+        return response.IsSuccessStatusCode;
+    }
 }
 
 // DTOs that should be moved to shared project later
 public record PigPenCreateDto(Guid CustomerId, string PenCode, int PigQty, DateTime RegisterDate, DateTime? ActHarvestDate, DateTime? EstimatedHarvestDate, PigPenType Type, Guid? FeedFormulaId, string? SelectedBrand, decimal DepositPerPig = 1500m);
 public record DepositCreateDto(decimal Amount, DateTime Date, string? Remark);
-public record HarvestCreateDto(DateTime HarvestDate, int PigCount, decimal AvgWeight, decimal MinWeight, decimal MaxWeight, decimal SalePricePerKg);
+public record HarvestCreateDto(DateTime HarvestDate, int PigCount, decimal AvgWeight, decimal MinWeight, decimal MaxWeight, decimal TotalWeight, decimal SalePricePerKg, decimal Revenue);

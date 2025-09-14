@@ -1,0 +1,371 @@
+@using Microsoft.AspNetCore.Components
+@using MudBlazor
+@using PigFarmManagement.Shared.Models
+@using PigFarmManagement.Client.Features.PigPens.Services
+@inject IPigPenService PigPenService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudContainer Style="max-width: 600px;">
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6" Class="mb-4">
+                        <MudIcon Icon="Icons.Material.Filled.Edit" Class="mr-2" />
+                        Edit Harvest Record
+                    </MudText>
+                </MudItem>
+                
+                <!-- Pig Tracking Info Card -->
+                @if (PigPen != null && ExistingHarvests != null)
+                {
+                    <MudItem xs="12">
+                        <MudCard Class="mb-4" Style="background-color: #f8f9fa;">
+                            <MudCardContent>
+                                <MudGrid>
+                                    <MudItem xs="12">
+                                        <MudText Typo="Typo.subtitle2" Class="mb-2">
+                                            🐷 Pig Tracking Information
+                                        </MudText>
+                                    </MudItem>
+                                    <MudItem xs="6">
+                                        <MudText Typo="Typo.body2" Class="text-muted">
+                                            Pen Capacity:
+                                        </MudText>
+                                        <MudText Typo="Typo.body1" Style="font-weight: 600;">
+                                            @PigPen.PigQty pigs
+                                        </MudText>
+                                    </MudItem>
+                                    <MudItem xs="6">
+                                        <MudText Typo="Typo.body2" Class="text-muted">
+                                            Other Harvests:
+                                        </MudText>
+                                        <MudText Typo="Typo.body1" Style="font-weight: 600;">
+                                            @otherHarvestedPigs pigs
+                                        </MudText>
+                                        <MudText Typo="Typo.caption" Class="text-muted">
+                                            (Excluding this record)
+                                        </MudText>
+                                    </MudItem>
+                                    
+                                    @if (availablePigs > 0)
+                                    {
+                                        <MudItem xs="12">
+                                            <MudAlert Severity="Severity.Info" Dense="true">
+                                                <MudText Typo="Typo.body2">
+                                                    <strong>@availablePigs pigs</strong> available for this harvest (including current)
+                                                </MudText>
+                                            </MudAlert>
+                                        </MudItem>
+                                    }
+                                    else if (totalPigs > availablePigs)
+                                    {
+                                        <MudItem xs="12">
+                                            <MudAlert Severity="Severity.Warning" Dense="true">
+                                                <MudText Typo="Typo.body2">
+                                                    <strong>Warning:</strong> Current value (@totalPigs) exceeds available capacity
+                                                </MudText>
+                                            </MudAlert>
+                                        </MudItem>
+                                    }
+                                </MudGrid>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+                }
+
+                <MudItem xs="12">
+                    <MudForm @ref="form" @bind-IsValid="@isFormValid">
+                        <MudGrid>
+                            <!-- Harvest Date -->
+                            <MudItem xs="12" md="6">
+                                <MudDatePicker @bind-Date="harvestDate"
+                                               Label="Harvest Date"
+                                               Required="true"
+                                               RequiredError="Harvest date is required"
+                                               MaxDate="DateTime.Today"
+                                               HelperText="Date when the harvest occurred"
+                                               Variant="Variant.Outlined" />
+                            </MudItem>
+
+                            <!-- Total Pigs -->
+                            <MudItem xs="12" md="6">
+                                <MudNumericField @bind-Value="totalPigs"
+                                                 Label="Total Pigs"
+                                                 Required="true"
+                                                 RequiredError="Number of pigs is required"
+                                                 Min="1"
+                                                 Max="@(availablePigs > 0 ? availablePigs : PigPen?.PigQty ?? 1000)"
+                                                 HelperText="Number of pigs harvested"
+                                                 Variant="Variant.Outlined"
+                                                 Adornment="Adornment.End"
+                                                 AdornmentText="pigs"
+                                                 OnBlur="CalculateRevenue" />
+                            </MudItem>
+
+                            <!-- Price Per Kg -->
+                            <MudItem xs="12" md="6">
+                                <MudNumericField @bind-Value="pricePerKg"
+                                                 Label="Price Per Kg"
+                                                 Required="true"
+                                                 RequiredError="Price per kg is required"
+                                                 Min="0.01m"
+                                                 Step="0.01m"
+                                                 Format="F2"
+                                                 HelperText="Sale price per kilogram"
+                                                 Variant="Variant.Outlined"
+                                                 Adornment="Adornment.Start"
+                                                 AdornmentText="฿"
+                                                 OnBlur="CalculateRevenue" />
+                            </MudItem>
+
+                            <!-- Total Weight -->
+                            <MudItem xs="12" md="6">
+                                <MudNumericField @bind-Value="totalWeight"
+                                                 Label="Total Weight"
+                                                 Required="true"
+                                                 RequiredError="Total weight is required"
+                                                 Min="0.1m"
+                                                 Step="0.1m"
+                                                 Format="F1"
+                                                 HelperText="Total weight of all pigs"
+                                                 Variant="Variant.Outlined"
+                                                 Adornment="Adornment.End"
+                                                 AdornmentText="kg"
+                                                 OnBlur="CalculateWeightMetrics" />
+                            </MudItem>
+
+                            <!-- Calculated Metrics Display -->
+                            @if (totalPigs > 0 && totalWeight > 0)
+                            {
+                                <MudItem xs="12">
+                                    <MudDivider Class="my-2" />
+                                    <MudText Typo="Typo.subtitle2" Class="mb-2">
+                                        📊 Calculated Metrics
+                                    </MudText>
+                                </MudItem>
+
+                                <MudItem xs="12" md="4">
+                                    <MudPaper Class="pa-3" Elevation="1">
+                                        <MudText Typo="Typo.body2" Color="Color.Secondary">Average Weight</MudText>
+                                        <MudText Typo="Typo.h6">@averageWeight.ToString("F1") kg</MudText>
+                                    </MudPaper>
+                                </MudItem>
+
+                                <MudItem xs="12" md="4">
+                                    <MudPaper Class="pa-3" Elevation="1">
+                                        <MudText Typo="Typo.body2" Color="Color.Secondary">Revenue per Pig</MudText>
+                                        <MudText Typo="Typo.h6" Color="Color.Success">฿@revenuePerPig.ToString("N0")</MudText>
+                                    </MudPaper>
+                                </MudItem>
+
+                                <MudItem xs="12" md="4">
+                                    <MudPaper Class="pa-3" Elevation="1">
+                                        <MudText Typo="Typo.body2" Color="Color.Secondary">Total Revenue</MudText>
+                                        <MudText Typo="Typo.h6" Color="Color.Success">฿@totalRevenue.ToString("N0")</MudText>
+                                    </MudPaper>
+                                </MudItem>
+                            }
+
+                            <!-- Optional Weight Range -->
+                            <MudItem xs="12">
+                                <MudExpansionPanels>
+                                    <MudExpansionPanel>
+                                        <TitleContent>
+                                            <div style="display: flex; align-items: center;">
+                                                <MudIcon Icon="@Icons.Material.Filled.ExpandMore" class="mr-3"></MudIcon>
+                                                <MudText>Advanced Weight Details (Optional)</MudText>
+                                            </div>
+                                        </TitleContent>
+                                        <ChildContent>
+                                            <MudGrid>
+                                                <MudItem xs="12" md="6">
+                                                    <MudNumericField @bind-Value="minWeight"
+                                                                     Label="Minimum Weight"
+                                                                     Min="0.1m"
+                                                                     Step="0.1m"
+                                                                     Format="F1"
+                                                                     HelperText="Lightest pig weight"
+                                                                     Variant="Variant.Outlined"
+                                                                     Adornment="Adornment.End"
+                                                                     AdornmentText="kg" />
+                                                </MudItem>
+
+                                                <MudItem xs="12" md="6">
+                                                    <MudNumericField @bind-Value="maxWeight"
+                                                                     Label="Maximum Weight"
+                                                                     Min="@(minWeight > 0 ? minWeight : 0.1m)"
+                                                                     Step="0.1m"
+                                                                     Format="F1"
+                                                                     HelperText="Heaviest pig weight"
+                                                                     Variant="Variant.Outlined"
+                                                                     Adornment="Adornment.End"
+                                                                     AdornmentText="kg" />
+                                                </MudItem>
+
+                                                @if (minWeight > 0 && maxWeight > 0 && totalPigs > 0)
+                                                {
+                                                    <MudItem xs="12">
+                                                        <MudAlert Severity="Severity.Info" Dense="true">
+                                                            <MudText Typo="Typo.body2">
+                                                                Weight range: <strong>@minWeight.ToString("F1") - @maxWeight.ToString("F1") kg</strong> 
+                                                                (Average: <strong>@averageWeight.ToString("F1") kg</strong>)
+                                                            </MudText>
+                                                        </MudAlert>
+                                                    </MudItem>
+                                                }
+                                            </MudGrid>
+                                        </ChildContent>
+                                    </MudExpansionPanel>
+                                </MudExpansionPanels>
+                            </MudItem>
+                        </MudGrid>
+                    </MudForm>
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" 
+                   Variant="Variant.Filled" 
+                   OnClick="SaveHarvest" 
+                   Disabled="@(!isFormValid || isSaving)"
+                   StartIcon="@(isSaving ? null : Icons.Material.Filled.Save)">
+            @if (isSaving)
+            {
+                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                <MudText Class="ms-2">Updating...</MudText>
+            }
+            else
+            {
+                <MudText>Update Harvest</MudText>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public HarvestResult HarvestToEdit { get; set; } = new HarvestResult(Guid.Empty, Guid.Empty, DateTime.Today, 0, 0, 0, 0, 0, 0, 0);
+    [Parameter] public PigPen? PigPen { get; set; }
+    [Parameter] public List<HarvestResult>? ExistingHarvests { get; set; }
+
+    private MudForm form = null!;
+    private bool isFormValid;
+    private bool isSaving = false;
+
+    // Form fields (in the order requested by user)
+    private DateTime? harvestDate = DateTime.Today;
+    private int totalPigs = 0;
+    private decimal pricePerKg = 0;
+    private decimal totalWeight = 0;
+
+    // Optional weight range fields
+    private decimal minWeight = 0;
+    private decimal maxWeight = 0;
+
+    // Calculated values
+    private decimal averageWeight => totalPigs > 0 ? totalWeight / totalPigs : 0;
+    private decimal totalRevenue => totalWeight * pricePerKg;
+    private decimal revenuePerPig => totalPigs > 0 ? totalRevenue / totalPigs : 0;
+
+    // Pig tracking (excluding the current harvest being edited)
+    private int otherHarvestedPigs => ExistingHarvests?.Where(h => h.Id != HarvestToEdit.Id).Sum(h => h.PigCount) ?? 0;
+    private int availablePigs => PigPen?.PigQty - otherHarvestedPigs ?? 0;
+
+    protected override void OnInitialized()
+    {
+        // Pre-populate form with existing harvest data
+        if (HarvestToEdit != null)
+        {
+            harvestDate = HarvestToEdit.HarvestDate;
+            totalPigs = HarvestToEdit.PigCount;
+            pricePerKg = HarvestToEdit.SalePricePerKg;
+            totalWeight = HarvestToEdit.TotalWeight;
+            minWeight = HarvestToEdit.MinWeight;
+            maxWeight = HarvestToEdit.MaxWeight;
+        }
+    }
+
+    private void CalculateRevenue()
+    {
+        StateHasChanged();
+    }
+
+    private void CalculateWeightMetrics()
+    {
+        // Auto-calculate weight range if not provided
+        if (totalWeight > 0 && totalPigs > 0)
+        {
+            var avgWeight = totalWeight / totalPigs;
+            
+            // If min/max not set, provide reasonable estimates
+            if (minWeight == 0)
+            {
+                minWeight = Math.Max(0.1m, avgWeight * 0.8m); // 20% below average
+            }
+            
+            if (maxWeight == 0)
+            {
+                maxWeight = avgWeight * 1.2m; // 20% above average
+            }
+        }
+        
+        StateHasChanged();
+    }
+
+    private async Task SaveHarvest()
+    {
+        if (!isFormValid || isSaving) return;
+
+        isSaving = true;
+        StateHasChanged();
+
+        try
+        {
+            // Validate the form
+            await form.Validate();
+            if (!form.IsValid) 
+            {
+                isSaving = false;
+                return;
+            }
+
+            // Create the updated harvest object
+            var updatedHarvest = new HarvestResult(
+                HarvestToEdit.Id,
+                HarvestToEdit.PigPenId,
+                harvestDate!.Value,
+                totalPigs,
+                averageWeight,
+                minWeight > 0 ? minWeight : averageWeight * 0.8m,
+                maxWeight > 0 ? maxWeight : averageWeight * 1.2m,
+                totalWeight,
+                pricePerKg,
+                totalRevenue
+            );
+
+            // Call the API to update the harvest
+            var result = await PigPenService.UpdateHarvestResultAsync(updatedHarvest);
+            
+            Snackbar.Add($"Harvest record updated successfully. Revenue: ฿{totalRevenue:N2}", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(result));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error updating harvest: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isSaving = false;
+            StateHasChanged();
+        }
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}

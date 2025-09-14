@@ -465,14 +465,20 @@
                             </MudTd>
                             <MudTd DataLabel="Actions" Style="text-align: center">
                                 <MudButtonGroup Size="Size.Small" Variant="Variant.Outlined">
-                                    <MudIconButton Icon="Icons.Material.Filled.Edit" 
-                                                   Color="Color.Primary" 
-                                                   Size="Size.Small"
-                                                   OnClick="@(() => EditHarvest(context))" />
-                                    <MudIconButton Icon="Icons.Material.Filled.Delete" 
-                                                   Color="Color.Error" 
-                                                   Size="Size.Small"
-                                                   OnClick="@(() => DeleteHarvest(context))" />
+                                    <MudButton Color="Color.Primary" 
+                                             Size="Size.Small"
+                                             Variant="Variant.Outlined"
+                                             Title="Edit Harvest"
+                                             OnClick="@(() => EditHarvest(context))">
+                                        ✏️ Edit
+                                    </MudButton>
+                                    <MudButton Color="Color.Error" 
+                                             Size="Size.Small"
+                                             Variant="Variant.Outlined"
+                                             Title="Delete Harvest"
+                                             OnClick="@(() => DeleteHarvest(context))">
+                                        🗑️ Delete
+                                    </MudButton>
                                 </MudButtonGroup>
                             </MudTd>
                         </RowTemplate>
@@ -865,19 +871,123 @@
         }
     }
 
-    private void AddHarvest()
+    private async Task AddHarvest()
     {
-        Snackbar.Add("Add harvest dialog coming soon", Severity.Info);
+        if (pigPen == null) return;
+
+        var parameters = new DialogParameters<AddHarvestDialog>
+        {
+            { x => x.PigPenId, pigPen.Id },
+            { x => x.PigPen, pigPen },
+            { x => x.ExistingHarvests, harvests ?? new List<HarvestResult>() }
+        };
+
+        var options = new DialogOptions() 
+        { 
+            CloseButton = true, 
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<AddHarvestDialog>("Add Harvest Record", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is HarvestResult newHarvest)
+        {
+            // Refresh harvests list
+            await RefreshHarvests();
+            
+            // Refresh summary to update calculations
+            if (summary != null)
+            {
+                summary = await Http.GetFromJsonAsync<PigPenSummary>($"/api/pigpens/{PigPenId}/summary");
+                StateHasChanged();
+            }
+        }
     }
 
-    private void EditHarvest(HarvestResult harvest)
+    private async Task EditHarvest(HarvestResult harvest)
     {
-        Snackbar.Add($"Edit harvest {harvest.Id} coming soon", Severity.Info);
+        if (pigPen == null) return;
+
+        var parameters = new DialogParameters<EditHarvestDialog>
+        {
+            { x => x.HarvestToEdit, harvest },
+            { x => x.PigPen, pigPen },
+            { x => x.ExistingHarvests, harvests ?? new List<HarvestResult>() }
+        };
+
+        var options = new DialogOptions() 
+        { 
+            CloseButton = true, 
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<EditHarvestDialog>("Edit Harvest Record", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is HarvestResult updatedHarvest)
+        {
+            // Refresh harvests list
+            await RefreshHarvests();
+            
+            // Refresh summary to update calculations
+            if (summary != null)
+            {
+                summary = await Http.GetFromJsonAsync<PigPenSummary>($"/api/pigpens/{PigPenId}/summary");
+                StateHasChanged();
+            }
+        }
     }
 
-    private void DeleteHarvest(HarvestResult harvest)
+    private async Task DeleteHarvest(HarvestResult harvest)
     {
-        Snackbar.Add($"Delete harvest {harvest.Id} coming soon", Severity.Info);
+        var parameters = new DialogParameters<DeleteHarvestConfirmationDialog>
+        {
+            { x => x.HarvestToDelete, harvest }
+        };
+
+        var options = new DialogOptions() 
+        { 
+            CloseButton = true, 
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<DeleteHarvestConfirmationDialog>("Confirm Delete", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is bool confirmed && confirmed)
+        {
+            try
+            {
+                var success = await PigPenService.DeleteHarvestResultAsync(harvest.PigPenId, harvest.Id);
+                
+                if (success)
+                {
+                    Snackbar.Add($"Harvest record (฿{harvest.Revenue:N2}) deleted successfully", Severity.Success);
+                    
+                    // Refresh harvests list
+                    await RefreshHarvests();
+                    
+                    // Refresh summary to update calculations
+                    if (summary != null)
+                    {
+                        summary = await Http.GetFromJsonAsync<PigPenSummary>($"/api/pigpens/{PigPenId}/summary");
+                        StateHasChanged();
+                    }
+                }
+                else
+                {
+                    Snackbar.Add("Failed to delete harvest record", Severity.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting harvest: {ex.Message}", Severity.Error);
+            }
+        }
     }
 
     private void BuildComparisonData()
@@ -1201,6 +1311,19 @@
         catch (Exception ex)
         {
             Snackbar.Add($"Error loading feeds: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task RefreshHarvests()
+    {
+        try
+        {
+            harvests = await Http.GetFromJsonAsync<List<HarvestResult>>($"/api/pigpens/{PigPenId}/harvests") ?? new();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading harvests: {ex.Message}", Severity.Error);
         }
     }
 

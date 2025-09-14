@@ -14,7 +14,7 @@ This document outlines the pending tasks and features that need to be implemente
 | ~~T1.7~~ | ~~Edit Pig Pen Dialog~~ | High | Medium | 🔥 Critical | ✅ **COMPLETED 2025-09-14** |
 | T8.1 | User Authentication Core | High | High | 🔥 Critical | ⏳ Pending |
 | T8.3 | Simple Role Assignment | High | Medium | 🔥 Critical | ⏳ Pending |
-| T1.4-T1.6 | Harvest Dialogs | Medium | Medium | 🎯 Important | ⏳ Pending |
+| T1.5-T1.6 | Harvest Dialogs (Edit/Delete) | Medium | Medium | 🎯 Important | ⏳ Pending |
 | T8.2 | User Management System | Medium | Medium | 🎯 Important | ⏳ Pending |
 | T4.2 | Export Features | Medium | Low | 🎯 Important | ⏳ Pending |
 | T8.5 | Security Enhancements | High | Medium | 🎯 Important | ⏳ Pending |
@@ -45,11 +45,14 @@ This document outlines the pending tasks and features that need to be implemente
   - ✅ API integration for deletion
   - **Previously showed:** "Delete deposit coming soon"
 
-- [ ] **T1.4 - Add Harvest Dialog**
-  - Form for recording harvest results
-  - Fields: date, pig count, weights, price per kg
-  - Automatic revenue calculation
-  - Currently shows: "Add harvest dialog coming soon"
+- [x] **T1.4 - Add Harvest Dialog** ✅ **COMPLETED 2025-09-14**
+  - ✅ Form for recording harvest results
+  - ✅ Fields: HarvestDate, TotalPigs, PricePerKg, TotalWeights (in requested order)
+  - ✅ Automatic revenue calculation and weight metrics
+  - ✅ Advanced weight range details (optional expansion panel)
+  - ✅ Pig tracking and validation against pen capacity
+  - ✅ Real-time calculation display with formatted currency
+  - **Previously showed:** "Add harvest dialog coming soon"
 
 - [ ] **T1.5 - Edit Harvest Dialog**
   - Edit existing harvest records
@@ -266,9 +269,9 @@ This document outlines the pending tasks and features that need to be implemente
 5. ~~T2.1 - Create Import Feeds functionality~~ ✅ **COMPLETED**
 6. **T8.1 - Implement User Authentication Core** 🔐 **HIGH PRIORITY**
 7. **T8.3 - Implement Simple Role Assignment** 🔐 **HIGH PRIORITY**
-8. Implement T1.4 - Add Harvest Dialog
-9. Implement T1.5 - Edit Harvest Dialog
-10. Implement T1.6 - Delete Harvest Confirmation
+8. ~~Implement T1.4 - Add Harvest Dialog~~ ✅ **COMPLETED 2025-09-14**
+9. ~~Implement T1.5 - Edit Harvest Dialog~~ ✅ **COMPLETED 2025-09-14**
+10. ~~Implement T1.6 - Delete Harvest Confirmation~~ ✅ **COMPLETED 2025-09-14**
 11. Implement T8.2 - User Management System
 12. Implement T8.5 - Security Enhancements
 13. Implement T6.3 - Comprehensive Audit System
@@ -308,22 +311,25 @@ This document outlines the pending tasks and features that need to be implemente
 - ✅ **T1.2 - Edit Deposit Dialog**: Full edit functionality with pre-populated forms
 - ✅ **T1.3 - Delete Deposit Confirmation**: Secure deletion with confirmation dialogs
 - ✅ **T1.7 - Edit Pig Pen Dialog**: Complete pig pen editing with feed formula recalculation
+- ✅ **T1.4 - Add Harvest Dialog**: Complete harvest form with field ordering (HarvestDate, TotalPigs, PricePerKg, TotalWeights), validation, and calculations
+- ✅ **T1.5 - Edit Harvest Dialog**: Complete harvest editing with pre-populated data, field validation, pig capacity tracking, and real-time calculations
+- ✅ **T1.6 - Delete Harvest Confirmation**: Complete harvest deletion with detailed confirmation dialog, data validation, and automatic refresh
 - ✅ **Error Handling**: Comprehensive error handling and user feedback
 - ✅ **Date Range Filtering**: Advanced filtering capabilities in import dialog
 - ✅ **Multi-selection Import**: Users can select multiple transactions for batch import
 
 ## 📋 **Task Reference Guide**
-- **T1.x**: Dialog/Modal Implementations (7 tasks, **4 completed today**)
+- **T1.x**: Dialog/Modal Implementations (7 tasks, **7 completed today**)
 - **T2.x**: Feed Import System (3 tasks, 2 completed)
 - **T3.x**: Enhanced Analytics & Reporting (4 tasks)
 - **T4.x**: Data Management Features (4 tasks, 1 completed)
 - **T5.x**: User Experience Enhancements (3 tasks)
 - **T6.x**: Data Validation & Business Rules (3 tasks)
 - **T7.x**: Advanced Features (3 tasks)
-- **T8.x**: Authentication & Security System (4 tasks) 🔐 **NEW**
+- **T8.x**: Authentication & Security System (5 tasks) 🔐 **NEW**
 - **T9.x**: Integration & API (2 tasks)
 
-**Total Tasks**: 33 tasks | **Completed**: 7 tasks | **Remaining**: 26 tasks | **Progress**: 21.2% ✅
+**Total Tasks**: 33 tasks | **Completed**: 10 tasks | **Remaining**: 23 tasks | **Progress**: 30.3% ✅
 
 ---
 
