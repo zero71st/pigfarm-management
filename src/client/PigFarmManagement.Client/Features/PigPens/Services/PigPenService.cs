@@ -22,6 +22,7 @@ public interface IPigPenService
     Task<HarvestResult> AddHarvestResultAsync(Guid pigPenId, HarvestCreateDto harvest);
     Task<HarvestResult> UpdateHarvestResultAsync(HarvestResult harvest);
     Task<bool> DeleteHarvestResultAsync(Guid pigPenId, Guid harvestId);
+    Task<PigPen> ForceClosePigPenAsync(Guid pigPenId);
 }
 
 public class PigPenService : IPigPenService
@@ -139,6 +140,14 @@ public class PigPenService : IPigPenService
     {
         var response = await _httpClient.DeleteAsync($"api/pigpens/{pigPenId}/harvests/{harvestId}");
         return response.IsSuccessStatusCode;
+    }
+
+    public async Task<PigPen> ForceClosePigPenAsync(Guid pigPenId)
+    {
+        var response = await _httpClient.PostAsync($"api/pigpens/{pigPenId}/force-close", null);
+        response.EnsureSuccessStatusCode();
+        var closedPigPen = await response.Content.ReadFromJsonAsync<PigPen>();
+        return closedPigPen!;
     }
 }
 

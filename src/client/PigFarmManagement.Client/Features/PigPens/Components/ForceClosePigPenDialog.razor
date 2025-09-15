@@ -1,0 +1,107 @@
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="Icons.Material.Filled.Warning" Class="mr-3" Color="Color.Warning"/>
+            Force Close Pig Pen
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudCard Elevation="0" Class="mb-4">
+            <MudCardContent>
+                <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-4">
+                    <MudText Typo="Typo.subtitle2" Class="mb-2">
+                        ⚠️ Warning: You are about to force close this pig pen
+                    </MudText>
+                    <MudText Typo="Typo.body2">
+                        This action will mark the pig pen as completed even though not all pigs have been harvested. 
+                        The actual harvest date will be set to today.
+                    </MudText>
+                </MudAlert>
+                
+                @if (PigPen != null && HarvestInfo != null)
+                {
+                    <MudGrid>
+                        <MudItem xs="12">
+                            <MudText Typo="Typo.subtitle1" Class="mb-2">
+                                <strong>Pig Pen Details:</strong>
+                            </MudText>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">Pen Code:</MudText>
+                            <MudText Typo="Typo.body1"><strong>@PigPen.PenCode</strong></MudText>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">Total Pigs:</MudText>
+                            <MudText Typo="Typo.body1"><strong>@PigPen.PigQty</strong></MudText>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">Harvested Pigs:</MudText>
+                            <MudText Typo="Typo.body1" Color="Color.Info">
+                                <strong>@HarvestInfo.HarvestedPigQuantity</strong>
+                            </MudText>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">Remaining Pigs:</MudText>
+                            <MudText Typo="Typo.body1" Color="@(HarvestInfo.RemainingPigQuantity > 0 ? Color.Warning : Color.Success)">
+                                <strong>@HarvestInfo.RemainingPigQuantity</strong>
+                            </MudText>
+                        </MudItem>
+                        
+                        @if (HarvestInfo.RemainingPigQuantity > 0)
+                        {
+                            <MudItem xs="12">
+                                <MudDivider Class="my-2" />
+                                <MudAlert Severity="Severity.Info" Dense="true">
+                                    <MudText Typo="Typo.body2">
+                                        <strong>@HarvestInfo.RemainingPigQuantity pig(s)</strong> will be marked as unaccounted for. 
+                                        Common reasons include:
+                                    </MudText>
+                                    <ul style="margin: 8px 0; padding-left: 20px;">
+                                        <li>Pigs died during raising period</li>
+                                        <li>Pigs kept for breeding purposes</li>
+                                        <li>Pigs sold through different channels</li>
+                                        <li>Data entry corrections needed</li>
+                                    </ul>
+                                </MudAlert>
+                            </MudItem>
+                        }
+                        
+                        <MudItem xs="12">
+                            <MudDivider Class="my-2" />
+                            <MudText Typo="Typo.subtitle2" Class="mb-2">
+                                Actions that will be performed:
+                            </MudText>
+                            <MudList Dense="true">
+                                <MudListItem Icon="Icons.Material.Filled.CalendarToday" Text="Set actual harvest date to today" />
+                                <MudListItem Icon="Icons.Material.Filled.Block" Text="Mark pig pen as completed/closed" />
+                                <MudListItem Icon="Icons.Material.Filled.Lock" Text="Prevent further harvest entries" />
+                            </MudList>
+                        </MudItem>
+                    </MudGrid>
+                }
+            </MudCardContent>
+        </MudCard>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Warning" 
+                   Variant="Variant.Filled" 
+                   OnClick="Confirm"
+                   StartIcon="Icons.Material.Filled.Warning">
+            Force Close Pig Pen
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public MudDialogInstance MudDialog { get; set; } = default!;
+    
+    [Parameter] public PigPen? PigPen { get; set; }
+    [Parameter] public HarvestCalculationInfo? HarvestInfo { get; set; }
+
+    private void Cancel() => MudDialog.Cancel();
+    
+    private void Confirm() => MudDialog.Close(DialogResult.Ok(true));
+}

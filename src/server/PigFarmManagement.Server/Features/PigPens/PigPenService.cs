@@ -13,6 +13,7 @@ public interface IPigPenService
     Task<PigPen> UpdatePigPenAsync(PigPen pigPen);
     Task<bool> DeletePigPenAsync(Guid id);
     Task<List<PigPen>> GetPigPensByCustomerIdAsync(Guid customerId);
+    Task<PigPen> ForceClosePigPenAsync(Guid id);
 }
 
 public class PigPenService : IPigPenService
@@ -91,5 +92,23 @@ public class PigPenService : IPigPenService
     public async Task<List<PigPen>> GetPigPensByCustomerIdAsync(Guid customerId)
     {
         return await _pigPenRepository.GetByCustomerIdAsync(customerId);
+    }
+
+    public async Task<PigPen> ForceClosePigPenAsync(Guid id)
+    {
+        var pigPen = await _pigPenRepository.GetByIdAsync(id);
+        if (pigPen == null)
+        {
+            throw new InvalidOperationException("Pig pen not found");
+        }
+
+        // Force close by setting actual harvest date to today
+        var forceClosedPigPen = pigPen with 
+        { 
+            ActHarvestDate = DateTime.Today,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        return await _pigPenRepository.UpdateAsync(forceClosedPigPen);
     }
 }

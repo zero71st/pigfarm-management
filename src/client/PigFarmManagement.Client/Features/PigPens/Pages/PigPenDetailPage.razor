@@ -49,6 +49,18 @@
                            OnClick="EditPigPen">
                     Edit
                 </MudButton>
+                @* Force Close button - Show for all pig pens with smart behavior *@
+                @if (ShouldShowForceCloseButton())
+                {
+                    <MudButton Variant="Variant.Filled" 
+                               Color="@GetForceCloseButtonColor()"
+                               StartIcon="@GetForceCloseButtonIcon()"
+                               OnClick="ForceClosePigPen"
+                               Class="ml-2">
+                        @GetForceCloseButtonText()
+                    </MudButton>
+                }
+                @* Remove debug info in production *@
             </div>
         </div>
 
@@ -823,6 +835,64 @@
         }
     }
 
+    private async Task ForceClosePigPen()
+    {
+        if (pigPen == null)
+        {
+            Snackbar.Add("Pig pen data not available", Severity.Error);
+            return;
+        }
+
+        if (pigPen.ActHarvestDate.HasValue)
+        {
+            Snackbar.Add("Pig pen is already closed", Severity.Warning);
+            return;
+        }
+
+        var parameters = new DialogParameters
+        {
+            { "PigPen", pigPen },
+            { "HarvestInfo", harvestCalculationInfo }
+        };
+
+        var options = new DialogOptions() 
+        { 
+            CloseButton = true, 
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<ForceClosePigPenDialog>("Force Close Pig Pen", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is bool confirmed && confirmed)
+        {
+            try
+            {
+                var closedPigPen = await PigPenService.ForceClosePigPenAsync(pigPen.Id);
+                
+                if (closedPigPen != null)
+                {
+                    // Update the local pig pen data
+                    pigPen = closedPigPen;
+                    
+                    // Refresh the page data to show updates
+                    await LoadData();
+                    
+                    Snackbar.Add("Pig pen has been force closed successfully", Severity.Success);
+                }
+                else
+                {
+                    Snackbar.Add("Failed to force close pig pen", Severity.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error force closing pig pen: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
     private async Task AddDeposit()
     {
         if (pigPen == null || pigPen.Type != PigPenType.Project) 
@@ -1405,6 +1475,66 @@
             HarvestCompletionStatus.Partial => Color.Warning,
             HarvestCompletionStatus.Started => Color.Info,
             _ => Color.Secondary
+        };
+    }
+
+    /// <summary>
+    /// Determines whether the Force Close button should be visible based on business rules
+    /// </summary>
+    private bool ShouldShowForceCloseButton()
+    {
+        // Don't show if pig pen is null or not loaded
+        if (pigPen == null) return false;
+        
+        // Show for active pig pens (no actual harvest date) - covers scenarios 1, 2, 3
+        if (!pigPen.ActHarvestDate.HasValue) return true;
+        
+        // Show for already completed pig pens (scenario 4) - might need to reopen or adjust
+        if (pigPen.ActHarvestDate.HasValue) return true;
+        
+        // Fallback: show in all cases where pig pen exists
+        return true;
+    }
+
+    /// <summary>
+    /// Gets the appropriate color for the Force Close button based on pig pen status
+    /// </summary>
+    private Color GetForceCloseButtonColor()
+    {
+        if (pigPen == null) return Color.Default;
+        
+        return pigPen.ActHarvestDate.HasValue switch
+        {
+            true => Color.Info,      // Already completed - blue for "manage/reopen"
+            false => Color.Warning   // Active - orange for "force close"
+        };
+    }
+
+    /// <summary>
+    /// Gets the appropriate icon for the Force Close button based on pig pen status
+    /// </summary>
+    private string GetForceCloseButtonIcon()
+    {
+        if (pigPen == null) return Icons.Material.Filled.GppMaybe;
+        
+        return pigPen.ActHarvestDate.HasValue switch
+        {
+            true => Icons.Material.Filled.Settings,    // Already completed - settings icon
+            false => Icons.Material.Filled.GppMaybe    // Active - warning icon
+        };
+    }
+
+    /// <summary>
+    /// Gets the appropriate text for the Force Close button based on pig pen status
+    /// </summary>
+    private string GetForceCloseButtonText()
+    {
+        if (pigPen == null) return "Force Close";
+        
+        return pigPen.ActHarvestDate.HasValue switch
+        {
+            true => "Manage",        // Already completed - allow management/adjustments
+            false => "Force Close"   // Active - force close action
         };
     }
 

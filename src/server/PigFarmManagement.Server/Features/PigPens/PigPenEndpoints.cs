@@ -56,6 +56,10 @@ public static class PigPenEndpoints
         group.MapDelete("/{id:guid}/harvests/{harvestId:guid}", DeleteHarvest)
             .WithName("DeleteHarvest");
 
+        // Special actions
+        group.MapPost("/{id:guid}/force-close", ForceClosePigPen)
+            .WithName("ForceClosePigPen");
+
         return builder;
     }
 
@@ -306,6 +310,42 @@ public static class PigPenEndpoints
         catch (Exception ex)
         {
             return Results.Problem($"Error deleting harvest: {ex.Message}");
+        }
+    }
+
+    private static async Task<IResult> ForceClosePigPen(Guid id, IPigPenService pigPenService)
+    {
+        try
+        {
+            var pigPen = await pigPenService.GetPigPenByIdAsync(id);
+            if (pigPen == null)
+            {
+                return Results.NotFound("Pig pen not found");
+            }
+
+            // Check if pig pen is already closed
+            if (pigPen.ActHarvestDate.HasValue)
+            {
+                return Results.BadRequest("Pig pen is already closed");
+            }
+
+            // Force close the pig pen by setting actual harvest date to today
+            var closedPigPen = pigPen with 
+            { 
+                ActHarvestDate = DateTime.Today,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            var updatedPigPen = await pigPenService.UpdatePigPenAsync(closedPigPen);
+            return Results.Ok(updatedPigPen);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Results.BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Error force closing pig pen: {ex.Message}");
         }
     }
 }
