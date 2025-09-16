@@ -1415,6 +1415,9 @@
             }
         }
 
+        // Sort by ProductCode in ascending order
+        comparisonData = comparisonData.OrderBy(c => c.ProductCode).ToList();
+
         Console.WriteLine($"BuildComparisonData completed - created {comparisonData.Count} comparison items ({comparisonData.Count(c => c.IsUnmatchedFeed)} unmatched)");
     }
 
