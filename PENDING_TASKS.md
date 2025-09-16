@@ -107,11 +107,12 @@ This document outlines the pending tasks and features that need to be implemente
   - ✅ Add maintenance endpoints for validation, repair, and statistics
   - ✅ Integration testing and validation completed
 
-- [ ] **T2.5 - Multiple Feed Formulas per Pig Pen** ⭐ **NEW HIGH PRIORITY**
-  - Support multiple formulas (Starter, Grower, Finisher) per pig pen
-  - Time-based formula allocation with start/end dates
-  - Quantity allocation per formula type and pig count
-  - Estimated effort: High | Impact: Critical for realistic farming
+- [ ] **T2.5 - Brand-Based Feed Formula Assignment** ⭐ **NEW HIGH PRIORITY**
+  - Simple brand selection (JET, Pure, etc.) for pig pens
+  - Automatic formula assignment based on selected brand
+  - No manual formula selection required
+  - Clean, user-friendly interface
+  - Estimated effort: Low | Impact: High for usability
 
 - [ ] **T2.6 - Planned vs Actual Feed Comparison** ⭐ **NEW HIGH PRIORITY**
   - Compare planned feed formulas against actual consumption
@@ -302,7 +303,7 @@ This document outlines the pending tasks and features that need to be implemente
 3. **T2.7 - Complete Unified PigPenFormulaAssignment System** ⭐ **IN PROGRESS**
    - Complete data migration for existing pig pens
    - Integration testing and validation
-4. **T2.5 - Implement Multiple Feed Formulas per Pig Pen** ⭐ **NEW HIGH PRIORITY**
+4. **T2.5 - Implement Brand-Based Feed Formula Assignment** ⭐ **NEW HIGH PRIORITY**
 5. **T2.6 - Implement Planned vs Actual Feed Comparison** ⭐ **NEW HIGH PRIORITY**
 6. ~~Implement T1.4 - Add Harvest Dialog~~ ✅ **COMPLETED 2025-09-14**
 7. ~~Implement T1.5 - Edit Harvest Dialog~~ ✅ **COMPLETED 2025-09-14**
@@ -326,7 +327,7 @@ This document outlines the pending tasks and features that need to be implemente
 | T8.1 | User Authentication Core | High | High | 🔥 Critical | ⏳ Pending |
 | T8.3 | Simple Role Assignment | High | Medium | 🔥 Critical | ⏳ Pending |
 | T2.4 | Feed Formula Snapshot System | High | High | 🔥 High | ✅ Completed |
-| T2.5 | Multiple Feed Formulas per Pig Pen | High | High | 🔥 High | ⏳ Pending |
+| T2.5 | Brand-Based Feed Formula Assignment | High | Low | 🔥 High | ⏳ Pending |
 | T2.6 | Planned vs Actual Feed Comparison | High | Medium-High | 🔥 High | ⏳ Pending |
 | T2.7 | Unified PigPenFormulaAssignment System | High | High | 🔥 High | ✅ **COMPLETED 2025-09-16** |
 | ~~T1.5-T1.6~~ | ~~Harvest Dialogs (Edit/Delete)~~ | Medium | Medium | 🎯 Important | ✅ **COMPLETED 2025-09-14** |

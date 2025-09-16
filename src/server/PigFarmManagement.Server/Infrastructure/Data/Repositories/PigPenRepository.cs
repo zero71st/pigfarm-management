@@ -17,6 +17,7 @@ public class PigPenRepository : IPigPenRepository
     {
         var entities = await _context.PigPens
             .Include(p => p.Customer)
+            .Include(p => p.FormulaAssignments)
             .ToListAsync();
         return entities.Select(e => e.ToModel());
     }
@@ -25,6 +26,7 @@ public class PigPenRepository : IPigPenRepository
     {
         var entity = await _context.PigPens
             .Include(p => p.Customer)
+            .Include(p => p.FormulaAssignments)
             .FirstOrDefaultAsync(p => p.Id == id);
         return entity?.ToModel();
     }
@@ -33,6 +35,7 @@ public class PigPenRepository : IPigPenRepository
     {
         var entities = await _context.PigPens
             .Include(p => p.Customer)
+            .Include(p => p.FormulaAssignments)
             .Where(p => p.CustomerId == customerId)
             .ToListAsync();
         return entities.Select(e => e.ToModel());

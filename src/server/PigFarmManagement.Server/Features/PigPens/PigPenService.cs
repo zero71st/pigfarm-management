@@ -60,7 +60,65 @@ public class PigPenService : IPigPenService
             SelectedBrand = dto.SelectedBrand // Store the selected brand
         };
 
+        // If a brand is selected, automatically assign all formulas for that brand
+        if (!string.IsNullOrEmpty(dto.SelectedBrand))
+        {
+            var formulaAssignments = await CreateAutomaticFormulaAssignments(id, dto.SelectedBrand, dto.PigQty);
+            pigPen = pigPen with { FormulaAssignments = formulaAssignments };
+        }
+
         return await _pigPenRepository.CreateAsync(pigPen);
+    }
+
+    private async Task<List<PigPenFormulaAssignment>> CreateAutomaticFormulaAssignments(Guid pigPenId, string brand, int pigQty)
+    {
+        try
+        {
+            // Get all feed formulas
+            var allFormulas = await _feedFormulaService.GetAllFeedFormulasAsync();
+            
+            // Filter formulas by brand
+            var brandFormulas = allFormulas
+                .Where(f => f.Brand.Equals(brand, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            if (!brandFormulas.Any())
+                return new List<PigPenFormulaAssignment>();
+
+            // Create assignments for all formulas that match the brand
+            var assignments = new List<PigPenFormulaAssignment>();
+            var now = DateTime.UtcNow;
+            
+            foreach (var formula in brandFormulas)
+            {
+                var assignment = new PigPenFormulaAssignment(
+                    Id: Guid.NewGuid(),
+                    PigPenId: pigPenId,
+                    OriginalFormulaId: formula.Id,
+                    ProductCode: formula.ProductCode,
+                    ProductName: formula.ProductName,
+                    Brand: formula.Brand,
+                    Stage: null, // Single formula, no stage
+                    AssignedPigQuantity: pigQty,
+                    AssignedBagPerPig: formula.BagPerPig,
+                    AssignedTotalBags: formula.BagPerPig * pigQty,
+                    AssignedAt: now,
+                    EffectiveUntil: null, // Always effective
+                    IsActive: true,
+                    IsLocked: false,
+                    LockReason: null,
+                    LockedAt: null
+                );
+                assignments.Add(assignment);
+            }
+
+            return assignments;
+        }
+        catch
+        {
+            // If automatic assignment fails, return empty list (pig pen still created without formulas)
+            return new List<PigPenFormulaAssignment>();
+        }
     }
 
     public async Task<PigPen> UpdatePigPenAsync(PigPen pigPen)

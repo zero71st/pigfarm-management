@@ -497,7 +497,7 @@
                 else
                 {
                     <MudAlert Severity="Severity.Warning">
-                        <MudText>No feed formula found for this pig pen. Please set up feed formulas to enable comparison.</MudText>
+                        <MudText>No feed formula assignments found for this pig pen. Please assign feed formulas to enable consumption comparison.</MudText>
                     </MudAlert>
                 }
             </MudCardContent>
@@ -769,20 +769,21 @@
                     Snackbar.Add($"Error loading feed progress: {ex.Message}", Severity.Warning);
                 }
 
-                // Load feed formula calculations - use locked assignments for locked pig pens
+                // Load feed formula calculations - use actual formula assignments for comparison
                 if (pigPen != null)
                 {
                     try
                     {
-                        var lockedAssignments = pigPen.FormulaAssignments
-                            .Where(fa => fa.IsLocked)
+                        // Get active formula assignments for this pig pen
+                        var activeAssignments = pigPen.FormulaAssignments
+                            .Where(fa => fa.IsActive && !fa.IsLocked)
                             .ToList();
 
-                        if (pigPen.IsCalculationLocked && lockedAssignments.Any())
+                        if (activeAssignments.Any())
                         {
-                            // Use locked assignment data for locked pig pens
-                            Console.WriteLine($"Using {lockedAssignments.Count} locked formula assignments for locked pig pen");
-                            feedFormulaCalculations = lockedAssignments.Select(assignment => new FeedFormulaWithCalculationResponse
+                            // Use active assignment data for comparison with actual consumption
+                            Console.WriteLine($"Using {activeAssignments.Count} active formula assignments for feed comparison");
+                            feedFormulaCalculations = activeAssignments.Select(assignment => new FeedFormulaWithCalculationResponse
                             {
                                 Id = assignment.OriginalFormulaId,
                                 ProductCode = assignment.ProductCode,
@@ -798,19 +799,45 @@
                                 BrandDisplayName = $"{assignment.Brand} - {assignment.ProductName}"
                             }).ToList();
                         }
-                        else if (!string.IsNullOrEmpty(pigPen.SelectedBrand))
+                        else if (pigPen.IsCalculationLocked)
                         {
-                            // Use current formulas for active pig pens
-                            Console.WriteLine($"Loading current feed formulas for brand: {pigPen.SelectedBrand}, pig count: {pigPen.PigQty}");
-                            feedFormulaCalculations = await FeedFormulaCalculationService.GetFeedFormulasByBrandAsync(pigPen.SelectedBrand, pigPen.PigQty);
+                            // Fallback to locked assignments for locked pig pens
+                            var lockedAssignments = pigPen.FormulaAssignments
+                                .Where(fa => fa.IsLocked)
+                                .ToList();
+
+                            if (lockedAssignments.Any())
+                            {
+                                Console.WriteLine($"Using {lockedAssignments.Count} locked formula assignments for locked pig pen");
+                                feedFormulaCalculations = lockedAssignments.Select(assignment => new FeedFormulaWithCalculationResponse
+                                {
+                                    Id = assignment.OriginalFormulaId,
+                                    ProductCode = assignment.ProductCode,
+                                    ProductName = assignment.ProductName,
+                                    Brand = assignment.Brand,
+                                    BagPerPig = assignment.AssignedBagPerPig,
+                                    TotalBagsRequired = assignment.AssignedTotalBags,
+                                    PigCount = assignment.AssignedPigQuantity,
+                                    CreatedAt = assignment.AssignedAt,
+                                    UpdatedAt = assignment.AssignedAt,
+                                    DisplayName = assignment.DisplayName,
+                                    ConsumptionRate = $"{assignment.AssignedBagPerPig:F1} bags/pig",
+                                    BrandDisplayName = $"{assignment.Brand} - {assignment.ProductName}"
+                                }).ToList();
+                            }
+                            else
+                            {
+                                Console.WriteLine("No assignments available for locked pig pen");
+                                feedFormulaCalculations = new List<FeedFormulaWithCalculationResponse>();
+                            }
                         }
                         else
                         {
-                            Console.WriteLine("No brand selected and no snapshot available for pig pen");
+                            Console.WriteLine("No active formula assignments found for pig pen");
                             feedFormulaCalculations = new List<FeedFormulaWithCalculationResponse>();
                         }
                         
-                        Console.WriteLine($"Loaded {feedFormulaCalculations?.Count() ?? 0} feed formulas");
+                        Console.WriteLine($"Loaded {feedFormulaCalculations?.Count() ?? 0} feed formula assignments for comparison");
                         
                         // Build comparison data
                         BuildComparisonData();
@@ -818,8 +845,8 @@
                     }
                     catch (Exception feedEx)
                     {
-                        Console.WriteLine($"Error loading feed formulas: {feedEx.Message}");
-                        Snackbar.Add($"Error loading feed formulas: {feedEx.Message}", Severity.Warning);
+                        Console.WriteLine($"Error loading feed formula assignments: {feedEx.Message}");
+                        Snackbar.Add($"Error loading feed formula assignments: {feedEx.Message}", Severity.Warning);
                     }
                 }
             }
