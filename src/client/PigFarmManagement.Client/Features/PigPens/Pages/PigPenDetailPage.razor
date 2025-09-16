@@ -456,16 +456,16 @@
                 }
 
                 <!-- Simple Feed Formula Comparison Table -->
-                @if (feedFormulaCalculations != null && feedFormulaCalculations.Any())
+                @if ((feedFormulaCalculations != null && feedFormulaCalculations.Any()) || (comparisonData != null && comparisonData.Any()))
                 {
                     <MudTable Items="@GetTableRows()" Hover="true" Striped="true">
                         <HeaderContent>
                             <MudTh>Product Code</MudTh>
                             <MudTh>Product Name</MudTh>
-                            <MudTh Style="text-align: center">Per Pig (Bags)</MudTh>
-                            <MudTh Style="text-align: center">Per Pen (Bags)</MudTh>
+                            <MudTh Style="text-align: center">Formula (Per Pig / Per Pen)</MudTh>
                             <MudTh Style="text-align: center">Invoice No</MudTh>
                             <MudTh Style="text-align: center">Actual (Bags)</MudTh>
+                            <MudTh Style="text-align: center">Actions</MudTh>
                         </HeaderContent>
                         <RowTemplate>
                             @{
@@ -483,24 +483,50 @@
                                     rowStyle = "background-color: #fafafa; border-top: 1px solid #ccc;";
                                     textStyle = "font-weight: 600; color: #424242;";
                                 }
+                                else if (row.IsUnmatchedFeed)
+                                {
+                                    // Highlight unmatched feeds (feeds not in any assigned formula)
+                                    rowStyle = "background-color: #fff3cd;";
+                                    textStyle = "color: #856404; font-weight: 500;";
+                                }
                             }
                             <MudTd Style="@rowStyle">
-                                <span style="@textStyle">@row.ProductCode</span>
+                                <span style="@textStyle">
+                                    @if (row.IsUnmatchedFeed && !string.IsNullOrEmpty(row.ProductCode) && row.IsFirstProductRow)
+                                    {
+                                        <MudTooltip Text="This feed was used but doesn't match any assigned formula - possible substitute feed due to stock shortage">
+                                            <MudIcon Icon="Icons.Material.Filled.Warning" 
+                                                     Color="Color.Warning" 
+                                                     Size="Size.Small" 
+                                                     Class="mr-1" />
+                                        </MudTooltip>
+                                    }
+                                    @(row.IsFirstProductRow ? row.ProductCode : "")
+                                </span>
                             </MudTd>
                             <MudTd Style="@rowStyle">
-                                <span style="@textStyle">@row.ProductName</span>
+                                <span style="@textStyle">@(row.IsFirstProductRow ? row.ProductName : "")</span>
                             </MudTd>
                             <MudTd Style="@($"text-align: center; {rowStyle}")">
-                                <span style="@textStyle">@row.PerPigBags</span>
-                            </MudTd>
-                            <MudTd Style="@($"text-align: center; {rowStyle}")">
-                                <span style="@textStyle">@row.PerPigPenBags</span>
+                                <span style="@textStyle">@row.PerPigPerPenBags</span>
                             </MudTd>
                             <MudTd Style="@($"text-align: center; {rowStyle}")">
                                 <span style="@textStyle">@row.InvoiceNo</span>
                             </MudTd>
                             <MudTd Style="@($"text-align: center; {rowStyle}")">
                                 <span style="@textStyle">@row.PerInvoiceBags</span>
+                            </MudTd>
+                            <MudTd Style="@($"text-align: center; {rowStyle}")">
+                                @if (!row.IsSubTotal && !row.IsGrandTotal && !string.IsNullOrEmpty(row.ProductCode) && !string.IsNullOrEmpty(row.InvoiceNo) && row.InvoiceNo != "No Feeds" && row.InvoiceNo != "Sub Total" && row.InvoiceNo != "Grand Total")
+                                {
+                                    <MudButton Color="Color.Error" 
+                                             Size="Size.Small"
+                                             Variant="Variant.Outlined"
+                                             Title="Delete Invoice"
+                                             OnClick="() => RemoveInvoice(row.ProductCode, row.InvoiceNo)">
+                                        🗑️ Delete
+                                    </MudButton>
+                                }
                             </MudTd>
                         </RowTemplate>
                     </MudTable>
@@ -1298,48 +1324,98 @@
     private void BuildComparisonData()
     {
         Console.WriteLine($"BuildComparisonData called - feedFormulaCalculations null: {feedFormulaCalculations == null}, pigPen null: {pigPen == null}");
-        
-        if (feedFormulaCalculations == null || pigPen == null) 
+
+        if (pigPen == null)
         {
-            Console.WriteLine("Exiting BuildComparisonData - missing data");
+            Console.WriteLine("Exiting BuildComparisonData - pigPen is null");
             return;
         }
 
-        Console.WriteLine($"Processing {feedFormulaCalculations.Count()} feed formulas");
+        comparisonData = new List<FeedComparisonData>();
 
-        comparisonData = feedFormulaCalculations.Select(formula =>
+        // 1. Process assigned formulas (existing logic)
+        if (feedFormulaCalculations != null)
         {
-            Console.WriteLine($"Processing formula: {formula.ProductCode} - {formula.ProductName}");
-            
-            // Find matching feed history entries by product code
-            var matchingFeeds = feeds.Where(f => f.ProductCode == formula.ProductCode).ToList();
-            Console.WriteLine($"Found {matchingFeeds.Count} matching feeds for {formula.ProductCode}");
-            
-            // Group by invoice number for detailed breakdown
-            var feedHistoryEntries = matchingFeeds
-                .GroupBy(f => string.IsNullOrEmpty(f.InvoiceNumber) ? "N/A" : f.InvoiceNumber)
-                .Select(g => new FeedHistoryEntry
-                {
-                    InvoiceNumber = g.Key ?? "N/A",
-                    Quantity = g.Sum(f => f.QuantityKg) / 25m // Convert KG to bags
-                })
-                .ToList();
+            Console.WriteLine($"Processing {feedFormulaCalculations.Count()} assigned feed formulas");
 
-            var result = new FeedComparisonData
+            var assignedFormulaData = feedFormulaCalculations.Select(formula =>
             {
-                ProductCode = formula.ProductCode,
-                ProductName = formula.ProductName,
-                FormulaPerPig = formula.BagPerPig,
-                FormulaTotal = formula.TotalBagsRequired,
-                ActualTotal = matchingFeeds.Sum(f => f.QuantityKg) / 25m, // Convert KG to bags
-                FeedHistoryEntries = feedHistoryEntries
-            };
-            
-            Console.WriteLine($"Created comparison data: {result.ProductCode}, FormulaPerPig: {result.FormulaPerPig}, FormulaTotal: {result.FormulaTotal}");
-            return result;
-        }).ToList();
-        
-        Console.WriteLine($"BuildComparisonData completed - created {comparisonData.Count} comparison items");
+                Console.WriteLine($"Processing assigned formula: {formula.ProductCode} - {formula.ProductName}");
+
+                // Find matching feed history entries by product code
+                var matchingFeeds = feeds.Where(f => f.ProductCode == formula.ProductCode).ToList();
+                Console.WriteLine($"Found {matchingFeeds.Count} matching feeds for assigned formula {formula.ProductCode}");
+
+                // Group by invoice number for detailed breakdown
+                var feedHistoryEntries = matchingFeeds
+                    .GroupBy(f => string.IsNullOrEmpty(f.InvoiceNumber) ? "N/A" : f.InvoiceNumber)
+                    .Select(g => new FeedHistoryEntry
+                    {
+                        InvoiceNumber = g.Key ?? "N/A",
+                        Quantity = g.Sum(f => f.QuantityKg) / 25m // Convert KG to bags
+                    })
+                    .ToList();
+
+                var result = new FeedComparisonData
+                {
+                    ProductCode = formula.ProductCode,
+                    ProductName = formula.ProductName,
+                    FormulaPerPig = formula.BagPerPig,
+                    FormulaTotal = formula.TotalBagsRequired,
+                    ActualTotal = matchingFeeds.Sum(f => f.QuantityKg) / 25m, // Convert KG to bags
+                    FeedHistoryEntries = feedHistoryEntries,
+                    IsUnmatchedFeed = false // This matches an assigned formula
+                };
+
+                Console.WriteLine($"Created assigned formula data: {result.ProductCode}, FormulaPerPig: {result.FormulaPerPig}, FormulaTotal: {result.FormulaTotal}");
+                return result;
+            }).ToList();
+
+            comparisonData.AddRange(assignedFormulaData);
+        }
+
+        // 2. Add unmatched feed items (feeds consumed but not in any assigned formula)
+        var assignedProductCodes = feedFormulaCalculations?.Select(f => f.ProductCode).ToHashSet() ?? new HashSet<string>();
+        var unmatchedFeeds = feeds.Where(f => !assignedProductCodes.Contains(f.ProductCode)).ToList();
+
+        Console.WriteLine($"Found {unmatchedFeeds.Count} unmatched feed records");
+
+        if (unmatchedFeeds.Any())
+        {
+            var unmatchedGroups = unmatchedFeeds.GroupBy(f => f.ProductCode);
+
+            foreach (var group in unmatchedGroups)
+            {
+                var productCode = group.Key;
+                var productName = group.First().ProductName ?? productCode;
+                var totalQuantity = group.Sum(f => f.QuantityKg) / 25m; // Convert KG to bags
+
+                Console.WriteLine($"Processing unmatched feed: {productCode} - {productName}, total: {totalQuantity:F1} bags");
+
+                // Group by invoice number for unmatched feeds too
+                var feedHistoryEntries = group
+                    .GroupBy(f => string.IsNullOrEmpty(f.InvoiceNumber) ? "N/A" : f.InvoiceNumber)
+                    .Select(g => new FeedHistoryEntry
+                    {
+                        InvoiceNumber = g.Key ?? "N/A",
+                        Quantity = g.Sum(f => f.QuantityKg) / 25m
+                    })
+                    .ToList();
+
+                comparisonData.Add(new FeedComparisonData
+                {
+                    ProductCode = productCode,
+                    ProductName = productName,
+                    FormulaPerPig = 0, // No assigned formula
+                    FormulaTotal = 0,   // No assigned formula
+                    ActualTotal = totalQuantity,
+                    FeedHistoryEntries = feedHistoryEntries,
+                    IsUnmatchedFeed = true // This feed doesn't match any assigned formula
+                });
+            }
+        }
+
+        Console.WriteLine($"BuildComparisonData completed - created {comparisonData.Count} comparison items ({comparisonData.Count(c => c.IsUnmatchedFeed)} unmatched)");
     }
 
     private decimal GetOverallVariance()
@@ -1398,15 +1474,20 @@
             {
                 // First add the main product row with first invoice
                 var firstInvoice = comparison.FeedHistoryEntries.First();
+                var perPigValue = comparison.IsUnmatchedFeed ? "N/A" : comparison.FormulaPerPig.ToString("F1");
+                var perPenValue = comparison.IsUnmatchedFeed ? "N/A" : comparison.FormulaTotal.ToString("0");
+                var combinedFormula = comparison.IsUnmatchedFeed ? "N/A" : $"{perPigValue} / {perPenValue}";
+                
                 rows.Add(new TableRowData
                 {
                     ProductCode = comparison.ProductCode,
                     ProductName = comparison.ProductName,
-                    PerPigBags = comparison.FormulaPerPig.ToString("F1"),
-                    PerPigPenBags = comparison.FormulaTotal.ToString("0"),
+                    PerPigPerPenBags = combinedFormula,
                     InvoiceNo = firstInvoice.InvoiceNumber,
                     PerInvoiceBags = firstInvoice.Quantity.ToString("0"),
-                    IsSubTotal = false
+                    IsSubTotal = false,
+                    IsUnmatchedFeed = comparison.IsUnmatchedFeed,
+                    IsFirstProductRow = true // This is the first row for this product
                 });
 
                 // Add additional invoices for this product (from second invoice onwards)
@@ -1414,13 +1495,14 @@
                 {
                     rows.Add(new TableRowData
                     {
-                        ProductCode = "",
+                        ProductCode = comparison.ProductCode, // Include ProductCode for delete functionality
                         ProductName = "",
-                        PerPigBags = "",
-                        PerPigPenBags = "",
+                        PerPigPerPenBags = "",
                         InvoiceNo = invoice.InvoiceNumber,
                         PerInvoiceBags = invoice.Quantity.ToString("0"),
-                        IsSubTotal = false
+                        IsSubTotal = false,
+                        IsUnmatchedFeed = comparison.IsUnmatchedFeed,
+                        IsFirstProductRow = false // Not the first row for this product
                     });
                 }
 
@@ -1429,45 +1511,57 @@
                 {
                     ProductCode = "",
                     ProductName = "",
-                    PerPigBags = "",
-                    PerPigPenBags = "",
+                    PerPigPerPenBags = "",
                     InvoiceNo = "Sub Total",
                     PerInvoiceBags = comparison.ActualTotal.ToString("0"),
-                    IsSubTotal = true
+                    IsSubTotal = true,
+                    IsUnmatchedFeed = comparison.IsUnmatchedFeed,
+                    IsFirstProductRow = false
                 });
             }
             else
             {
                 // No feed history - show only formula data with "No Feeds" indicator
+                var perPigValue = comparison.IsUnmatchedFeed ? "N/A" : comparison.FormulaPerPig.ToString("F1");
+                var perPenValue = comparison.IsUnmatchedFeed ? "N/A" : comparison.FormulaTotal.ToString("0");
+                var combinedFormula = comparison.IsUnmatchedFeed ? "N/A" : $"{perPigValue} / {perPenValue}";
+                
                 rows.Add(new TableRowData
                 {
                     ProductCode = comparison.ProductCode,
                     ProductName = comparison.ProductName,
-                    PerPigBags = comparison.FormulaPerPig.ToString("F1"),
-                    PerPigPenBags = comparison.FormulaTotal.ToString("0"),
+                    PerPigPerPenBags = combinedFormula,
                     InvoiceNo = "No Feeds",
                     PerInvoiceBags = "0",
-                    IsSubTotal = false
+                    IsSubTotal = false,
+                    IsUnmatchedFeed = comparison.IsUnmatchedFeed,
+                    IsFirstProductRow = true // This is the only row for this product
                 });
             }
         }
 
-        // Calculate grand totals
-        var grandTotalPerPig = comparisonData.Sum(c => c.FormulaPerPig);
-        var grandTotalPerPigPen = comparisonData.Sum(c => c.FormulaTotal);
+        // Calculate grand totals (only include assigned formulas, not unmatched feeds)
+        var assignedFormulas = comparisonData.Where(c => !c.IsUnmatchedFeed);
+        var grandTotalPerPig = assignedFormulas.Sum(c => c.FormulaPerPig);
+        var grandTotalPerPigPen = assignedFormulas.Sum(c => c.FormulaTotal);
         var grandTotalPerInvoice = comparisonData.Sum(c => c.ActualTotal);
 
         // Add Grand Total row
+        var grandTotalCombined = grandTotalPerPig > 0 || grandTotalPerPigPen > 0 
+            ? $"{grandTotalPerPig.ToString("F1")} / {grandTotalPerPigPen.ToString("0")}" 
+            : "N/A";
+        
         rows.Add(new TableRowData
         {
             ProductCode = "",
             ProductName = "",
-            PerPigBags = grandTotalPerPig.ToString("F1"),
-            PerPigPenBags = grandTotalPerPigPen.ToString("0"),
+            PerPigPerPenBags = grandTotalCombined,
             InvoiceNo = "Grand Total",
             PerInvoiceBags = grandTotalPerInvoice.ToString("0"),
             IsSubTotal = false,
-            IsGrandTotal = true
+            IsGrandTotal = true,
+            IsUnmatchedFeed = false,
+            IsFirstProductRow = false
         });
 
         return rows;
@@ -1477,12 +1571,13 @@
     {
         public string ProductCode { get; set; } = "";
         public string ProductName { get; set; } = "";
-        public string PerPigBags { get; set; } = "";
-        public string PerPigPenBags { get; set; } = "";
+        public string PerPigPerPenBags { get; set; } = ""; // Combined: "PerPig / PerPen"
         public string InvoiceNo { get; set; } = "";
         public string PerInvoiceBags { get; set; } = "";
         public bool IsSubTotal { get; set; }
         public bool IsGrandTotal { get; set; }
+        public bool IsUnmatchedFeed { get; set; } // True if this feed doesn't match any assigned formula
+        public bool IsFirstProductRow { get; set; } // True if this is the first row for this product
     }
 
     public class FeedComparisonData
@@ -1493,6 +1588,7 @@
         public decimal FormulaTotal { get; set; }
         public decimal ActualTotal { get; set; }
         public List<FeedHistoryEntry> FeedHistoryEntries { get; set; } = new();
+        public bool IsUnmatchedFeed { get; set; } // True if this feed doesn't match any assigned formula
     }
 
     public class FeedHistoryEntry
@@ -1795,5 +1891,72 @@
         // 1. It has an actual harvest date (harvested)
         // 2. Calculations are locked
         return pigPen.ActHarvestDate.HasValue || pigPen.IsCalculationLocked;
+    }
+
+    private async Task RemoveInvoice(string productCode, string invoiceNumber)
+    {
+        if (string.IsNullOrEmpty(productCode) || string.IsNullOrEmpty(invoiceNumber) || invoiceNumber == "N/A")
+        {
+            Snackbar.Add("Cannot remove this invoice entry", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            // Find and remove feeds with the specified invoice number and product code
+            var feedsToRemove = feeds.Where(f => f.ProductCode == productCode && 
+                                               (f.InvoiceNumber == invoiceNumber || 
+                                                (string.IsNullOrEmpty(f.InvoiceNumber) && invoiceNumber == "N/A")))
+                                    .ToList();
+
+            if (!feedsToRemove.Any())
+            {
+                Snackbar.Add("Invoice not found", Severity.Warning);
+                return;
+            }
+
+            // Confirm deletion
+            var totalQuantity = feedsToRemove.Sum(f => f.QuantityKg);
+            var confirmed = await DialogService.ShowMessageBox(
+                "Confirm Removal",
+                $"Are you sure you want to remove invoice '{invoiceNumber}' for product '{productCode}'? This will remove {feedsToRemove.Count} feed record(s) totaling {totalQuantity:N1} kg.",
+                yesText: "Remove Invoice",
+                cancelText: "Cancel");
+
+            if (confirmed == true)
+            {
+                // Remove the feeds from the local collection
+                foreach (var feed in feedsToRemove)
+                {
+                    feeds.Remove(feed);
+                }
+
+                // Update grouped feeds
+                groupedFeeds = feeds
+                    .Where(f => !string.IsNullOrEmpty(f.ProductCode))
+                    .GroupBy(f => f.ProductCode)
+                    .Select(g => new GroupedFeedItem
+                    {
+                        ProductCode = g.Key,
+                        ProductName = g.First().ProductName ?? g.Key,
+                        TotalQuantity = g.Sum(f => f.QuantityKg),
+                        FeedCount = g.Count()
+                    })
+                    .OrderBy(g => g.ProductCode)
+                    .ToList();
+
+                // Rebuild comparison data
+                BuildComparisonData();
+
+                // Refresh the UI
+                StateHasChanged();
+
+                Snackbar.Add($"Removed invoice '{invoiceNumber}' - {feedsToRemove.Count} feed record(s) deleted", Severity.Success);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error removing invoice: {ex.Message}", Severity.Error);
+        }
     }
 }
