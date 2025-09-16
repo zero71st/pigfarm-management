@@ -4,7 +4,7 @@ using PigFarmManagement.Server.Infrastructure.Data.Repositories;
 namespace PigFarmManagement.Server.Features.PigPens;
 
 public record DepositCreateDto(decimal Amount, DateTime Date, string? Remark);
-public record HarvestCreateDto(DateTime HarvestDate, int PigCount, decimal AvgWeight, decimal MinWeight, decimal MaxWeight, decimal TotalWeight, decimal SalePricePerKg, decimal Revenue);
+public record HarvestCreateDto(DateTime HarvestDate, int PigCount, decimal AvgWeight, decimal TotalWeight, decimal SalePricePerKg, decimal Revenue);
 
 public interface IPigPenDetailService
 {
@@ -161,8 +161,6 @@ public class PigPenDetailService : IPigPenDetailService
             dto.HarvestDate,
             dto.PigCount,
             dto.AvgWeight,
-            dto.MinWeight,
-            dto.MaxWeight,
             dto.TotalWeight,
             dto.SalePricePerKg,
             dto.Revenue

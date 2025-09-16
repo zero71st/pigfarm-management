@@ -167,58 +167,6 @@
                                 </MudItem>
                             }
 
-                            <!-- Optional Weight Range -->
-                            <MudItem xs="12">
-                                <MudExpansionPanels>
-                                    <MudExpansionPanel>
-                                        <TitleContent>
-                                            <div style="display: flex; align-items: center;">
-                                                <MudIcon Icon="@Icons.Material.Filled.ExpandMore" class="mr-3"></MudIcon>
-                                                <MudText>Advanced Weight Details (Optional)</MudText>
-                                            </div>
-                                        </TitleContent>
-                                        <ChildContent>
-                                            <MudGrid>
-                                                <MudItem xs="12" md="6">
-                                                    <MudNumericField @bind-Value="minWeight"
-                                                                     Label="Minimum Weight"
-                                                                     Min="0.1m"
-                                                                     Step="0.1m"
-                                                                     Format="F1"
-                                                                     HelperText="Lightest pig weight"
-                                                                     Variant="Variant.Outlined"
-                                                                     Adornment="Adornment.End"
-                                                                     AdornmentText="kg" />
-                                                </MudItem>
-
-                                                <MudItem xs="12" md="6">
-                                                    <MudNumericField @bind-Value="maxWeight"
-                                                                     Label="Maximum Weight"
-                                                                     Min="@(minWeight > 0 ? minWeight : 0.1m)"
-                                                                     Step="0.1m"
-                                                                     Format="F1"
-                                                                     HelperText="Heaviest pig weight"
-                                                                     Variant="Variant.Outlined"
-                                                                     Adornment="Adornment.End"
-                                                                     AdornmentText="kg" />
-                                                </MudItem>
-
-                                                @if (minWeight > 0 && maxWeight > 0 && totalPigs > 0)
-                                                {
-                                                    <MudItem xs="12">
-                                                        <MudAlert Severity="Severity.Info" Dense="true">
-                                                            <MudText Typo="Typo.body2">
-                                                                Weight range: <strong>@minWeight.ToString("F1") - @maxWeight.ToString("F1") kg</strong> 
-                                                                (Average: <strong>@averageWeight.ToString("F1") kg</strong>)
-                                                            </MudText>
-                                                        </MudAlert>
-                                                    </MudItem>
-                                                }
-                                            </MudGrid>
-                                        </ChildContent>
-                                    </MudExpansionPanel>
-                                </MudExpansionPanels>
-                            </MudItem>
                         </MudGrid>
                     </MudForm>
                 </MudItem>
@@ -248,7 +196,7 @@
 @code {
     [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
 
-    [Parameter] public HarvestResult HarvestToEdit { get; set; } = new HarvestResult(Guid.Empty, Guid.Empty, DateTime.Today, 0, 0, 0, 0, 0, 0, 0);
+    [Parameter] public HarvestResult HarvestToEdit { get; set; } = new HarvestResult(Guid.Empty, Guid.Empty, DateTime.Today, 0, 0, 0, 0, 0);
     [Parameter] public PigPen? PigPen { get; set; }
     [Parameter] public List<HarvestResult>? ExistingHarvests { get; set; }
 
@@ -261,10 +209,6 @@
     private int totalPigs = 0;
     private decimal pricePerKg = 0;
     private decimal totalWeight = 0;
-
-    // Optional weight range fields
-    private decimal minWeight = 0;
-    private decimal maxWeight = 0;
 
     // Calculated values
     private decimal averageWeight => totalPigs > 0 ? totalWeight / totalPigs : 0;
@@ -284,8 +228,6 @@
             totalPigs = HarvestToEdit.PigCount;
             pricePerKg = HarvestToEdit.SalePricePerKg;
             totalWeight = HarvestToEdit.TotalWeight;
-            minWeight = HarvestToEdit.MinWeight;
-            maxWeight = HarvestToEdit.MaxWeight;
         }
     }
 
@@ -296,23 +238,7 @@
 
     private void CalculateWeightMetrics()
     {
-        // Auto-calculate weight range if not provided
-        if (totalWeight > 0 && totalPigs > 0)
-        {
-            var avgWeight = totalWeight / totalPigs;
-            
-            // If min/max not set, provide reasonable estimates
-            if (minWeight == 0)
-            {
-                minWeight = Math.Max(0.1m, avgWeight * 0.8m); // 20% below average
-            }
-            
-            if (maxWeight == 0)
-            {
-                maxWeight = avgWeight * 1.2m; // 20% above average
-            }
-        }
-        
+        // Weight metrics are now calculated automatically from total weight and pig count
         StateHasChanged();
     }
 
@@ -340,8 +266,6 @@
                 harvestDate!.Value,
                 totalPigs,
                 averageWeight,
-                minWeight > 0 ? minWeight : averageWeight * 0.8m,
-                maxWeight > 0 ? maxWeight : averageWeight * 1.2m,
                 totalWeight,
                 pricePerKg,
                 totalRevenue

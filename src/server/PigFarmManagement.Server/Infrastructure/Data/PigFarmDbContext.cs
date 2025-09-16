@@ -104,8 +104,6 @@ public class PigFarmDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.AvgWeight).HasColumnType("decimal(18,2)");
-            entity.Property(e => e.MinWeight).HasColumnType("decimal(18,2)");
-            entity.Property(e => e.MaxWeight).HasColumnType("decimal(18,2)");
             entity.Property(e => e.TotalWeight).HasColumnType("decimal(18,2)");
             entity.Property(e => e.SalePricePerKg).HasColumnType("decimal(18,2)");
             entity.Property(e => e.Revenue).HasColumnType("decimal(18,2)");
@@ -339,8 +337,6 @@ public class PigFarmDbContext : DbContext
             var pigPen = pigPens[random.Next(pigPens.Count)];
             var pigCount = random.Next(5, pigPen.PigQty);
             var avgWeight = random.Next(80, 120);
-            var minWeight = avgWeight - random.Next(10, 20);
-            var maxWeight = avgWeight + random.Next(10, 20);
             var totalWeight = pigCount * avgWeight + random.Next(-50, 50);
             var salePricePerKg = random.Next(45, 75);
             
@@ -351,8 +347,6 @@ public class PigFarmDbContext : DbContext
                 HarvestDate = now.AddDays(-random.Next(1, 180)),
                 PigCount = pigCount,
                 AvgWeight = avgWeight,
-                MinWeight = minWeight,
-                MaxWeight = maxWeight,
                 TotalWeight = totalWeight,
                 SalePricePerKg = salePricePerKg,
                 Revenue = totalWeight * salePricePerKg

@@ -601,7 +601,6 @@
                             <MudTh>Date</MudTh>
                             <MudTh Style="text-align: center">Pigs Sold</MudTh>
                             <MudTh Style="text-align: right">Avg Weight (kg)</MudTh>
-                            <MudTh Style="text-align: right">Weight Range (kg)</MudTh>
                             <MudTh Style="text-align: right">Price per Kg</MudTh>
                             <MudTh Style="text-align: right">Total Revenue</MudTh>
                             <MudTh Style="text-align: center">Actions</MudTh>
@@ -612,9 +611,6 @@
                                 <MudChip Size="Size.Small" Color="Color.Info">@context.PigCount</MudChip>
                             </MudTd>
                             <MudTd DataLabel="Avg Weight" Style="text-align: right">@context.AvgWeight.ToString("N1")</MudTd>
-                            <MudTd DataLabel="Weight Range" Style="text-align: right">
-                                @context.MinWeight.ToString("N1") - @context.MaxWeight.ToString("N1")
-                            </MudTd>
                             <MudTd DataLabel="Price per Kg" Style="text-align: right">฿@context.SalePricePerKg.ToString("N2")</MudTd>
                             <MudTd DataLabel="Total Revenue" Style="text-align: right">
                                 <MudText Color="Color.Success"><strong>฿@context.Revenue.ToString("N2")</strong></MudText>

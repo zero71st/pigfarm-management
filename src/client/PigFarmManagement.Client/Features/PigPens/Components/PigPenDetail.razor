@@ -182,8 +182,6 @@
                                 <MudTh>Date</MudTh>
                                 <MudTh>Pigs Sold</MudTh>
                                 <MudTh>Avg Weight</MudTh>
-                                <MudTh>Min Weight</MudTh>
-                                <MudTh>Max Weight</MudTh>
                                 <MudTh>Price per Kg</MudTh>
                                 <MudTh>Total Revenue</MudTh>
                             </HeaderContent>
@@ -191,8 +189,6 @@
                                 <MudTd>@context.HarvestDate.ToString("dd/MM/yyyy")</MudTd>
                                 <MudTd>@context.PigCount</MudTd>
                                 <MudTd>@context.AvgWeight.ToString("N1") kg</MudTd>
-                                <MudTd>@context.MinWeight.ToString("N1") kg</MudTd>
-                                <MudTd>@context.MaxWeight.ToString("N1") kg</MudTd>
                                 <MudTd>฿@context.SalePricePerKg.ToString("N2")</MudTd>
                                 <MudTd>฿@context.Revenue.ToString("N2")</MudTd>
                             </RowTemplate>

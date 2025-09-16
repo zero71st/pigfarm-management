@@ -18,12 +18,6 @@ public class HarvestEntity
     public decimal AvgWeight { get; set; }
     
     [Column(TypeName = "decimal(18,2)")]
-    public decimal MinWeight { get; set; }
-    
-    [Column(TypeName = "decimal(18,2)")]
-    public decimal MaxWeight { get; set; }
-    
-    [Column(TypeName = "decimal(18,2)")]
     public decimal TotalWeight { get; set; }
     
     [Column(TypeName = "decimal(18,2)")]
@@ -45,8 +39,6 @@ public class HarvestEntity
             HarvestDate, 
             PigCount, 
             AvgWeight, 
-            MinWeight, 
-            MaxWeight, 
             TotalWeight, 
             SalePricePerKg, 
             Revenue
@@ -63,8 +55,6 @@ public class HarvestEntity
             HarvestDate = harvest.HarvestDate,
             PigCount = harvest.PigCount,
             AvgWeight = harvest.AvgWeight,
-            MinWeight = harvest.MinWeight,
-            MaxWeight = harvest.MaxWeight,
             TotalWeight = harvest.TotalWeight,
             SalePricePerKg = harvest.SalePricePerKg,
             Revenue = harvest.Revenue

@@ -58,15 +58,6 @@
                                     <strong>฿@HarvestToDelete.Revenue.ToString("N2")</strong>
                                 </MudText>
                             </MudItem>
-                            @if (HarvestToDelete.MinWeight != HarvestToDelete.MaxWeight)
-                            {
-                                <MudItem xs="12">
-                                    <MudText Typo="Typo.body2" Color="Color.Secondary">Weight Range:</MudText>
-                                    <MudText Typo="Typo.body1">
-                                        @HarvestToDelete.MinWeight.ToString("N1") - @HarvestToDelete.MaxWeight.ToString("N1") kg
-                                    </MudText>
-                                </MudItem>
-                            }
                         </MudGrid>
                     </MudPaper>
                 </MudItem>
@@ -96,10 +87,10 @@
 </MudDialog>
 
 @code {
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
-    [Parameter] public HarvestResult HarvestToDelete { get; set; } = new HarvestResult(Guid.Empty, Guid.Empty, DateTime.Today, 0, 0, 0, 0, 0, 0, 0);
+    [CascadingParameter] MudDialogInstance? MudDialog { get; set; }
+    [Parameter] public HarvestResult HarvestToDelete { get; set; } = new HarvestResult(Guid.Empty, Guid.Empty, DateTime.Today, 0, 0, 0, 0, 0);
 
-    void Cancel() => MudDialog.Cancel();
+    void Cancel() => MudDialog?.Cancel();
 
-    void Confirm() => MudDialog.Close(DialogResult.Ok(true));
+    void Confirm() => MudDialog?.Close(DialogResult.Ok(true));
 }

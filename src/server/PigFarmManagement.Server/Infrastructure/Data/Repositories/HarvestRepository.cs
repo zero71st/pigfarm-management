@@ -52,8 +52,6 @@ public class HarvestRepository : IHarvestRepository
         entity.HarvestDate = harvest.HarvestDate;
         entity.PigCount = harvest.PigCount;
         entity.AvgWeight = harvest.AvgWeight;
-        entity.MinWeight = harvest.MinWeight;
-        entity.MaxWeight = harvest.MaxWeight;
         entity.TotalWeight = harvest.TotalWeight;
         entity.SalePricePerKg = harvest.SalePricePerKg;
         entity.Revenue = harvest.Revenue;

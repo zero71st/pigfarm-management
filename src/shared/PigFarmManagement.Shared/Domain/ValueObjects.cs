@@ -35,11 +35,10 @@ public record Deposit(Guid Id, Guid PigPenId, decimal Amount, DateTime Date, str
 };
 
 public record HarvestResult(Guid Id, Guid PigPenId, DateTime HarvestDate, int PigCount, 
-    decimal AvgWeight, decimal MinWeight, decimal MaxWeight, decimal TotalWeight, 
-    decimal SalePricePerKg, decimal Revenue)
+    decimal AvgWeight, decimal TotalWeight, decimal SalePricePerKg, decimal Revenue)
 {
     // Calculated properties
     public decimal TotalValue => TotalWeight * SalePricePerKg;
     public decimal AverageRevenuePerPig => PigCount > 0 ? Revenue / PigCount : 0;
-    public bool IsSuccessfulHarvest => AvgWeight >= MinWeight && Revenue > 0;
+    public bool IsSuccessfulHarvest => AvgWeight > 0 && Revenue > 0;
 };
