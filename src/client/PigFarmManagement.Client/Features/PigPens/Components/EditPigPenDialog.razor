@@ -237,24 +237,14 @@
             return;
         }
         
-        // Fallback: Try to get the brand from existing feed formula if available
-        if (PigPen.FeedFormulaId.HasValue)
+        // Fallback: Try to get the brand from existing formula assignments if available
+        var activeAssignment = PigPen.FormulaAssignments.FirstOrDefault(fa => fa.IsActive && !fa.IsLocked);
+        if (activeAssignment != null)
         {
-            try
-            {
-                var feedFormula = await FeedFormulaService.GetFeedFormulaByIdAsync(PigPen.FeedFormulaId.Value);
-                if (feedFormula != null && !string.IsNullOrEmpty(feedFormula.Brand))
-                {
-                    selectedBrand = feedFormula.Brand;
-                    Console.WriteLine($"[EditPigPen - InitializeFeedFormulaSelection] Found existing feed formula brand: {selectedBrand}");
-                    await LoadFeedFormulasForBrand();
-                    return;
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[EditPigPen - InitializeFeedFormulaSelection] Error loading existing feed formula: {ex.Message}");
-            }
+            selectedBrand = activeAssignment.Brand;
+            Console.WriteLine($"[EditPigPen - InitializeFeedFormulaSelection] Found existing formula assignment brand: {selectedBrand}");
+            await LoadFeedFormulasForBrand();
+            return;
         }
         
         // Final fallback: Auto-select Jet brand as default to show feed formulas

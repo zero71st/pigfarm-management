@@ -22,10 +22,16 @@ public record Customer(Guid Id, string Code, string Name, CustomerStatus Status)
 public record PigPen(Guid Id, Guid CustomerId, string PenCode, int PigQty,
     DateTime RegisterDate, DateTime? ActHarvestDate, DateTime? EstimatedHarvestDate,
     decimal FeedCost, decimal Investment, decimal ProfitLoss, 
-    PigPenType Type, Guid? FeedFormulaId, decimal DepositPerPig, DateTime CreatedAt, DateTime UpdatedAt)
+    PigPenType Type, decimal DepositPerPig, DateTime CreatedAt, DateTime UpdatedAt)
 {
     // Feed formula brand selection (for display purposes)
     public string? SelectedBrand { get; init; }
+    
+    // Unified formula assignments - replaces the old FeedFormulaId, FeedFormulaSnapshot, and FeedFormulaAllocations systems
+    public List<PigPenFormulaAssignment> FormulaAssignments { get; init; } = new();
+    
+    // Flag to indicate if calculations are locked (for closed pig pens)
+    public bool IsCalculationLocked { get; init; }
     
     // Business computed properties
     public string Name => $"Pen {PenCode}";
@@ -54,4 +60,37 @@ public record FeedFormula(Guid Id, string ProductCode, string ProductName,
     // Business logic
     public decimal CalculateTotalBags(int pigCount) => pigCount * BagPerPig;
     public decimal CalculateCost(int pigCount, decimal bagPrice) => CalculateTotalBags(pigCount) * bagPrice;
+};
+
+/// <summary>
+/// Unified formula assignment for pig pens - replaces the old FeedFormulaId, FeedFormulaSnapshot, and FeedFormulaAllocation systems
+/// Handles both active and locked assignments with single entity
+/// </summary>
+public record PigPenFormulaAssignment(
+    Guid Id,
+    Guid PigPenId,
+    Guid OriginalFormulaId,
+    string ProductCode,
+    string ProductName,
+    string Brand,
+    string? Stage, // "Starter", "Grower", "Finisher" - null for single formula assignments
+    int AssignedPigQuantity,
+    decimal AssignedBagPerPig, // Value at time of assignment
+    decimal AssignedTotalBags,  // Calculated at time of assignment
+    DateTime AssignedAt,
+    DateTime? EffectiveUntil,
+    bool IsActive,              // For active pig pens - can be modified
+    bool IsLocked,              // For closed pig pens - historical protection
+    string? LockReason,         // "ForceClosed", "Completed", etc.
+    DateTime? LockedAt)
+{
+    // Business computed properties
+    public string DisplayName => Stage != null ? $"{ProductName} - {Stage}" : $"{ProductName} ({ProductCode})";
+    public bool CanBeModified => IsActive && !IsLocked;
+    public string Status => IsLocked ? "Locked" : IsActive ? "Active" : "Inactive";
+    public decimal EstimatedCost(decimal bagPrice) => AssignedTotalBags * bagPrice;
+
+    // Business logic
+    public bool IsCurrentlyEffective => !EffectiveUntil.HasValue || EffectiveUntil > DateTime.Now;
+    public int DaysAssigned => (DateTime.Now - AssignedAt).Days;
 };

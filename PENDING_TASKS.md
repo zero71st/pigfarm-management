@@ -14,7 +14,7 @@ This document outlines the pending tasks and features that need to be implemente
 | ~~T1.7~~ | ~~Edit Pig Pen Dialog~~ | High | Medium | 🔥 Critical | ✅ **COMPLETED 2025-09-14** |
 | T8.1 | User Authentication Core | High | High | 🔥 Critical | ⏳ Pending |
 | T8.3 | Simple Role Assignment | High | Medium | 🔥 Critical | ⏳ Pending |
-| T1.5-T1.6 | Harvest Dialogs (Edit/Delete) | Medium | Medium | 🎯 Important | ⏳ Pending |
+| ~~T1.5-T1.6~~ | ~~Harvest Dialogs (Edit/Delete)~~ | Medium | Medium | 🎯 Important | ✅ **COMPLETED 2025-09-14** |
 | T8.2 | User Management System | Medium | Medium | 🎯 Important | ⏳ Pending |
 | T4.2 | Export Features | Medium | Low | 🎯 Important | ⏳ Pending |
 | T8.5 | Security Enhancements | High | Medium | 🎯 Important | ⏳ Pending |
@@ -54,13 +54,13 @@ This document outlines the pending tasks and features that need to be implemente
   - ✅ Real-time calculation display with formatted currency
   - **Previously showed:** "Add harvest dialog coming soon"
 
-- [ ] **T1.5 - Edit Harvest Dialog**
+- [x] **T1.5 - Edit Harvest Dialog** ✅ **COMPLETED 2025-09-14**
   - Edit existing harvest records
   - Validation for harvest data
   - Update calculations automatically
   - Currently shows: "Edit harvest coming soon"
 
-- [ ] **T1.6 - Delete Harvest Confirmation**
+- [x] **T1.6 - Delete Harvest Confirmation** ✅ **COMPLETED 2025-09-14**
   - Confirmation before harvest deletion
   - Impact assessment on ROI calculations
   - Currently shows: "Delete harvest coming soon"
@@ -91,6 +91,35 @@ This document outlines the pending tasks and features that need to be implemente
   - Check for missing product information
   - Error reporting and correction suggestions
 
+- [x] **T2.4 - Feed Formula Snapshot System** ⭐ **NEW HIGH PRIORITY**
+  - ✅ Create immutable snapshots of feed formulas for each pig pen
+  - ✅ Prevent closed pig pens from being affected by formula changes
+  - ✅ Store historical formula data for audit and reporting
+  - ✅ Add UI indicators for locked calculation status
+  - Estimated effort: High | Impact: Critical for data integrity
+
+- [x] **T2.7 - Unified PigPenFormulaAssignment System** ⭐ **COMPLETED 2025-09-16**
+  - ✅ Create PigPenFormulaAssignment entity to replace FeedFormulaId, FeedFormulaSnapshot, and FeedFormulaAllocations
+  - ✅ Implement unified system for both active and closed pig pens
+  - ✅ Eliminate duplication between snapshots and assignments
+  - ✅ Update PigPenService, client calculations, and UI components
+  - ✅ Test compilation and basic functionality
+  - ✅ Add maintenance endpoints for validation, repair, and statistics
+  - ✅ Integration testing and validation completed
+
+- [ ] **T2.5 - Multiple Feed Formulas per Pig Pen** ⭐ **NEW HIGH PRIORITY**
+  - Support multiple formulas (Starter, Grower, Finisher) per pig pen
+  - Time-based formula allocation with start/end dates
+  - Quantity allocation per formula type and pig count
+  - Estimated effort: High | Impact: Critical for realistic farming
+
+- [ ] **T2.6 - Planned vs Actual Feed Comparison** ⭐ **NEW HIGH PRIORITY**
+  - Compare planned feed formulas against actual consumption
+  - Generate variance reports and efficiency metrics
+  - Cost analysis (budget vs actual spending)
+  - Timeline correlation between planned and actual feed usage
+  - Estimated effort: Medium-High | Impact: High for performance analysis
+
 ---
 
 ## 🎯 **Medium Priority Tasks**
@@ -115,6 +144,12 @@ This document outlines the pending tasks and features that need to be implemente
   - Feed conversion ratio calculations
   - Growth rate tracking
   - Efficiency benchmarking
+
+- [ ] **T3.5 - Feed Formula Performance Analysis** ⭐ **NEW**
+  - Analyze which formulas perform best for different growth stages
+  - Compare formula effectiveness across different pig pens
+  - Historical performance tracking for formula optimization
+  - Estimated effort: Medium | Impact: High for insights
 
 ### **4. Data Management Features**
 - [x] **T4.1 - Real-time Data Refresh** ✅ **COMPLETED 2025-09-14**
@@ -262,21 +297,20 @@ This document outlines the pending tasks and features that need to be implemente
 - User interface refinements
 
 ### ⏳ **Next Steps**
-1. ~~T1.1 - Implement Add Deposit Dialog~~ ✅ **COMPLETED**
-2. ~~T1.2 - Implement Edit Deposit Dialog~~ ✅ **COMPLETED**
-3. ~~T1.3 - Implement Delete Deposit Confirmation~~ ✅ **COMPLETED**
-4. ~~T1.7 - Implement Edit Pig Pen Dialog~~ ✅ **COMPLETED**
-5. ~~T2.1 - Create Import Feeds functionality~~ ✅ **COMPLETED**
-6. **T8.1 - Implement User Authentication Core** 🔐 **HIGH PRIORITY**
-7. **T8.3 - Implement Simple Role Assignment** 🔐 **HIGH PRIORITY**
-8. ~~Implement T1.4 - Add Harvest Dialog~~ ✅ **COMPLETED 2025-09-14**
-9. ~~Implement T1.5 - Edit Harvest Dialog~~ ✅ **COMPLETED 2025-09-14**
-10. ~~Implement T1.6 - Delete Harvest Confirmation~~ ✅ **COMPLETED 2025-09-14**
-11. Implement T8.2 - User Management System
-12. Implement T8.5 - Security Enhancements
-13. Implement T6.3 - Comprehensive Audit System
-14. Implement T5.2 - Add comprehensive error handling
-14. Implement T4.2 - Export features
+1. **T8.1 - Implement User Authentication Core** 🔐 **HIGH PRIORITY**
+2. **T8.3 - Implement Simple Role Assignment** 🔐 **HIGH PRIORITY**
+3. **T2.7 - Complete Unified PigPenFormulaAssignment System** ⭐ **IN PROGRESS**
+   - Complete data migration for existing pig pens
+   - Integration testing and validation
+4. **T2.5 - Implement Multiple Feed Formulas per Pig Pen** ⭐ **NEW HIGH PRIORITY**
+5. **T2.6 - Implement Planned vs Actual Feed Comparison** ⭐ **NEW HIGH PRIORITY**
+6. ~~Implement T1.4 - Add Harvest Dialog~~ ✅ **COMPLETED 2025-09-14**
+7. ~~Implement T1.5 - Edit Harvest Dialog~~ ✅ **COMPLETED 2025-09-14**
+8. ~~Implement T1.6 - Delete Harvest Confirmation~~ ✅ **COMPLETED 2025-09-14**
+9. Implement T8.2 - User Management System
+10. Implement T8.5 - Security Enhancements
+11. Implement T3.5 - Feed Formula Performance Analysis
+12. Implement T4.2 - Export Features (Quick win)
 
 ---
 
@@ -285,10 +319,23 @@ This document outlines the pending tasks and features that need to be implemente
 | Task ID | Task | Impact | Effort | Priority | Status |
 |---------|------|--------|--------|----------|---------|
 | ~~T2.1~~ | ~~Import Feeds~~ | High | High | 🔥 Critical | ✅ **COMPLETED 2025-09-14** |
-| T1.1 | Add Deposit Dialog | High | Medium | 🔥 Critical | ⏳ Pending |
-| T1.2-T1.7 | Edit Dialogs | Medium | Medium | 🎯 Important | ⏳ Pending |
+| ~~T1.1~~ | ~~Add Deposit Dialog~~ | High | Medium | 🔥 Critical | ✅ **COMPLETED 2025-09-14** |
+| ~~T1.2~~ | ~~Edit Deposit Dialog~~ | High | Medium | 🔥 Critical | ✅ **COMPLETED 2025-09-14** |
+| ~~T1.3~~ | ~~Delete Deposit Confirmation~~ | High | Medium | 🔥 Critical | ✅ **COMPLETED 2025-09-14** |
+| ~~T1.7~~ | ~~Edit Pig Pen Dialog~~ | High | Medium | 🔥 Critical | ✅ **COMPLETED 2025-09-14** |
+| T8.1 | User Authentication Core | High | High | 🔥 Critical | ⏳ Pending |
+| T8.3 | Simple Role Assignment | High | Medium | 🔥 Critical | ⏳ Pending |
+| T2.4 | Feed Formula Snapshot System | High | High | 🔥 High | ✅ Completed |
+| T2.5 | Multiple Feed Formulas per Pig Pen | High | High | 🔥 High | ⏳ Pending |
+| T2.6 | Planned vs Actual Feed Comparison | High | Medium-High | 🔥 High | ⏳ Pending |
+| T2.7 | Unified PigPenFormulaAssignment System | High | High | 🔥 High | ✅ **COMPLETED 2025-09-16** |
+| ~~T1.5-T1.6~~ | ~~Harvest Dialogs (Edit/Delete)~~ | Medium | Medium | 🎯 Important | ✅ **COMPLETED 2025-09-14** |
+| T8.2 | User Management System | Medium | Medium | 🎯 Important | ⏳ Pending |
 | T4.2 | Export Features | Medium | Low | 🎯 Important | ⏳ Pending |
+| T8.5 | Security Enhancements | High | Medium | 🎯 Important | ⏳ Pending |
+| T3.5 | Feed Formula Performance Analysis | Medium | Medium | 🎯 Medium | ⏳ Pending |
 | T3.1-T3.4 | Analytics Charts | High | High | 📈 Nice to Have | ⏳ Pending |
+| T6.3 | Comprehensive Audit System | Medium | Medium | 📈 Nice to Have | ⏳ Pending |
 | T5.3 | Mobile Responsiveness | Medium | Medium | 📱 Nice to Have | ⏳ Pending |
 
 ---
@@ -319,9 +366,9 @@ This document outlines the pending tasks and features that need to be implemente
 - ✅ **Multi-selection Import**: Users can select multiple transactions for batch import
 
 ## 📋 **Task Reference Guide**
-- **T1.x**: Dialog/Modal Implementations (7 tasks, **7 completed today**)
-- **T2.x**: Feed Import System (3 tasks, 2 completed)
-- **T3.x**: Enhanced Analytics & Reporting (4 tasks)
+- **T1.x**: Dialog/Modal Implementations (7 tasks, 7 completed)
+- **T2.x**: Feed Import System (7 tasks, 2 completed, 4 new) ⭐ **UPDATED**
+- **T3.x**: Enhanced Analytics & Reporting (5 tasks, 4 existing, 1 new) ⭐ **UPDATED**
 - **T4.x**: Data Management Features (4 tasks, 1 completed)
 - **T5.x**: User Experience Enhancements (3 tasks)
 - **T6.x**: Data Validation & Business Rules (3 tasks)
@@ -329,7 +376,7 @@ This document outlines the pending tasks and features that need to be implemente
 - **T8.x**: Authentication & Security System (5 tasks) 🔐 **NEW**
 - **T9.x**: Integration & API (2 tasks)
 
-**Total Tasks**: 33 tasks | **Completed**: 10 tasks | **Remaining**: 23 tasks | **Progress**: 30.3% ✅
+**Total Tasks**: 37 tasks | **Completed**: 12 tasks | **In Progress**: 1 task | **Remaining**: 24 tasks | **Progress**: 32.4% ✅
 
 ---
 

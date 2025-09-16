@@ -1,9 +1,10 @@
 using PigFarmManagement.Shared.Models;
+using PigFarmManagement.Server.Features.FeedFormulas;
 using System.Linq;
 
 namespace PigFarmManagement.Server.Features.PigPens;
 
-public record PigPenCreateDto(Guid CustomerId, string PenCode, int PigQty, DateTime RegisterDate, DateTime? ActHarvestDate, DateTime? EstimatedHarvestDate, PigPenType Type, Guid? FeedFormulaId, string? SelectedBrand, decimal DepositPerPig = 1500m);
+public record PigPenCreateDto(Guid CustomerId, string PenCode, int PigQty, DateTime RegisterDate, DateTime? ActHarvestDate, DateTime? EstimatedHarvestDate, PigPenType Type, string? SelectedBrand, decimal DepositPerPig = 1500m);
 
 public interface IPigPenService
 {
@@ -19,10 +20,12 @@ public interface IPigPenService
 public class PigPenService : IPigPenService
 {
     private readonly IPigPenRepository _pigPenRepository;
+    private readonly IFeedFormulaService _feedFormulaService;
 
-    public PigPenService(IPigPenRepository pigPenRepository)
+    public PigPenService(IPigPenRepository pigPenRepository, IFeedFormulaService feedFormulaService)
     {
         _pigPenRepository = pigPenRepository;
+        _feedFormulaService = feedFormulaService;
     }
 
     public async Task<List<PigPen>> GetAllPigPensAsync()
@@ -50,7 +53,6 @@ public class PigPenService : IPigPenService
             dto.EstimatedHarvestDate, 
             0, 0, 0, // Initial values for FeedCost, Investment, ProfitLoss
             dto.Type, // PigPenType
-            dto.FeedFormulaId, // FeedFormulaId
             dto.DepositPerPig, // DepositPerPig from DTO
             now, // CreatedAt
             now) // UpdatedAt
@@ -102,10 +104,33 @@ public class PigPenService : IPigPenService
             throw new InvalidOperationException("Pig pen not found");
         }
 
-        // Force close by setting actual harvest date to today
+        // Create locked formula assignments for historical data integrity
+        var lockedAssignments = new List<PigPenFormulaAssignment>();
+
+        // Handle existing formula assignments (new system)
+        foreach (var assignment in pigPen.FormulaAssignments.Where(a => a.IsActive))
+        {
+            var lockedAssignment = assignment with {
+                IsActive = false,
+                IsLocked = true,
+                LockReason = "ForceClosed",
+                LockedAt = DateTime.UtcNow
+            };
+            lockedAssignments.Add(lockedAssignment);
+        }
+
+        // Combine existing assignments with new locked ones
+        var allAssignments = pigPen.FormulaAssignments
+            .Where(a => !a.IsActive) // Keep inactive ones
+            .Concat(lockedAssignments) // Add newly locked ones
+            .ToList();
+
+        // Force close by setting actual harvest date to today and lock calculations
         var forceClosedPigPen = pigPen with 
         { 
             ActHarvestDate = DateTime.Today,
+            FormulaAssignments = allAssignments,
+            IsCalculationLocked = true,
             UpdatedAt = DateTime.UtcNow
         };
 

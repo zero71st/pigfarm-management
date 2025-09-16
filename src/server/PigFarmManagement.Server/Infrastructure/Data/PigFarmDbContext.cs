@@ -16,6 +16,7 @@ public class PigFarmDbContext : DbContext
     public DbSet<DepositEntity> Deposits { get; set; }
     public DbSet<HarvestEntity> Harvests { get; set; }
     public DbSet<FeedFormulaEntity> FeedFormulas { get; set; }
+    public DbSet<PigPenFormulaAssignmentEntity> PigPenFormulaAssignments { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -47,11 +48,29 @@ public class PigFarmDbContext : DbContext
                   .WithMany(e => e.PigPens)
                   .HasForeignKey(e => e.CustomerId)
                   .OnDelete(DeleteBehavior.Restrict);
-                  
-            entity.HasOne(e => e.FeedFormula)
+        });
+
+        // PigPenFormulaAssignment Configuration
+        modelBuilder.Entity<PigPenFormulaAssignmentEntity>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ProductCode).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.ProductName).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Brand).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Stage).HasMaxLength(50);
+            entity.Property(e => e.AssignedBagPerPig).HasColumnType("decimal(18,4)");
+            entity.Property(e => e.AssignedTotalBags).HasColumnType("decimal(18,4)");
+            entity.Property(e => e.LockReason).HasMaxLength(100);
+
+            entity.HasOne(e => e.PigPen)
+                  .WithMany(e => e.FormulaAssignments)
+                  .HasForeignKey(e => e.PigPenId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.OriginalFormula)
                   .WithMany()
-                  .HasForeignKey(e => e.FeedFormulaId)
-                  .OnDelete(DeleteBehavior.SetNull);
+                  .HasForeignKey(e => e.OriginalFormulaId)
+                  .OnDelete(DeleteBehavior.Restrict);
         });
 
         // Feed Configuration
@@ -246,9 +265,9 @@ public class PigFarmDbContext : DbContext
                 Investment = pigQty * investmentPerPig + random.Next(-2000, 2000),
                 ProfitLoss = random.Next(-5000, 2000),
                 Type = pigPenTypes[random.Next(pigPenTypes.Length)],
-                FeedFormulaId = selectedFeedFormulaId,
                 SelectedBrand = selectedBrand,
                 DepositPerPig = random.Next(0, 100) < 30 ? 1000m : 1500m, // 30% use 1000, 70% use 1500
+                IsCalculationLocked = false, // Default to unlocked
                 CreatedAt = now.AddDays(-startDaysAgo),
                 UpdatedAt = now.AddDays(-random.Next(1, 30))
             });

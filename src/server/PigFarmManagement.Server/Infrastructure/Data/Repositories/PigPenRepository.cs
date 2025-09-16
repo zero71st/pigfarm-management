@@ -76,10 +76,22 @@ public class PigPenRepository : IPigPenRepository
         entity.Investment = pigPen.Investment;
         entity.ProfitLoss = pigPen.ProfitLoss;
         entity.Type = pigPen.Type;
-        entity.FeedFormulaId = pigPen.FeedFormulaId;
         entity.DepositPerPig = pigPen.DepositPerPig;
         entity.SelectedBrand = pigPen.SelectedBrand;
+        entity.IsCalculationLocked = pigPen.IsCalculationLocked;
         entity.UpdatedAt = DateTime.UtcNow;
+
+        // Update formula assignments
+        // Remove existing assignments
+        var existingAssignments = _context.PigPenFormulaAssignments.Where(fa => fa.PigPenId == pigPen.Id);
+        _context.PigPenFormulaAssignments.RemoveRange(existingAssignments);
+
+        // Add new assignments
+        foreach (var assignment in pigPen.FormulaAssignments)
+        {
+            var assignmentEntity = PigPenFormulaAssignmentEntity.FromModel(assignment);
+            _context.PigPenFormulaAssignments.Add(assignmentEntity);
+        }
 
         await _context.SaveChangesAsync();
         return entity.ToModel();

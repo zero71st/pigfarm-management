@@ -38,27 +38,32 @@ public class FeedProgressService : IFeedProgressService
         var feedFormulas = new List<FeedFormula>();
         FeedFormula? primaryFeedFormula = null;
         
-        if (!string.IsNullOrEmpty(pigPen.SelectedBrand))
+        // Get active formula assignments for this pig pen
+        var activeAssignments = pigPen.FormulaAssignments
+            .Where(fa => fa.IsActive && !fa.IsLocked)
+            .ToList();
+
+        if (activeAssignments.Any())
         {
-            // Get all feed formulas for the brand (like client-side does)
+            // Get all feed formulas for the assigned formulas
+            var allFormulas = await _feedFormulaService.GetAllFeedFormulasAsync();
+            
+            // Get the formulas referenced by active assignments
+            var assignedFormulaIds = activeAssignments.Select(fa => fa.OriginalFormulaId).Distinct();
+            feedFormulas = allFormulas
+                .Where(f => assignedFormulaIds.Contains(f.Id))
+                .ToList();
+                
+            // Use the first assignment as primary reference
+            primaryFeedFormula = feedFormulas.FirstOrDefault(f => f.Id == activeAssignments.First().OriginalFormulaId);
+        }
+        else if (!string.IsNullOrEmpty(pigPen.SelectedBrand))
+        {
+            // Fallback: Get all formulas for the selected brand
             var allFormulas = await _feedFormulaService.GetAllFeedFormulasAsync();
             feedFormulas = allFormulas
                 .Where(f => f.Brand.Equals(pigPen.SelectedBrand, StringComparison.OrdinalIgnoreCase))
                 .ToList();
-                
-            // Keep the primary formula for reference
-            if (pigPen.FeedFormulaId.HasValue)
-            {
-                primaryFeedFormula = feedFormulas.FirstOrDefault(f => f.Id == pigPen.FeedFormulaId.Value)
-                    ?? await _feedFormulaService.GetFeedFormulaByIdAsync(pigPen.FeedFormulaId.Value);
-            }
-        }
-        else if (pigPen.FeedFormulaId.HasValue)
-        {
-            // Fallback to single formula if no brand is selected
-            primaryFeedFormula = await _feedFormulaService.GetFeedFormulaByIdAsync(pigPen.FeedFormulaId.Value);
-            if (primaryFeedFormula != null)
-                feedFormulas.Add(primaryFeedFormula);
         }
 
         var feeds = await _feedService.GetFeedsByPigPenIdAsync(pigPenId);

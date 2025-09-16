@@ -30,10 +30,31 @@
         <!-- Header Section -->
         <div class="d-flex justify-space-between align-center mb-6">
             <div>
-                <MudText Typo="Typo.h3" GutterBottom="true">
-                    <MudIcon Icon="Icons.Material.Filled.Widgets" Class="mr-3" />
-                    @pigPen.Name
-                </MudText>
+                <div class="d-flex align-center mb-2">
+                    <MudText Typo="Typo.h3" GutterBottom="true" Class="mr-3">
+                        <MudIcon Icon="Icons.Material.Filled.Widgets" Class="mr-3" />
+                        @pigPen.Name
+                    </MudText>
+                    @if (pigPen.IsCalculationLocked)
+                    {
+                        <MudChip Color="Color.Warning" 
+                                 Size="Size.Medium" 
+                                 Variant="Variant.Filled"
+                                 Icon="Icons.Material.Filled.Lock"
+                                 Class="mr-2">
+                            Calculations Locked
+                        </MudChip>
+                    }
+                    else
+                    {
+                        <MudChip Color="Color.Success" 
+                                 Size="Size.Medium" 
+                                 Variant="Variant.Filled"
+                                 Icon="Icons.Material.Filled.CheckCircle">
+                            Active
+                        </MudChip>
+                    }
+                </div>
                 <MudBreadcrumbs Items="@breadcrumbItems" />
             </div>
             <div>
@@ -328,6 +349,16 @@
                         <MudIcon Icon="Icons.Material.Filled.Fastfood" Class="mr-2" />
                         Feed History (@feeds.Count)
                     </MudText>
+                    @if (pigPen?.IsCalculationLocked == true)
+                    {
+                        <MudChip Color="Color.Warning" 
+                                 Size="Size.Small" 
+                                 Variant="Variant.Filled" 
+                                 Class="ml-3"
+                                 Icon="Icons.Material.Filled.Lock">
+                            Calculations Locked
+                        </MudChip>
+                    }
                 </CardHeaderContent>
                 <CardHeaderActions>
                     <MudButton Variant="Variant.Filled" 
@@ -349,6 +380,18 @@
                 {
                     <MudAlert Severity="Severity.Info" Class="mb-3">
                         <MudText>No feed records found for this pig pen. The comparison will show formula data only.</MudText>
+                    </MudAlert>
+                }
+
+                <!-- Calculation Lock Alert -->
+                @if (pigPen?.IsCalculationLocked == true)
+                {
+                    <MudAlert Severity="Severity.Warning" Class="mb-3" Dense="true">
+                        <MudText Typo="Typo.body2">
+                            <MudIcon Icon="Icons.Material.Filled.Lock" Class="mr-2" />
+                            <strong>Calculations Locked:</strong> This pig pen has been force-closed and is using historical feed formula data. 
+                            Changes to feed formulas will not affect this pig pen's calculations.
+                        </MudText>
                     </MudAlert>
                 }
 
@@ -726,13 +769,47 @@
                     Snackbar.Add($"Error loading feed progress: {ex.Message}", Severity.Warning);
                 }
 
-                // Load feed formula calculations if there's a selected brand
-                if (pigPen != null && !string.IsNullOrEmpty(pigPen.SelectedBrand))
+                // Load feed formula calculations - use locked assignments for locked pig pens
+                if (pigPen != null)
                 {
                     try
                     {
-                        Console.WriteLine($"Loading feed formulas for brand: {pigPen.SelectedBrand}, pig count: {pigPen.PigQty}");
-                        feedFormulaCalculations = await FeedFormulaCalculationService.GetFeedFormulasByBrandAsync(pigPen.SelectedBrand, pigPen.PigQty);
+                        var lockedAssignments = pigPen.FormulaAssignments
+                            .Where(fa => fa.IsLocked)
+                            .ToList();
+
+                        if (pigPen.IsCalculationLocked && lockedAssignments.Any())
+                        {
+                            // Use locked assignment data for locked pig pens
+                            Console.WriteLine($"Using {lockedAssignments.Count} locked formula assignments for locked pig pen");
+                            feedFormulaCalculations = lockedAssignments.Select(assignment => new FeedFormulaWithCalculationResponse
+                            {
+                                Id = assignment.OriginalFormulaId,
+                                ProductCode = assignment.ProductCode,
+                                ProductName = assignment.ProductName,
+                                Brand = assignment.Brand,
+                                BagPerPig = assignment.AssignedBagPerPig,
+                                TotalBagsRequired = assignment.AssignedTotalBags,
+                                PigCount = assignment.AssignedPigQuantity,
+                                CreatedAt = assignment.AssignedAt,
+                                UpdatedAt = assignment.AssignedAt,
+                                DisplayName = assignment.DisplayName,
+                                ConsumptionRate = $"{assignment.AssignedBagPerPig:F1} bags/pig",
+                                BrandDisplayName = $"{assignment.Brand} - {assignment.ProductName}"
+                            }).ToList();
+                        }
+                        else if (!string.IsNullOrEmpty(pigPen.SelectedBrand))
+                        {
+                            // Use current formulas for active pig pens
+                            Console.WriteLine($"Loading current feed formulas for brand: {pigPen.SelectedBrand}, pig count: {pigPen.PigQty}");
+                            feedFormulaCalculations = await FeedFormulaCalculationService.GetFeedFormulasByBrandAsync(pigPen.SelectedBrand, pigPen.PigQty);
+                        }
+                        else
+                        {
+                            Console.WriteLine("No brand selected and no snapshot available for pig pen");
+                            feedFormulaCalculations = new List<FeedFormulaWithCalculationResponse>();
+                        }
+                        
                         Console.WriteLine($"Loaded {feedFormulaCalculations?.Count() ?? 0} feed formulas");
                         
                         // Build comparison data
@@ -744,10 +821,6 @@
                         Console.WriteLine($"Error loading feed formulas: {feedEx.Message}");
                         Snackbar.Add($"Error loading feed formulas: {feedEx.Message}", Severity.Warning);
                     }
-                }
-                else
-                {
-                    Console.WriteLine("No brand selected for pig pen");
                 }
             }
         }

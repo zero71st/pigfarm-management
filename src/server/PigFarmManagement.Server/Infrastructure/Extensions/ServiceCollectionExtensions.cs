@@ -35,6 +35,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IFeedImportService, FeedImportService>();
         services.AddScoped<IFeedProgressService, FeedProgressService>();
         services.AddScoped<IDashboardService, DashboardService>();
+        services.AddScoped<FormulaMigrationService, FormulaMigrationService>();
 
         return services;
     }

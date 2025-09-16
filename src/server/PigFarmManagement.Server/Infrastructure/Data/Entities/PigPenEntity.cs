@@ -31,12 +31,12 @@ public class PigPenEntity
     
     public PigPenType Type { get; set; }
     
-    public Guid? FeedFormulaId { get; set; }
-    
     [Column(TypeName = "decimal(18,2)")]
     public decimal DepositPerPig { get; set; } = 1500m; // Default value
     
     public string? SelectedBrand { get; set; }
+    
+    public bool IsCalculationLocked { get; set; }
     
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
@@ -45,8 +45,7 @@ public class PigPenEntity
     [ForeignKey("CustomerId")]
     public virtual CustomerEntity Customer { get; set; } = null!;
     
-    [ForeignKey("FeedFormulaId")]
-    public virtual FeedFormulaEntity? FeedFormula { get; set; }
+    public virtual ICollection<PigPenFormulaAssignmentEntity> FormulaAssignments { get; set; } = new List<PigPenFormulaAssignmentEntity>();
     
     public virtual ICollection<FeedEntity> Feeds { get; set; } = new List<FeedEntity>();
     public virtual ICollection<DepositEntity> Deposits { get; set; } = new List<DepositEntity>();
@@ -67,13 +66,14 @@ public class PigPenEntity
             Investment, 
             ProfitLoss, 
             Type,
-            FeedFormulaId,
             DepositPerPig,
             CreatedAt, 
             UpdatedAt
         )
         {
-            SelectedBrand = SelectedBrand
+            SelectedBrand = SelectedBrand,
+            FormulaAssignments = FormulaAssignments.Select(fa => fa.ToModel()).ToList(),
+            IsCalculationLocked = IsCalculationLocked
         };
     }
     
@@ -93,11 +93,12 @@ public class PigPenEntity
             Investment = pigPen.Investment,
             ProfitLoss = pigPen.ProfitLoss,
             Type = pigPen.Type,
-            FeedFormulaId = pigPen.FeedFormulaId,
             DepositPerPig = pigPen.DepositPerPig,
             SelectedBrand = pigPen.SelectedBrand,
+            IsCalculationLocked = pigPen.IsCalculationLocked,
             CreatedAt = pigPen.CreatedAt,
-            UpdatedAt = pigPen.UpdatedAt
+            UpdatedAt = pigPen.UpdatedAt,
+            FormulaAssignments = pigPen.FormulaAssignments.Select(fa => PigPenFormulaAssignmentEntity.FromModel(fa)).ToList()
         };
     }
 }

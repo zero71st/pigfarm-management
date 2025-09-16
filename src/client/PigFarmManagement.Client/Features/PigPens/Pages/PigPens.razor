@@ -42,6 +42,13 @@
     <div class="d-flex justify-space-between align-center mb-4">
         <MudText Typo="Typo.h6">Pig Pen List</MudText>
         <div class="d-flex gap-2">
+            <MudButton Variant="Variant.Outlined" 
+                       Color="Color.Info"
+                       StartIcon="Icons.Material.Filled.Refresh"
+                       OnClick="RefreshData"
+                       Size="Size.Small">
+                Refresh
+            </MudButton>
             <MudButton Variant="Variant.Filled" Color="Color.Primary" 
                        StartIcon="Icons.Material.Filled.Add" OnClick="ShowAddDialog">
                 Add New Pig Pen
@@ -54,6 +61,7 @@
             <MudTh>Customer</MudTh>
             <MudTh>Pen Code</MudTh>
             <MudTh>Type</MudTh>
+            <MudTh>Status</MudTh>
             <MudTh>Quantity</MudTh>
             <MudTh>Register Date</MudTh>
             <MudTh>Est. Harvest</MudTh>
@@ -69,6 +77,26 @@
                          Size="Size.Small" Variant="Variant.Filled">
                     @context.Type
                 </MudChip>
+            </MudTd>
+            <MudTd DataLabel="Status">
+                @if (context.IsCalculationLocked)
+                {
+                    <MudChip Color="Color.Warning" 
+                             Size="Size.Small" 
+                             Variant="Variant.Filled"
+                             Icon="Icons.Material.Filled.Lock">
+                        Locked
+                    </MudChip>
+                }
+                else
+                {
+                    <MudChip Color="Color.Success" 
+                             Size="Size.Small" 
+                             Variant="Variant.Filled"
+                             Icon="Icons.Material.Filled.CheckCircle">
+                        Active
+                    </MudChip>
+                }
             </MudTd>
             <MudTd DataLabel="Quantity">@context.PigQty</MudTd>
             <MudTd DataLabel="Register Date">@context.RegisterDate.ToString("yyyy-MM-dd")</MudTd>
@@ -143,6 +171,7 @@
     private Guid? selectedCustomerId = null;
     private PigPenType? selectedPigPenType = null;
     private string searchText = "";
+    private DateTime lastRefreshTime = DateTime.MinValue;
 
     private Guid? SelectedCustomerId
     {
@@ -179,6 +208,19 @@
         await LoadData();
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            // Auto-refresh data if it's been more than 30 seconds since last refresh
+            // This helps when navigating back from detail pages after operations
+            if ((DateTime.Now - lastRefreshTime).TotalSeconds > 30)
+            {
+                await LoadData();
+            }
+        }
+    }
+
     private async Task LoadData()
     {
         try
@@ -194,6 +236,7 @@
             pigPens = pigPensTask.Result;
 
             FilterPigPens();
+            lastRefreshTime = DateTime.Now;
         }
         catch (Exception ex)
         {
@@ -203,6 +246,12 @@
         {
             loading = false;
         }
+    }
+
+    private async Task RefreshData()
+    {
+        await LoadData();
+        Snackbar.Add("Data refreshed successfully", Severity.Info);
     }
 
     private void FilterPigPens()

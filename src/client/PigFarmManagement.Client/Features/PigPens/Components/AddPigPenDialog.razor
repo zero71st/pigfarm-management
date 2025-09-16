@@ -374,7 +374,7 @@
 
         try
         {
-            var pigPenDto = new PigPenCreateDto(
+            var pigPenDto = new PigFarmManagement.Client.Features.PigPens.Services.PigPenCreateDto(
                 selectedCustomerId!.Value,
                 penCode,
                 pigQty,
@@ -382,7 +382,6 @@
                 actualHarvestDate,
                 estimatedHarvestDate,
                 selectedType,
-                null, // No longer using individual feed formula selection
                 selectedBrand, // Save the selected brand
                 depositPerPig // Custom deposit per pig amount
             );

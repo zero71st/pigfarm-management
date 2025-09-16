@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using PigFarmManagement.Server.Features.FeedFormulas;
+using PigFarmManagement.Server.Services;
 
 namespace PigFarmManagement.Server.Features.FeedFormulas;
 
@@ -44,6 +45,23 @@ public static class FeedFormulaEndpoints
             .WithName("CheckFeedFormulaExists")
             .WithSummary("Check if feed formula exists by product code")
             .Produces<bool>();
+
+        group.MapPost("/maintenance/validate", ValidateFormulaSystem)
+            .WithName("ValidateFormulaSystem")
+            .WithSummary("Validate the unified formula assignment system")
+            .Produces<FormulaSystemValidationResponse>()
+            .Produces(500);
+
+        group.MapPost("/maintenance/repair", RepairFormulaSystem)
+            .WithName("RepairFormulaSystem")
+            .WithSummary("Repair any issues in the unified formula assignment system")
+            .Produces<FormulaSystemRepairResponse>()
+            .Produces(500);
+
+        group.MapGet("/maintenance/stats", GetFormulaSystemStats)
+            .WithName("GetFormulaSystemStats")
+            .WithSummary("Get statistics about the formula assignment system")
+            .Produces<FormulaSystemStatsResponse>();
     }
 
     private static async Task<IResult> GetAllFeedFormulas(IFeedFormulaService feedFormulaService)
@@ -195,6 +213,75 @@ public static class FeedFormulaEndpoints
             return Results.Problem($"Error checking feed formula existence: {ex.Message}");
         }
     }
+
+    private static async Task<IResult> ValidateFormulaSystem(FormulaMigrationService migrationService)
+    {
+        try
+        {
+            var result = await migrationService.ValidateUnifiedSystemAsync();
+            var response = new FormulaSystemValidationResponse
+            {
+                IsValid = result.IsValid,
+                ErrorMessage = result.ErrorMessage,
+                TotalPigPens = result.TotalPigPens,
+                PigPensWithAssignments = result.PigPensWithAssignments,
+                LockedPigPens = result.LockedPigPens,
+                LockedPigPensWithLockedAssignments = result.LockedPigPensWithLockedAssignments,
+                ActivePigPens = result.ActivePigPens,
+                ActivePigPensWithActiveAssignments = result.ActivePigPensWithActiveAssignments,
+                ValidationMessages = result.ValidationMessages,
+                ValidationTimestamp = DateTime.UtcNow
+            };
+            return Results.Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Error validating formula system: {ex.Message}", statusCode: 500);
+        }
+    }
+
+    private static async Task<IResult> RepairFormulaSystem(FormulaMigrationService migrationService)
+    {
+        try
+        {
+            var result = await migrationService.RepairSystemAsync();
+            var response = new FormulaSystemRepairResponse
+            {
+                Success = result.Success,
+                ErrorMessage = result.ErrorMessage,
+                RepairsPerformed = result.RepairsPerformed,
+                RepairTimestamp = DateTime.UtcNow
+            };
+            return Results.Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Error repairing formula system: {ex.Message}", statusCode: 500);
+        }
+    }
+
+    private static async Task<IResult> GetFormulaSystemStats(FormulaMigrationService migrationService)
+    {
+        try
+        {
+            var stats = await migrationService.GetSystemStatisticsAsync();
+            var response = new FormulaSystemStatsResponse
+            {
+                TotalPigPens = stats.TotalPigPens,
+                ActivePigPens = stats.ActivePigPens,
+                ClosedPigPens = stats.LockedPigPens, // Assuming locked = closed
+                TotalAssignments = stats.TotalFormulaAssignments,
+                ActiveAssignments = stats.ActiveAssignments,
+                LockedAssignments = stats.LockedAssignments,
+                LastUpdated = DateTime.UtcNow
+            };
+            return Results.Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Error getting formula system stats: {ex.Message}", statusCode: 500);
+        }
+    }
 }
 
 // Response DTOs
@@ -210,4 +297,37 @@ public class FeedFormulaResponse
     public string DisplayName { get; set; } = string.Empty;
     public string ConsumptionRate { get; set; } = string.Empty;
     public string BrandDisplayName { get; set; } = string.Empty;
+}
+
+public class FormulaSystemValidationResponse
+{
+    public bool IsValid { get; set; }
+    public string? ErrorMessage { get; set; }
+    public int TotalPigPens { get; set; }
+    public int PigPensWithAssignments { get; set; }
+    public int LockedPigPens { get; set; }
+    public int LockedPigPensWithLockedAssignments { get; set; }
+    public int ActivePigPens { get; set; }
+    public int ActivePigPensWithActiveAssignments { get; set; }
+    public List<string>? ValidationMessages { get; set; }
+    public DateTime ValidationTimestamp { get; set; }
+}
+
+public class FormulaSystemRepairResponse
+{
+    public bool Success { get; set; }
+    public string? ErrorMessage { get; set; }
+    public int RepairsPerformed { get; set; }
+    public DateTime RepairTimestamp { get; set; }
+}
+
+public class FormulaSystemStatsResponse
+{
+    public int TotalPigPens { get; set; }
+    public int ActivePigPens { get; set; }
+    public int ClosedPigPens { get; set; }
+    public int TotalAssignments { get; set; }
+    public int ActiveAssignments { get; set; }
+    public int LockedAssignments { get; set; }
+    public DateTime LastUpdated { get; set; }
 }

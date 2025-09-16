@@ -333,6 +333,7 @@ public static class PigPenEndpoints
             var closedPigPen = pigPen with 
             { 
                 ActHarvestDate = DateTime.Today,
+                IsCalculationLocked = true,
                 UpdatedAt = DateTime.UtcNow
             };
 
