@@ -79,7 +79,16 @@
                 </MudChip>
             </MudTd>
             <MudTd DataLabel="Status">
-                @if (context.IsCalculationLocked)
+                @if (context.ActHarvestDate.HasValue)
+                {
+                    <MudChip Color="Color.Error" 
+                             Size="Size.Small" 
+                             Variant="Variant.Filled"
+                             Icon="Icons.Material.Filled.Cancel">
+                        Closed
+                    </MudChip>
+                }
+                else if (context.IsCalculationLocked)
                 {
                     <MudChip Color="Color.Warning" 
                              Size="Size.Small" 
@@ -145,6 +154,7 @@
                               Class="pa-1"
                               Style="min-width: 32px; font-size: 16px; line-height: 1;"
                               OnClick="() => ShowEditDialog(context)"
+                              Disabled="@IsPigPenClosed(context)"
                               Title="Edit">
                         ✏️
                     </MudButton>
@@ -341,6 +351,13 @@
 
     private async Task ShowEditDialog(PigPen pigPen)
     {
+        // Prevent editing if pig pen is closed
+        if (IsPigPenClosed(pigPen))
+        {
+            Snackbar.Add("Cannot edit a closed pig pen", Severity.Warning);
+            return;
+        }
+
         var parameters = new DialogParameters<EditPigPenDialog>
         {
             { x => x.PigPen, pigPen }
@@ -386,5 +403,15 @@
                 Snackbar.Add($"Error deleting pig pen: {ex.Message}", Severity.Error);
             }
         }
+    }
+
+    private bool IsPigPenClosed(PigPen pigPen)
+    {
+        if (pigPen == null) return false;
+        
+        // A pig pen is considered closed if:
+        // 1. It has an actual harvest date (harvested)
+        // 2. Calculations are locked
+        return pigPen.ActHarvestDate.HasValue || pigPen.IsCalculationLocked;
     }
 }

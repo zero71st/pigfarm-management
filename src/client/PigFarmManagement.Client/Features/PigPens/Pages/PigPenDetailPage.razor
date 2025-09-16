@@ -45,7 +45,17 @@
                             Calculations Locked
                         </MudChip>
                     }
-                    else
+                    @if (pigPen.ActHarvestDate.HasValue)
+                    {
+                        <MudChip Color="Color.Error" 
+                                 Size="Size.Medium" 
+                                 Variant="Variant.Filled"
+                                 Icon="Icons.Material.Filled.Cancel"
+                                 Class="mr-2">
+                            Closed
+                        </MudChip>
+                    }
+                    @if (!pigPen.IsCalculationLocked && !pigPen.ActHarvestDate.HasValue)
                     {
                         <MudChip Color="Color.Success" 
                                  Size="Size.Medium" 
@@ -67,7 +77,8 @@
                 <MudButton Variant="Variant.Filled" 
                            Color="Color.Primary"
                            StartIcon="Icons.Material.Filled.Edit"
-                           OnClick="EditPigPen">
+                           OnClick="EditPigPen"
+                           Disabled="@IsPigPenClosed()">
                     Edit
                 </MudButton>
                 @* Force Close button - Show for all pig pens with smart behavior *@
@@ -893,6 +904,14 @@
         {
             Console.WriteLine("[EditPigPen] pigPen is null, returning");
             Snackbar.Add("No pig pen data available", Severity.Error);
+            return;
+        }
+
+        // Prevent editing if pig pen is closed
+        if (IsPigPenClosed())
+        {
+            Console.WriteLine("[EditPigPen] Pig pen is closed, preventing edit");
+            Snackbar.Add("Cannot edit a closed pig pen", Severity.Warning);
             return;
         }
 
@@ -1770,5 +1789,15 @@
             "Over-feeding" => Color.Error,
             _ => Color.Info
         };
+    }
+
+    private bool IsPigPenClosed()
+    {
+        if (pigPen == null) return false;
+        
+        // A pig pen is considered closed if:
+        // 1. It has an actual harvest date (harvested)
+        // 2. Calculations are locked
+        return pigPen.ActHarvestDate.HasValue || pigPen.IsCalculationLocked;
     }
 }
