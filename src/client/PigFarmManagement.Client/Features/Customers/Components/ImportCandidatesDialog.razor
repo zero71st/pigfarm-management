@@ -24,22 +24,38 @@
                 <MudText Typo="Typo.caption">Selected: @_selectedCount</MudText>
             </MudStack>
 
-            <MudList Class="candidate-list">
-                @foreach (var c in FilteredCandidates)
-                {
-                    <MudListItem>
-                        <MudCheckBox @bind-Value="c.IsSelected" Color="Color.Primary" />
-                        <div class="ml-2">
-                            <MudText>@c.name</MudText>
-                            <MudText Typo="Typo.caption">@c.email • @c.phone</MudText>
-                            @if (!string.IsNullOrEmpty(c.address))
-                            {
-                                <MudText Typo="Typo.caption">@c.address</MudText>
-                            }
-                        </div>
-                    </MudListItem>
-                }
-            </MudList>
+            @if (_candidates.Count == 0)
+            {
+                <div class="pa-4 text-center">
+                    <MudText Typo="Typo.subtitle1">No candidates found</MudText>
+                    <MudText Typo="Typo.caption" Class="mt-1">No POSPOS candidates are available. This may mean POSPOS is not configured on the server or the upstream API returned no results.</MudText>
+                    <div class="mt-3 d-flex justify-center">
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="LoadCandidates">Retry</MudButton>
+                    </div>
+                    <div class="mt-2">
+                        <MudText Typo="Typo.caption">Tip: Ensure the server has POSPOS_API_BASE and POSPOS_API_KEY set, then try again.</MudText>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <MudList Class="candidate-list">
+                    @foreach (var c in FilteredCandidates)
+                    {
+                        <MudListItem>
+                            <MudCheckBox @bind-Value="c.IsSelected" Color="Color.Primary" />
+                            <div class="ml-2">
+                                <MudText>@c.name</MudText>
+                                <MudText Typo="Typo.caption">@c.email • @c.phone</MudText>
+                                @if (!string.IsNullOrEmpty(c.address))
+                                {
+                                    <MudText Typo="Typo.caption">@c.address</MudText>
+                                }
+                            </div>
+                        </MudListItem>
+                    }
+                </MudList>
+            }
         </MudStack>
     }
 

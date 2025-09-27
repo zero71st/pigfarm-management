@@ -7,6 +7,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Add controllers support so attribute-based API controllers are mapped
+builder.Services.AddControllers();
+
 // Bind POSPOS options from configuration / environment
 builder.Services.Configure<PigFarmManagement.Server.Infrastructure.Settings.PosposOptions>(builder.Configuration.GetSection("Pospos"));
 
@@ -77,6 +80,9 @@ app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = Dat
 app.UseCors();
 app.UseDefaultFiles();
 app.UseStaticFiles();
+
+// Map attribute-routed controllers (ImportController etc.)
+app.MapControllers();
 
 // Map all feature endpoints
 app.MapFeatureEndpoints();

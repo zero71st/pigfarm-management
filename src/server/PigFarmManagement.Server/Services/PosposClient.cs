@@ -20,25 +20,35 @@ namespace PigFarmManagement.Server.Services
         {
             _http = http;
             _opts = opts.Value;
+            // If configuration wasn't provided via appsettings, allow environment variables as a fallback
+            if (string.IsNullOrWhiteSpace(_opts.ApiBase))
+            {
+                var envBase = Environment.GetEnvironmentVariable("POSPOS_API_BASE");
+                if (!string.IsNullOrWhiteSpace(envBase))
+                    _opts.ApiBase = envBase;
+            }
+            if (string.IsNullOrWhiteSpace(_opts.ApiKey))
+            {
+                var envKey = Environment.GetEnvironmentVariable("POSPOS_API_KEY");
+                if (!string.IsNullOrWhiteSpace(envKey))
+                    _opts.ApiKey = envKey;
+            }
+            logger.LogInformation("PosposClient configured. ApiBase='{ApiBase}', ApiKeySet={HasKey}", _opts.ApiBase, !string.IsNullOrEmpty(_opts.ApiKey));
             _logger = logger;
         }
 
         public async Task<IEnumerable<PosposMember>> GetMembersAsync()
         {
-            if (string.IsNullOrWhiteSpace(_opts.ApiBase))
+            // If ApiBase is not configured or not an absolute URI, log and return empty list
+            if (string.IsNullOrWhiteSpace(_opts.ApiBase) || !Uri.IsWellFormedUriString(_opts.ApiBase, UriKind.Absolute))
             {
-                _logger.LogWarning("POSPOS ApiBase is not configured (Pospos:ApiBase). Set POSPOS_API_BASE or the Pospos section in appsettings.");
+                _logger.LogWarning("POSPOS ApiBase is not configured or invalid ('{ApiBase}'). No candidates will be returned. Set POSPOS_API_BASE and POSPOS_API_KEY to use the real API.", _opts.ApiBase);
                 return Array.Empty<PosposMember>();
             }
-            if (string.IsNullOrWhiteSpace(_opts.ApiKey))
-            {
-                _logger.LogWarning("POSPOS ApiKey is not configured (Pospos:ApiKey). Set POSPOS_API_KEY or the Pospos section in appsettings.");
-                // we still attempt the request (some endpoints may not require key), but warn first
-            }
+
             var request = new HttpRequestMessage(HttpMethod.Get, _opts.ApiBase);
             // POSPOS expects 'apikey' header per user guidance
-            if (!string.IsNullOrWhiteSpace(_opts.ApiKey))
-                request.Headers.Add("apikey", _opts.ApiKey);
+            request.Headers.Add("apikey", _opts.ApiKey);
 
             HttpResponseMessage res;
             try
