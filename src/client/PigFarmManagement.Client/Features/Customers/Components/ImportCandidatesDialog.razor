@@ -17,7 +17,7 @@
     {
         <MudStack Spacing="2">
             <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
-                <MudTextField @bind-Value="_filter" Placeholder="Search name, phone, email..." Adornment="Adornment.Start" AdornmentIcon="Icons.Material.Filled.Search" Immediate="true" />
+                <MudTextField @bind-Value="_filter" Placeholder="Search code, name, mobile phone, email..." Adornment="Adornment.Start" AdornmentIcon="Icons.Material.Filled.Search" Immediate="true" />
                 <MudCheckBox Value="_selectAll" ValueChanged="@( (bool v) => ToggleSelectAll(v) )" Color="Color.Primary" />
                 <MudText Typo="Typo.subtitle2">Select all</MudText>
                 <MudSpacer />
@@ -39,22 +39,28 @@
             }
             else
             {
-                <MudList Class="candidate-list">
-                    @foreach (var c in FilteredCandidates)
-                    {
-                        <MudListItem>
-                            <MudCheckBox @bind-Value="c.IsSelected" Color="Color.Primary" />
-                            <div class="ml-2">
-                                <MudText>@c.name</MudText>
-                                <MudText Typo="Typo.caption">@c.email • @c.phone</MudText>
-                                @if (!string.IsNullOrEmpty(c.address))
-                                {
-                                    <MudText Typo="Typo.caption">@c.address</MudText>
-                                }
-                            </div>
-                        </MudListItem>
-                    }
-                </MudList>
+                <MudTable Items="FilteredCandidates" Hover="true" Bordered="true" Striped="true" Class="candidate-table">
+                    <HeaderContent>
+                        <MudTh Style="width:48px;">
+                            <MudCheckBox Value="@_selectAll" ValueChanged="@( (bool v) => ToggleSelectAll(v) )" Color="Color.Primary" />
+                        </MudTh>
+                        <MudTh>Code</MudTh>
+                        <MudTh>Name</MudTh>
+                        <MudTh>Mobile</MudTh>
+                        <MudTh>Email</MudTh>
+                        <MudTh>Address</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>
+                            <MudCheckBox @bind-Value="context.IsSelected" Color="Color.Primary" />
+                        </MudTd>
+                        <MudTd>@context.id</MudTd>
+                        <MudTd>@context.name</MudTd>
+                        <MudTd>@context.phone</MudTd>
+                        <MudTd>@context.email</MudTd>
+                        <MudTd>@context.address</MudTd>
+                    </RowTemplate>
+                </MudTable>
             }
         </MudStack>
     }
@@ -77,7 +83,7 @@
 
     private IEnumerable<CandidateMember> FilteredCandidates => string.IsNullOrWhiteSpace(_filter)
         ? _candidates
-        : _candidates.Where(c => (c.name + " " + c.phone + " " + c.email + " " + c.address).Contains(_filter, StringComparison.OrdinalIgnoreCase));
+        : _candidates.Where(c => (c.id + " " + c.name + " " + c.phone + " " + c.email + " " + c.address).Contains(_filter, StringComparison.OrdinalIgnoreCase));
 
     private bool _hasSelection => _candidates.Any(c => c.IsSelected);
 
