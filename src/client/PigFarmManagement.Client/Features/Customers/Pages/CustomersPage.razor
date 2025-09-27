@@ -9,6 +9,7 @@
 @inject IPigPenService PigPenService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@inject HttpClient Http
 
 <PageTitle>PigTrack Pro - Customers</PageTitle>
 
@@ -40,12 +41,20 @@
                 </MudSelect>
             </MudItem>
             <MudItem xs="12" md="3" Class="text-right">
-                <MudButton Variant="Variant.Filled" 
-                          Color="Color.Primary" 
-                          StartIcon="Icons.Material.Filled.Add"
-                          OnClick="OpenAddCustomerDialog">
-                    Add Customer
-                </MudButton>
+                <MudStack Row Spacing="1" Class="align-items-center justify-content-end">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="StartImport" Disabled="_importRunning">
+                        <MudIcon Icon="Icons.Material.Filled.Download" Class="mr-1" /> Import
+                    </MudButton>
+
+                    <MudSwitch @bind-Value="_persistMapping" Color="Color.Primary" />
+
+                    <MudButton Variant="Variant.Filled" 
+                              Color="Color.Primary" 
+                              StartIcon="Icons.Material.Filled.Add"
+                              OnClick="OpenAddCustomerDialog">
+                        Add Customer
+                    </MudButton>
+                </MudStack>
             </MudItem>
         </MudGrid>
     </MudPaper>
@@ -219,5 +228,50 @@
     {
         var parameters = new DialogParameters { ["Customer"] = customer };
         await DialogService.ShowAsync<CustomerDetailsDialog>("Customer Details", parameters);
+    }
+}
+
+@code {
+    // Import UI state
+    private bool _persistMapping = false;
+    private bool _importRunning = false;
+
+    private async Task StartImport()
+    {
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var parameters = new DialogParameters { ["PersistMapping"] = _persistMapping };
+        var dialog = await DialogService.ShowAsync<Components.ImportCandidatesDialog>("Import from POSPOS", parameters, options);
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            // reload data after successful import
+            await LoadData();
+        }
+    }
+
+    private async Task GetSummary()
+    {
+        try
+        {
+            var resp = await Http.GetAsync("/import/customers/summary");
+            if (resp.IsSuccessStatusCode)
+            {
+                var txt = await resp.Content.ReadAsStringAsync();
+                Snackbar.Add("Summary loaded.", Severity.Info);
+            }
+            else if (resp.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                Snackbar.Add("No import has been run yet.", Severity.Warning);
+            }
+            else
+            {
+                var txt = await resp.Content.ReadAsStringAsync();
+                Snackbar.Add($"Failed to load summary: {resp.StatusCode} - {txt}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Summary error: {ex.Message}", Severity.Error);
+        }
     }
 }

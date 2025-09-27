@@ -7,5 +7,6 @@ namespace PigFarmManagement.Server.Services
     public interface IPosposClient
     {
         Task<IEnumerable<PosposMember>> GetMembersAsync();
+        Task<IEnumerable<PosposMember>> GetMembersByIdsAsync(IEnumerable<string> ids);
     }
 }

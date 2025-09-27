@@ -9,10 +9,12 @@ namespace PigFarmManagement.Server.Controllers
     public class ImportController : ControllerBase
     {
         private readonly IPosposImporter _importer;
+        private readonly IPosposClient _posposClient;
 
-        public ImportController(IPosposImporter importer)
+        public ImportController(IPosposImporter importer, IPosposClient posposClient)
         {
             _importer = importer;
+            _posposClient = posposClient;
         }
 
         /// <summary>
@@ -23,6 +25,29 @@ namespace PigFarmManagement.Server.Controllers
         public async Task<IActionResult> ImportCustomers([FromQuery] bool persist = false)
         {
             var summary = await _importer.RunImportAsync(persist);
+            return Ok(summary);
+        }
+
+        /// <summary>
+        /// List POSPOS members available for import (candidates).
+        /// </summary>
+        [HttpGet("customers/candidates")]
+        public async Task<IActionResult> GetCandidates()
+        {
+            var members = await _posposClient.GetMembersAsync();
+            return Ok(members);
+        }
+
+        /// <summary>
+        /// Import a specific list of POSPOS member ids.
+        /// </summary>
+        [HttpPost("customers/selected")]
+        public async Task<IActionResult> ImportSelected([FromBody] IEnumerable<string> ids, [FromQuery] bool persist = false)
+        {
+            if (ids == null)
+                return BadRequest(new { message = "ids required" });
+
+            var summary = await _importer.RunImportSelectedAsync(ids, persist);
             return Ok(summary);
         }
 

@@ -1,0 +1,178 @@
+@using MudBlazor
+@using System.Text.Json
+@inject HttpClient Http
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.h6">Import customers from POSPOS</MudText>
+
+    @if (_isLoading)
+    {
+        <div class="d-flex justify-center pa-4">
+            <MudProgressCircular Indeterminate="true" />
+        </div>
+    }
+    else
+    {
+        <MudStack Spacing="2">
+            <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                <MudTextField @bind-Value="_filter" Placeholder="Search name, phone, email..." Adornment="Adornment.Start" AdornmentIcon="Icons.Material.Filled.Search" Immediate="true" />
+                <MudCheckBox Value="_selectAll" ValueChanged="@( (bool v) => ToggleSelectAll(v) )" Color="Color.Primary" />
+                <MudText Typo="Typo.subtitle2">Select all</MudText>
+                <MudSpacer />
+                <MudText Typo="Typo.caption">Selected: @_selectedCount</MudText>
+            </MudStack>
+
+            <MudList Class="candidate-list">
+                @foreach (var c in FilteredCandidates)
+                {
+                    <MudListItem>
+                        <MudCheckBox @bind-Value="c.IsSelected" Color="Color.Primary" />
+                        <div class="ml-2">
+                            <MudText>@c.name</MudText>
+                            <MudText Typo="Typo.caption">@c.email • @c.phone</MudText>
+                            @if (!string.IsNullOrEmpty(c.address))
+                            {
+                                <MudText Typo="Typo.caption">@c.address</MudText>
+                            }
+                        </div>
+                    </MudListItem>
+                }
+            </MudList>
+        </MudStack>
+    }
+
+    <div class="mt-3 d-flex justify-end">
+        <MudButton Variant="Variant.Text" OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_isLoading || !_hasSelection" OnClick="ImportSelected">Import selected</MudButton>
+    </div>
+</MudPaper>
+
+@code {
+    [Parameter] public bool PersistMapping { get; set; } = false;
+
+    [CascadingParameter] MudDialogInstance MudDialogInstance { get; set; } = null!;
+
+    private bool _isLoading = true;
+    private List<CandidateMember> _candidates = new();
+    private string _filter = string.Empty;
+    private bool _selectAll = false;
+
+    private IEnumerable<CandidateMember> FilteredCandidates => string.IsNullOrWhiteSpace(_filter)
+        ? _candidates
+        : _candidates.Where(c => (c.name + " " + c.phone + " " + c.email + " " + c.address).Contains(_filter, StringComparison.OrdinalIgnoreCase));
+
+    private bool _hasSelection => _candidates.Any(c => c.IsSelected);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCandidates();
+    }
+
+    private async Task LoadCandidates()
+    {
+        _isLoading = true;
+        try
+        {
+            var list = await Http.GetFromJsonAsync<List<CandidateMember>>("/import/customers/candidates");
+            if (list != null)
+                _candidates = list;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to load candidates: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void Cancel() => MudDialogInstance.Cancel();
+
+    private async Task ImportSelected()
+    {
+        var selected = _candidates.Where(c => c.IsSelected).ToList();
+        if (!selected.Any())
+        {
+            Snackbar.Add("Please select at least one member.", Severity.Warning);
+            return;
+        }
+
+        // Build a short preview of selected names (limit to 10 names)
+        var count = selected.Count;
+        var namesPreview = string.Join(", ", selected.Take(10).Select(c => c.name));
+        if (selected.Count > 10)
+            namesPreview += $", ... (+{selected.Count - 10} more)";
+
+        var confirm = await DialogService.ShowMessageBox(
+            "Confirm import",
+            $"You are about to import {count} member(s).\n\nPreview: {namesPreview}\n\nProceed?",
+            yesText: "Import",
+            noText: "Cancel");
+
+        if (confirm != true)
+        {
+            // user canceled
+            return;
+        }
+
+        var selectedIds = selected.Select(c => c.id).ToList();
+
+        try
+        {
+            var uri = "/import/customers/selected" + (PersistMapping ? "?persist=true" : "");
+            var resp = await Http.PostAsJsonAsync(uri, selectedIds);
+            if (resp.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Import completed.", Severity.Success);
+                MudDialogInstance.Close(DialogResult.Ok(true));
+            }
+            else
+            {
+                var txt = await resp.Content.ReadAsStringAsync();
+                Snackbar.Add($"Import failed: {resp.StatusCode} - {txt}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Import error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private int _selectedCount => _candidates.Count(c => c.IsSelected);
+
+    protected override void OnParametersSet()
+    {
+        UpdateSelectAllState();
+    }
+
+    private void UpdateSelectAllState()
+    {
+        if (_candidates.Count == 0) _selectAll = false;
+        else _selectAll = _candidates.All(c => c.IsSelected);
+    }
+
+    private void ToggleSelectAll(bool value)
+    {
+        foreach (var c in FilteredCandidates)
+            c.IsSelected = value;
+    }
+
+    private void OnSelectAllChanged(ChangeEventArgs e)
+    {
+        if (e.Value is bool b)
+            ToggleSelectAll(b);
+    }
+
+    private class CandidateMember
+    {
+        public string id { get; set; } = string.Empty;
+        public string name { get; set; } = string.Empty;
+        public string phone { get; set; } = string.Empty;
+        public string email { get; set; } = string.Empty;
+        public string address { get; set; } = string.Empty;
+        public bool IsSelected { get; set; }
+    }
+}

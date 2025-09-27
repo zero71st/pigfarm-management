@@ -47,3 +47,64 @@ paths:
                     type: array
                     items:
                       type: string
+    /import/customers/candidates:
+      get:
+        summary: List POSPOS members available to import
+        responses:
+          '200':
+            description: Array of POSPOS members
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      name:
+                        type: string
+                      phone:
+                        type: string
+                      email:
+                        type: string
+                      address:
+                        type: string
+
+    /import/customers/selected:
+      post:
+        summary: Import selected POSPOS members (by id)
+        parameters:
+          - in: query
+            name: persist
+            schema:
+              type: boolean
+            description: Persist the mapping if true
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        responses:
+          '200':
+            description: Import summary for selected members
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    timestamp:
+                      type: string
+                    created:
+                      type: integer
+                    updated:
+                      type: integer
+                    skipped:
+                      type: integer
+                    errors:
+                      type: array
+                      items:
+                        type: string

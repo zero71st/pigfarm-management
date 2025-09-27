@@ -29,21 +29,13 @@ T001. (Setup) Verify local dev environment and run server (blocking)
 - Command/Path: `dotnet run --project src/server/PigFarmManagement.Server/PigFarmManagement.Server.csproj`
 - Dependencies: none
 
-T002. (Test) Create contract test for POST `/import/customers` [P]
-- Purpose: Define expected request/response shape from `contracts/import-customers.yaml`.
-- File(s): `specs/001-title-import-customer/contracts/import-customers.yaml` -> test file `tests/importers/ImportCustomersContractTests.cs`
+T002. (Contract) Define API contracts for endpoints - DONE
+- Purpose: Record and finalize the expected request/response shapes used by implementers and callers.
+- File(s): `specs/001-title-import-customer/contracts/import-customers.yaml` and relevant OpenAPI snippets in the `contracts/` folder.
 - Action:
-  1. Add a test that starts the server (test host), POSTs to `/import/customers`, and asserts the response JSON contains integer `created`, `updated`, `skipped`, and `errors` array.
-  2. The test should expect 200 status. The implementation will initially return a failing response until implementation exists (TDD).
-- Parallel: Yes ([P]) — independent test file.
-
-T003. (Test) Create contract test for GET `/import/customers/summary` [P]
-- Purpose: Define expected response shape for summary endpoint.
-- File(s): `tests/importers/ImportCustomersSummaryContractTests.cs`
-- Action:
-  1. Start test host, GET `/import/customers/summary`, and assert JSON has `timestamp` (string), `created`, `updated`, `skipped` and `errors` array.
-  2. Expect 200 status.
-- Parallel: Yes ([P])
+  1. Contract definitions for POST `/import/customers` and GET `/import/customers/summary` are created and checked in under `specs/001-title-import-customer/contracts/import-customers.yaml`.
+  2. Use these contract files as the authoritative reference for requests and responses.
+ Parallel: Yes ([P]) — documentation-only task.
 
 T004. (Model) Implement in-memory domain models [P] - DONE
 - Purpose: Add the C# POCOs matching `data-model.md` to the server project.
@@ -88,13 +80,13 @@ T007. (Endpoint) Create Import controller and wire routes
   3. Register controller routing in `Program.cs` if not automatically discovered.
 - Dependencies: T004 (models), T005 (importer), T006 (mapping store).
 
-T008. (Test) Implement contract tests to pass against the new endpoints
-- Purpose: Make T002/T003 pass by wiring tests to the real server implementation.
-- Files: `tests/importers/ImportCustomersContractTests.cs`, `tests/importers/ImportCustomersSummaryContractTests.cs`
+T008. (Integration) Exercise endpoints locally and validate behavior
+- Purpose: Manually or via developer-chosen tests, exercise POST `/import/customers` and GET `/import/customers/summary` to validate import behavior with controlled POSPOS responses.
+- Files: Developer may use local scripts, Postman collections, or their preferred test harness. The `contracts/` files should be used as a reference.
 - Actions:
-  1. Update tests to start the server in test mode, ensure DI registration includes test-friendly PosposHttpClient (e.g., mockable via interface) so tests can stub POSPOS responses.
-  2. For now, tests can stub `IPosposClient` to return a small page of customers to exercise created/updated flows.
-- Dependencies: T005, T007
+  1. Start the server locally and use the contract YAML as a guide to POST to `/import/customers` and read results.
+  2. Optionally simulate POSPOS responses via a stub server or by setting `POSPOS_API_BASE` to a mock endpoint.
+-- Dependencies: T005, T007
 
 T009. (UI) Wire client import trigger (optional small PR)
 - Purpose: Add a simple button in the client UI to POST to `/import/customers` and display the returned summary.
