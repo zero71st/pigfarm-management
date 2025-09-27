@@ -146,6 +146,13 @@
              c.Code.Contains(searchText, StringComparison.OrdinalIgnoreCase)) &&
             (selectedCustomerStatus == null || c.Status == selectedCustomerStatus)
         ).ToList();
+        
+        // Show the most recently imported/updated customers first
+        // Use UpdatedAt (set by the importer) as the primary sort key. If UpdatedAt is null, treat it as DateTime.MinValue.
+        filteredCustomers = filteredCustomers
+            .OrderByDescending(c => c.UpdatedAt)
+            .ThenByDescending(c => c.CreatedAt)
+            .ToList();
     }
 
     private void OnSearchKeyUp(KeyboardEventArgs e)
