@@ -7,12 +7,20 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Bind POSPOS options from configuration / environment
+builder.Services.Configure<PigFarmManagement.Server.Infrastructure.Settings.PosposOptions>(builder.Configuration.GetSection("Pospos"));
+
 // Add Entity Framework
 builder.Services.AddDbContext<PigFarmDbContext>(options =>
     options.UseInMemoryDatabase("PigFarmManagement"));
 
 // Add application services
 builder.Services.AddApplicationServices();
+
+// Pospos services
+builder.Services.AddSingleton<PigFarmManagement.Server.Services.IMappingStore, PigFarmManagement.Server.Services.FileMappingStore>();
+builder.Services.AddHttpClient<PigFarmManagement.Server.Services.IPosposClient, PigFarmManagement.Server.Services.PosposClient>();
+builder.Services.AddSingleton<PigFarmManagement.Server.Services.IPosposImporter, PigFarmManagement.Server.Services.PosposImporter>();
 
 // CORS configuration for production
 builder.Services.AddCors(options =>

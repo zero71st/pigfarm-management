@@ -1,0 +1,49 @@
+openapi: 3.0.0
+info:
+  title: POSPOS Customer Importer (In-memory)
+  version: 0.1.0
+paths:
+  /import/customers:
+    post:
+      summary: Trigger import from POSPOS
+      responses:
+        '200':
+          description: Import summary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  created:
+                    type: integer
+                  updated:
+                    type: integer
+                  skipped:
+                    type: integer
+                  errors:
+                    type: array
+                    items:
+                      type: string
+  /import/customers/summary:
+    get:
+      summary: Get last import summary
+      responses:
+        '200':
+          description: Last import summary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  timestamp:
+                    type: string
+                  created:
+                    type: integer
+                  updated:
+                    type: integer
+                  skipped:
+                    type: integer
+                  errors:
+                    type: array
+                    items:
+                      type: string
