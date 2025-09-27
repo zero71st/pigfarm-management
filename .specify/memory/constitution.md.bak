@@ -1,3 +1,8 @@
+Backup of constitution prior to architecture amendment.
+
+---
+
+```markdown
 #!/usr/bin/env text
 # PigFarmManagement — Project Constitution
 
@@ -44,25 +49,10 @@ This constitution governs project-level principles, ownership, and propagation r
 - Templates to update: all project templates (plan-template.md, spec-template.md, tasks-template.md, commands/*.md, README.md, PENDING_TASKS.md) when constitution text meaningfully changes.
 - Automatic propagation: yes — the owner has approved automatic propagation to project templates. Back up local template edits before running propagation.
 
-When constitution text meaningfully changes (including architecture or feature-structure guidance), propagate updates to project templates and record the rationale in the commit message.
-
-## Architecture & Project Structure
-
-Principle: Follow a feature-based architecture that organizes code by vertical features (for example: PigPens, Feeds, Customers) rather than only by horizontal technical layers. This reduces cognitive overhead for feature work and supports independent evolution of features.
-
-Guidelines:
-- Folder layout: each feature should own a folder containing UI, domain, service, and test artifacts when appropriate (for example: `src/client/Features/PigPens`, `src/server/Features/Feeds`). Shared code remains under `shared/`.
-- Ownership: Each feature has an implicit owner (typically the single project owner) responsible for design, migration, and code review for that feature.
-- Contracts & Tests: Feature changes that affect persisted data or public contracts should include a short migration plan, unit tests for logic, and a brief README or comment describing the feature boundary and public APIs.
-- Backwards compatibility: When a feature change affects historical data or public contracts, include a compatibility/migration plan before merging.
-- Quality gates: Use code review and tests as the minimum gates. Prefer small, isolated changes per feature and document breaking changes clearly.
-
-Template propagation:
-- Architecture-related changes (folder layout, public contract changes, or feature ownership policy) must be considered for template updates. Back up templates before applying structural changes.
-
 ## Maintenance & Contacts
 - Constitution owner: single owner (maintainer). Contact details intentionally omitted by owner request.
 
 ---
 
 *This file is the authoritative project constitution. Amendments are managed by the single owner and recorded in the project history.*
+```

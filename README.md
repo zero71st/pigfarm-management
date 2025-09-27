@@ -29,5 +29,7 @@ dotnet run --project .\client\PigFarmManagement.Client\PigFarmManagement.Client.
 * Add reporting & printing endpoints
 * Refactor into layered architecture (Domain, Application, Infrastructure)
 
+> Project constitution: .specify/memory/constitution.md — contains governance, ownership, and template propagation rules.
+
 ---
 Mock only. No persistence yet.

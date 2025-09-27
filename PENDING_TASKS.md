@@ -2,6 +2,8 @@
 
 *Last Updated: September 14, 2025*
 
+Note: Project constitution is stored at `.specify/memory/constitution.md` and governs template propagation and amendment rules.
+
 ## 📋 Overview
 This document outlines the pending tasks and features that need to be implemented in the PigFarmManagement project, s## 🎯 **Implementation Priority Matrix**
 
