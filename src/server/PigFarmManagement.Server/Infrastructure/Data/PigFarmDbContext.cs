@@ -27,7 +27,8 @@ public class PigFarmDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.Code).IsUnique();
-            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.FirstName).HasMaxLength(100);
+            entity.Property(e => e.LastName).HasMaxLength(100);
             entity.Property(e => e.Code).IsRequired().HasMaxLength(20);
             entity.Property(e => e.Status).HasConversion<int>();
         });
@@ -140,11 +141,17 @@ public class PigFarmDbContext : DbContext
         
         for (int i = 1; i <= 100; i++)
         {
+            var full = GetRandomCustomerName(i, random);
+            var parts = full.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            var first = parts.Length > 0 ? parts[0] : full;
+            var last = parts.Length > 1 ? string.Join(' ', parts.Skip(1)) : string.Empty;
+
             customers.Add(new CustomerEntity
             {
                 Id = Guid.NewGuid(),
                 Code = $"M{i:D6}",
-                Name = GetRandomCustomerName(i, random),
+                FirstName = first,
+                LastName = last,
                 Status = customerStatuses[random.Next(customerStatuses.Length)],
                 CreatedAt = now.AddDays(-random.Next(1, 365)),
                 UpdatedAt = now.AddDays(-random.Next(1, 30))

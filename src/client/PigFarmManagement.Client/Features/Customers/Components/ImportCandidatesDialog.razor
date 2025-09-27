@@ -45,20 +45,32 @@
                             <MudCheckBox Value="@_selectAll" ValueChanged="@( (bool v) => ToggleSelectAll(v) )" Color="Color.Primary" />
                         </MudTh>
                         <MudTh>Code</MudTh>
-                        <MudTh>Name</MudTh>
+                        <MudTh>Display</MudTh>
+                        <MudTh>First</MudTh>
+                        <MudTh>Last</MudTh>
                         <MudTh>Mobile</MudTh>
                         <MudTh>Email</MudTh>
                         <MudTh>Address</MudTh>
+                        <MudTh>KeyCard</MudTh>
+                        <MudTh>ExternalId</MudTh>
+                        <MudTh>Sex</MudTh>
+                        <MudTh>Zip</MudTh>
                     </HeaderContent>
                     <RowTemplate>
                         <MudTd>
                             <MudCheckBox @bind-Value="context.IsSelected" Color="Color.Primary" />
                         </MudTd>
-                        <MudTd>@context.id</MudTd>
-                        <MudTd>@context.name</MudTd>
-                        <MudTd>@context.phone</MudTd>
-                        <MudTd>@context.email</MudTd>
-                        <MudTd>@context.address</MudTd>
+                        <MudTd>@context.Code</MudTd>
+                        <MudTd>@context.DisplayName</MudTd>
+                        <MudTd>@context.FirstName</MudTd>
+                        <MudTd>@context.LastName</MudTd>
+                        <MudTd>@context.Phone</MudTd>
+                        <MudTd>@context.Email</MudTd>
+                        <MudTd>@context.Address</MudTd>
+                        <MudTd>@context.KeyCardId</MudTd>
+                        <MudTd>@context.ExternalId</MudTd>
+                        <MudTd>@context.Sex</MudTd>
+                        <MudTd>@context.Zipcode</MudTd>
                     </RowTemplate>
                 </MudTable>
             }
@@ -83,7 +95,11 @@
 
     private IEnumerable<CandidateMember> FilteredCandidates => string.IsNullOrWhiteSpace(_filter)
         ? _candidates
-        : _candidates.Where(c => (c.id + " " + c.name + " " + c.phone + " " + c.email + " " + c.address).Contains(_filter, StringComparison.OrdinalIgnoreCase));
+        : _candidates.Where(c => (
+            (c.Id ?? "") + " " + (c.Code ?? "") + " " + (c.DisplayName ?? "") + " " + (c.FirstName ?? "") + " " + (c.LastName ?? "") + " " +
+            (c.Phone ?? "") + " " + (c.Email ?? "") + " " + (c.Address ?? "") + " " + (c.KeyCardId ?? "") + " " + (c.ExternalId ?? "") + " " +
+            (c.Sex ?? "") + " " + (c.Zipcode ?? "")
+        ).Contains(_filter, StringComparison.OrdinalIgnoreCase));
 
     private bool _hasSelection => _candidates.Any(c => c.IsSelected);
 
@@ -124,7 +140,7 @@
 
         // Build a short preview of selected names (limit to 10 names)
         var count = selected.Count;
-        var namesPreview = string.Join(", ", selected.Take(10).Select(c => c.name));
+    var namesPreview = string.Join(", ", selected.Take(10).Select(c => c.DisplayName));
         if (selected.Count > 10)
             namesPreview += $", ... (+{selected.Count - 10} more)";
 
@@ -140,7 +156,7 @@
             return;
         }
 
-        var selectedIds = selected.Select(c => c.id).ToList();
+    var selectedIds = selected.Select(c => c.Id).ToList();
 
         try
         {
@@ -190,11 +206,20 @@
 
     private class CandidateMember
     {
-        public string id { get; set; } = string.Empty;
-        public string name { get; set; } = string.Empty;
-        public string phone { get; set; } = string.Empty;
-        public string email { get; set; } = string.Empty;
-        public string address { get; set; } = string.Empty;
+        public string Id { get; set; } = string.Empty;
+        public string Code { get; set; } = string.Empty; // optional code/key
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string DisplayName =>
+            string.IsNullOrWhiteSpace($"{FirstName} {LastName}".Trim()) ? (string.IsNullOrWhiteSpace(Code) ? Id : Code) : $"{FirstName} {LastName}".Trim();
+        public string Phone { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Address { get; set; } = string.Empty;
+        public string KeyCardId { get; set; } = string.Empty;
+        public string ExternalId { get; set; } = string.Empty;
+        public string Sex { get; set; } = string.Empty;
+        public string Zipcode { get; set; } = string.Empty;
+        public long CreatedAt { get; set; }
         public bool IsSelected { get; set; }
     }
 }

@@ -19,7 +19,7 @@
                 <MudSelectItem T="Guid?" Value="@((Guid?)null)">All Customers</MudSelectItem>
                 @foreach (var customer in customers)
                 {
-                    <MudSelectItem T="Guid?" Value="@((Guid?)customer.Id)">                @customer.Name (@customer.Status)</MudSelectItem>
+                    <MudSelectItem T="Guid?" Value="@((Guid?)customer.Id)">                @customer.DisplayName (@customer.Status)</MudSelectItem>
                 }
             </MudSelect>
         </MudItem>
@@ -135,7 +135,7 @@
                               Color="Color.Info"
                               Class="pa-1"
                               Style="min-width: 32px; font-size: 16px; line-height: 1;"
-                              OnClick="() => ShowPosImportDialog(context.Id, GetCustomerName(context.CustomerId), context.PenCode, GetCustomerCode(context.CustomerId))"
+                            OnClick="() => ShowPosImportDialog(context.Id, GetCustomerName(context.CustomerId), context.PenCode, GetCustomerCode(context.CustomerId))"
                               Title="Import feeds">
                         📥
                     </MudButton>
@@ -277,7 +277,7 @@
 
     private string GetCustomerName(Guid customerId)
     {
-        return customers.FirstOrDefault(c => c.Id == customerId)?.Name ?? "Unknown";
+        return customers.FirstOrDefault(c => c.Id == customerId)?.DisplayName ?? "Unknown";
     }
 
     private async Task ShowAddDialog()
@@ -297,7 +297,7 @@
         var parameters = new DialogParameters
         {
             { "PigPenId", pigPenId },
-            { "CustomerName", customerName },
+            { "CustomerDisplayName", customerName },
             { "PenCode", penCode },
             { "CustomerCode", customerCode }
         };

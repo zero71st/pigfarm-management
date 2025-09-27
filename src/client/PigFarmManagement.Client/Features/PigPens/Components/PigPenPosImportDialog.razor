@@ -9,7 +9,7 @@
             
             <MudAlert Severity="Severity.Info" Class="mb-4">
                 <MudText Typo="Typo.body2">
-                    <strong>Customer:</strong> @CustomerName<br/>
+                    <strong>Customer:</strong> @CustomerDisplayName<br/>
                     <strong>Pen Code:</strong> @PenCode<br/>
                     Select which POSPOS invoices should be applied to this pig pen.
                 </MudText>
@@ -220,7 +220,7 @@
     [CascadingParameter] MudDialogInstance MudDialog { get; set; } = default!;
     
     [Parameter] public Guid PigPenId { get; set; }
-    [Parameter] public string CustomerName { get; set; } = "";
+    [Parameter] public string CustomerDisplayName { get; set; } = "";
     [Parameter] public string PenCode { get; set; } = "";
     [Parameter] public string CustomerCode { get; set; } = "";
 

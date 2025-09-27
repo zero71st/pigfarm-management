@@ -5,18 +5,25 @@ namespace PigFarmManagement.Shared.Models;
 /// Responsibility: Define the main business entities and their behavior
 /// </summary>
 
-public record Customer(Guid Id, string Code, string Name, CustomerStatus Status)
+public record Customer(Guid Id, string Code, CustomerStatus Status)
 {
     public string? ExternalId { get; init; }
     public string? KeyCardId { get; init; }
     public string? Phone { get; init; }
     public string? Email { get; init; }
+    // POSPOS-aligned fields
+    public string? Address { get; init; }
+    public string? FirstName { get; init; }
+    public string? LastName { get; init; }
+    public string? Sex { get; init; }
+    public string? Zipcode { get; init; }
+
     public DateTime CreatedAt { get; init; } = DateTime.Now;
     public DateTime UpdatedAt { get; init; } = DateTime.Now;
     
     // Business logic
     public bool IsActive => Status == CustomerStatus.Active;
-    public string DisplayName => $"{Name} ({Code})";
+    public string DisplayName => $"{(string.IsNullOrWhiteSpace(FirstName) && string.IsNullOrWhiteSpace(LastName) ? Code : $"{FirstName} {LastName}" )} ({Code})";
 };
 
 public record PigPen(Guid Id, Guid CustomerId, string PenCode, int PigQty,

@@ -244,7 +244,7 @@ public class FeedImportService : IFeedImportService
 
         if (pigPen == null)
         {
-            throw new Exception($"No pig pen found for customer {customer.Name}");
+            throw new Exception($"No pig pen found for customer {customer.DisplayName}");
         }
 
         await ProcessTransactionForPigPenAsync(transaction, pigPen, result);
@@ -287,16 +287,17 @@ public class FeedImportService : IFeedImportService
             return existingCustomer;
         }
 
-        // Create new customer
-        var newCustomer = new Customer(
-            Guid.NewGuid(),
-            buyerDetail.Code,
-            buyerDetail.FirstName,
-            CustomerStatus.Active)
-        {
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
+            // Create new customer
+            var newCustomer = new Customer(
+                Guid.NewGuid(),
+                buyerDetail.Code,
+                CustomerStatus.Active)
+            {
+                FirstName = buyerDetail.FirstName,
+                LastName = buyerDetail.LastName,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
 
         _customers.Add(newCustomer);
         return newCustomer;

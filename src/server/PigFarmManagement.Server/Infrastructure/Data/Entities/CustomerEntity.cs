@@ -12,9 +12,7 @@ public class CustomerEntity
     [MaxLength(20)]
     public string Code { get; set; } = string.Empty;
     
-    [Required]
-    [MaxLength(100)]
-    public string Name { get; set; } = string.Empty;
+    // Name has been split into FirstName/LastName per POSPOS integration
     
     public CustomerStatus Status { get; set; }
     
@@ -22,6 +20,11 @@ public class CustomerEntity
     public string? Email { get; set; }
     public string? ExternalId { get; set; }
     public string? KeyCardId { get; set; }
+    public string? Address { get; set; }
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
+    public string? Sex { get; set; }
+    public string? Zipcode { get; set; }
     
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
@@ -32,15 +35,22 @@ public class CustomerEntity
     // Convert to shared model
     public Customer ToModel()
     {
-        return new Customer(Id, Code, Name, Status)
+        var customer = new Customer(Id, Code, Status)
         {
             Phone = Phone,
             Email = Email,
             ExternalId = ExternalId,
             KeyCardId = KeyCardId,
+            Address = Address,
+            FirstName = FirstName,
+            LastName = LastName,
+            Sex = Sex,
+            Zipcode = Zipcode,
             CreatedAt = CreatedAt,
             UpdatedAt = UpdatedAt
         };
+
+        return customer;
     }
     
     // Create from shared model
@@ -50,12 +60,16 @@ public class CustomerEntity
         {
             Id = customer.Id,
             Code = customer.Code,
-            Name = customer.Name,
             Status = customer.Status,
             Phone = customer.Phone,
             Email = customer.Email,
             ExternalId = customer.ExternalId,
             KeyCardId = customer.KeyCardId,
+            Address = customer.Address,
+            FirstName = customer.FirstName,
+            LastName = customer.LastName,
+            Sex = customer.Sex,
+            Zipcode = customer.Zipcode,
             CreatedAt = customer.CreatedAt,
             UpdatedAt = customer.UpdatedAt
         };

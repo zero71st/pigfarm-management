@@ -20,7 +20,7 @@
                         <MudSelectItem T="Guid?" Value="@((Guid?)null)">-- Select Customer --</MudSelectItem>
                         @foreach (var customer in customers)
                         {
-                            <MudSelectItem T="Guid?" Value="@((Guid?)customer.Id)">@customer.Name (@customer.Status)</MudSelectItem>
+                            <MudSelectItem T="Guid?" Value="@((Guid?)customer.Id)">@customer.DisplayName (@customer.Status)</MudSelectItem>
                         }
                     </MudSelect>
                 </MudItem>

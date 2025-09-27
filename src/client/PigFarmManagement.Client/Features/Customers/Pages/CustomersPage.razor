@@ -142,7 +142,7 @@
     {
         filteredCustomers = customers.Where(c =>
             (string.IsNullOrEmpty(searchText) || 
-             c.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+             c.DisplayName.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
              c.Code.Contains(searchText, StringComparison.OrdinalIgnoreCase)) &&
             (selectedCustomerStatus == null || c.Status == selectedCustomerStatus)
         ).ToList();
@@ -193,7 +193,7 @@
     {
         var parameters = new DialogParameters
         {
-            ["ContentText"] = $"Are you sure you want to delete customer '{customer.Name}'? This action cannot be undone.",
+            ["ContentText"] = $"Are you sure you want to delete customer '{customer.DisplayName}'? This action cannot be undone.",
             ["ButtonText"] = "Delete",
             ["ButtonColor"] = Color.Error
         };

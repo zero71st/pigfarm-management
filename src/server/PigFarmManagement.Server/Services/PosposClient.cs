@@ -76,7 +76,12 @@ namespace PigFarmManagement.Server.Services
                 if (trimmed.StartsWith("["))
                 {
                     var arr = JsonSerializer.Deserialize<IEnumerable<PosposMember>>(s);
-                    return arr ?? Array.Empty<PosposMember>();
+                    if (arr != null)
+                    {
+                        // ensure FirstName/LastName populated when API returns 'name' fields
+                        return arr.Select(m => EnsureNames(m));
+                    }
+                    return Array.Empty<PosposMember>();
                 }
 
                 using var doc = JsonDocument.Parse(s);
@@ -85,7 +90,7 @@ namespace PigFarmManagement.Server.Services
                 {
                     var json = data.GetRawText();
                     var arr = JsonSerializer.Deserialize<IEnumerable<PosposMember>>(json);
-                    return arr ?? Array.Empty<PosposMember>();
+                    return (arr ?? Array.Empty<PosposMember>()).Select(m => EnsureNames(m));
                 }
 
                 // 2) sometimes API nests under other keys or returns { items: [...] }
@@ -99,7 +104,7 @@ namespace PigFarmManagement.Server.Services
                             {
                                 var arr = JsonSerializer.Deserialize<IEnumerable<PosposMember>>(prop.Value.GetRawText());
                                 if (arr != null && arr.Any())
-                                    return arr;
+                                    return arr.Select(m => EnsureNames(m));
                             }
                             catch { }
                         }
@@ -109,6 +114,44 @@ namespace PigFarmManagement.Server.Services
             catch
             {
                 _logger.LogWarning("Failed to parse POSPOS response JSON");
+            }
+
+            // local helper to populate names
+            PosposMember EnsureNames(PosposMember m)
+            {
+                // If the API used lowercase 'name' in JSON, try to read it via JsonDocument fallback
+                if (string.IsNullOrWhiteSpace(m.FirstName) && string.IsNullOrWhiteSpace(m.LastName))
+                {
+                    try
+                    {
+                        using var doc = JsonDocument.Parse(s);
+                        // Try to find the object with matching id
+                        foreach (var prop in doc.RootElement.EnumerateObject())
+                        {
+                            if (prop.Value.ValueKind == JsonValueKind.Array)
+                            {
+                                foreach (var el in prop.Value.EnumerateArray())
+                                {
+                                    if (el.ValueKind == JsonValueKind.Object && el.TryGetProperty("id", out var idProp) && idProp.GetString() == m.id)
+                                    {
+                                        if (el.TryGetProperty("firstName", out var fn)) m.FirstName = fn.GetString() ?? "";
+                                        if (el.TryGetProperty("lastName", out var ln)) m.LastName = ln.GetString() ?? "";
+                                        if (string.IsNullOrWhiteSpace(m.FirstName) && el.TryGetProperty("name", out var nameProp))
+                                        {
+                                            var nm = nameProp.GetString() ?? "";
+                                            var parts = nm.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
+                                            if (parts.Length == 1) m.FirstName = parts[0];
+                                            else if (parts.Length >= 2) { m.FirstName = parts[0]; m.LastName = parts[1]; }
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch { }
+                }
+                return m;
             }
 
             return Array.Empty<PosposMember>();

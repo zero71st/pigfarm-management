@@ -286,7 +286,7 @@
             var parameters = new DialogParameters<PigPenPosImportDialog>
             {
                 { x => x.PigPenId, PigPenId },
-                { x => x.CustomerName, customer.Name },
+                { x => x.CustomerDisplayName, customer.DisplayName },
                 { x => x.PenCode, pigPen.PenCode },
                 { x => x.CustomerCode, customer.Code }
             };

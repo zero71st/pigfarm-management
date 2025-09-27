@@ -8,12 +8,17 @@
     <DialogContent>
         <MudContainer Style="max-width: 500px;">
             <MudGrid>
-                <MudItem xs="12">
-                    <MudTextField @bind-Value="customerName" 
-                                 Label="Customer Name" 
+                <MudItem xs="6">
+                    <MudTextField @bind-Value="customerFirstName" 
+                                 Label="First Name" 
                                  Variant="Variant.Outlined" 
                                  Required="true"
-                                 RequiredError="Customer name is required" />
+                                 RequiredError="First name is required" />
+                </MudItem>
+                <MudItem xs="6">
+                    <MudTextField @bind-Value="customerLastName" 
+                                 Label="Last Name" 
+                                 Variant="Variant.Outlined" />
                 </MudItem>
                 <MudItem xs="12">
                     <MudTextField @bind-Value="customerCode" 
@@ -48,7 +53,8 @@
 @code {
     [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
 
-    private string customerName = "";
+    private string customerFirstName = "";
+    private string customerLastName = "";
     private string customerCode = "";
     private CustomerStatus customerStatus = CustomerStatus.Active;
 
@@ -56,7 +62,7 @@
 
     private bool IsFormValid()
     {
-        return !string.IsNullOrWhiteSpace(customerName) &&
+        return !string.IsNullOrWhiteSpace(customerFirstName) &&
                !string.IsNullOrWhiteSpace(customerCode);
     }
 
@@ -67,7 +73,11 @@
 
         try
         {
-            var customer = new Customer(Guid.NewGuid(), customerCode, customerName, customerStatus);
+            var customer = new Customer(Guid.NewGuid(), customerCode, customerStatus)
+            {
+                FirstName = customerFirstName,
+                LastName = customerLastName
+            };
             var createdCustomer = await CustomerService.CreateCustomerAsync(customer);
             MudDialog.Close(DialogResult.Ok(createdCustomer));
         }
