@@ -38,6 +38,9 @@
             {
                 <MudTable Items="FilteredCandidates" Hover="true" Bordered="true" Striped="true" Class="candidate-table">
                     <HeaderContent>
+                        <MudTh>
+                            <MudCheckBox T="bool" Value="_selectAll" ValueChanged="OnSelectAllChanged" />
+                        </MudTh>
                         <MudTh>Code</MudTh>
                         <MudTh>Display</MudTh>
                         <!-- First/Last columns removed per request -->
@@ -50,10 +53,11 @@
                         <MudTh>Zip</MudTh>
                     </HeaderContent>
                     <RowTemplate>
+                        <MudTd>
+                            <MudCheckBox T="bool" @bind-Value="context.IsSelected" />
+                        </MudTd>
                         <MudTd>@(string.IsNullOrWhiteSpace(context.Code) ? "-" : context.Code)</MudTd>
-                        
-                        <!-- Checkbox removed: import will default to all candidates when none explicitly selected -->
-                        
+
                         <MudTd>@(string.IsNullOrWhiteSpace(context.DisplayName) ? "-" : context.DisplayName)</MudTd>
                         <!-- First/Last cells removed per request -->
                         <MudTd>@context.Phone</MudTd>
@@ -83,6 +87,7 @@
     private bool _isLoading = true;
     private List<CandidateMember> _candidates = new();
     private string _filter = string.Empty;
+    private bool _selectAll = false;
 
     private IEnumerable<CandidateMember> FilteredCandidates => string.IsNullOrWhiteSpace(_filter)
         ? _candidates
@@ -92,7 +97,7 @@
             (c.Sex ?? "") + " " + (c.Zipcode ?? "")
         ).Contains(_filter, StringComparison.OrdinalIgnoreCase));
 
-    // With checkboxes removed, treat the presence of candidates as the ability to import.
+    // Keep the import fallback: allow importing all candidates when none are explicitly selected.
     private bool _hasSelection => _candidates.Any();
 
     protected override async Task OnInitializedAsync()
@@ -117,6 +122,15 @@
         {
             _isLoading = false;
         }
+    }
+
+    private Task OnSelectAllChanged(bool value)
+    {
+        _selectAll = value;
+        foreach (var c in _candidates)
+            c.IsSelected = value;
+        StateHasChanged();
+        return Task.CompletedTask;
     }
 
     private void Cancel() => MudDialogInstance.Cancel();
