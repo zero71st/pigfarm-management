@@ -80,9 +80,10 @@
 </MudPaper>
 
 @code {
-    [Parameter] public bool PersistMapping { get; set; } = false;
+    [Parameter] public bool PersistMapping { get; set; } = true; // persist mapping by default for POSPOS imports
 
-    [CascadingParameter] MudDialogInstance MudDialogInstance { get; set; } = null!;
+    // MudDialogInstance is provided when this component is shown via IDialogService; make it nullable and guard calls.
+    [CascadingParameter] MudDialogInstance? MudDialogInstance { get; set; }
 
     private bool _isLoading = true;
     private List<CandidateMember> _candidates = new();
@@ -133,7 +134,7 @@
         return Task.CompletedTask;
     }
 
-    private void Cancel() => MudDialogInstance.Cancel();
+    private void Cancel() => MudDialogInstance?.Cancel();
 
     private async Task ImportSelected()
     {
@@ -146,7 +147,7 @@
 
         // Build a short preview of selected names (limit to 10 names)
         var count = selected.Count;
-    var namesPreview = string.Join(", ", selected.Take(10).Select(c => c.DisplayName));
+        var namesPreview = string.Join(", ", selected.Take(10).Select(c => c.DisplayName));
         if (selected.Count > 10)
             namesPreview += $", ... (+{selected.Count - 10} more)";
 
@@ -162,7 +163,7 @@
             return;
         }
 
-    var selectedIds = selected.Select(c => c.Id).ToList();
+        var selectedIds = selected.Select(c => c.Id).ToList();
 
         try
         {
@@ -171,7 +172,7 @@
             if (resp.IsSuccessStatusCode)
             {
                 Snackbar.Add("Import completed.", Severity.Success);
-                MudDialogInstance.Close(DialogResult.Ok(true));
+                MudDialogInstance?.Close(DialogResult.Ok(true));
             }
             else
             {
