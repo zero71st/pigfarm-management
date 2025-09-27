@@ -46,8 +46,7 @@
                         </MudTh>
                         <MudTh>Code</MudTh>
                         <MudTh>Display</MudTh>
-                        <MudTh>First</MudTh>
-                        <MudTh>Last</MudTh>
+                        <!-- First/Last columns removed per request -->
                         <MudTh>Mobile</MudTh>
                         <MudTh>Email</MudTh>
                         <MudTh>Address</MudTh>
@@ -62,8 +61,7 @@
                         </MudTd>
                         <MudTd>@(string.IsNullOrWhiteSpace(context.Code) ? "-" : context.Code)</MudTd>
                         <MudTd>@(string.IsNullOrWhiteSpace(context.DisplayName) ? "-" : context.DisplayName)</MudTd>
-                        <MudTd>@(string.IsNullOrWhiteSpace(context.FirstName) ? "-" : context.FirstName)</MudTd>
-                        <MudTd>@(string.IsNullOrWhiteSpace(context.LastName) ? "-" : context.LastName)</MudTd>
+                        <!-- First/Last cells removed per request -->
                         <MudTd>@context.Phone</MudTd>
                         <MudTd>@context.Email</MudTd>
                         <MudTd>@context.Address</MudTd>
