@@ -54,7 +54,7 @@ namespace PigFarmManagement.Server.Services
                 {
                     try
                     {
-                        if (string.IsNullOrEmpty(m.id))
+                        if (string.IsNullOrEmpty(m.Id))
                         {
                             summary.Skipped++;
                             continue;
@@ -63,7 +63,7 @@ namespace PigFarmManagement.Server.Services
                         // Map Pospos member to internal Customer model
                         PigFarmManagement.Shared.Models.Customer mapped = MapPosposToCustomer(m);
 
-                        if (_mapping.TryGetValue(m.id, out var internalId))
+                        if (_mapping.TryGetValue(m.Id, out var internalId))
                         {
                             // existing mapping -> update via repository
                             try
@@ -77,7 +77,7 @@ namespace PigFarmManagement.Server.Services
                                 // If update fails because not found, create instead
                                 _logger.LogWarning(ex, "Update failed for mapped customer id {Id}, will try create", internalId);
                                 var created = await _customerRepository.CreateAsync(mapped);
-                                _mapping[m.id] = created.Id.ToString();
+                                _mapping[m.Id] = created.Id.ToString();
                                 summary.Created++;
                             }
                         }
@@ -85,16 +85,16 @@ namespace PigFarmManagement.Server.Services
                         {
                             // create new via repository
                             var created = await _customerRepository.CreateAsync(mapped);
-                            _mapping[m.id] = created.Id.ToString();
+                            _mapping[m.Id] = created.Id.ToString();
                             summary.Created++;
                         }
                     }
                     catch (Exception ex)
                     {
                         var memberDisplay = GetMemberDisplay(m);
-                        var err = $"Member id={m?.id ?? "(null)"} name={memberDisplay}: {ex.Message}";
+                        var err = $"Member id={m?.Id ?? "(null)"} name={memberDisplay}: {ex.Message}";
                         summary.Errors.Add(err);
-                        _logger.LogError(ex, "Error importing member {MemberId}", m?.id);
+                        _logger.LogError(ex, "Error importing member {MemberId}", m?.Id);
                     }
                 }
 
@@ -133,7 +133,7 @@ namespace PigFarmManagement.Server.Services
                 {
                     try
                     {
-                        if (string.IsNullOrEmpty(m.id))
+                            if (string.IsNullOrEmpty(m.Id))
                         {
                             summary.Skipped++;
                             continue;
@@ -141,7 +141,7 @@ namespace PigFarmManagement.Server.Services
 
                         PigFarmManagement.Shared.Models.Customer mapped = MapPosposToCustomer(m);
 
-                        if (_mapping.TryGetValue(m.id, out var internalId))
+                        if (_mapping.TryGetValue(m.Id, out var internalId))
                         {
                             try
                             {
@@ -153,23 +153,23 @@ namespace PigFarmManagement.Server.Services
                             {
                                 _logger.LogWarning(ex, "Update failed for mapped customer id {Id}, will try create", internalId);
                                 var created = await _customerRepository.CreateAsync(mapped);
-                                _mapping[m.id] = created.Id.ToString();
+                                _mapping[m.Id] = created.Id.ToString();
                                 summary.Created++;
                             }
                         }
                         else
                         {
                             var created = await _customerRepository.CreateAsync(mapped);
-                            _mapping[m.id] = created.Id.ToString();
+                            _mapping[m.Id] = created.Id.ToString();
                             summary.Created++;
                         }
                     }
                     catch (Exception ex)
                     {
                         var memberDisplay = GetMemberDisplay(m);
-                        var err = $"Member id={m?.id ?? "(null)"} name={memberDisplay}: {ex.Message}";
+                        var err = $"Member id={m?.Id ?? "(null)"} name={memberDisplay}: {ex.Message}";
                         summary.Errors.Add(err);
-                        _logger.LogError(ex, "Error importing member {MemberId}", m?.id);
+                        _logger.LogError(ex, "Error importing member {MemberId}", m?.Id);
                     }
                 }
 
@@ -206,17 +206,21 @@ namespace PigFarmManagement.Server.Services
             string? last = string.IsNullOrWhiteSpace(m.LastName) ? null : m.LastName.Trim();
 
             // Use the external id as code if no other code is provided
-            var code = !string.IsNullOrWhiteSpace(m.id) ? m.id : string.Empty;
+            var code = !string.IsNullOrWhiteSpace(m.Id) ? m.Id : m.Code ?? string.Empty;
 
             var cust = new PigFarmManagement.Shared.Models.Customer(Guid.NewGuid(), code, PigFarmManagement.Shared.Models.CustomerStatus.Active)
             {
                 FirstName = first,
                 LastName = last,
-                ExternalId = m.id,
-                Phone = string.IsNullOrWhiteSpace(m.phone) ? null : m.phone,
-                Email = string.IsNullOrWhiteSpace(m.email) ? null : m.email,
-                Address = string.IsNullOrWhiteSpace(m.address) ? null : m.address,
-                CreatedAt = DateTimeOffset.FromUnixTimeMilliseconds(m.createdAt).UtcDateTime,
+                ExternalId = m.Id,
+                KeyCardId = string.IsNullOrWhiteSpace(m.KeyCardId) ? null : m.KeyCardId,
+                Phone = string.IsNullOrWhiteSpace(m.Phone) ? (string.IsNullOrWhiteSpace(m.PhoneNumber) ? null : m.PhoneNumber) : m.Phone,
+                Email = string.IsNullOrWhiteSpace(m.Email) ? null : m.Email,
+                Address = string.IsNullOrWhiteSpace(m.Address) ? null : m.Address,
+                Sex = string.IsNullOrWhiteSpace(m.Sex) ? null : m.Sex,
+                Zipcode = string.IsNullOrWhiteSpace(m.Zipcode) ? null : m.Zipcode,
+                // CreatedAt from POSPOS can be numeric (ms since epoch) or ISO string; try both
+                CreatedAt = ParseCreatedAt(m.CreatedAt),
                 UpdatedAt = DateTime.UtcNow
             };
 
@@ -231,8 +235,26 @@ namespace PigFarmManagement.Server.Services
             var last = string.IsNullOrWhiteSpace(m.LastName) ? string.Empty : m.LastName.Trim();
             var combined = (first + " " + last).Trim();
             if (!string.IsNullOrEmpty(combined)) return combined;
-            if (!string.IsNullOrWhiteSpace(m.id)) return m.id;
+            if (!string.IsNullOrWhiteSpace(m.Id)) return m.Id;
+            if (!string.IsNullOrWhiteSpace(m.Code)) return m.Code;
             return "(unknown)";
+        }
+
+        private static DateTime ParseCreatedAt(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return DateTime.UtcNow;
+            // Try ISO parse
+            if (DateTimeOffset.TryParse(value, out var dto)) return dto.UtcDateTime;
+
+            // Try numeric milliseconds
+            var digits = new string(value.Where(char.IsDigit).ToArray());
+            if (long.TryParse(digits, out var ms))
+            {
+                try { return DateTimeOffset.FromUnixTimeMilliseconds(ms).UtcDateTime; }
+                catch { }
+            }
+
+            return DateTime.UtcNow;
         }
     }
 }

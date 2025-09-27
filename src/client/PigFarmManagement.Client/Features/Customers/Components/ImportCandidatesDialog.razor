@@ -60,10 +60,10 @@
                         <MudTd>
                             <MudCheckBox @bind-Value="context.IsSelected" Color="Color.Primary" />
                         </MudTd>
-                        <MudTd>@context.Code</MudTd>
-                        <MudTd>@context.DisplayName</MudTd>
-                        <MudTd>@context.FirstName</MudTd>
-                        <MudTd>@context.LastName</MudTd>
+                        <MudTd>@(string.IsNullOrWhiteSpace(context.Code) ? "-" : context.Code)</MudTd>
+                        <MudTd>@(string.IsNullOrWhiteSpace(context.DisplayName) ? "-" : context.DisplayName)</MudTd>
+                        <MudTd>@(string.IsNullOrWhiteSpace(context.FirstName) ? "-" : context.FirstName)</MudTd>
+                        <MudTd>@(string.IsNullOrWhiteSpace(context.LastName) ? "-" : context.LastName)</MudTd>
                         <MudTd>@context.Phone</MudTd>
                         <MudTd>@context.Email</MudTd>
                         <MudTd>@context.Address</MudTd>
@@ -219,7 +219,7 @@
         public string ExternalId { get; set; } = string.Empty;
         public string Sex { get; set; } = string.Empty;
         public string Zipcode { get; set; } = string.Empty;
-        public long CreatedAt { get; set; }
+        public string CreatedAt { get; set; } = string.Empty;
         public bool IsSelected { get; set; }
     }
 }
