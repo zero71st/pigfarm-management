@@ -13,7 +13,7 @@ Risks & Mitigations:
 - Risk: Credentials in environment variables during development. Mitigation: Document env var names and example usage in quickstart.
 
 API assumptions:
-- POSPOS API exposes a paginated customer endpoint that returns records with an ID, name, phone, email, and address.
+- POSPOS API exposes a paginated customer endpoint that returns records with an ID, firstName, lastName, phone, email, and address.
 - We will implement a simple HTTP client with pagination support and basic retry/backoff.
 
 Research conclusion: proceed with an in-memory importer implementation and simple OpenAPI contract for the local importer endpoints used by UI or CLI.

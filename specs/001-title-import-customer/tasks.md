@@ -41,7 +41,7 @@ T004. (Model) Implement in-memory domain models [P] - DONE
 - Purpose: Add the C# POCOs matching `data-model.md` to the server project.
 - Files to create: `src/server/PigFarmManagement.Server/Models/PosposCustomer.cs`, `src/server/PigFarmManagement.Server/Models/Customer.cs`, `src/server/PigFarmManagement.Server/Models/CustomerMapping.cs`
 - Actions:
-  1. Create POCOs with properties as specified (posposId, name, phone, email, address, createdAt; internal id GUID for Customer).
+  1. Create POCOs with properties as specified (posposId, firstName, lastName, phone, email, address, createdAt; internal id GUID for Customer).
   2. Add minimal validation attributes or helper validators where appropriate.
 - Parallel: Yes ([P]) — independent model files.
 

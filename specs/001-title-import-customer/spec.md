@@ -79,7 +79,7 @@ As a system operator I want to import customers from the POSPOS system into PigF
 - **FR-008**: On partial match, POSPOS data SHALL overwrite the internal record. If the POSPOSId does not exist in the mapping, create a new internal customer and record the mapping.
 
 ### Key Entities *(include if feature involves data)*
-- **POSPOSCustomer**: External customer record from POSPOS (POSPOSId, Name, Phone, Email, Address, CreatedAt)
+- **POSPOSCustomer**: External customer record from POSPOS (POSPOSId, FirstName, LastName, Phone, Email, Address, CreatedAt)
 - **CustomerMapping**: Mapping between POSPOSId and internal CustomerId (POSPOSId → InternalId)
 
 ---

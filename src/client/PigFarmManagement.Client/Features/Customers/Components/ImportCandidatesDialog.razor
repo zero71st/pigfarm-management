@@ -18,10 +18,7 @@
         <MudStack Spacing="2">
             <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
                 <MudTextField @bind-Value="_filter" Placeholder="Search code, name, mobile phone, email..." Adornment="Adornment.Start" AdornmentIcon="Icons.Material.Filled.Search" Immediate="true" />
-                <MudCheckBox Value="_selectAll" ValueChanged="@( (bool v) => ToggleSelectAll(v) )" Color="Color.Primary" />
-                <MudText Typo="Typo.subtitle2">Select all</MudText>
                 <MudSpacer />
-                <MudText Typo="Typo.caption">Selected: @_selectedCount</MudText>
             </MudStack>
 
             @if (_candidates.Count == 0)
@@ -41,9 +38,6 @@
             {
                 <MudTable Items="FilteredCandidates" Hover="true" Bordered="true" Striped="true" Class="candidate-table">
                     <HeaderContent>
-                        <MudTh Style="width:48px;">
-                            <MudCheckBox Value="@_selectAll" ValueChanged="@( (bool v) => ToggleSelectAll(v) )" Color="Color.Primary" />
-                        </MudTh>
                         <MudTh>Code</MudTh>
                         <MudTh>Display</MudTh>
                         <!-- First/Last columns removed per request -->
@@ -56,10 +50,10 @@
                         <MudTh>Zip</MudTh>
                     </HeaderContent>
                     <RowTemplate>
-                        <MudTd>
-                            <MudCheckBox @bind-Value="context.IsSelected" Color="Color.Primary" />
-                        </MudTd>
                         <MudTd>@(string.IsNullOrWhiteSpace(context.Code) ? "-" : context.Code)</MudTd>
+                        
+                        <!-- Checkbox removed: import will default to all candidates when none explicitly selected -->
+                        
                         <MudTd>@(string.IsNullOrWhiteSpace(context.DisplayName) ? "-" : context.DisplayName)</MudTd>
                         <!-- First/Last cells removed per request -->
                         <MudTd>@context.Phone</MudTd>
@@ -89,7 +83,6 @@
     private bool _isLoading = true;
     private List<CandidateMember> _candidates = new();
     private string _filter = string.Empty;
-    private bool _selectAll = false;
 
     private IEnumerable<CandidateMember> FilteredCandidates => string.IsNullOrWhiteSpace(_filter)
         ? _candidates
@@ -99,7 +92,8 @@
             (c.Sex ?? "") + " " + (c.Zipcode ?? "")
         ).Contains(_filter, StringComparison.OrdinalIgnoreCase));
 
-    private bool _hasSelection => _candidates.Any(c => c.IsSelected);
+    // With checkboxes removed, treat the presence of candidates as the ability to import.
+    private bool _hasSelection => _candidates.Any();
 
     protected override async Task OnInitializedAsync()
     {
@@ -129,11 +123,11 @@
 
     private async Task ImportSelected()
     {
+        // If no explicit selections (checkboxes removed), default to importing all candidates.
         var selected = _candidates.Where(c => c.IsSelected).ToList();
         if (!selected.Any())
         {
-            Snackbar.Add("Please select at least one member.", Severity.Warning);
-            return;
+            selected = _candidates.ToList();
         }
 
         // Build a short preview of selected names (limit to 10 names)
@@ -177,30 +171,7 @@
         }
     }
 
-    private int _selectedCount => _candidates.Count(c => c.IsSelected);
-
-    protected override void OnParametersSet()
-    {
-        UpdateSelectAllState();
-    }
-
-    private void UpdateSelectAllState()
-    {
-        if (_candidates.Count == 0) _selectAll = false;
-        else _selectAll = _candidates.All(c => c.IsSelected);
-    }
-
-    private void ToggleSelectAll(bool value)
-    {
-        foreach (var c in FilteredCandidates)
-            c.IsSelected = value;
-    }
-
-    private void OnSelectAllChanged(ChangeEventArgs e)
-    {
-        if (e.Value is bool b)
-            ToggleSelectAll(b);
-    }
+    private int _selectedCount => _candidates.Count;
 
     private class CandidateMember
     {

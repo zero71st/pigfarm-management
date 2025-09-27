@@ -12,15 +12,19 @@ namespace PigFarmManagement.Server.Models
 
     // Indexed / search fields
     public string Code { get; set; } = string.Empty; // maps to POSPOS code / key_card_id
-    public string Name { get; set; } = string.Empty;
+    // Split into FirstName/LastName per POSPOS integration
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
+    // Friendly display computed property
+    [JsonIgnore]
+    public string DisplayName => string.IsNullOrWhiteSpace(FirstName) && string.IsNullOrWhiteSpace(LastName) ? Code : $"{FirstName} {LastName} ({Code})";
     public CustomerStatus Status { get; set; } = CustomerStatus.Active;
     public string? Phone { get; set; }
     public string? Email { get; set; }
     public string? ExternalId { get; set; }
     public string? KeyCardId { get; set; }
     public string? Address { get; set; }
-    public string? FirstName { get; set; }
-    public string? LastName { get; set; }
+    // FirstName/LastName defined above
     public string? Sex { get; set; }
     public string? Zipcode { get; set; }
 

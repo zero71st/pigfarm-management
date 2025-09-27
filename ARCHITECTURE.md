@@ -341,7 +341,7 @@ GET    /api/pigpens/{id}/harvests     # Get harvest history
 **Core Entities:**
 ```csharp
 // Customer management
-Customer(Id, Code, Name, Type)
+Customer(Id, Code, FirstName, LastName, Type)
 CustomerType: Cash | Project
 
 // Pig pen operations

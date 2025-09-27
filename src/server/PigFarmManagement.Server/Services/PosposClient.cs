@@ -132,19 +132,24 @@ namespace PigFarmManagement.Server.Services
                             {
                                 foreach (var el in prop.Value.EnumerateArray())
                                 {
-                                    if (el.ValueKind == JsonValueKind.Object && el.TryGetProperty("id", out var idProp) && idProp.GetString() == m.id)
+                                    if (el.ValueKind != JsonValueKind.Object) continue;
+                                    // Match either "id" or "_id" to the deserialized member Id
+                                    var matched = false;
+                                    if (el.TryGetProperty("id", out var idProp) && idProp.GetString() == m.Id) matched = true;
+                                    if (!matched && el.TryGetProperty("_id", out var idProp2) && idProp2.GetString() == m.Id) matched = true;
+                                    if (!matched) continue;
+
+                                    if (el.TryGetProperty("firstName", out var fn)) m.FirstName = fn.GetString() ?? "";
+                                    if (el.TryGetProperty("lastName", out var ln)) m.LastName = ln.GetString() ?? "";
+                                    if (string.IsNullOrWhiteSpace(m.FirstName) && el.TryGetProperty("name", out var nameProp))
                                     {
-                                        if (el.TryGetProperty("firstName", out var fn)) m.FirstName = fn.GetString() ?? "";
-                                        if (el.TryGetProperty("lastName", out var ln)) m.LastName = ln.GetString() ?? "";
-                                        if (string.IsNullOrWhiteSpace(m.FirstName) && el.TryGetProperty("name", out var nameProp))
-                                        {
-                                            var nm = nameProp.GetString() ?? "";
-                                            var parts = nm.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
-                                            if (parts.Length == 1) m.FirstName = parts[0];
-                                            else if (parts.Length >= 2) { m.FirstName = parts[0]; m.LastName = parts[1]; }
-                                        }
-                                        break;
+                                        var nm = nameProp.GetString() ?? "";
+                                        var parts = nm.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
+                                        if (parts.Length == 1) m.FirstName = parts[0];
+                                        else if (parts.Length >= 2) { m.FirstName = parts[0]; m.LastName = parts[1]; }
                                     }
+
+                                    break;
                                 }
                             }
                         }
@@ -162,7 +167,7 @@ namespace PigFarmManagement.Server.Services
             // POSPOS API may not expose a batch-get; fallback to fetching all and filtering
             var all = await GetMembersAsync();
             var set = new HashSet<string>(ids ?? Array.Empty<string>());
-            return all.Where(m => !string.IsNullOrEmpty(m.id) && set.Contains(m.id));
+            return all.Where(m => !string.IsNullOrEmpty(m.Id) && set.Contains(m.Id));
         }
     }
 }
