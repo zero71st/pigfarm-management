@@ -205,8 +205,8 @@ namespace PigFarmManagement.Server.Services
             string? first = string.IsNullOrWhiteSpace(m.FirstName) ? null : m.FirstName.Trim();
             string? last = string.IsNullOrWhiteSpace(m.LastName) ? null : m.LastName.Trim();
 
-            // Use the external id as code if no other code is provided
-            var code = !string.IsNullOrWhiteSpace(m.Id) ? m.Id : m.Code ?? string.Empty;
+            // Prefer the POSPOS 'Code' (e.g. M0000X). Fall back to the external id when Code is not present.
+            var code = !string.IsNullOrWhiteSpace(m.Code) ? m.Code : (m.Id ?? string.Empty);
 
             var cust = new PigFarmManagement.Shared.Models.Customer(Guid.NewGuid(), code, PigFarmManagement.Shared.Models.CustomerStatus.Active)
             {

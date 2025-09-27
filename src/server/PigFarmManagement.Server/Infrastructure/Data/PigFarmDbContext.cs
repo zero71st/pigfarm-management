@@ -126,8 +126,10 @@ public class PigFarmDbContext : DbContext
             entity.Property(e => e.BagPerPig).HasColumnType("decimal(18,2)");
         });
 
-        // Seed Data
-        SeedData(modelBuilder);
+    // Seed Data
+    // NOTE: Disabled automatic seed of mock/sample data so the system starts empty
+    // and real POSPOS customers can be imported by the user.
+    // SeedData(modelBuilder);
     }
 
     private static void SeedData(ModelBuilder modelBuilder)

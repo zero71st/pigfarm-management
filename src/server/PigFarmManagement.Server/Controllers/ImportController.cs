@@ -10,15 +10,17 @@ namespace PigFarmManagement.Server.Controllers
     {
         private readonly IPosposImporter _importer;
         private readonly IPosposClient _posposClient;
-    private readonly Microsoft.Extensions.Options.IOptions<PigFarmManagement.Server.Infrastructure.Settings.PosposOptions> _posposOptions;
-    private readonly System.Net.Http.IHttpClientFactory _httpClientFactory;
+        private readonly Microsoft.Extensions.Options.IOptions<PigFarmManagement.Server.Infrastructure.Settings.PosposOptions> _posposOptions;
+        private readonly System.Net.Http.IHttpClientFactory _httpClientFactory;
+        private readonly Features.Customers.ICustomerService _customerService;
 
-        public ImportController(IPosposImporter importer, IPosposClient posposClient, Microsoft.Extensions.Options.IOptions<PigFarmManagement.Server.Infrastructure.Settings.PosposOptions> posposOptions, System.Net.Http.IHttpClientFactory httpClientFactory)
+        public ImportController(IPosposImporter importer, IPosposClient posposClient, Microsoft.Extensions.Options.IOptions<PigFarmManagement.Server.Infrastructure.Settings.PosposOptions> posposOptions, System.Net.Http.IHttpClientFactory httpClientFactory, Features.Customers.ICustomerService customerService)
         {
             _importer = importer;
             _posposClient = posposClient;
             _posposOptions = posposOptions;
             _httpClientFactory = httpClientFactory;
+            _customerService = customerService;
         }
 
         /// <summary>
@@ -199,6 +201,62 @@ namespace PigFarmManagement.Server.Controllers
 
             var summary = await _importer.RunImportSelectedAsync(ids, persist);
             return Ok(summary);
+        }
+
+        /// <summary>
+        /// Backfill customer.Code using POSPOS member 'Code' when available.
+        /// Matches customers by ExternalId -> POSPOS member Id. This fixes older imports
+        /// where Customer.Code was set to the external GUID/id instead of the POSPOS code.
+        /// </summary>
+        [HttpPost("customers/fix-codes")]
+        public async Task<IActionResult> FixCustomerCodes()
+        {
+            try
+            {
+                var members = await _posposClient.GetMembersAsync();
+                var map = members.Where(m => !string.IsNullOrWhiteSpace(m.Code) && !string.IsNullOrWhiteSpace(m.Id))
+                                 .ToDictionary(m => m.Id, m => m.Code);
+
+                var customers = await _customerService.GetAllCustomersAsync();
+                int updated = 0;
+                var audit = new List<object>();
+
+                // Build reverse map: posCode -> posId for matching by code
+                var codeToId = map.ToDictionary(kv => kv.Value, kv => kv.Key);
+
+                foreach (var cust in customers)
+                {
+                    // Prefer matching by ExternalId -> POSPOS id
+                    if (!string.IsNullOrWhiteSpace(cust.ExternalId) && map.TryGetValue(cust.ExternalId, out var posCode))
+                    {
+                        if (!string.Equals(cust.Code, posCode, StringComparison.Ordinal))
+                        {
+                            var updatedCustomer = cust with { Code = posCode };
+                            await _customerService.UpdateCustomerAsync(updatedCustomer);
+                            updated++;
+                            audit.Add(new { CustomerId = cust.Id, Before = cust.Code, After = posCode, MatchedBy = "ExternalId" });
+                        }
+                    }
+                    else if (!string.IsNullOrWhiteSpace(cust.Code) && codeToId.TryGetValue(cust.Code, out var foundPosId))
+                    {
+                        // If customer has no ExternalId but their Code matches a POSPOS member code,
+                        // set ExternalId so future exchanges can match directly.
+                        if (string.IsNullOrWhiteSpace(cust.ExternalId) || !string.Equals(cust.ExternalId, foundPosId, StringComparison.Ordinal))
+                        {
+                            var updatedCustomer = cust with { ExternalId = foundPosId };
+                            await _customerService.UpdateCustomerAsync(updatedCustomer);
+                            updated++;
+                            audit.Add(new { CustomerId = cust.Id, Before = cust.ExternalId, After = foundPosId, MatchedBy = "Code" });
+                        }
+                    }
+                }
+
+                return Ok(new { Updated = updated, Audit = audit.Take(200) });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Failed to fix customer codes", error = ex.Message });
+            }
         }
 
         /// <summary>
