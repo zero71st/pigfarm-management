@@ -14,7 +14,7 @@
 <PageTitle>PigFarm - Customers</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge">
-    <MudText Typo="Typo.h4" GutterBottom="true" Class="mb-4">
+    <MudText Typo="Typo.h4" GutterBottom="true" Class="mb-2">
         <MudIcon Icon="Icons.Material.Filled.People" Class="mr-2" />
         Customer Management
     </MudText>
@@ -22,42 +22,39 @@
     <!-- Customer Management statistics (moved to sit between title and search/action bar) -->
     @if (customers?.Any() == true)
     {
-        <CustomerStatistics Customers="customers" PigPens="pigPens" />
+        <CustomerStatistics Customers="customers" />
     }
 
     <!-- Action Bar -->
-    <MudPaper Class="pa-4 mb-4" Elevation="2">
-        <MudGrid AlignItems="Center">
-            <MudItem xs="12" md="6">
-                <MudTextField @bind-Value="searchText" Label="Search customers..." Variant="Variant.Outlined"
-                    Adornment="Adornment.End" AdornmentIcon="Icons.Material.Filled.Search" OnKeyUp="OnSearchKeyUp"
-                    Immediate="true" />
-            </MudItem>
-            <MudItem xs="12" md="3">
-                <MudSelect T="CustomerStatus ?" @bind-Value="selectedCustomerStatus" Label="Filter by Status"
-                    Variant="Variant.Outlined" Clearable="true">
-                    <MudSelectItem T="CustomerStatus ?" Value="@CustomerStatus.Active">Active</MudSelectItem>
-                    <MudSelectItem T="CustomerStatus ?" Value="@CustomerStatus.Inactive">Inactive</MudSelectItem>
-                </MudSelect>
-            </MudItem>
-            <MudItem xs="12" md="3" Class="text-right">
-                <MudStack Row Spacing="1" Class="align-items-center justify-content-end">
-                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="StartImport"
-                        Disabled="_importRunning">
-                        <MudIcon Icon="Icons.Material.Filled.Download" Class="mr-1" /> Import
-                    </MudButton>
+    <MudGrid Class="pa-2 mb-1" AlignItems="Center">
+        <MudItem xs="12" md="6">
+            <MudTextField @bind-Value="searchText" Label="Search customers..." Variant="Variant.Outlined"
+                Adornment="Adornment.End" AdornmentIcon="Icons.Material.Filled.Search" OnKeyUp="OnSearchKeyUp"
+                Immediate="true" />
+        </MudItem>
+        <MudItem xs="12" md="3">
+            <MudSelect T="CustomerStatus ?" @bind-Value="selectedCustomerStatus" Label="Filter by Status"
+                Variant="Variant.Outlined" Clearable="true">
+                <MudSelectItem T="CustomerStatus ?" Value="@CustomerStatus.Active">Active</MudSelectItem>
+                <MudSelectItem T="CustomerStatus ?" Value="@CustomerStatus.Inactive">Inactive</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" md="3" Class="text-right">
+            <MudStack Row Spacing="1" Class="align-items-center justify-content-end">
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="StartImport"
+                    Disabled="_importRunning">
+                    <MudIcon Icon="Icons.Material.Filled.Download" Class="mr-1" /> Import
+                </MudButton>
 
-                    <MudSwitch @bind-Value="_persistMapping" Color="Color.Primary" />
+                <MudSwitch @bind-Value="_persistMapping" Color="Color.Primary" />
 
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="Icons.Material.Filled.Add"
-                        OnClick="OpenAddCustomerDialog">
-                        Add Customer
-                    </MudButton>
-                </MudStack>
-            </MudItem>
-        </MudGrid>
-    </MudPaper>
-
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="Icons.Material.Filled.Add"
+                    OnClick="OpenAddCustomerDialog">
+                    Add Customer
+                </MudButton>
+            </MudStack>
+        </MudItem>
+    </MudGrid>
 
     <!-- Customer Cards Grid -->
     <MudGrid>

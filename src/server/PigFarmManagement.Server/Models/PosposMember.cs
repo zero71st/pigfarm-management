@@ -25,6 +25,6 @@ namespace PigFarmManagement.Server.Models
         [JsonPropertyName("zipcode")] public string Zipcode { get; set; } = string.Empty;
         [JsonPropertyName("sex")] public string Sex { get; set; } = string.Empty;
 
-    [JsonPropertyName("created_at")] public string CreatedAt { get; set; } = string.Empty;
+        [JsonPropertyName("created_at")] public string CreatedAt { get; set; } = string.Empty;
     }
 }
