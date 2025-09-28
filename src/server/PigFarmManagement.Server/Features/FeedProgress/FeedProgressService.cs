@@ -109,9 +109,8 @@ public class FeedProgressService : IFeedProgressService
         var requiredBags = totalBagPerPig * pigPen.PigQty;
         
         // Calculate actual bags consumed
-        // Assuming standard feed bag size is 25kg
-        var standardBagSizeKg = 25m;
-        var actualBags = feeds.Sum(f => f.QuantityKg) / standardBagSizeKg;
+    // Quantity is stored as number of bags
+    var actualBags = feeds.Sum(f => f.Quantity);
         
         // Calculate percentage
         var percentage = requiredBags > 0 ? (actualBags / requiredBags) * 100 : 0;
@@ -144,16 +143,14 @@ public class FeedProgressService : IFeedProgressService
 
     private List<FeedBagUsage> CalculateFeedBagUsage(List<FeedItem> feeds)
     {
-        var standardBagSizeKg = 25m;
-        
         return feeds
             .OrderByDescending(f => f.Date)
             .Take(10) // Get last 10 feed records
             .Select(f => new FeedBagUsage(
                 Date: f.Date,
                 ProductName: f.ProductName,
-                BagsUsed: f.QuantityKg / standardBagSizeKg,
-                CostPerBag: f.PricePerKg * standardBagSizeKg,
+                BagsUsed: f.Quantity,
+                CostPerBag: f.PricePerBag,
                 TotalCost: f.Cost
             ))
             .ToList();

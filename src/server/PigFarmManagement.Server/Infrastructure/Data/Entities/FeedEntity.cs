@@ -34,6 +34,10 @@ public class FeedEntity
     public DateTime FeedDate { get; set; }
     
     public string? ExternalReference { get; set; }
+    public string? ExternalProductCode { get; set; }
+    public string? ExternalProductName { get; set; }
+    public string? InvoiceReferenceCode { get; set; }
+    public bool UnmappedProduct { get; set; }
     public string? Notes { get; set; }
     
     public DateTime CreatedAt { get; set; }
@@ -59,6 +63,10 @@ public class FeedEntity
             TotalPrice = TotalPrice,
             FeedDate = FeedDate,
             ExternalReference = ExternalReference,
+            ExternalProductCode = ExternalProductCode,
+            ExternalProductName = ExternalProductName,
+            InvoiceReferenceCode = InvoiceReferenceCode,
+            UnmappedProduct = UnmappedProduct,
             Notes = Notes,
             CreatedAt = CreatedAt,
             UpdatedAt = UpdatedAt
@@ -81,6 +89,10 @@ public class FeedEntity
             TotalPrice = feed.TotalPrice,
             FeedDate = feed.FeedDate,
             ExternalReference = feed.ExternalReference,
+            ExternalProductCode = feed.ExternalProductCode,
+            ExternalProductName = feed.ExternalProductName,
+            InvoiceReferenceCode = feed.InvoiceReferenceCode,
+            UnmappedProduct = feed.UnmappedProduct,
             Notes = feed.Notes,
             CreatedAt = feed.CreatedAt,
             UpdatedAt = feed.UpdatedAt

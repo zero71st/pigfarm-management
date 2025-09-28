@@ -13,12 +13,17 @@ public class Feed
     public string ProductCode { get; set; } = ""; // Add product code field
     public string ProductName { get; set; } = ""; // Add product name field
     public string InvoiceNumber { get; set; } = ""; // Add invoice number field
+    public string? InvoiceReferenceCode { get; set; }
     public int Quantity { get; set; }
     public decimal UnitPrice { get; set; }
     public decimal TotalPrice { get; set; }
     public DateTime FeedDate { get; set; }
     public string? Notes { get; set; }
     public string? ExternalReference { get; set; }
+    // New fields for external product mapping
+    public string? ExternalProductCode { get; set; }
+    public string? ExternalProductName { get; set; }
+    public bool UnmappedProduct { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.Now;
     public DateTime UpdatedAt { get; set; } = DateTime.Now;
     
