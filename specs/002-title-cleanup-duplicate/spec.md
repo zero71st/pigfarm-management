@@ -6,94 +6,111 @@
 **Input**: User description: "$ARGUMENTS"
 
 ## Execution Flow (main)
-# Feature Specification: Cleanup duplicate docs
+```
+1. Parse user description from Input
+   → If empty: ERROR "No feature description provided"
+2. Extract key concepts from description
+   → Identify: actors, actions, data, constraints
+3. For each unclear aspect:
+   → Mark with [NEEDS CLARIFICATION: specific question]
+4. Fill User Scenarios & Testing section
+   → If no clear user flow: ERROR "Cannot determine user scenarios"
+5. Generate Functional Requirements
+   → Each requirement must be testable
+   → Mark ambiguous requirements
+6. Identify Key Entities (if data involved)
+7. Run Review Checklist
+   → If any [NEEDS CLARIFICATION]: WARN "Spec has uncertainties"
+   → If implementation details found: ERROR "Remove tech details"
+8. Return: SUCCESS (spec ready for planning)
+```
 
-**Feature Branch**: `002-title-cleanup-duplicate`  
-**Created**: 2025-09-28  
-**Status**: Draft  
-**Input**: User description: "clean up duplicate docs except specify kit docs (spec/plan/task)"
+---
 
-## Objective
+## ⚡ Quick Guidelines
+- ✅ Focus on WHAT users need and WHY
+- ❌ Avoid HOW to implement (no tech stack, APIs, code structure)
+- 👥 Written for business stakeholders, not developers
 
-Consolidate or remove duplicate and overlapping documentation in the repository while preserving the `specify` kit artifacts (files created/managed by the `.specify` tooling under `specs/` and the `.specify/` directory). Produce a small, reviewable PR that archives non-canonical copies and leaves a single authoritative document for each topic.
+### Section Requirements
+- **Mandatory sections**: Must be completed for every feature
+- **Optional sections**: Include only when relevant to the feature
+- When a section doesn't apply, remove it entirely (don't leave as "N/A")
 
-## Execution Flow (main)
+### For AI Generation
+When creating this spec from a user prompt:
+1. **Mark all ambiguities**: Use [NEEDS CLARIFICATION: specific question] for any assumption you'd need to make
+2. **Don't guess**: If the prompt doesn't specify something (e.g., "login system" without auth method), mark it
+3. **Think like a tester**: Every vague requirement should fail the "testable and unambiguous" checklist item
+4. **Common underspecified areas**:
+   - User types and permissions
+   - Data retention/deletion policies  
+   - Performance targets and scale
+   - Error handling behaviors
+   - Integration requirements
+   - Security/compliance needs
 
-1. Scan the repository for documentation files under paths: `docs/`, `README.md`, `specs/`, and any top-level `*.md` that appear to be documentation.
-2. Compute hashes and a similarity score for every pair of candidate documents (exact match or fuzzy text similarity). Group near-duplicates (similarity >= 85%).
-3. Exclude from automated deletion any file under `.specify/` and exclude the entire `specs/` folder; no files under `specs/` will be modified or deleted by the automated cleanup process. Files under `specs/` are considered out-of-scope for this cleanup.
-4. For each group of near-duplicates, generate a proposed action: (A) keep canonical file and archive others, (B) consolidate by merging unique sections into canonical file and archive others, or (C) manual review if differences are non-trivial.
-5. Produce a preview PR branch that contains: the proposed deletions (moved to `docs/_archive/<timestamp>/`), any consolidations applied as edits to the canonical file, and a summary file `docs/cleanup-report.md` listing all actions and reasons.
-6. Open a draft PR for human review with a checklist for reviewers to sign off.
+---
 
-If any ambiguous case is found (e.g., docs with small but important differences), mark them for manual review and do not auto-delete.
-
-## Clarifications
-
-### Session 2025-09-28
-
-- Q: Which spec files should be protected from cleanup? → A: A
-
-Note: Answer A means fully exclude both `.specify/` and the entire `specs/` folder — no spec files will be touched. The spec and the tooling will treat `specs/` as out-of-scope for this feature.
-
-## User Scenarios & Testing
+## User Scenarios & Testing *(mandatory)*
 
 ### Primary User Story
-As a documentation maintainer, I want duplicate documentation removed or consolidated so that the repo docs are easier to navigate, authoritative, and free of confusing copies.
+[Describe the main user journey in plain language]
 
 ### Acceptance Scenarios
-1. Given the repo contains multiple versions of the same doc, when the cleanup PR is created, then only a single canonical doc remains in place and non-canonical files are moved to `docs/_archive/<timestamp>/` with a backup entry.
-2. Given a doc is referenced in `README.md` or `specs/`, when the cleanup completes, then links resolve to the canonical doc and no broken links are introduced.
-3. Given a doc under `.specify/` or a `specs/**` file identified as from the specify kit, when the cleanup runs, then those files are not changed or deleted.
+1. **Given** [initial state], **When** [action], **Then** [expected outcome]
+2. **Given** [initial state], **When** [action], **Then** [expected outcome]
 
 ### Edge Cases
-- Generated artifacts (e.g., `docs/generated/`) should be ignored unless explicitly listed for cleanup.
-- If two docs differ only by formatting or white-space, prefer canonicalizing formatting rather than deleting content.
-- If two docs differ by minor but important content (e.g., a command vs. a script update), surface to reviewer for manual merge.
+- What happens when [boundary condition]?
+- How does system handle [error scenario]?
 
-## Requirements
+## Requirements *(mandatory)*
 
 ### Functional Requirements
-- FR-006: The system MUST detect and group duplicate or highly similar documentation files under repository doc paths.
-- FR-007: The system MUST exclude any file under `.specify/` and any `specs/**` file marked as created by the specify tooling from automatic deletion or modification.
-- FR-008: For each duplicate-group, the system MUST produce a proposed action and preview (diff) that a human reviewer can approve.
-- FR-009: The system MUST move removed files into an archival location `docs/_archive/<timestamp>/` and record an `ArchiveEntry` in `docs/cleanup-report.md`.
-- FR-010: The system MUST create a draft PR containing all proposed changes and a human review checklist before any deletion is merged.
+- **FR-001**: System MUST [specific capability, e.g., "allow users to create accounts"]
+- **FR-002**: System MUST [specific capability, e.g., "validate email addresses"]  
+- **FR-003**: Users MUST be able to [key interaction, e.g., "reset their password"]
+- **FR-004**: System MUST [data requirement, e.g., "persist user preferences"]
+- **FR-005**: System MUST [behavior, e.g., "log all security events"]
 
-### Non-functional Requirements
-- NFR-001: The process MUST be reversible (archived files restoreable) via the repo history and archived folder.
-- NFR-002: The tool or process MUST run quickly on a developer machine (< 30s for a medium repo) and provide a concise report.
+*Example of marking unclear requirements:*
+- **FR-006**: System MUST authenticate users via [NEEDS CLARIFICATION: auth method not specified - email/password, SSO, OAuth?]
+- **FR-007**: System MUST retain user data for [NEEDS CLARIFICATION: retention period not specified]
 
-## Key Entities
-- Document: { path, checksum, title, headings, references }
-- DuplicateCandidate: { canonicalPath, otherPaths[], similarityScore, action }
-- ArchiveEntry: { originalPath, archivePath, timestamp, commit }
+### Key Entities *(include if feature involves data)*
+- **[Entity 1]**: [What it represents, key attributes without implementation]
+- **[Entity 2]**: [What it represents, relationships to other entities]
+
+---
 
 ## Review & Acceptance Checklist
+*GATE: Automated checks run during main() execution*
 
-Before merging the cleanup PR, ensure:
+### Content Quality
+- [ ] No implementation details (languages, frameworks, APIs)
+- [ ] Focused on user value and business needs
+- [ ] Written for non-technical stakeholders
+- [ ] All mandatory sections completed
 
-- [ ] A reviewer has validated that no specify-tooling files (`.specify/` or specify-created `specs/**`) were removed.
-- [ ] All removed files exist in `docs/_archive/<timestamp>/` and are referenced in `docs/cleanup-report.md`.
-- [ ] Internal links from `README.md`, `specs/`, and other index pages resolve to the canonical documents.
-- [ ] The PR description lists all removed/consolidated files and the justification for each.
-- [ ] At least one maintainer has approved the PR.
+### Requirement Completeness
+- [ ] No [NEEDS CLARIFICATION] markers remain
+- [ ] Requirements are testable and unambiguous  
+- [ ] Success criteria are measurable
+- [ ] Scope is clearly bounded
+- [ ] Dependencies and assumptions identified
 
-## Proposed Implementation Steps (developer-facing)
-
-1. Implement a script `scripts/cleanup-docs.ps1` (or `scripts/cleanup-docs.sh`) that performs the flow above. The script must accept a `--dry-run` flag to produce the preview without modifying files.
-2. Run `scripts/cleanup-docs.ps1 --dry-run` and review the generated `docs/cleanup-report.md`.
-3. If results are acceptable, run without `--dry-run` which will move files to `docs/_archive/<timestamp>/` and commit the changes to a feature branch `002-title-cleanup-duplicate`.
-4. Open a PR and request reviewer approval.
-
-Notes: This script is optional; maintainers may perform manual cleanup guided by `docs/cleanup-report.md` if preferred.
+---
 
 ## Execution Status
+*Updated by main() during processing*
 
-- [x] User description parsed
-- [x] Key concepts extracted
-- [x] Ambiguities marked: none critical; confirm generated assets policy (assumed ignored)
-- [x] User scenarios defined
-- [x] Requirements generated
-- [x] Entities identified
-- [ ] Review checklist to be completed during PR review
+- [ ] User description parsed
+- [ ] Key concepts extracted
+- [ ] Ambiguities marked
+- [ ] User scenarios defined
+- [ ] Requirements generated
+- [ ] Entities identified
+- [ ] Review checklist passed
+
+---

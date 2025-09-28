@@ -59,15 +59,17 @@ namespace PigFarmManagement.Server.Controllers
                 var trimmed = body.TrimStart();
                 if (trimmed.StartsWith("["))
                 {
-                    var arr = JsonSerializer.Deserialize<IEnumerable<JsonElement>>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                    return Ok(new { Status = (int)res.StatusCode, Data = arr ?? Array.Empty<JsonElement>() });
+                    // body is a raw JSON array; wrap it in our debug envelope and return as raw JSON content to avoid JsonDocument lifecycle issues
+                    var outJson = $"{{\"Status\":{(int)res.StatusCode},\"Data\":{body}}}";
+                    return Content(outJson, "application/json");
                 }
 
                 using var doc = JsonDocument.Parse(body);
                 if (doc.RootElement.ValueKind == JsonValueKind.Object && doc.RootElement.TryGetProperty("data", out var data) && data.ValueKind == JsonValueKind.Array)
                 {
-                    var arr = data.EnumerateArray().Select(e => e).ToArray();
-                    return Ok(new { Status = (int)res.StatusCode, Data = arr });
+                    // Deserialize the array node into a standalone JsonElement[] so it doesn't reference the JsonDocument buffer
+                    var outJson = $"{{\"Status\":{(int)res.StatusCode},\"Data\":{data.GetRawText()}}}";
+                    return Content(outJson, "application/json");
                 }
 
                 // fallback: find first array node
@@ -75,8 +77,8 @@ namespace PigFarmManagement.Server.Controllers
                 {
                     if (prop.Value.ValueKind == JsonValueKind.Array)
                     {
-                        var arr = prop.Value.EnumerateArray().Select(e => e).ToArray();
-                        if (arr.Length > 0) return Ok(new { Status = (int)res.StatusCode, Data = arr });
+                        var outJson = $"{{\"Status\":{(int)res.StatusCode},\"Data\":{prop.Value.GetRawText()}}}";
+                        if (!string.IsNullOrWhiteSpace(prop.Value.GetRawText())) return Content(outJson, "application/json");
                     }
                 }
 

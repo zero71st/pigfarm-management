@@ -1,118 +1,116 @@
-# Feature Specification: Connect to POSPOS for invoice data
+# Feature Specification: [FEATURE NAME]
 
-**Feature Branch**: `003-connect-to-pospos`  
-**Created**: 2025-09-28  
+**Feature Branch**: `[###-feature-name]`  
+**Created**: [DATE]  
 **Status**: Draft  
-**Input**: User description: "connect to pospos to get invoice info, and remove all mock depend of invoice (python, json)"
+**Input**: User description: "$ARGUMENTS"
 
 ## Execution Flow (main)
-1. Parse the user description and extract scope: retrieve live invoice data from POSPOS and remove mock invoice dependencies from the codebase and tests.
-2. Identify actors and data shapes required for invoice retrieval and downstream consumers.
-3. Run dry-run integration in an isolated environment to validate live responses and map fields.
-4. Replace mock data paths/usages with production data adapters behind a controlled feature flag or configuration.
-5. Execute tests (contract + integration) to confirm parity and that no consumer breaks occur.
+```
+1. Parse user description from Input
+   → If empty: ERROR "No feature description provided"
+2. Extract key concepts from description
+   → Identify: actors, actions, data, constraints
+3. For each unclear aspect:
+   → Mark with [NEEDS CLARIFICATION: specific question]
+4. Fill User Scenarios & Testing section
+   → If no clear user flow: ERROR "Cannot determine user scenarios"
+5. Generate Functional Requirements
+   → Each requirement must be testable
+   → Mark ambiguous requirements
+6. Identify Key Entities (if data involved)
+7. Run Review Checklist
+   → If any [NEEDS CLARIFICATION]: WARN "Spec has uncertainties"
+   → If implementation details found: ERROR "Remove tech details"
+8. Return: SUCCESS (spec ready for planning)
+```
 
 ---
 
 ## ⚡ Quick Guidelines
-- Focus on WHAT the system must provide: reliable, testable invoice data from POSPOS and removal of mock artifacts that currently stand in for that data.
-- Avoid prescribing implementation languages or libraries in this spec. The spec describes behavior, data contracts, and acceptance criteria.
+- ✅ Focus on WHAT users need and WHY
+- ❌ Avoid HOW to implement (no tech stack, APIs, code structure)
+- 👥 Written for business stakeholders, not developers
+
+### Section Requirements
+- **Mandatory sections**: Must be completed for every feature
+- **Optional sections**: Include only when relevant to the feature
+- When a section doesn't apply, remove it entirely (don't leave as "N/A")
+
+### For AI Generation
+When creating this spec from a user prompt:
+1. **Mark all ambiguities**: Use [NEEDS CLARIFICATION: specific question] for any assumption you'd need to make
+2. **Don't guess**: If the prompt doesn't specify something (e.g., "login system" without auth method), mark it
+3. **Think like a tester**: Every vague requirement should fail the "testable and unambiguous" checklist item
+4. **Common underspecified areas**:
+   - User types and permissions
+   - Data retention/deletion policies  
+   - Performance targets and scale
+   - Error handling behaviors
+   - Integration requirements
+   - Security/compliance needs
+
+---
 
 ## User Scenarios & Testing *(mandatory)*
 
 ### Primary User Story
-As a system operator or downstream job, I want the application to use live invoice information from the POSPOS service so that reports and imports reflect real transactions instead of local mock JSON fixtures.
+[Describe the main user journey in plain language]
 
 ### Acceptance Scenarios
-1. Given a valid invoice identifier exists in POSPOS, when the system requests invoice details, then it returns an invoice object containing invoice id, date, customer reference, line items, totals, and payment status.
-2. Given POSPOS is unavailable or returns an error for a request, when the system attempts to fetch an invoice, then it surfaces a clear error (or retryable failure) to the caller and does not return stale or partial mock data silently.
-3. Given integration tests run in CI with network access disabled, when the mock mode is enabled, then tests use a maintained mock fixture (only for CI isolation) while developers using live mode receive live responses.
+1. **Given** [initial state], **When** [action], **Then** [expected outcome]
+2. **Given** [initial state], **When** [action], **Then** [expected outcome]
 
 ### Edge Cases
-- Invoice not found: should return a 404-like result with a documented shape so callers can handle missing data.
-- Schema drift: if POSPOS adds/removes fields, the importer should ignore unknown fields and log schema differences for later mapping.
-- Partial data: if line items are empty or totals missing, the importer must validate and reject inconsistent invoices with an explanatory error.
-- Rate limiting / throttling: the system must handle HTTP 429 or equivalent by retrying with exponential backoff or queuing requests.
+- What happens when [boundary condition]?
+- How does system handle [error scenario]?
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
-- FR-001: System MUST be able to fetch invoice details using an invoice identifier from the POSPOS service and provide the data to existing consumers in the same logical shape (or via a documented transformation mapping).
-- FR-002: System MUST remove or stop using local mock invoice fixtures (Python scripts, JSON files) in production code paths and tests that are intended to exercise live integrations.
-- FR-003: System MUST provide a configuration switch or environment-aware behavior to allow tests/CI to run in mock mode while production uses live POSPOS data.
-- FR-004: System MUST validate incoming invoice data and reject records that fail basic integrity checks (missing id, negative totals, inconsistent line items).
-- FR-005: System MUST surface clear errors when POSPOS is unreachable or returns an error, and not silently fall back to stale mocks.
-- FR-006: System MUST write an audit/log entry for each imported invoice (source, timestamp, mapping decisions) to aid debugging and rollback.
+- **FR-001**: System MUST [specific capability, e.g., "allow users to create accounts"]
+- **FR-002**: System MUST [specific capability, e.g., "validate email addresses"]  
+- **FR-003**: Users MUST be able to [key interaction, e.g., "reset their password"]
+- **FR-004**: System MUST [data requirement, e.g., "persist user preferences"]
+- **FR-005**: System MUST [behavior, e.g., "log all security events"]
 
-### Non-functional Requirements
-- NFR-001: The importer should be idempotent for a given invoice id (re-processing the same invoice must not create duplicates).
-- NFR-002: The integration must be observable (metrics for success/failure counts and latency) and log schema mismatches with at least WARN level.
+*Example of marking unclear requirements:*
+- **FR-006**: System MUST authenticate users via [NEEDS CLARIFICATION: auth method not specified - email/password, SSO, OAuth?]
+- **FR-007**: System MUST retain user data for [NEEDS CLARIFICATION: retention period not specified]
 
-### Ambiguities / NEEDS CLARIFICATION
- - AUTH: Credentials will be provided via API key stored in environment variables (same approach as customers import).
-- ENDPOINTS / SCHEMA: What is the canonical POSPOS API base URL and the exact invoice payload schema (field names, types)? Provide an OpenAPI or example JSON if available. [NEEDS CLARIFICATION]
-- SCOPE: Which Python mock files and JSON fixtures should be removed versus retained for offline CI? Please list paths or confirm policy. [NEEDS CLARIFICATION]
-- FAILOVER: Should the system have a fallback to cached invoice snapshots if POSPOS is temporarily unavailable? [NEEDS CLARIFICATION]
-
-**Resolved: POSPOS endpoint (provided by user)**
-- POSPOS transactions endpoint: https://go.pospos.co/developer/api/transactions
-- The integration will call the endpoint with query parameters: start (YYYY-MM-DD), end (YYYY-MM-DD), page (default: 1), limit (default: 200). Example provided by user:
-  - https://go.pospos.co/developer/api/transactions?page=1&limit=200&start=2025-09-03&end=2025-09-03
-- For imports we will send start and end date; page will be kept at 1 and limit at 200 as requested.
-
-> Note: The schema (field names and types) is still considered [NEEDS CLARIFICATION] — if you can paste a sample response or OpenAPI, I will generate an exact contract mapping.
-
-## Key Entities *(include if feature involves data)*
-- Invoice
-  - invoiceId (string)
-  - date (ISO 8601)
-  - customerRef (string)
-  - lines (array of InvoiceLine)
-  - subtotal, tax, total (numbers)
-  - status (e.g., PAID, UNPAID, CANCELLED)
-
-- InvoiceLine
-  - sku or itemCode (string)
-  - description (string)
-  - quantity (number)
-  - unitPrice (number)
-  - lineTotal (number)
-
-- InvoiceImportLog
-  - source (string: POSPOS)
-  - fetchedAt (timestamp)
-  - invoiceId (string)
-  - mappingNotes (string)
-
-## Review & Acceptance Checklist
-- [ ] Specification clearly describes user value and acceptance scenarios
-- [ ] All FRs are testable and have an associated acceptance test or contract
-- [ ] All [NEEDS CLARIFICATION] items are answered before implementation
-- [ ] No production code references local mock fixtures after implementation
-- [ ] Integration observability (metrics/logs) is present
-
-## Execution Status
-- [X] User description parsed
-- [X] Key concepts extracted
-- [X] Ambiguities recorded as NEEDS CLARIFICATION
-- [ ] User scenarios defined (complete)
-- [ ] Requirements generated (complete)
-- [ ] Entities identified
-- [ ] Review checklist passed
+### Key Entities *(include if feature involves data)*
+- **[Entity 1]**: [What it represents, key attributes without implementation]
+- **[Entity 2]**: [What it represents, relationships to other entities]
 
 ---
 
-### Next steps (planning)
-1. Provide POSPOS API details (endpoint, auth, example responses) so contracts can be generated.
-2. Inventory mock fixtures and Python/JSON files that act as invoice mocks and mark them for removal or migration to CI-only fixtures.
-3. Create contract tests that call a small adapter or test harness to validate field mappings against sample POSPOS responses.
-4. Implement importer with idempotency, validation, logging, and a config to select live vs mock modes.
-5. Run integration tests in a disposable environment and iterate until contract tests pass.
+## Review & Acceptance Checklist
+*GATE: Automated checks run during main() execution*
 
-## Clarifications
+### Content Quality
+- [ ] No implementation details (languages, frameworks, APIs)
+- [ ] Focused on user value and business needs
+- [ ] Written for non-technical stakeholders
+- [ ] All mandatory sections completed
 
-### Session 2025-09-28
-- Q: Which authentication method should POSPOS use? → A: Same as customers import (API key in env vars)
-- Q: Will you provide a sample response or should the agent fetch live data? → A: C (Agent should fetch live from POSPOS; user will supply auth)
+### Requirement Completeness
+- [ ] No [NEEDS CLARIFICATION] markers remain
+- [ ] Requirements are testable and unambiguous  
+- [ ] Success criteria are measurable
+- [ ] Scope is clearly bounded
+- [ ] Dependencies and assumptions identified
+
+---
+
+## Execution Status
+*Updated by main() during processing*
+
+- [ ] User description parsed
+- [ ] Key concepts extracted
+- [ ] Ambiguities marked
+- [ ] User scenarios defined
+- [ ] Requirements generated
+- [ ] Entities identified
+- [ ] Review checklist passed
 
 ---

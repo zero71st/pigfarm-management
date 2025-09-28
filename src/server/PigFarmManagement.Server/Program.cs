@@ -27,10 +27,6 @@ builder.Services.AddHttpClient<PigFarmManagement.Server.Services.IPosposClient, 
 // injecting scoped services into a singleton which causes runtime DI errors.
 builder.Services.AddScoped<PigFarmManagement.Server.Services.IPosposImporter, PigFarmManagement.Server.Services.PosposImporter>();
 
-// Register POSPOS feed client and invoice importer for feed-level imports
-builder.Services.AddHttpClient<PigFarmManagement.Server.Services.IPosposFeedClient, PigFarmManagement.Server.Services.PosposFeedClient>();
-builder.Services.AddScoped<PigFarmManagement.Server.Services.IPosposInvoiceImporter, PigFarmManagement.Server.Services.PosposInvoiceImporter>();
-
 // CORS configuration for production
 builder.Services.AddCors(options =>
 {

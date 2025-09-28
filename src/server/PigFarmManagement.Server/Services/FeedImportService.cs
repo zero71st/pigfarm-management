@@ -272,18 +272,8 @@ public class FeedImportService : IFeedImportService
                 UpdatedAt = DateTime.UtcNow
             };
 
-            // Idempotency: attempt to create atomically; CreateIfNotExistsAsync will return existing
-            var createdOrExisting = await _feedRepository.CreateIfNotExistsAsync(feed);
-            if (createdOrExisting.ExternalReference == feed.ExternalReference && createdOrExisting.CreatedAt < feed.CreatedAt)
-            {
-                // Existing record returned (created earlier) — treat as skipped
-                result.SkippedImports++;
-            }
-            else
-            {
-                // New record created
-                result.TotalFeedItems++;
-            }
+            await _feedRepository.CreateAsync(feed);
+            result.TotalFeedItems++;
         }
     }
 

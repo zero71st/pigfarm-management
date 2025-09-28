@@ -34,45 +34,12 @@ public class FeedRepository : IFeedRepository
         return entities.Select(e => e.ToModel());
     }
 
-    public async Task<Feed?> FindByExternalReferenceAsync(string externalReference)
-    {
-        if (string.IsNullOrWhiteSpace(externalReference)) return null;
-        var entity = await _context.Feeds.FirstOrDefaultAsync(f => f.ExternalReference == externalReference);
-        return entity?.ToModel();
-    }
-
     public async Task<Feed> CreateAsync(Feed feed)
     {
         var entity = FeedEntity.FromModel(feed);
         _context.Feeds.Add(entity);
         await _context.SaveChangesAsync();
         return entity.ToModel();
-    }
-
-    public async Task<Feed> CreateIfNotExistsAsync(Feed feed)
-    {
-        if (string.IsNullOrWhiteSpace(feed.ExternalReference))
-        {
-            // Fallback to normal create when no external reference provided
-            return await CreateAsync(feed);
-        }
-
-        // Try to insert; if a unique constraint violation occurs, return the existing record
-        var entity = FeedEntity.FromModel(feed);
-        _context.Feeds.Add(entity);
-        try
-        {
-            await _context.SaveChangesAsync();
-            return entity.ToModel();
-        }
-        catch (DbUpdateException)
-        {
-            // Likely unique constraint violation on ExternalReference. Attempt to return existing.
-            var existing = await _context.Feeds.FirstOrDefaultAsync(f => f.ExternalReference == feed.ExternalReference);
-            if (existing != null) return existing.ToModel();
-            // If we can't find it, rethrow to signal unexpected failure
-            throw;
-        }
     }
 
     public async Task<IEnumerable<Feed>> CreateManyAsync(IEnumerable<Feed> feeds)

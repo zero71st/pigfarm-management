@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using PigFarmManagement.Server.Services;
 using PigFarmManagement.Server.Infrastructure.Data.Repositories;
-using PigFarmManagement.Server.Models;
 using PigFarmManagement.Shared.Models;
 using Microsoft.Extensions.Logging;
 using Xunit;

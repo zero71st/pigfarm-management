@@ -129,9 +129,6 @@ directories captured above]
 
 **Output**: research.md with all NEEDS CLARIFICATION resolved
 
-## Phase 0 Output
-- research.md: generated and saved to specs/002-title-cleanup-duplicate/research.md
-
 ## Phase 1: Design & Contracts
 *Prerequisites: research.md complete*
 
@@ -164,12 +161,6 @@ directories captured above]
    - Output to repository root
 
 **Output**: data-model.md, /contracts/*, failing tests, quickstart.md, agent-specific file
-
-## Phase 1 Output
-- data-model.md: specs/002-title-cleanup-duplicate/data-model.md
-- quickstart.md: specs/002-title-cleanup-duplicate/quickstart.md
-- contracts: specs/002-title-cleanup-duplicate/contracts/cleanup-contracts.md
-
 
 ## Phase 2: Task Planning Approach
 *This section describes what the /tasks command will do - DO NOT execute during /plan*
@@ -211,8 +202,8 @@ directories captured above]
 *This checklist is updated during execution flow*
 
 **Phase Status**:
-- [x] Phase 0: Research complete (/plan command)
-- [x] Phase 1: Design complete (/plan command)
+- [ ] Phase 0: Research complete (/plan command)
+- [ ] Phase 1: Design complete (/plan command)
 - [ ] Phase 2: Task planning complete (/plan command - describe approach only)
 - [ ] Phase 3: Tasks generated (/tasks command)
 - [ ] Phase 4: Implementation complete
