@@ -1,7 +1,12 @@
 using System;
+using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using PigFarmManagement.Server.Services;
+using Microsoft.Extensions.Options;
+using PigFarmManagement.Server.Infrastructure.Settings;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace PigFarmManagement.Server.Controllers
 {
@@ -9,40 +14,78 @@ namespace PigFarmManagement.Server.Controllers
     [Route("import/feeds")]
     public class ImportFeedsController : ControllerBase
     {
-        private readonly IPosposInvoiceImporter _importer;
+        private readonly System.Net.Http.IHttpClientFactory _httpFactory;
+        private readonly Microsoft.Extensions.Options.IOptions<PigFarmManagement.Server.Infrastructure.Settings.PosposOptions> _opts;
 
-        public ImportFeedsController(IPosposInvoiceImporter importer)
+        public ImportFeedsController(System.Net.Http.IHttpClientFactory httpFactory, Microsoft.Extensions.Options.IOptions<PigFarmManagement.Server.Infrastructure.Settings.PosposOptions> opts)
         {
-            _importer = importer;
+            _httpFactory = httpFactory;
+            _opts = opts;
         }
 
         /// <summary>
-        /// Import POSPOS transactions for a date range (inclusive). Dates should be yyyy-MM-dd.
+        /// Fetch raw POSPOS transactions (no import). Useful for debugging or mapping before importing.
         /// </summary>
-        [HttpPost("date-range")]
-        public async Task<IActionResult> ImportByDate([FromQuery] string from, [FromQuery] string to)
+        [HttpGet("pospos/raw")]
+        public async Task<IActionResult> GetRawPosposTransactions([FromQuery] string? start = null, [FromQuery] string? end = null, [FromQuery] int page = 1, [FromQuery] int limit = 200)
         {
-            if (!DateTime.TryParse(from, out var fromDt) || !DateTime.TryParse(to, out var toDt))
-                return BadRequest(new { message = "Invalid from/to date parameters. Use yyyy-MM-dd or ISO date strings." });
+            var opts = _opts?.Value;
+            if (opts == null || string.IsNullOrWhiteSpace(opts.ApiBase))
+                return BadRequest(new { message = "POSPOS ApiBase not configured" });
 
-            var result = await _importer.ImportByDateRangeAsync(fromDt, toDt);
-            return Ok(result);
-        }
+            // Build URI with query params
+            var uri = opts.ApiBase.TrimEnd('/');
+            // If ApiBase already contains query string, append appropriately
+            var hasQuery = uri.Contains('?');
+            var q = new List<string>();
+            q.Add($"page={page}");
+            q.Add($"limit={limit}");
+            if (!string.IsNullOrWhiteSpace(start)) q.Add($"start={Uri.EscapeDataString(start)}");
+            if (!string.IsNullOrWhiteSpace(end)) q.Add($"end={Uri.EscapeDataString(end)}");
+            uri += (hasQuery ? "&" : "?") + string.Join("&", q);
 
-        /// <summary>
-        /// Import POSPOS transactions for a specific customer code.
-        /// </summary>
-        [HttpPost("customer/{code}")]
-        public async Task<IActionResult> ImportByCustomer([FromRoute] string code, [FromQuery] string? from = null, [FromQuery] string? to = null)
-        {
-            DateTime? fromDt = null, toDt = null;
-            if (!string.IsNullOrWhiteSpace(from) && !DateTime.TryParse(from, out var f)) return BadRequest(new { message = "Invalid from date" });
-            if (!string.IsNullOrWhiteSpace(to) && !DateTime.TryParse(to, out var t)) return BadRequest(new { message = "Invalid to date" });
-            if (!string.IsNullOrWhiteSpace(from)) fromDt = DateTime.Parse(from);
-            if (!string.IsNullOrWhiteSpace(to)) toDt = DateTime.Parse(to);
+            var client = _httpFactory.CreateClient();
+            var req = new HttpRequestMessage(HttpMethod.Get, uri);
+            if (!string.IsNullOrWhiteSpace(opts.ApiKey)) req.Headers.Add("apikey", opts.ApiKey);
 
-            var result = await _importer.ImportByCustomerCodeAsync(code, fromDt, toDt);
-            return Ok(result);
+            try
+            {
+                var res = await client.SendAsync(req);
+                var body = await res.Content.ReadAsStringAsync();
+
+                // Try return parsed array if possible
+                var trimmed = body.TrimStart();
+                if (trimmed.StartsWith("["))
+                {
+                    var arr = JsonSerializer.Deserialize<IEnumerable<JsonElement>>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    return Ok(new { Status = (int)res.StatusCode, Data = arr ?? Array.Empty<JsonElement>() });
+                }
+
+                using var doc = JsonDocument.Parse(body);
+                if (doc.RootElement.ValueKind == JsonValueKind.Object && doc.RootElement.TryGetProperty("data", out var data) && data.ValueKind == JsonValueKind.Array)
+                {
+                    var arr = data.EnumerateArray().Select(e => e).ToArray();
+                    return Ok(new { Status = (int)res.StatusCode, Data = arr });
+                }
+
+                // fallback: find first array node
+                foreach (var prop in doc.RootElement.EnumerateObject())
+                {
+                    if (prop.Value.ValueKind == JsonValueKind.Array)
+                    {
+                        var arr = prop.Value.EnumerateArray().Select(e => e).ToArray();
+                        if (arr.Length > 0) return Ok(new { Status = (int)res.StatusCode, Data = arr });
+                    }
+                }
+
+                // otherwise return raw body for inspection
+                return Ok(new { Status = (int)res.StatusCode, Body = body });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Failed to fetch POSPOS transactions", error = ex.Message });
+            }
         }
     }
 }
+
