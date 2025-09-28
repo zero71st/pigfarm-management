@@ -15,7 +15,7 @@
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge">
     <MudText Typo="Typo.h4" GutterBottom="true" Class="mb-2">
-        <MudIcon Icon="Icons.Material.Filled.People" Class="mr-2" />
+        <MudIcon Icon="@Icons.Material.Filled.People" Class="mr-2" />
         Customer Management
     </MudText>
 
@@ -29,7 +29,7 @@
     <MudGrid Class="pa-2 mb-1" AlignItems="Center">
         <MudItem xs="12" md="6">
             <MudTextField @bind-Value="searchText" Label="Search customers..." Variant="Variant.Outlined"
-                Adornment="Adornment.End" AdornmentIcon="Icons.Material.Filled.Search" OnKeyUp="OnSearchKeyUp"
+                Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" OnKeyUp="OnSearchKeyUp"
                 Immediate="true" />
         </MudItem>
         <MudItem xs="12" md="3">
@@ -43,12 +43,12 @@
             <MudStack Row Spacing="1" Class="align-items-center justify-content-end">
                 <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="StartImport"
                     Disabled="_importRunning">
-                    <MudIcon Icon="Icons.Material.Filled.Download" Class="mr-1" /> Import
+                    <MudIcon Icon="@Icons.Material.Filled.Download" Class="mr-1" /> Import
                 </MudButton>
 
                 <MudSwitch @bind-Value="_persistMapping" Color="Color.Primary" />
 
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="Icons.Material.Filled.Add"
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
                     OnClick="OpenAddCustomerDialog">
                     Add Customer
                 </MudButton>
