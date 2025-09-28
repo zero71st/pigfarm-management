@@ -1,0 +1,31 @@
+[
+  {
+    "code": "ST-TEST-0001",
+    "timestamp": "2025-09-28T08:30:00Z",
+    "buyer_detail": {
+      "code": "M000001",
+      "first_name": "Somchai",
+      "last_name": "Farm",
+      "key_card_id": "KC12345"
+    },
+    "order_list": [
+      {
+        "code": "PK64000161",
+        "name": "เจ็ท 120 หมู 40-60 กก.",
+        "stock": "5",
+        "price": "580",
+        "total_price_include_discount": "2900",
+        "special_price": "0"
+      },
+      {
+        "code": "UNKNOWN-CODE",
+        "name": "Generic Feed 20kg",
+        "stock": 3.2,
+        "price": 500.5,
+        "total_price_include_discount": 1601.5,
+        "special_price": 0
+      }
+    ],
+    "invoice_reference": { "code": "INV-REF-999" }
+  }
+]

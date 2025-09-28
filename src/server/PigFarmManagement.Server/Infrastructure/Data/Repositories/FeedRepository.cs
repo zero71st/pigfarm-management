@@ -79,4 +79,10 @@ public class FeedRepository : IFeedRepository
             await _context.SaveChangesAsync();
         }
     }
+
+    public async Task<bool> ExistsByInvoiceNumberAsync(string invoiceNumber)
+    {
+        if (string.IsNullOrWhiteSpace(invoiceNumber)) return false;
+        return await _context.Feeds.AnyAsync(f => f.InvoiceNumber == invoiceNumber);
+    }
 }

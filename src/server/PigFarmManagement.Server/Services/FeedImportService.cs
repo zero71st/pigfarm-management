@@ -10,6 +10,7 @@ public class FeedImportService : IFeedImportService
     private readonly IPigPenRepository _pigPenRepository;
     private readonly ICustomerRepository _customerRepository;
     private readonly IFeedRepository _feedRepository;
+    private readonly Infrastructure.Data.Repositories.IFeedRepository _efFeedRepository;
     private readonly IPosposFeedClient _posposFeedClient;
 
     // Keep legacy in-memory data for mock POSPOS transactions
@@ -20,11 +21,13 @@ public class FeedImportService : IFeedImportService
         IPigPenRepository pigPenRepository,
         ICustomerRepository customerRepository,
         IFeedRepository feedRepository,
+        Infrastructure.Data.Repositories.IFeedRepository efFeedRepository,
         IPosposFeedClient posposFeedClient)
     {
         _pigPenRepository = pigPenRepository;
         _customerRepository = customerRepository;
         _feedRepository = feedRepository;
+        _efFeedRepository = efFeedRepository;
         _posposFeedClient = posposFeedClient;
         InitializeData(); // Still needed for mock data
     }
@@ -235,32 +238,58 @@ public class FeedImportService : IFeedImportService
 
     private async Task ProcessTransactionForPigPenAsync(PosPosFeedTransaction transaction, PigPen pigPen, FeedImportResult result)
     {
+        // Idempotency: skip processing if a feed with the same InvoiceNumber already exists globally
+        if (!string.IsNullOrWhiteSpace(transaction.Code))
+        {
+            var exists = await _efFeedRepository.ExistsByInvoiceNumberAsync(transaction.Code);
+            if (exists)
+            {
+                result.FailedImports++;
+                result.Errors.Add($"Transaction {transaction.Code} skipped: invoice already imported");
+                return;
+            }
+        }
+
         foreach (var orderItem in transaction.OrderList)
         {
-            // stock is decimal (bags). Convert to kilograms (25 kg per bag).
-            var kilograms = orderItem.Stock * 25m;
-            // Quantity in Feed DTO is int (kg). Round to nearest integer to store.
-            var quantityKg = (int)Math.Round(kilograms, MidpointRounding.AwayFromZero);
+            // stock is decimal representing number of bags. Coerce to integer bag count.
+            var bags = (int)Math.Round(orderItem.Stock, MidpointRounding.AwayFromZero);
+
+            // UnitPrice is price-per-bag (POSPOS price is per-bag)
+            var unitPricePerBag = orderItem.Price;
+
+            // Determine product mapping: prefer exact code match, fallback to exact name match
+            var normalizedCode = (orderItem.Code ?? string.Empty).Trim();
+            var normalizedName = (orderItem.Name ?? string.Empty).Trim();
+
+            // NOTE: repository for product catalog is not available; rely on ProductCode/Name being stored on Feed
 
             var feed = new Feed
             {
                 Id = Guid.NewGuid(),
                 PigPenId = pigPen.Id,
                 ProductType = "อาหารสัตว์",
-                ProductCode = orderItem.Code,
-                ProductName = orderItem.Name,
+                ProductCode = normalizedCode,
+                ProductName = normalizedName,
                 InvoiceNumber = transaction.Code,
-                Quantity = quantityKg,
-                UnitPrice = orderItem.Price / 25m, // Price per kg
+                InvoiceReferenceCode = transaction.InvoiceReference?.Code,
+                Quantity = bags,
+                UnitPrice = unitPricePerBag,
                 TotalPrice = orderItem.TotalPriceIncludeDiscount,
                 FeedDate = transaction.Timestamp,
                 ExternalReference = $"POSPOS-{transaction.Code}-{orderItem.Code}",
                 Notes = $"Imported from POSPOS transaction {transaction.Code}",
+                ExternalProductCode = normalizedCode,
+                ExternalProductName = normalizedName,
+                UnmappedProduct = true, // default to true until a product mapping routine updates this
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
 
-            await _feedRepository.CreateAsync(feed);
+            // If we had product lookup logic, we would set UnmappedProduct=false and set ProductCode/ProductName accordingly.
+
+            await _efFeedRepository.CreateAsync(feed);
+
             result.TotalFeedItems++;
         }
     }
