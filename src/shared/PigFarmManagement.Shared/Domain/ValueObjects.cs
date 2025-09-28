@@ -14,7 +14,7 @@ public record FeedItem(
     string InvoiceNumber,
     decimal QuantityKg, 
     decimal PricePerKg, 
-    decimal Cost, 
+    decimal Cost,
     DateTime Date)
 {
     public string? ExternalReference { get; init; }

@@ -89,7 +89,7 @@
                 <MudTable Items="_availableTransactions" Hover="true" Striped="true" MultiSelection="true" 
                          @bind-SelectedItems="_selectedTransactions" T="PosPosFeedTransaction">
                     <HeaderContent>
-                        <MudTh><MudTableSortLabel SortBy="new Func<PosPosFeedTransaction, object>(x => x.Code)">Invoice Code</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<PosPosFeedTransaction, object>(x => x.InvoiceReference.Code)">Invoice Code</MudTableSortLabel></MudTh>
                         <MudTh><MudTableSortLabel SortBy="new Func<PosPosFeedTransaction, object>(x => x.Timestamp)">Date</MudTableSortLabel></MudTh>
                         <MudTh>Customer</MudTh>
                         <MudTh>Items</MudTh>
@@ -98,7 +98,7 @@
                     </HeaderContent>
                     <RowTemplate>
                         <MudTd DataLabel="Invoice Code">
-                            <MudChip Color="Color.Primary" Size="Size.Small">@context.Code</MudChip>
+                            <MudChip Color="Color.Primary" Size="Size.Small">@context.InvoiceReference.Code</MudChip>
                         </MudTd>
                         <MudTd DataLabel="Date">@context.Timestamp.ToString("yyyy-MM-dd HH:mm")</MudTd>
                         <MudTd DataLabel="Customer">@context.BuyerDetail.FirstName @context.BuyerDetail.LastName</MudTd>
