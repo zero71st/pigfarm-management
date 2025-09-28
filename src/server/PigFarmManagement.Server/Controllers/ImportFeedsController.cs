@@ -30,11 +30,13 @@ namespace PigFarmManagement.Server.Controllers
         public async Task<IActionResult> GetRawPosposTransactions([FromQuery] string? start = null, [FromQuery] string? end = null, [FromQuery] int page = 1, [FromQuery] int limit = 200)
         {
             var opts = _opts?.Value;
-            if (opts == null || string.IsNullOrWhiteSpace(opts.ApiBase))
-                return BadRequest(new { message = "POSPOS ApiBase not configured" });
+            if (opts == null || (string.IsNullOrWhiteSpace(opts.TransactionsApiBase) && string.IsNullOrWhiteSpace(opts.ApiBase)))
+                return BadRequest(new { message = "POSPOS transactions endpoint not configured (TransactionsApiBase or ApiBase)" });
 
+            // Prefer TransactionsApiBase when provided, otherwise fall back to ApiBase
+            var baseUri = !string.IsNullOrWhiteSpace(opts.TransactionsApiBase) ? opts.TransactionsApiBase : opts.ApiBase;
             // Build URI with query params
-            var uri = opts.ApiBase.TrimEnd('/');
+            var uri = baseUri.TrimEnd('/');
             // If ApiBase already contains query string, append appropriately
             var hasQuery = uri.Contains('?');
             var q = new List<string>();
