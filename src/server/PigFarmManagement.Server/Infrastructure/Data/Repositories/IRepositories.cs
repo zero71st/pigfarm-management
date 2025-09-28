@@ -28,6 +28,7 @@ public interface IFeedRepository
     Task<IEnumerable<Feed>> GetAllAsync();
     Task<Feed?> GetByIdAsync(Guid id);
     Task<IEnumerable<Feed>> GetByPigPenIdAsync(Guid pigPenId);
+        Task<Feed?> FindByExternalReferenceAsync(string externalReference);
     Task<Feed> CreateAsync(Feed feed);
     Task<Feed> UpdateAsync(Feed feed);
     Task DeleteAsync(Guid id);

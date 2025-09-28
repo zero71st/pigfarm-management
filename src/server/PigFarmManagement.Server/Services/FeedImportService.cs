@@ -272,6 +272,14 @@ public class FeedImportService : IFeedImportService
                 UpdatedAt = DateTime.UtcNow
             };
 
+            // Idempotency: skip if a feed with same ExternalReference already exists
+            var existing = await _feedRepository.FindByExternalReferenceAsync(feed.ExternalReference ?? string.Empty);
+            if (existing != null)
+            {
+                result.SkippedImports++;
+                continue;
+            }
+
             await _feedRepository.CreateAsync(feed);
             result.TotalFeedItems++;
         }

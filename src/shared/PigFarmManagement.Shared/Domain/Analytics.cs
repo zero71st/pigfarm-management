@@ -80,6 +80,7 @@ public class FeedImportResult
     public int FailedImports { get; set; }
     public List<string> Errors { get; set; } = new();
     public List<ImportedFeedSummary> ImportedFeeds { get; set; } = new();
+    public int SkippedImports { get; set; }
     
     // Import analytics
     public decimal SuccessRate => TotalTransactions > 0 ? (decimal)SuccessfulImports / TotalTransactions * 100 : 0;

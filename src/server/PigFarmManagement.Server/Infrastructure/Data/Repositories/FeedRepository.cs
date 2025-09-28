@@ -34,6 +34,13 @@ public class FeedRepository : IFeedRepository
         return entities.Select(e => e.ToModel());
     }
 
+    public async Task<Feed?> FindByExternalReferenceAsync(string externalReference)
+    {
+        if (string.IsNullOrWhiteSpace(externalReference)) return null;
+        var entity = await _context.Feeds.FirstOrDefaultAsync(f => f.ExternalReference == externalReference);
+        return entity?.ToModel();
+    }
+
     public async Task<Feed> CreateAsync(Feed feed)
     {
         var entity = FeedEntity.FromModel(feed);
