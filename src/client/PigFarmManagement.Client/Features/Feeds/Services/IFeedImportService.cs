@@ -39,18 +39,7 @@ public class FeedImportService : IFeedImportService
         return await response.Content.ReadFromJsonAsync<FeedImportResult>() ?? new FeedImportResult();
     }
 
-    public async Task<List<PosPosFeedTransaction>> GetMockPosPosFeedDataAsync()
-    {
-        var response = await _httpClient.GetFromJsonAsync<List<PosPosFeedTransaction>>("/api/feeds/import/pospos/mock");
-        return response ?? new List<PosPosFeedTransaction>();
-    }
-
-    public async Task<FeedImportResult> ImportMockPosPosFeedDataAsync()
-    {
-        var response = await _httpClient.PostAsync("/api/feeds/import/pospos/mock/import", null);
-        response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<FeedImportResult>() ?? new FeedImportResult();
-    }
+    // Mock methods removed. Use date-range endpoints or ImportFromJsonAsync for testing / replay.
 
     public async Task<FeedImportResult> ImportPosPosFeedForPigPenAsync(Guid pigPenId, List<PosPosFeedTransaction> transactions)
     {

@@ -1,8 +1,10 @@
-# PigFarmManagement (Mock Prototype)
+# PigFarmManagement
 
 Initial scaffold based on PRD. Contains:
 
-* Server: Minimal API (.NET 8) with in-memory mock data
+* Server: Minimal API (.NET 8) with POSPOS integration for live feed imports
+* Shared: DTO / record models
+* Client: Blazor WebAssembly basic UI for Pig Pens list + detail (feeds, deposits, harvest)
 * Shared: DTO / record models
 * Client: Blazor WebAssembly basic UI for Pig Pens list + detail (feeds, deposits, harvest)
 
@@ -32,4 +34,4 @@ dotnet run --project .\client\PigFarmManagement.Client\PigFarmManagement.Client.
 > Project constitution: .specify/memory/constitution.md — contains governance, ownership, and template propagation rules.
 
 ---
-Mock only. No persistence yet.
+Note: legacy mock data endpoints were removed. Use the POSPOS integration and the JSON import flow for testing and replay.

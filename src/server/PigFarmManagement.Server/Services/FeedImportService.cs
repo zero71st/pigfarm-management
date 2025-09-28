@@ -114,12 +114,7 @@ public class FeedImportService : IFeedImportService
         return result;
     }
 
-    public async Task<List<PosPosFeedTransaction>> GetMockPosPosFeedDataAsync()
-    {
-        // Mock data support removed - return empty list. Use IPosposFeedClient for live data.
-        await Task.CompletedTask;
-        return new List<PosPosFeedTransaction>();
-    }
+    // Mock endpoints removed. Use ImportFromJsonAsync or the POSPOS date-range endpoints for testing.
 
     public async Task<List<PosPosFeedTransaction>> GetPosPosFeedByCustomerCodeAsync(string customerCode)
     {
@@ -220,7 +215,7 @@ public class FeedImportService : IFeedImportService
         // Legacy initialization for mock data - keeping for compatibility
         // This will be removed once all data comes from repositories
     }
-
+        // Legacy initialization for mock data - kept only as a historical placeholder.
     private async Task ProcessTransactionAsync(PosPosFeedTransaction transaction, FeedImportResult result)
     {
         // Find or create customer based on buyer detail
