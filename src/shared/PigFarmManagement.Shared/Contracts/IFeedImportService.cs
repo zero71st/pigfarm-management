@@ -19,10 +19,7 @@ public interface IFeedImportService
     /// </summary>
     Task<FeedImportResult> ImportFromJsonAsync(string jsonContent);
     
-    /// <summary>
-    /// Get mock POSPOS feed data for testing
-    /// </summary>
-    Task<List<PosPosFeedTransaction>> GetMockPosPosFeedDataAsync();
+    // Note: mock-specific methods were removed. Use live POSPOS flows or ImportFromJsonAsync for testing.
     
     /// <summary>
     /// Import POSPOS feed data for a specific pig pen

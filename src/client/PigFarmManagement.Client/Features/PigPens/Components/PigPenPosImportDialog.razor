@@ -89,7 +89,7 @@
                 <MudTable Items="_availableTransactions" Hover="true" Striped="true" MultiSelection="true" 
                          @bind-SelectedItems="_selectedTransactions" T="PosPosFeedTransaction">
                     <HeaderContent>
-                        <MudTh><MudTableSortLabel SortBy="new Func<PosPosFeedTransaction, object>(x => x.Code)">Invoice Code</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<PosPosFeedTransaction, object>(x => x.InvoiceReference.Code)">Invoice Code</MudTableSortLabel></MudTh>
                         <MudTh><MudTableSortLabel SortBy="new Func<PosPosFeedTransaction, object>(x => x.Timestamp)">Date</MudTableSortLabel></MudTh>
                         <MudTh>Customer</MudTh>
                         <MudTh>Items</MudTh>
@@ -98,7 +98,7 @@
                     </HeaderContent>
                     <RowTemplate>
                         <MudTd DataLabel="Invoice Code">
-                            <MudChip Color="Color.Primary" Size="Size.Small">@context.Code</MudChip>
+                            <MudChip Color="Color.Primary" Size="Size.Small">@context.InvoiceReference.Code</MudChip>
                         </MudTd>
                         <MudTd DataLabel="Date">@context.Timestamp.ToString("yyyy-MM-dd HH:mm")</MudTd>
                         <MudTd DataLabel="Customer">@context.BuyerDetail.FirstName @context.BuyerDetail.LastName</MudTd>
@@ -260,18 +260,20 @@
                 }
                 else if (_fromDate.HasValue)
                 {
-                    // Only from date - get all transactions and filter
-                    var allData = await FeedImportService.GetMockPosPosFeedDataAsync();
-                    allTransactions = allData
+                    // Only from date - call the date-range endpoint (from -> now) then filter by customer
+                    var to = DateTime.UtcNow;
+                    var range = await FeedImportService.GetPosPosFeedByDateRangeAsync(_fromDate.Value, to);
+                    allTransactions = range
                         .Where(t => t.BuyerDetail.Code.Equals(_customerCode, StringComparison.OrdinalIgnoreCase) &&
                                    t.Timestamp >= _fromDate.Value)
                         .ToList();
                 }
                 else // _toDate.HasValue
                 {
-                    // Only to date - get all transactions and filter
-                    var allData = await FeedImportService.GetMockPosPosFeedDataAsync();
-                    allTransactions = allData
+                    // Only to date - call the date-range endpoint (earliest -> to) then filter by customer
+                    var from = DateTime.MinValue;
+                    var range = await FeedImportService.GetPosPosFeedByDateRangeAsync(from, _toDate!.Value);
+                    allTransactions = range
                         .Where(t => t.BuyerDetail.Code.Equals(_customerCode, StringComparison.OrdinalIgnoreCase) &&
                                    t.Timestamp <= _toDate!.Value)
                         .ToList();
