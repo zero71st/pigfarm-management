@@ -14,9 +14,9 @@
 <PageTitle>PigFarm - Customers</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge">
-    <MudText Typo="Typo.h4" GutterBottom="true" Class="mb-2">
+    <MudText Typo="Typo.h4" GutterBottom="true" Class="mb-1">
         <MudIcon Icon="@Icons.Material.Filled.People" Class="mr-2" />
-        Customer Management
+        Customers
     </MudText>
 
     <!-- Customer Management statistics (moved to sit between title and search/action bar) -->
@@ -26,20 +26,20 @@
     }
 
     <!-- Action Bar -->
-    <MudGrid Class="pa-2 mb-1" AlignItems="Center">
+    <MudGrid Class="pa-1 mb-1" AlignItems="Center">
         <MudItem xs="12" md="6">
             <MudTextField @bind-Value="searchText" Label="Search customers..." Variant="Variant.Outlined"
-                Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" OnKeyUp="OnSearchKeyUp"
-                Immediate="true" />
+                Margin="Margin.Dense" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search"
+                OnKeyUp="OnSearchKeyUp" Immediate="true" />
         </MudItem>
         <MudItem xs="12" md="3">
             <MudSelect T="CustomerStatus ?" @bind-Value="selectedCustomerStatus" Label="Filter by Status"
-                Variant="Variant.Outlined" Clearable="true">
+                Variant="Variant.Outlined" Clearable="true" Margin="Margin.Dense" FullWidth="true">
                 <MudSelectItem T="CustomerStatus ?" Value="@CustomerStatus.Active">Active</MudSelectItem>
                 <MudSelectItem T="CustomerStatus ?" Value="@CustomerStatus.Inactive">Inactive</MudSelectItem>
             </MudSelect>
         </MudItem>
-        <MudItem xs="12" md="3" Class="text-right">
+        <MudItem xs="12" md="3" class="text-right align-self-center">
             <MudStack Row Spacing="1" Class="align-items-center justify-content-end">
                 <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="StartImport"
                     Disabled="_importRunning">
@@ -50,7 +50,7 @@
 
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
                     OnClick="OpenAddCustomerDialog">
-                    Add Customer
+                    Add
                 </MudButton>
             </MudStack>
         </MudItem>
