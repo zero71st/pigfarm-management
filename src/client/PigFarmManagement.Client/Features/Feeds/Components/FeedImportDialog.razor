@@ -8,76 +8,7 @@
             <MudText Typo="Typo.h6" Class="mb-4">Import Feed Data from POSPOS</MudText>
             
             <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
-                <MudTabPanel Text="Mock Data Import" Icon="@Icons.Material.Filled.CloudDownload">
-                    <div class="d-flex flex-column gap-4">
-                        <MudText Typo="Typo.body1" Class="mb-3">
-                            Import sample POSPOS feed transaction data for testing purposes.
-                        </MudText>
-                        
-                        @if (_mockData.Any())
-                        {
-                            <MudCard>
-                                <MudCardContent>
-                                    <MudText Typo="Typo.h6" Class="mb-2">Preview Mock Data</MudText>
-                                    <MudText Typo="Typo.body2" Class="mb-2">
-                                        Found @_mockData.Count transaction(s) with @_mockData.Sum(t => t.OrderList.Count) feed items
-                                    </MudText>
-                                    
-                                    @foreach (var transaction in _mockData.Take(2))
-                                    {
-                                        <MudChip Color="Color.Primary" Size="Size.Small" Class="mr-2 mb-1">
-                                            @transaction.Code - @transaction.BuyerDetail.FirstName @transaction.BuyerDetail.LastName
-                                        </MudChip>
-                                    }
-                                    
-                                    @if (_mockData.Count > 2)
-                                    {
-                                        <MudChip Color="Color.Secondary" Size="Size.Small" Variant="Variant.Outlined">
-                                            +@(_mockData.Count - 2) more...
-                                        </MudChip>
-                                    }
-                                </MudCardContent>
-                            </MudCard>
-                        }
-                        
-                        <div class="d-flex gap-2">
-                            <MudButton Color="Color.Info" 
-                                     Variant="Variant.Filled" 
-                                     StartIcon="@Icons.Material.Filled.Preview"
-                                     OnClick="LoadMockData"
-                                     Disabled="_isLoading">
-                                @if (_isLoading)
-                                {
-                                    <MudProgressCircular Size="Size.Small" Indeterminate="true" />
-                                    <span class="ml-2">Loading...</span>
-                                }
-                                else
-                                {
-                                    <span>Load Mock Data</span>
-                                }
-                            </MudButton>
-                            
-                            @if (_mockData.Any())
-                            {
-                                <MudButton Color="Color.Success" 
-                                         Variant="Variant.Filled" 
-                                         StartIcon="@Icons.Material.Filled.Upload"
-                                         OnClick="ImportMockData"
-                                         Disabled="_isImporting">
-                                    @if (_isImporting)
-                                    {
-                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" />
-                                        <span class="ml-2">Importing...</span>
-                                    }
-                                    else
-                                    {
-                                        <span>Import Mock Data</span>
-                                    }
-                                </MudButton>
-                            }
-                        </div>
-                    </div>
-                </MudTabPanel>
+                <!-- Mock Data Import tab removed. Use Date Range or JSON Import for live data. -->
                 
                 <MudTabPanel Text="Date Range Import" Icon="@Icons.Material.Filled.DateRange">
                     <div class="d-flex flex-column gap-4">
@@ -249,60 +180,18 @@
     private bool _isLoading;
     private bool _isImporting;
     private string _jsonContent = "";
-    private List<PosPosFeedTransaction> _mockData = new();
     private List<PosPosFeedTransaction> _dateRangeTransactions = new();
     private FeedImportResult? _importResult;
     private DateTime? _fromDate = DateTime.Today.AddDays(-7); // Default to last 7 days
     private DateTime? _toDate = DateTime.Today;
 
-    protected override async Task OnInitializedAsync()
+    protected override Task OnInitializedAsync()
     {
-        await LoadMockData();
+        // No mock data to load on init. User can use Date Range or JSON import flows.
+        return Task.CompletedTask;
     }
 
-    private async Task LoadMockData()
-    {
-        _isLoading = true;
-        try
-        {
-            _mockData = await FeedImportService.GetMockPosPosFeedDataAsync();
-            Snackbar.Add($"Loaded {_mockData.Count} mock transactions", Severity.Success);
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Failed to load mock data: {ex.Message}", Severity.Error);
-        }
-        finally
-        {
-            _isLoading = false;
-        }
-    }
-
-    private async Task ImportMockData()
-    {
-        _isImporting = true;
-        try
-        {
-            _importResult = await FeedImportService.ImportMockPosPosFeedDataAsync();
-            
-            if (_importResult.FailedImports == 0)
-            {
-                Snackbar.Add($"Successfully imported {_importResult.SuccessfulImports} transactions with {_importResult.TotalFeedItems} feed items", Severity.Success);
-            }
-            else
-            {
-                Snackbar.Add($"Import completed with {_importResult.FailedImports} failures", Severity.Warning);
-            }
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Import failed: {ex.Message}", Severity.Error);
-        }
-        finally
-        {
-            _isImporting = false;
-        }
-    }
+    // Mock-specific methods removed. Use date-range or JSON import instead.
 
     private async Task ImportFromJson()
     {

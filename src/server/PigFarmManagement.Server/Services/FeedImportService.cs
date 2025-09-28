@@ -10,6 +10,7 @@ public class FeedImportService : IFeedImportService
     private readonly IPigPenRepository _pigPenRepository;
     private readonly ICustomerRepository _customerRepository;
     private readonly IFeedRepository _feedRepository;
+    private readonly IPosposFeedClient _posposFeedClient;
 
     // Keep legacy in-memory data for mock POSPOS transactions
     private readonly List<PigPen> _pigPens = new();
@@ -18,11 +19,13 @@ public class FeedImportService : IFeedImportService
     public FeedImportService(
         IPigPenRepository pigPenRepository,
         ICustomerRepository customerRepository,
-        IFeedRepository feedRepository)
+        IFeedRepository feedRepository,
+        IPosposFeedClient posposFeedClient)
     {
         _pigPenRepository = pigPenRepository;
         _customerRepository = customerRepository;
         _feedRepository = feedRepository;
+        _posposFeedClient = posposFeedClient;
         InitializeData(); // Still needed for mock data
     }
 
@@ -113,56 +116,41 @@ public class FeedImportService : IFeedImportService
 
     public async Task<List<PosPosFeedTransaction>> GetMockPosPosFeedDataAsync()
     {
-        try
-        {
-            // Use hardcoded path for now to test functionality
-            var feedsPath = @"d:\dz Projects\PigFarmManagement\src\client\POSPOS\feeds.json";
-            Console.WriteLine($"Looking for feeds.json at: {feedsPath}");
-            Console.WriteLine($"File exists: {File.Exists(feedsPath)}");
-            Console.WriteLine($"Current directory: {Directory.GetCurrentDirectory()}");
-            Console.WriteLine($"AppContext.BaseDirectory: {AppContext.BaseDirectory}");
-            
-            if (File.Exists(feedsPath))
-            {
-                var json = await File.ReadAllTextAsync(feedsPath);
-                Console.WriteLine($"File size: {json.Length} characters");
-                var transactions = JsonSerializer.Deserialize<List<PosPosFeedTransaction>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                if (transactions != null)
-                {
-                    Console.WriteLine($"Loaded {transactions.Count} transactions");
-                    return transactions;
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error reading feeds.json: {ex.Message}");
-        }
+        // Mock data support removed - return empty list. Use IPosposFeedClient for live data.
+        await Task.CompletedTask;
         return new List<PosPosFeedTransaction>();
     }
 
     public async Task<List<PosPosFeedTransaction>> GetPosPosFeedByCustomerCodeAsync(string customerCode)
     {
-        var allTransactions = await GetMockPosPosFeedDataAsync();
-        return allTransactions
-            .Where(t => t.BuyerDetail.Code.Equals(customerCode, StringComparison.OrdinalIgnoreCase))
+        // Default to last 30 days for customer-only queries
+        var to = DateTime.UtcNow;
+        var from = to.AddDays(-30);
+        var transactions = await _posposFeedClient.GetTransactionsByDateRangeAsync(from, to);
+        return transactions
+            .Where(t => t.BuyerDetail != null && (
+                t.BuyerDetail.Code.Equals(customerCode, StringComparison.OrdinalIgnoreCase) ||
+                (!string.IsNullOrWhiteSpace(t.BuyerDetail.KeyCardId) && t.BuyerDetail.KeyCardId.Equals(customerCode, StringComparison.OrdinalIgnoreCase))
+            ))
             .ToList();
     }
 
     public async Task<List<PosPosFeedTransaction>> GetPosPosFeedByDateRangeAsync(DateTime fromDate, DateTime toDate)
     {
-        var allTransactions = await GetMockPosPosFeedDataAsync();
-        return allTransactions
+        var transactions = await _posposFeedClient.GetTransactionsByDateRangeAsync(fromDate, toDate);
+        return transactions
             .Where(t => t.Timestamp >= fromDate && t.Timestamp <= toDate)
             .ToList();
     }
 
     public async Task<List<PosPosFeedTransaction>> GetPosPosFeedByCustomerAndDateRangeAsync(string customerCode, DateTime fromDate, DateTime toDate)
     {
-        var allTransactions = await GetMockPosPosFeedDataAsync();
-        return allTransactions
-            .Where(t => t.BuyerDetail.Code.Equals(customerCode, StringComparison.OrdinalIgnoreCase) &&
-                       t.Timestamp >= fromDate && t.Timestamp <= toDate)
+        var transactions = await _posposFeedClient.GetTransactionsByDateRangeAsync(fromDate, toDate);
+        return transactions
+            .Where(t => t.BuyerDetail != null && (
+                t.BuyerDetail.Code.Equals(customerCode, StringComparison.OrdinalIgnoreCase) ||
+                (!string.IsNullOrWhiteSpace(t.BuyerDetail.KeyCardId) && t.BuyerDetail.KeyCardId.Equals(customerCode, StringComparison.OrdinalIgnoreCase))
+            ) && t.Timestamp >= fromDate && t.Timestamp <= toDate)
             .ToList();
     }
 
@@ -254,6 +242,11 @@ public class FeedImportService : IFeedImportService
     {
         foreach (var orderItem in transaction.OrderList)
         {
+            // stock is decimal (bags). Convert to kilograms (25 kg per bag).
+            var kilograms = orderItem.Stock * 25m;
+            // Quantity in Feed DTO is int (kg). Round to nearest integer to store.
+            var quantityKg = (int)Math.Round(kilograms, MidpointRounding.AwayFromZero);
+
             var feed = new Feed
             {
                 Id = Guid.NewGuid(),
@@ -262,8 +255,8 @@ public class FeedImportService : IFeedImportService
                 ProductCode = orderItem.Code,
                 ProductName = orderItem.Name,
                 InvoiceNumber = transaction.Code,
-                Quantity = orderItem.Stock * 25, // Convert bags to kg (25kg per bag)
-                UnitPrice = orderItem.Price / 25, // Price per kg
+                Quantity = quantityKg,
+                UnitPrice = orderItem.Price / 25m, // Price per kg
                 TotalPrice = orderItem.TotalPriceIncludeDiscount,
                 FeedDate = transaction.Timestamp,
                 ExternalReference = $"POSPOS-{transaction.Code}-{orderItem.Code}",

@@ -40,12 +40,16 @@ public class PosPosFeedTransaction
     public bool IsValidTransaction() => !string.IsNullOrWhiteSpace(Code) && OrderList.Any();
     public decimal TotalFeedCost => OrderList.Sum(item => item.TotalPriceIncludeDiscount);
     public string CustomerFullName => $"{BuyerDetail.FirstName} {BuyerDetail.LastName}".Trim();
+
+    // Convenience accessor: prefer BuyerDetail.Code, fall back to KeyCardId
+    public string CustomerCode => !string.IsNullOrWhiteSpace(BuyerDetail?.Code) ? BuyerDetail.Code : (BuyerDetail?.KeyCardId ?? string.Empty);
 }
 
 public class PosPosFeedItem
 {
     [JsonPropertyName("stock")]
-    public int Stock { get; set; }
+    // Use decimal to be tolerant of upstream numeric formats (ints, floats)
+    public decimal Stock { get; set; }
     
     [JsonPropertyName("name")]
     public string Name { get; set; } = "";
