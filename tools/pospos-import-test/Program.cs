@@ -41,42 +41,67 @@ internal class Program
             return 1;
         }
 
-    // Seed a customer and pigPen in the DB to receive imported feeds
-    var context = services.GetRequiredService<PigFarmManagement.Server.Infrastructure.Data.PigFarmDbContext>();
-    // Ensure migrations are applied to this DB (creates tables if they're missing)
-    await context.Database.MigrateAsync();
+        // Seed or reuse a customer and pigPen in the DB to receive imported feeds
+        var context = services.GetRequiredService<PigFarmManagement.Server.Infrastructure.Data.PigFarmDbContext>();
+        // Ensure migrations are applied to this DB (creates tables if they're missing)
+        await context.Database.MigrateAsync();
         var buyerCode = transactions[0].BuyerDetail?.Code ?? "M000001";
-        // Create customer entity
-        var customerEntity = new PigFarmManagement.Server.Infrastructure.Data.Entities.CustomerEntity
-        {
-            Id = Guid.NewGuid(),
-            Code = buyerCode,
-            FirstName = transactions[0].BuyerDetail?.FirstName ?? "Test",
-            LastName = transactions[0].BuyerDetail?.LastName ?? "User",
-            Status = PigFarmManagement.Shared.Models.CustomerStatus.Active,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
-        context.Customers.Add(customerEntity);
 
-        var pigPenEntity = new PigFarmManagement.Server.Infrastructure.Data.Entities.PigPenEntity
+        // Upsert customer by Code
+        var customerEntity = await context.Customers.FirstOrDefaultAsync(c => c.Code == buyerCode);
+        if (customerEntity == null)
         {
-            Id = Guid.NewGuid(),
-            CustomerId = customerEntity.Id,
-            PenCode = "TEST-PEN-001",
-            PigQty = 20,
-            RegisterDate = DateTime.UtcNow.AddDays(-30),
-            FeedCost = 0,
-            Investment = 0,
-            ProfitLoss = 0,
-            Type = PigFarmManagement.Shared.Models.PigPenType.Cash,
-            DepositPerPig = 1000m,
-            IsCalculationLocked = false,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
-        context.PigPens.Add(pigPenEntity);
-        await context.SaveChangesAsync();
+            customerEntity = new PigFarmManagement.Server.Infrastructure.Data.Entities.CustomerEntity
+            {
+                Id = Guid.NewGuid(),
+                Code = buyerCode,
+                FirstName = transactions[0].BuyerDetail?.FirstName ?? "Test",
+                LastName = transactions[0].BuyerDetail?.LastName ?? "User",
+                Status = PigFarmManagement.Shared.Models.CustomerStatus.Active,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            context.Customers.Add(customerEntity);
+            await context.SaveChangesAsync();
+        }
+
+        // Upsert pig pen by PenCode for this customer
+        var penCode = "TEST-PEN-001";
+        var pigPenEntity = await context.PigPens.FirstOrDefaultAsync(p => p.PenCode == penCode && p.CustomerId == customerEntity.Id);
+        if (pigPenEntity == null)
+        {
+            pigPenEntity = new PigFarmManagement.Server.Infrastructure.Data.Entities.PigPenEntity
+            {
+                Id = Guid.NewGuid(),
+                CustomerId = customerEntity.Id,
+                PenCode = penCode,
+                PigQty = 20,
+                RegisterDate = DateTime.UtcNow.AddDays(-30),
+                FeedCost = 0,
+                Investment = 0,
+                ProfitLoss = 0,
+                Type = PigFarmManagement.Shared.Models.PigPenType.Cash,
+                DepositPerPig = 1000m,
+                IsCalculationLocked = false,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            context.PigPens.Add(pigPenEntity);
+            await context.SaveChangesAsync();
+        }
+
+        // Remove any existing feeds for this invoice to force a fresh import
+        var invoiceNum = transactions[0].Code;
+        if (!string.IsNullOrWhiteSpace(invoiceNum))
+        {
+            var existingFeeds = await context.Feeds.Where(f => f.InvoiceNumber == invoiceNum).ToListAsync();
+            if (existingFeeds.Any())
+            {
+                context.Feeds.RemoveRange(existingFeeds);
+                await context.SaveChangesAsync();
+                Console.WriteLine($"Removed {existingFeeds.Count} existing feed(s) for invoice {invoiceNum} to force re-import.");
+            }
+        }
 
         Console.WriteLine("Running import from sample JSON...");
         var result = await importService.ImportPosPosFeedForPigPenAsync(pigPenEntity.Id, transactions);

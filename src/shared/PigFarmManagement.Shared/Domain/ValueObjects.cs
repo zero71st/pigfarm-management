@@ -17,6 +17,11 @@ public record FeedItem(
     decimal Cost,
     DateTime Date)
 {
+    // Backwards-compatible convenience properties expected by the UI
+    // Some UI code references QuantityKg and PricePerKg; expose them here
+    public decimal QuantityKg => Quantity; // quantity is provided in kilograms by service mapping
+    public decimal PricePerKg => PricePerBag; // price per kg (service mapping sets this)
+
     public string? ExternalReference { get; init; }
     public string? ExternalProductCode { get; init; }
     public string? ExternalProductName { get; init; }

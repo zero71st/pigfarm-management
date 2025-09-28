@@ -126,6 +126,7 @@
                                 <MudTh>Date</MudTh>
                                 <MudTh>Product</MudTh>
                                 <MudTh>Invoice</MudTh>
+                                <MudTh>Invoice Ref</MudTh>
                                 <MudTh>Quantity (Kg)</MudTh>
                                 <MudTh>Bags</MudTh>
                                 <MudTh>Price per Kg</MudTh>
@@ -141,6 +142,16 @@
                                     }
                                 </MudTd>
                                 <MudTd>@context.InvoiceNumber</MudTd>
+                                <MudTd>
+                                    @if (!string.IsNullOrEmpty(context.InvoiceReferenceCode))
+                                    {
+                                        <MudChip Color="Color.Primary" Size="Size.Small">@context.InvoiceReferenceCode</MudChip>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </MudTd>
                                 <MudTd>@context.QuantityKg.ToString("N1")</MudTd>
                                 <MudTd>@((context.QuantityKg / 25m).ToString("N2"))</MudTd>
                                 <MudTd>฿@context.PricePerKg.ToString("N2")</MudTd>

@@ -28,6 +28,18 @@ public class PosPosFeedTransaction
     
     [JsonPropertyName("reference_tax_invoice_abbreviate")]
     public PosPosInvoiceReference InvoiceReference { get; set; } = new();
+
+    // Some POSPOS feeds use a different property name; accept both JSON shapes.
+    [JsonPropertyName("invoice_reference")]
+    public PosPosInvoiceReference? InvoiceReferenceAlias
+    {
+        get => InvoiceReference;
+        set
+        {
+            if (value != null)
+                InvoiceReference = value;
+        }
+    }
     
     [JsonPropertyName("sub_total")]
     public decimal SubTotal { get; set; }
