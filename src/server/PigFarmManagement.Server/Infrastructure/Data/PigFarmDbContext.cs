@@ -86,6 +86,8 @@ public class PigFarmDbContext : DbContext
                   .WithMany(e => e.Feeds)
                   .HasForeignKey(e => e.PigPenId)
                   .OnDelete(DeleteBehavior.Cascade);
+            // ExternalReference should be unique when present to prevent duplicate imports
+            entity.HasIndex(e => e.ExternalReference).IsUnique().HasFilter("[ExternalReference] IS NOT NULL");
         });
 
         // Deposit Configuration

@@ -30,6 +30,11 @@ public interface IFeedRepository
     Task<IEnumerable<Feed>> GetByPigPenIdAsync(Guid pigPenId);
         Task<Feed?> FindByExternalReferenceAsync(string externalReference);
     Task<Feed> CreateAsync(Feed feed);
+    /// <summary>
+    /// Attempt to create a Feed only if ExternalReference does not already exist. Returns existing feed if present.
+    /// This method should be concurrency-safe when backed by a DB unique constraint on ExternalReference.
+    /// </summary>
+    Task<Feed> CreateIfNotExistsAsync(Feed feed);
     Task<Feed> UpdateAsync(Feed feed);
     Task DeleteAsync(Guid id);
     Task<IEnumerable<Feed>> CreateManyAsync(IEnumerable<Feed> feeds);
