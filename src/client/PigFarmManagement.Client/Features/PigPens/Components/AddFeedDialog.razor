@@ -30,7 +30,7 @@
                     <MudCard Variant="Variant.Outlined" Class="pa-3">
                         <MudText Typo="Typo.body2" Color="Color.Secondary">Summary</MudText>
                         <MudText><strong>Total Cost:</strong> $@CalculateTotalCost().ToString("N2")</MudText>
-                        <MudText><strong>Customer:</strong> @CustomerName</MudText>
+                        <MudText><strong>Customer:</strong> @CustomerDisplayName</MudText>
                         <MudText><strong>Pen:</strong> @PenCode</MudText>
                     </MudCard>
                 </MudItem>
@@ -52,7 +52,7 @@
 @code {
     [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
     [Parameter] public Guid PigPenId { get; set; }
-    [Parameter] public string CustomerName { get; set; } = "";
+    [Parameter] public string CustomerDisplayName { get; set; } = "";
     [Parameter] public string PenCode { get; set; } = "";
 
     private string feedType = "";
@@ -60,7 +60,7 @@
     private decimal pricePerKg = 0;
     private DateTime? feedDate = DateTime.Today;
 
-    private string PenInfo => $"{CustomerName} - {PenCode}";
+    private string PenInfo => $"{CustomerDisplayName} - {PenCode}";
 
     protected override void OnInitialized()
     {

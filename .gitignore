@@ -97,3 +97,6 @@ yarn-error.log*
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Ignore Visual Studio launchSettings which may contain secrets (e.g. API keys)
+**/Properties/launchSettings.json

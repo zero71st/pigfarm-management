@@ -9,46 +9,52 @@
 @inject IPigPenService PigPenService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@inject HttpClient Http
 
-<PageTitle>PigTrack Pro - Customers</PageTitle>
+<PageTitle>PigFarm - Customers</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge">
-    <MudText Typo="Typo.h4" GutterBottom="true" Class="mb-4">
-        <MudIcon Icon="Icons.Material.Filled.People" Class="mr-2" />
-        Customer Management
+    <MudText Typo="Typo.h4" GutterBottom="true" Class="mb-1">
+        <MudIcon Icon="@Icons.Material.Filled.People" Class="mr-2" />
+        Customers
     </MudText>
 
+    <!-- Customer Management statistics (moved to sit between title and search/action bar) -->
+    @if (customers?.Any() == true)
+    {
+        <CustomerStatistics Customers="customers" />
+    }
+
     <!-- Action Bar -->
-    <MudPaper Class="pa-4 mb-4" Elevation="2">
-        <MudGrid AlignItems="Center">
-            <MudItem xs="12" md="6">
-                <MudTextField @bind-Value="searchText" 
-                             Label="Search customers..." 
-                             Variant="Variant.Outlined" 
-                             Adornment="Adornment.End" 
-                             AdornmentIcon="Icons.Material.Filled.Search"
-                             OnKeyUp="OnSearchKeyUp"
-                             Immediate="true" />
-            </MudItem>
-            <MudItem xs="12" md="3">
-                <MudSelect T="CustomerStatus?" @bind-Value="selectedCustomerStatus" 
-                          Label="Filter by Status" 
-                          Variant="Variant.Outlined"
-                          Clearable="true">
-                    <MudSelectItem T="CustomerStatus?" Value="@CustomerStatus.Active">Active</MudSelectItem>
-                    <MudSelectItem T="CustomerStatus?" Value="@CustomerStatus.Inactive">Inactive</MudSelectItem>
-                </MudSelect>
-            </MudItem>
-            <MudItem xs="12" md="3" Class="text-right">
-                <MudButton Variant="Variant.Filled" 
-                          Color="Color.Primary" 
-                          StartIcon="Icons.Material.Filled.Add"
-                          OnClick="OpenAddCustomerDialog">
-                    Add Customer
+    <MudGrid Class="pa-1 mb-1" AlignItems="Center">
+        <MudItem xs="12" md="6">
+            <MudTextField @bind-Value="searchText" Label="Search customers..." Variant="Variant.Outlined"
+                Margin="Margin.Dense" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search"
+                OnKeyUp="OnSearchKeyUp" Immediate="true" />
+        </MudItem>
+        <MudItem xs="12" md="3">
+            <MudSelect T="CustomerStatus ?" @bind-Value="selectedCustomerStatus" Label="Filter by Status"
+                Variant="Variant.Outlined" Clearable="true" Margin="Margin.Dense" FullWidth="true">
+                <MudSelectItem T="CustomerStatus ?" Value="@CustomerStatus.Active">Active</MudSelectItem>
+                <MudSelectItem T="CustomerStatus ?" Value="@CustomerStatus.Inactive">Inactive</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" md="3" class="text-right align-self-center">
+            <MudStack Row Spacing="1" Class="align-items-center justify-content-end">
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="StartImport"
+                    Disabled="_importRunning">
+                    <MudIcon Icon="@Icons.Material.Filled.Download" Class="mr-1" /> Import
                 </MudButton>
-            </MudItem>
-        </MudGrid>
-    </MudPaper>
+
+                <MudSwitch @bind-Value="_persistMapping" Color="Color.Primary" />
+
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                    OnClick="OpenAddCustomerDialog">
+                    Add
+                </MudButton>
+            </MudStack>
+        </MudItem>
+    </MudGrid>
 
     <!-- Customer Cards Grid -->
     <MudGrid>
@@ -65,28 +71,21 @@
             @foreach (var customer in filteredCustomers)
             {
                 <MudItem xs="12" sm="6" md="4" lg="3">
-                    <CustomerCard Customer="customer" 
-                                 PigPenCount="@GetCustomerPigPenCount(customer.Id)"
-                                 OnEdit="EditCustomer"
-                                 OnDelete="DeleteCustomer"
-                                 OnViewDetails="ViewCustomerDetails" />
+                    <CustomerCard Customer="customer" PigPenCount="@GetCustomerPigPenCount(customer.Id)" OnEdit="EditCustomer"
+                        OnDelete="DeleteCustomer" OnViewDetails="ViewCustomerDetails" />
                 </MudItem>
             }
         }
         else
         {
             <MudItem xs="12">
-                <CustomerEmptyState OnAddCustomer="OpenAddCustomerDialog" 
-                                   HasFilters="@(!string.IsNullOrEmpty(searchText) || selectedCustomerStatus != null)" />
+                <CustomerEmptyState OnAddCustomer="OpenAddCustomerDialog"
+                    HasFilters="@(!string.IsNullOrEmpty(searchText) || selectedCustomerStatus != null)" />
             </MudItem>
         }
     </MudGrid>
 
-    <!-- Stats Summary -->
-    @if (customers?.Any() == true)
-    {
-        <CustomerStatistics Customers="customers" PigPens="pigPens" />
-    }
+
 </MudContainer>
 
 @code {
@@ -107,16 +106,16 @@
         try
         {
             isLoading = true;
-            
+
             // Load customers and pig pens in parallel
             var customersTask = CustomerService.GetCustomersAsync();
             var pigPensTask = PigPenService.GetPigPensAsync();
-            
+
             await Task.WhenAll(customersTask, pigPensTask);
-            
+
             customers = customersTask.Result;
             pigPens = pigPensTask.Result;
-            
+
             FilterCustomers();
         }
         catch (Exception ex)
@@ -132,11 +131,18 @@
     private void FilterCustomers()
     {
         filteredCustomers = customers.Where(c =>
-            (string.IsNullOrEmpty(searchText) || 
-             c.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
-             c.Code.Contains(searchText, StringComparison.OrdinalIgnoreCase)) &&
-            (selectedCustomerStatus == null || c.Status == selectedCustomerStatus)
+        (string.IsNullOrEmpty(searchText) ||
+        c.DisplayName.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+        c.Code.Contains(searchText, StringComparison.OrdinalIgnoreCase)) &&
+        (selectedCustomerStatus == null || c.Status == selectedCustomerStatus)
         ).ToList();
+
+        // Show the most recently imported/updated customers first
+        // Use UpdatedAt (set by the importer) as the primary sort key. If UpdatedAt is null, treat it as DateTime.MinValue.
+        filteredCustomers = filteredCustomers
+        .OrderByDescending(c => c.UpdatedAt)
+        .ThenByDescending(c => c.CreatedAt)
+        .ToList();
     }
 
     private void OnSearchKeyUp(KeyboardEventArgs e)
@@ -184,7 +190,7 @@
     {
         var parameters = new DialogParameters
         {
-            ["ContentText"] = $"Are you sure you want to delete customer '{customer.Name}'? This action cannot be undone.",
+            ["ContentText"] = $"Are you sure you want to delete customer '{customer.DisplayName}'? This action cannot be undone.",
             ["ButtonText"] = "Delete",
             ["ButtonColor"] = Color.Error
         };
@@ -219,5 +225,51 @@
     {
         var parameters = new DialogParameters { ["Customer"] = customer };
         await DialogService.ShowAsync<CustomerDetailsDialog>("Customer Details", parameters);
+    }
+}
+
+@code {
+    // Import UI state
+    private bool _persistMapping = false;
+    private bool _importRunning = false;
+
+    private async Task StartImport()
+    {
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var parameters = new DialogParameters { ["PersistMapping"] = _persistMapping };
+        var dialog = await DialogService.ShowAsync<Components.ImportCandidatesDialog>("Import from POSPOS", parameters,
+        options);
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            // reload data after successful import
+            await LoadData();
+        }
+    }
+
+    private async Task GetSummary()
+    {
+        try
+        {
+            var resp = await Http.GetAsync("/import/customers/summary");
+            if (resp.IsSuccessStatusCode)
+            {
+                var txt = await resp.Content.ReadAsStringAsync();
+                Snackbar.Add("Summary loaded.", Severity.Info);
+            }
+            else if (resp.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                Snackbar.Add("No import has been run yet.", Severity.Warning);
+            }
+            else
+            {
+                var txt = await resp.Content.ReadAsStringAsync();
+                Snackbar.Add($"Failed to load summary: {resp.StatusCode} - {txt}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Summary error: {ex.Message}", Severity.Error);
+        }
     }
 }

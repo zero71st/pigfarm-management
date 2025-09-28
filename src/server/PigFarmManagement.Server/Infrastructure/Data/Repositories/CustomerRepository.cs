@@ -45,10 +45,12 @@ public class CustomerRepository : ICustomerRepository
         if (entity == null)
             throw new ArgumentException($"Customer with ID {customer.Id} not found");
 
-        entity.Code = customer.Code;
-        entity.Name = customer.Name;
-        entity.Status = customer.Status;
-        entity.UpdatedAt = DateTime.UtcNow;
+    entity.Code = customer.Code;
+    // Name removed in favor of FirstName/LastName
+    entity.FirstName = customer.FirstName;
+    entity.LastName = customer.LastName;
+    entity.Status = customer.Status;
+    entity.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
         return entity.ToModel();

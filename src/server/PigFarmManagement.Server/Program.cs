@@ -7,12 +7,25 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Add controllers support so attribute-based API controllers are mapped
+builder.Services.AddControllers();
+
+// Bind POSPOS options from configuration / environment
+builder.Services.Configure<PigFarmManagement.Server.Infrastructure.Settings.PosposOptions>(builder.Configuration.GetSection("Pospos"));
+
 // Add Entity Framework
 builder.Services.AddDbContext<PigFarmDbContext>(options =>
     options.UseInMemoryDatabase("PigFarmManagement"));
 
 // Add application services
 builder.Services.AddApplicationServices();
+
+// Pospos services
+builder.Services.AddSingleton<PigFarmManagement.Server.Services.IMappingStore, PigFarmManagement.Server.Services.FileMappingStore>();
+builder.Services.AddHttpClient<PigFarmManagement.Server.Services.IPosposClient, PigFarmManagement.Server.Services.PosposClient>();
+// PosposImporter depends on scoped services (ICustomerRepository). Register as scoped to avoid
+// injecting scoped services into a singleton which causes runtime DI errors.
+builder.Services.AddScoped<PigFarmManagement.Server.Services.IPosposImporter, PigFarmManagement.Server.Services.PosposImporter>();
 
 // CORS configuration for production
 builder.Services.AddCors(options =>
@@ -69,6 +82,9 @@ app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = Dat
 app.UseCors();
 app.UseDefaultFiles();
 app.UseStaticFiles();
+
+// Map attribute-routed controllers (ImportController etc.)
+app.MapControllers();
 
 // Map all feature endpoints
 app.MapFeatureEndpoints();

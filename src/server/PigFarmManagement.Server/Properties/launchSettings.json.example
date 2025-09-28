@@ -4,7 +4,9 @@
       "commandName": "Project",
       "launchBrowser": true,
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "Pospos__ApiBase": "https://your-pospos-api.example/members",
+        "Pospos__ApiKey": "REPLACE_WITH_POSPOS_API_KEY"
       },
       "applicationUrl": "https://localhost:61008;http://localhost:61009"
     }

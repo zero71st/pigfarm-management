@@ -8,12 +8,17 @@
     <DialogContent>
         <MudContainer Style="max-width: 500px;">
             <MudGrid>
-                <MudItem xs="12">
-                    <MudTextField @bind-Value="customerName" 
-                                 Label="Customer Name" 
+                <MudItem xs="6">
+                    <MudTextField @bind-Value="customerFirstName" 
+                                 Label="First Name" 
                                  Variant="Variant.Outlined" 
                                  Required="true"
-                                 RequiredError="Customer name is required" />
+                                 RequiredError="First name is required" />
+                </MudItem>
+                <MudItem xs="6">
+                    <MudTextField @bind-Value="customerLastName" 
+                                 Label="Last Name" 
+                                 Variant="Variant.Outlined" />
                 </MudItem>
                 <MudItem xs="12">
                     <MudTextField @bind-Value="customerCode" 
@@ -49,23 +54,25 @@
     [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
     [Parameter] public Customer Customer { get; set; } = null!;
 
-    private string customerName = "";
+    private string customerFirstName = "";
+    private string customerLastName = "";
     private string customerCode = "";
     private CustomerStatus customerStatus = CustomerStatus.Active;
 
     protected override void OnInitialized()
     {
-        // Initialize with existing customer data
-        customerName = Customer.Name;
-        customerCode = Customer.Code;
-        customerStatus = Customer.Status;
+    // Initialize with existing customer data
+    customerFirstName = Customer.FirstName ?? string.Empty;
+    customerLastName = Customer.LastName ?? string.Empty;
+    customerCode = Customer.Code;
+    customerStatus = Customer.Status;
     }
 
     void Cancel() => MudDialog.Cancel();
 
     private bool IsFormValid()
     {
-        return !string.IsNullOrWhiteSpace(customerName) &&
+        return !string.IsNullOrWhiteSpace(customerFirstName) &&
                !string.IsNullOrWhiteSpace(customerCode);
     }
 
@@ -76,7 +83,11 @@
 
         try
         {
-            var updatedCustomer = new Customer(Customer.Id, customerCode, customerName, customerStatus);
+            var updatedCustomer = new Customer(Customer.Id, customerCode, customerStatus)
+            {
+                FirstName = customerFirstName,
+                LastName = customerLastName
+            };
             var result = await CustomerService.UpdateCustomerAsync(updatedCustomer);
             MudDialog.Close(DialogResult.Ok(result));
         }

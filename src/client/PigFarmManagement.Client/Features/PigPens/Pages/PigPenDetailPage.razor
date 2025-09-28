@@ -32,7 +32,7 @@
             <div>
                 <div class="d-flex align-center mb-2">
                     <MudText Typo="Typo.h3" GutterBottom="true" Class="mr-3">
-                        <MudIcon Icon="Icons.Material.Filled.Widgets" Class="mr-3" />
+                        <MudIcon Icon="@Icons.Material.Filled.Widgets" Class="mr-3" />
                         @pigPen.Name
                     </MudText>
                     @if (pigPen.IsCalculationLocked)
@@ -1178,7 +1178,7 @@
         var parameters = new DialogParameters<PigPenPosImportDialog>
         {
             { x => x.PigPenId, pigPen.Id },
-            { x => x.CustomerName, customer?.Name ?? "Unknown Customer" },
+            { x => x.CustomerDisplayName, customer?.DisplayName ?? "Unknown Customer" },
             { x => x.PenCode, pigPen.PenCode },
             { x => x.CustomerCode, customer?.Code ?? "" }
         };

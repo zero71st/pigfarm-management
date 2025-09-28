@@ -1,0 +1,209 @@
+@using MudBlazor
+@using System.Text.Json
+@inject HttpClient Http
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.h6">Import customers from POSPOS</MudText>
+
+    @if (_isLoading)
+    {
+        <div class="d-flex justify-center pa-4">
+            <MudProgressCircular Indeterminate="true" />
+        </div>
+    }
+    else
+    {
+        <MudStack Spacing="2">
+            <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                <MudTextField @bind-Value="_filter" Placeholder="Search code, name, mobile phone, email..." Adornment="Adornment.Start" AdornmentIcon="Icons.Material.Filled.Search" Immediate="true" />
+                <MudSpacer />
+            </MudStack>
+
+            @if (_candidates.Count == 0)
+            {
+                <div class="pa-4 text-center">
+                    <MudText Typo="Typo.subtitle1">No candidates found</MudText>
+                    <MudText Typo="Typo.caption" Class="mt-1">No POSPOS candidates are available. This may mean POSPOS is not configured on the server or the upstream API returned no results.</MudText>
+                    <div class="mt-3 d-flex justify-center">
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="LoadCandidates">Retry</MudButton>
+                    </div>
+                    <div class="mt-2">
+                        <MudText Typo="Typo.caption">Tip: Ensure the server has POSPOS_API_BASE and POSPOS_API_KEY set, then try again.</MudText>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <MudTable Items="FilteredCandidates" Hover="true" Bordered="true" Striped="true" Class="candidate-table">
+                    <HeaderContent>
+                        <MudTh>
+                            <MudCheckBox T="bool" Value="_selectAll" ValueChanged="OnSelectAllChanged" />
+                        </MudTh>
+                        <MudTh>Code</MudTh>
+                        <MudTh>Display</MudTh>
+                        <!-- First/Last columns removed per request -->
+                        <MudTh>Mobile</MudTh>
+                        <MudTh>Email</MudTh>
+                        <MudTh>Address</MudTh>
+                        <MudTh>KeyCard</MudTh>
+                        <MudTh>ExternalId</MudTh>
+                        <MudTh>Sex</MudTh>
+                        <MudTh>Zip</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>
+                            <MudCheckBox T="bool" @bind-Value="context.IsSelected" />
+                        </MudTd>
+                        <MudTd>@(string.IsNullOrWhiteSpace(context.Code) ? "-" : context.Code)</MudTd>
+
+                        <MudTd>@(string.IsNullOrWhiteSpace(context.DisplayName) ? "-" : context.DisplayName)</MudTd>
+                        <!-- First/Last cells removed per request -->
+                        <MudTd>@context.Phone</MudTd>
+                        <MudTd>@context.Email</MudTd>
+                        <MudTd>@context.Address</MudTd>
+                        <MudTd>@context.KeyCardId</MudTd>
+                        <MudTd>@context.ExternalId</MudTd>
+                        <MudTd>@context.Sex</MudTd>
+                        <MudTd>@context.Zipcode</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+        </MudStack>
+    }
+
+    <div class="mt-3 d-flex justify-end">
+        <MudButton Variant="Variant.Text" OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_isLoading || !_hasSelection" OnClick="ImportSelected">Import selected</MudButton>
+    </div>
+</MudPaper>
+
+@code {
+    [Parameter] public bool PersistMapping { get; set; } = true; // persist mapping by default for POSPOS imports
+
+    // MudDialogInstance is provided when this component is shown via IDialogService; make it nullable and guard calls.
+    [CascadingParameter] MudDialogInstance? MudDialogInstance { get; set; }
+
+    private bool _isLoading = true;
+    private List<CandidateMember> _candidates = new();
+    private string _filter = string.Empty;
+    private bool _selectAll = false;
+
+    private IEnumerable<CandidateMember> FilteredCandidates => string.IsNullOrWhiteSpace(_filter)
+        ? _candidates
+        : _candidates.Where(c => (
+            (c.Id ?? "") + " " + (c.Code ?? "") + " " + (c.DisplayName ?? "") + " " + (c.FirstName ?? "") + " " + (c.LastName ?? "") + " " +
+            (c.Phone ?? "") + " " + (c.Email ?? "") + " " + (c.Address ?? "") + " " + (c.KeyCardId ?? "") + " " + (c.ExternalId ?? "") + " " +
+            (c.Sex ?? "") + " " + (c.Zipcode ?? "")
+        ).Contains(_filter, StringComparison.OrdinalIgnoreCase));
+
+    // Keep the import fallback: allow importing all candidates when none are explicitly selected.
+    private bool _hasSelection => _candidates.Any();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCandidates();
+    }
+
+    private async Task LoadCandidates()
+    {
+        _isLoading = true;
+        try
+        {
+            var list = await Http.GetFromJsonAsync<List<CandidateMember>>("/import/customers/candidates");
+            if (list != null)
+                _candidates = list;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to load candidates: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private Task OnSelectAllChanged(bool value)
+    {
+        _selectAll = value;
+        foreach (var c in _candidates)
+            c.IsSelected = value;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private void Cancel() => MudDialogInstance?.Cancel();
+
+    private async Task ImportSelected()
+    {
+        // If no explicit selections (checkboxes removed), default to importing all candidates.
+        var selected = _candidates.Where(c => c.IsSelected).ToList();
+        if (!selected.Any())
+        {
+            selected = _candidates.ToList();
+        }
+
+        // Build a short preview of selected names (limit to 10 names)
+        var count = selected.Count;
+        var namesPreview = string.Join(", ", selected.Take(10).Select(c => c.DisplayName));
+        if (selected.Count > 10)
+            namesPreview += $", ... (+{selected.Count - 10} more)";
+
+        var confirm = await DialogService.ShowMessageBox(
+            "Confirm import",
+            $"You are about to import {count} member(s).\n\nPreview: {namesPreview}\n\nProceed?",
+            yesText: "Import",
+            noText: "Cancel");
+
+        if (confirm != true)
+        {
+            // user canceled
+            return;
+        }
+
+        var selectedIds = selected.Select(c => c.Id).ToList();
+
+        try
+        {
+            var uri = "/import/customers/selected" + (PersistMapping ? "?persist=true" : "");
+            var resp = await Http.PostAsJsonAsync(uri, selectedIds);
+            if (resp.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Import completed.", Severity.Success);
+                MudDialogInstance?.Close(DialogResult.Ok(true));
+            }
+            else
+            {
+                var txt = await resp.Content.ReadAsStringAsync();
+                Snackbar.Add($"Import failed: {resp.StatusCode} - {txt}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Import error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private int _selectedCount => _candidates.Count;
+
+    private class CandidateMember
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Code { get; set; } = string.Empty; // optional code/key
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string DisplayName =>
+            string.IsNullOrWhiteSpace($"{FirstName} {LastName}".Trim()) ? (string.IsNullOrWhiteSpace(Code) ? Id : Code) : $"{FirstName} {LastName}".Trim();
+        public string Phone { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Address { get; set; } = string.Empty;
+        public string KeyCardId { get; set; } = string.Empty;
+        public string ExternalId { get; set; } = string.Empty;
+        public string Sex { get; set; } = string.Empty;
+        public string Zipcode { get; set; } = string.Empty;
+        public string CreatedAt { get; set; } = string.Empty;
+        public bool IsSelected { get; set; }
+    }
+}

@@ -102,7 +102,7 @@ public class DashboardService : IDashboardService
 
                 customerStats.Add(new CustomerPigPenStats(
                     customer.Id,
-                    customer.Name,
+                    customer.DisplayName,
                     customer.Status,
                     customerPigPens.Count,
                     customerPigPens.Sum(p => p.PigQty),

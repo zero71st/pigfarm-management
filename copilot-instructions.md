@@ -115,9 +115,13 @@ public interface ICustomerRepository
 
 ### **5. Record Types for Immutable Data**
 ```csharp
-public record Customer(Guid Id, string Code, string Name, CustomerStatus Status)
+public record Customer(Guid Id, string Code, CustomerStatus Status)
 {
-    public string DisplayName => $"{Name} ({Code})";
+    // Customer now uses FirstName and LastName (POSPOS alignment).
+    // DisplayName is computed from FirstName/LastName with fallback to Code.
+    public string? FirstName { get; init; }
+    public string? LastName { get; init; }
+    public string DisplayName => string.IsNullOrWhiteSpace(FirstName) && string.IsNullOrWhiteSpace(LastName) ? Code : $"{FirstName} {LastName} ({Code})";
     public bool IsActive => Status == CustomerStatus.Active;
 }
 ```
