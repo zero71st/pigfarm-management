@@ -21,12 +21,20 @@ Consolidate or remove duplicate and overlapping documentation in the repository 
 
 1. Scan the repository for documentation files under paths: `docs/`, `README.md`, `specs/`, and any top-level `*.md` that appear to be documentation.
 2. Compute hashes and a similarity score for every pair of candidate documents (exact match or fuzzy text similarity). Group near-duplicates (similarity >= 85%).
-3. Exclude from automated deletion any file under `.specify/` and any `specs/**` file whose header or path indicates it was created by the specify tooling. These are "exempt".
+3. Exclude from automated deletion any file under `.specify/` and exclude the entire `specs/` folder; no files under `specs/` will be modified or deleted by the automated cleanup process. Files under `specs/` are considered out-of-scope for this cleanup.
 4. For each group of near-duplicates, generate a proposed action: (A) keep canonical file and archive others, (B) consolidate by merging unique sections into canonical file and archive others, or (C) manual review if differences are non-trivial.
 5. Produce a preview PR branch that contains: the proposed deletions (moved to `docs/_archive/<timestamp>/`), any consolidations applied as edits to the canonical file, and a summary file `docs/cleanup-report.md` listing all actions and reasons.
 6. Open a draft PR for human review with a checklist for reviewers to sign off.
 
 If any ambiguous case is found (e.g., docs with small but important differences), mark them for manual review and do not auto-delete.
+
+## Clarifications
+
+### Session 2025-09-28
+
+- Q: Which spec files should be protected from cleanup? → A: A
+
+Note: Answer A means fully exclude both `.specify/` and the entire `specs/` folder — no spec files will be touched. The spec and the tooling will treat `specs/` as out-of-scope for this feature.
 
 ## User Scenarios & Testing
 
