@@ -12,6 +12,7 @@ public interface IFeedImportService
     Task<List<PosPosFeedTransaction>> GetPosPosFeedByCustomerCodeAsync(string customerCode);
     Task<List<PosPosFeedTransaction>> GetPosPosFeedByDateRangeAsync(DateTime fromDate, DateTime toDate);
     Task<List<PosPosFeedTransaction>> GetPosPosFeedByCustomerAndDateRangeAsync(string customerCode, DateTime fromDate, DateTime toDate);
+    Task<List<PosPosFeedTransaction>> GetAllPosPosFeedByDateRangeAsync(DateTime fromDate, DateTime toDate);
     Task<FeedImportResult> ImportPosPosFeedByDateRangeAsync(DateTime fromDate, DateTime toDate);
 }
 
@@ -65,6 +66,13 @@ public class FeedImportService : IFeedImportService
     {
         var response = await _httpClient.GetFromJsonAsync<List<PosPosFeedTransaction>>(
             $"/api/feeds/import/pospos/customer/{customerCode}/daterange?fromDate={fromDate:yyyy-MM-ddTHH:mm:ss}&toDate={toDate:yyyy-MM-ddTHH:mm:ss}");
+        return response ?? new List<PosPosFeedTransaction>();
+    }
+
+    public async Task<List<PosPosFeedTransaction>> GetAllPosPosFeedByDateRangeAsync(DateTime fromDate, DateTime toDate)
+    {
+        var response = await _httpClient.GetFromJsonAsync<List<PosPosFeedTransaction>>(
+            $"/api/feeds/import/pospos/daterange/all?fromDate={fromDate:yyyy-MM-ddTHH:mm:ss}&toDate={toDate:yyyy-MM-ddTHH:mm:ss}");
         return response ?? new List<PosPosFeedTransaction>();
     }
 

@@ -161,11 +161,11 @@ namespace PigFarmManagement.Server.Services
 					break;
 				}
 
-				// Build url with date filters if supported. POSPOS API may accept from/to as unix timestamps or ISO strings; we'll use ISO8601 here.
-				var fromIso = Uri.EscapeDataString(from.ToString("o"));
-				var toIso = Uri.EscapeDataString(to.ToString("o"));
+				// Build url with date filters. POSPOS API uses start/end parameters with YYYY-MM-DD format.
+				var startDate = from.ToString("yyyy-MM-dd");
+				var endDate = to.ToString("yyyy-MM-dd");
 				var sep = baseUrl.Contains('?') ? '&' : '?';
-				var url = string.Concat(baseUrl, sep, "page=", page, "&limit=", pageSize, "&from=", fromIso, "&to=", toIso);
+				var url = string.Concat(baseUrl, sep, "page=", page, "&limit=", pageSize, "&start=", startDate, "&end=", endDate);
 
 				// Log the exact request URL used for date-range fetches
 				_logger?.LogDebug("POSPOS request URL (daterange): {Url}", url);

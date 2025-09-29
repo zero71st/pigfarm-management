@@ -82,6 +82,7 @@ app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = Dat
 app.UseCors();
 app.UseDefaultFiles();
 app.UseStaticFiles();
+app.UseBlazorFrameworkFiles();
 
 // Map attribute-routed controllers (ImportController etc.)
 app.MapControllers();

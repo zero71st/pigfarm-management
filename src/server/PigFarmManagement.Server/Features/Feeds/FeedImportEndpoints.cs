@@ -40,6 +40,10 @@ public static class FeedImportEndpoints
             .WithName("GetPosPosFeedByCustomerAndDateRange")
             .WithSummary("Get POSPOS feed transactions by customer code and date range");
 
+        group.MapGet("/pospos/daterange/all", GetAllPosPosFeedByDateRange)
+            .WithName("GetAllPosPosFeedByDateRange")
+            .WithSummary("Get all POSPOS feed transactions by date range (without customer filtering)");
+
         // Debug: raw fetch from POSPOS for a customer (no import)
         group.MapGet("/pospos/customer/{customerCode}/raw", GetRawPosPosByCustomer)
             .WithName("GetRawPosPosByCustomer")
@@ -158,6 +162,22 @@ public static class FeedImportEndpoints
         try
         {
             var transactions = await feedImportService.GetPosPosFeedByCustomerAndDateRangeAsync(customerCode, fromDate, toDate);
+            return Results.Ok(transactions);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Failed to get transactions: {ex.Message}");
+        }
+    }
+
+    private static async Task<IResult> GetAllPosPosFeedByDateRange(
+        DateTime fromDate,
+        DateTime toDate,
+        IFeedImportService feedImportService)
+    {
+        try
+        {
+            var transactions = await feedImportService.GetAllPosPosFeedByDateRangeAsync(fromDate, toDate);
             return Results.Ok(transactions);
         }
         catch (Exception ex)

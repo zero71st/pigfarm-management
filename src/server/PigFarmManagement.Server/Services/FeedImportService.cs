@@ -152,6 +152,14 @@ public class FeedImportService : IFeedImportService
             .ToList();
     }
 
+    public async Task<List<PosPosFeedTransaction>> GetAllPosPosFeedByDateRangeAsync(DateTime fromDate, DateTime toDate)
+    {
+        var transactions = await _posposFeedClient.GetTransactionsByDateRangeAsync(fromDate, toDate);
+        return transactions
+            .Where(t => t.Timestamp >= fromDate && t.Timestamp <= toDate)
+            .ToList();
+    }
+
     public async Task<FeedImportResult> ImportPosPosFeedByDateRangeAsync(DateTime fromDate, DateTime toDate)
     {
         var transactions = await GetPosPosFeedByDateRangeAsync(fromDate, toDate);
