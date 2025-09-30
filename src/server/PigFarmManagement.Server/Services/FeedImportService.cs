@@ -12,7 +12,7 @@ public class FeedImportService : IFeedImportService
     private readonly ICustomerRepository _customerRepository;
     private readonly IFeedRepository _feedRepository;
     private readonly Infrastructure.Data.Repositories.IFeedRepository _efFeedRepository;
-    private readonly IPosposTransactionClient _posposFeedClient;
+    private readonly IPosposTransactionClient _posposTrasactionClient;
 
     // Keep legacy in-memory data for mock POSPOS transactions
     private readonly List<PigPen> _pigPens = new();
@@ -23,13 +23,14 @@ public class FeedImportService : IFeedImportService
         ICustomerRepository customerRepository,
         IFeedRepository feedRepository,
         Infrastructure.Data.Repositories.IFeedRepository efFeedRepository,
-        IPosposTransactionClient posposFeedClient)
+        IPosposTransactionClient posposTransactionClient)
     {
         _pigPenRepository = pigPenRepository;
         _customerRepository = customerRepository;
         _feedRepository = feedRepository;
         _efFeedRepository = efFeedRepository;
-        _posposFeedClient = posposFeedClient;
+        _posposTrasactionClient = posposTransactionClient;
+        
         InitializeData(); // Still needed for mock data
     }
 
@@ -125,7 +126,7 @@ public class FeedImportService : IFeedImportService
         // Default to last 30 days for customer-only queries
         var to = DateTime.UtcNow;
         var from = to.AddDays(-30);
-        var transactions = await _posposFeedClient.GetTransactionsByDateRangeAsync(from, to);
+        var transactions = await _posposTrasactionClient.GetTransactionsByDateRangeAsync(from, to);
         return transactions
             .Where(t => t.BuyerDetail != null && (
                 t.BuyerDetail.Code.Equals(customerCode, StringComparison.OrdinalIgnoreCase) ||
@@ -136,7 +137,7 @@ public class FeedImportService : IFeedImportService
 
     public async Task<List<PosPosFeedTransaction>> GetPosPosFeedByDateRangeAsync(DateTime fromDate, DateTime toDate)
     {
-        var transactions = await _posposFeedClient.GetTransactionsByDateRangeAsync(fromDate, toDate);
+        var transactions = await _posposTrasactionClient.GetTransactionsByDateRangeAsync(fromDate, toDate);
         return transactions
             .Where(t => t.Timestamp >= fromDate && t.Timestamp <= toDate)
             .ToList();
@@ -144,7 +145,7 @@ public class FeedImportService : IFeedImportService
 
     public async Task<List<PosPosFeedTransaction>> GetPosPosFeedByCustomerAndDateRangeAsync(string customerCode, DateTime fromDate, DateTime toDate)
     {
-        var transactions = await _posposFeedClient.GetTransactionsByDateRangeAsync(fromDate, toDate);
+        var transactions = await _posposTrasactionClient.GetTransactionsByDateRangeAsync(fromDate, toDate);
         return transactions
             .Where(t => t.BuyerDetail != null && (
                 t.BuyerDetail.Code.Equals(customerCode, StringComparison.OrdinalIgnoreCase) ||
@@ -155,7 +156,7 @@ public class FeedImportService : IFeedImportService
 
     public async Task<List<PosPosFeedTransaction>> GetAllPosPosFeedByDateRangeAsync(DateTime fromDate, DateTime toDate)
     {
-        var transactions = await _posposFeedClient.GetTransactionsByDateRangeAsync(fromDate, toDate);
+        var transactions = await _posposTrasactionClient.GetTransactionsByDateRangeAsync(fromDate, toDate);
         return transactions
             .Where(t => t.Timestamp >= fromDate && t.Timestamp <= toDate)
             .ToList();
@@ -166,6 +167,7 @@ public class FeedImportService : IFeedImportService
         var transactions = await GetPosPosFeedByDateRangeAsync(fromDate, toDate);
         return await ImportPosPosFeedDataAsync(transactions);
     }
+
 
     public async Task<FeedImportResult> CreateDemoFeedsWithProductInfoAsync(Guid pigPenId)
     {
