@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using PigFarmManagement.Server.Models;
 using PigFarmManagement.Shared.Models;
 using Microsoft.Extensions.Logging;
+using PigFarmManagement.Server.Services.ExternalServices;
 
 namespace PigFarmManagement.Server.Services
 {

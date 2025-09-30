@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using PigFarmManagement.Server.Services;
+using PigFarmManagement.Server.Services.ExternalServices;
 
 namespace PigFarmManagement.Server.Controllers
 {

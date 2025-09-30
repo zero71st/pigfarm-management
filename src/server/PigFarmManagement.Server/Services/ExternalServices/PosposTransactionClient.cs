@@ -7,7 +7,7 @@ using Microsoft.Extensions.Options;
 using PigFarmManagement.Server.Infrastructure.Settings;
 using PigFarmManagement.Shared.Models;
 
-namespace PigFarmManagement.Server.Services
+namespace PigFarmManagement.Server.Services.ExternalServices
 {
 	public class PosposTransactionClient : IPosposTransactionClient
 	{

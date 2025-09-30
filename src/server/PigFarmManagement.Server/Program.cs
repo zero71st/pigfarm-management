@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PigFarmManagement.Server.Infrastructure.Data;
 using PigFarmManagement.Server.Infrastructure.Extensions;
+using PigFarmManagement.Server.Services.ExternalServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,7 +23,7 @@ builder.Services.AddApplicationServices();
 
 // Pospos services
 builder.Services.AddSingleton<PigFarmManagement.Server.Services.IMappingStore, PigFarmManagement.Server.Services.FileMappingStore>();
-builder.Services.AddHttpClient<PigFarmManagement.Server.Services.IPosposMemberClient, PigFarmManagement.Server.Services.PosposMemberClient>();
+builder.Services.AddHttpClient<IPosposMemberClient, PosposMemberClient>();
 // PosposImporter depends on scoped services (ICustomerRepository). Register as scoped to avoid
 // injecting scoped services into a singleton which causes runtime DI errors.
 builder.Services.AddScoped<PigFarmManagement.Server.Services.IPosposImporter, PigFarmManagement.Server.Services.PosposImporter>();

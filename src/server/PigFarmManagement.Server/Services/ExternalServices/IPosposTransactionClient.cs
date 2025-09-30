@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using PigFarmManagement.Shared.Models;
 
-namespace PigFarmManagement.Server.Services;
+namespace PigFarmManagement.Server.Services.ExternalServices;
 
 public interface IPosposTransactionClient
 {

@@ -2,6 +2,7 @@ using System.Text.Json;
 using PigFarmManagement.Shared.Models;
 using PigFarmManagement.Shared.Contracts;
 using PigFarmManagement.Server.Infrastructure.Data.Repositories;
+using PigFarmManagement.Server.Services.ExternalServices;
 
 namespace PigFarmManagement.Server.Services;
 

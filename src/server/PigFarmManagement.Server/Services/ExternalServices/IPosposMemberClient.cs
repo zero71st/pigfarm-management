@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using PigFarmManagement.Server.Models;
 
-namespace PigFarmManagement.Server.Services
+namespace PigFarmManagement.Server.Services.ExternalServices
 {
     public interface IPosposMemberClient
     {
