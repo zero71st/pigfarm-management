@@ -11,8 +11,8 @@
                 <MudText Typo="Typo.body2">
                     <strong>Customer:</strong> @CustomerDisplayName<br/>
                     <strong>Pen Code:</strong> @PenCode<br/>
-                    <strong>Note:</strong> Only showing POSPOS transactions that include buyer information. 
-                    Please select the transactions that belong to this customer (@_customerCode).
+                    <strong>Note:</strong> Showing POSPOS transactions for customer code @_customerCode. 
+                    Select the transactions you want to import for this pig pen.
                 </MudText>
             </MudAlert>
             
@@ -255,46 +255,41 @@
         {
             List<PosPosFeedTransaction> allTransactions;
             
-            // Use date range filtering - get ALL transactions since POSPOS API doesn't include buyer_detail
+            // Use customer and date range filtering to get only transactions for this customer
             if (_fromDate.HasValue && _toDate.HasValue)
             {
-                // Both dates specified - get all transactions in date range
-                allTransactions = await FeedImportService.GetAllPosPosFeedByDateRangeAsync(
-                    _fromDate.Value, _toDate.Value);
+                // Both dates specified - get customer transactions in date range
+                allTransactions = await FeedImportService.GetPosPosFeedByCustomerAndDateRangeAsync(
+                    _customerCode, _fromDate.Value, _toDate.Value);
             }
             else if (_fromDate.HasValue)
             {
-                // Only from date - get all transactions from date to now
+                // Only from date - get customer transactions from date to now
                 var to = DateTime.UtcNow;
-                allTransactions = await FeedImportService.GetAllPosPosFeedByDateRangeAsync(_fromDate.Value, to);
+                allTransactions = await FeedImportService.GetPosPosFeedByCustomerAndDateRangeAsync(_customerCode, _fromDate.Value, to);
             }
             else if (_toDate.HasValue)
             {
-                // Only to date - get all transactions up to that date
+                // Only to date - get customer transactions up to that date
                 var from = DateTime.UtcNow.AddDays(-30); // Default to last 30 days if no from date
-                allTransactions = await FeedImportService.GetAllPosPosFeedByDateRangeAsync(from, _toDate.Value);
+                allTransactions = await FeedImportService.GetPosPosFeedByCustomerAndDateRangeAsync(_customerCode, from, _toDate.Value);
             }
             else
             {
                 // No date filter - default to last 3 days
                 var from = DateTime.Today.AddDays(-3);
                 var to = DateTime.Today;
-                allTransactions = await FeedImportService.GetAllPosPosFeedByDateRangeAsync(from, to);
+                allTransactions = await FeedImportService.GetPosPosFeedByCustomerAndDateRangeAsync(_customerCode, from, to);
             }
             
             _availableTransactions = allTransactions
-                .Where(t => t.BuyerDetail != null && 
-                           (!string.IsNullOrWhiteSpace(t.BuyerDetail.Code) || 
-                            !string.IsNullOrWhiteSpace(t.BuyerDetail.KeyCardId) ||
-                            !string.IsNullOrWhiteSpace(t.BuyerDetail.FirstName) || 
-                            !string.IsNullOrWhiteSpace(t.BuyerDetail.LastName)))
                 .OrderByDescending(t => t.Timestamp)
                 .ToList();
                 
             if (_availableTransactions.Any())
             {
                 var dateRangeText = GetDateRangeDisplayText();
-                Snackbar.Add($"Found {_availableTransactions.Count} POSPOS transaction(s) with buyer information{dateRangeText}. Please select the ones for customer {_customerCode}.", Severity.Success);
+                Snackbar.Add($"Found {_availableTransactions.Count} POSPOS transaction(s) for customer {_customerCode}{dateRangeText}.", Severity.Success);
             }
             else
             {

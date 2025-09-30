@@ -30,7 +30,7 @@ public class FeedImportService : IFeedImportService
         _feedRepository = feedRepository;
         _efFeedRepository = efFeedRepository;
         _posposTrasactionClient = posposTransactionClient;
-        
+
         InitializeData(); // Still needed for mock data
     }
 
@@ -137,10 +137,7 @@ public class FeedImportService : IFeedImportService
 
     public async Task<List<PosPosFeedTransaction>> GetPosPosFeedByDateRangeAsync(DateTime fromDate, DateTime toDate)
     {
-        var transactions = await _posposTrasactionClient.GetTransactionsByDateRangeAsync(fromDate, toDate);
-        return transactions
-            .Where(t => t.Timestamp >= fromDate && t.Timestamp <= toDate)
-            .ToList();
+        return await _posposTrasactionClient.GetTransactionsByDateRangeAsync(fromDate, toDate);
     }
 
     public async Task<List<PosPosFeedTransaction>> GetPosPosFeedByCustomerAndDateRangeAsync(string customerCode, DateTime fromDate, DateTime toDate)
@@ -150,16 +147,13 @@ public class FeedImportService : IFeedImportService
             .Where(t => t.BuyerDetail != null && (
                 t.BuyerDetail.Code.Equals(customerCode, StringComparison.OrdinalIgnoreCase) ||
                 (!string.IsNullOrWhiteSpace(t.BuyerDetail.KeyCardId) && t.BuyerDetail.KeyCardId.Equals(customerCode, StringComparison.OrdinalIgnoreCase))
-            ) && t.Timestamp >= fromDate && t.Timestamp <= toDate)
+            ))
             .ToList();
     }
 
     public async Task<List<PosPosFeedTransaction>> GetAllPosPosFeedByDateRangeAsync(DateTime fromDate, DateTime toDate)
     {
-        var transactions = await _posposTrasactionClient.GetTransactionsByDateRangeAsync(fromDate, toDate);
-        return transactions
-            .Where(t => t.Timestamp >= fromDate && t.Timestamp <= toDate)
-            .ToList();
+        return await _posposTrasactionClient.GetTransactionsByDateRangeAsync(fromDate, toDate);
     }
 
     public async Task<FeedImportResult> ImportPosPosFeedByDateRangeAsync(DateTime fromDate, DateTime toDate)
@@ -167,7 +161,6 @@ public class FeedImportService : IFeedImportService
         var transactions = await GetPosPosFeedByDateRangeAsync(fromDate, toDate);
         return await ImportPosPosFeedDataAsync(transactions);
     }
-
 
     public async Task<FeedImportResult> CreateDemoFeedsWithProductInfoAsync(Guid pigPenId)
     {
