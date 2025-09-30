@@ -1915,7 +1915,7 @@
 
         try
         {
-            // Find and remove feeds with the specified invoice number and product code
+            // Find feeds with the specified invoice number and product code
             var feedsToRemove = feeds.Where(f => f.ProductCode == productCode && 
                                                (f.InvoiceNumber == invoiceNumber || 
                                                 (string.IsNullOrEmpty(f.InvoiceNumber) && invoiceNumber == "N/A")))
@@ -1923,7 +1923,9 @@
 
             if (!feedsToRemove.Any())
             {
-                Snackbar.Add("Invoice not found", Severity.Warning);
+                Snackbar.Add($"Invoice '{invoiceNumber}' for product '{productCode}' was not found or has already been deleted.", Severity.Info);
+                // Still refresh to ensure UI is up to date
+                await RefreshFeeds();
                 return;
             }
 
@@ -1937,33 +1939,50 @@
 
             if (confirmed == true)
             {
-                // Remove the feeds from the local collection
+                // Delete feeds from the server one by one to handle partial failures gracefully
+                var successfulDeletes = 0;
+                var failedDeletes = 0;
+                
                 foreach (var feed in feedsToRemove)
                 {
-                    feeds.Remove(feed);
+                    try
+                    {
+                        Console.WriteLine($"Attempting to delete feed {feed.Id} for pig pen {pigPen!.Id}");
+                        var result = await PigPenService.DeleteFeedItemAsync(pigPen!.Id, feed.Id);
+                        Console.WriteLine($"Delete result for feed {feed.Id}: {result}");
+                        if (result)
+                        {
+                            successfulDeletes++;
+                        }
+                        else
+                        {
+                            failedDeletes++;
+                            Console.WriteLine($"Failed to delete feed {feed.Id} - HTTP request failed");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Exception deleting feed {feed.Id}: {ex.Message}");
+                        failedDeletes++;
+                    }
                 }
 
-                // Update grouped feeds
-                groupedFeeds = feeds
-                    .Where(f => !string.IsNullOrEmpty(f.ProductCode))
-                    .GroupBy(f => f.ProductCode)
-                    .Select(g => new GroupedFeedItem
-                    {
-                        ProductCode = g.Key,
-                        ProductName = g.First().ProductName ?? g.Key,
-                        TotalQuantity = g.Sum(f => f.QuantityKg),
-                        FeedCount = g.Count()
-                    })
-                    .OrderBy(g => g.ProductCode)
-                    .ToList();
+                // Always refresh feeds data from server
+                await RefreshFeeds();
 
-                // Rebuild comparison data
-                BuildComparisonData();
-
-                // Refresh the UI
-                StateHasChanged();
-
-                Snackbar.Add($"Removed invoice '{invoiceNumber}' - {feedsToRemove.Count} feed record(s) deleted", Severity.Success);
+                // Show appropriate message based on results
+                if (failedDeletes == 0)
+                {
+                    Snackbar.Add($"Successfully removed invoice '{invoiceNumber}' - {successfulDeletes} feed record(s) deleted", Severity.Success);
+                }
+                else if (successfulDeletes > 0)
+                {
+                    Snackbar.Add($"Partially removed invoice '{invoiceNumber}' - {successfulDeletes} record(s) deleted, {failedDeletes} failed. Some records may have already been deleted.", Severity.Warning);
+                }
+                else
+                {
+                    Snackbar.Add($"Failed to remove invoice '{invoiceNumber}' - all {failedDeletes} record(s) could not be deleted. They may have already been removed.", Severity.Error);
+                }
             }
         }
         catch (Exception ex)

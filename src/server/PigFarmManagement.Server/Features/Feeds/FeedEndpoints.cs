@@ -11,7 +11,7 @@ public static class FeedEndpoints
         group.MapPost("/{pigPenId:guid}/feeds", AddFeedToPigPen)
             .WithName("AddFeedToPigPen");
 
-        group.MapDelete("/feeds/{id:guid}", DeleteFeed)
+        group.MapDelete("/{pigPenId:guid}/feeds/{feedItemId:guid}", DeleteFeed)
             .WithName("DeleteFeed");
 
         return builder;
@@ -34,11 +34,11 @@ public static class FeedEndpoints
         }
     }
 
-    private static async Task<IResult> DeleteFeed(Guid id, IFeedService feedService)
+    private static async Task<IResult> DeleteFeed(Guid pigPenId, Guid feedItemId, IFeedService feedService)
     {
         try
         {
-            await feedService.DeleteFeedAsync(id);
+            await feedService.DeleteFeedAsync(feedItemId);
             return Results.Ok();
         }
         catch (InvalidOperationException ex)
