@@ -205,7 +205,7 @@ public static class FeedImportEndpoints
         string customerCode,
         [FromQuery] string? from,
         [FromQuery] string? to,
-        IPosposFeedClient posposFeedClient)
+        IPosposTransactionClient posposFeedClient)
     {
         try
         {
@@ -233,7 +233,7 @@ public static class FeedImportEndpoints
     private static async Task<IResult> FetchAndImportPosPosByDateRange(
         [FromBody] DateRangeImportRequest request,
         IFeedImportService feedImportService,
-        IPosposFeedClient posposFeedClient)
+        IPosposTransactionClient posposFeedClient)
     {
         try
         {

@@ -4,7 +4,7 @@ using PigFarmManagement.Server.Models;
 
 namespace PigFarmManagement.Server.Services
 {
-    public interface IPosposClient
+    public interface IPosposMemberClient
     {
         Task<IEnumerable<PosposMember>> GetMembersAsync();
         Task<IEnumerable<PosposMember>> GetMembersByIdsAsync(IEnumerable<string> ids);

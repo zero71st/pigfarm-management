@@ -5,7 +5,7 @@ using PigFarmManagement.Shared.Models;
 
 namespace PigFarmManagement.Server.Services;
 
-public interface IPosposFeedClient
+public interface IPosposTransactionClient
 {
     /// <summary>
     /// Fetch a single page of transactions from POSPOS. The returned tuple contains the transactions and a boolean flag indicating whether there are more pages available.

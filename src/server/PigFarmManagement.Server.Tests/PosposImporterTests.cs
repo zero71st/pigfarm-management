@@ -11,7 +11,7 @@ namespace PigFarmManagement.Server.Tests
 {
     public class PosposImporterTests
     {
-        private class FakePosposClient : IPosposClient
+        private class FakePosposClient : IPosposMemberClient
         {
             private readonly IEnumerable<PosposMember> _members;
             public FakePosposClient(IEnumerable<PosposMember> members) => _members = members;

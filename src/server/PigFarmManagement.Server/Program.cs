@@ -22,7 +22,7 @@ builder.Services.AddApplicationServices();
 
 // Pospos services
 builder.Services.AddSingleton<PigFarmManagement.Server.Services.IMappingStore, PigFarmManagement.Server.Services.FileMappingStore>();
-builder.Services.AddHttpClient<PigFarmManagement.Server.Services.IPosposClient, PigFarmManagement.Server.Services.PosposClient>();
+builder.Services.AddHttpClient<PigFarmManagement.Server.Services.IPosposMemberClient, PigFarmManagement.Server.Services.PosposMemberClient>();
 // PosposImporter depends on scoped services (ICustomerRepository). Register as scoped to avoid
 // injecting scoped services into a singleton which causes runtime DI errors.
 builder.Services.AddScoped<PigFarmManagement.Server.Services.IPosposImporter, PigFarmManagement.Server.Services.PosposImporter>();

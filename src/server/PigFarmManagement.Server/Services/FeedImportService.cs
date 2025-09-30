@@ -11,7 +11,7 @@ public class FeedImportService : IFeedImportService
     private readonly ICustomerRepository _customerRepository;
     private readonly IFeedRepository _feedRepository;
     private readonly Infrastructure.Data.Repositories.IFeedRepository _efFeedRepository;
-    private readonly IPosposFeedClient _posposFeedClient;
+    private readonly IPosposTransactionClient _posposFeedClient;
 
     // Keep legacy in-memory data for mock POSPOS transactions
     private readonly List<PigPen> _pigPens = new();
@@ -22,7 +22,7 @@ public class FeedImportService : IFeedImportService
         ICustomerRepository customerRepository,
         IFeedRepository feedRepository,
         Infrastructure.Data.Repositories.IFeedRepository efFeedRepository,
-        IPosposFeedClient posposFeedClient)
+        IPosposTransactionClient posposFeedClient)
     {
         _pigPenRepository = pigPenRepository;
         _customerRepository = customerRepository;
@@ -226,14 +226,14 @@ public class FeedImportService : IFeedImportService
         // Legacy initialization for mock data - keeping for compatibility
         // This will be removed once all data comes from repositories
     }
-        // Legacy initialization for mock data - kept only as a historical placeholder.
+    // Legacy initialization for mock data - kept only as a historical placeholder.
     private async Task ProcessTransactionAsync(PosPosFeedTransaction transaction, FeedImportResult result)
     {
         // Find or create customer based on buyer detail
         var customer = FindOrCreateCustomer(transaction.BuyerDetail);
 
         // Find pig pen for this customer (for demo, we'll use the first available)
-        var pigPen = _pigPens.FirstOrDefault(p => p.CustomerId == customer.Id) 
+        var pigPen = _pigPens.FirstOrDefault(p => p.CustomerId == customer.Id)
                     ?? _pigPens.FirstOrDefault(); // fallback
 
         if (pigPen == null)
@@ -312,17 +312,17 @@ public class FeedImportService : IFeedImportService
             return existingCustomer;
         }
 
-            // Create new customer
-            var newCustomer = new Customer(
-                Guid.NewGuid(),
-                buyerDetail.Code,
-                CustomerStatus.Active)
-            {
-                FirstName = buyerDetail.FirstName,
-                LastName = buyerDetail.LastName,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
+        // Create new customer
+        var newCustomer = new Customer(
+            Guid.NewGuid(),
+            buyerDetail.Code,
+            CustomerStatus.Active)
+        {
+            FirstName = buyerDetail.FirstName,
+            LastName = buyerDetail.LastName,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
 
         _customers.Add(newCustomer);
         return newCustomer;

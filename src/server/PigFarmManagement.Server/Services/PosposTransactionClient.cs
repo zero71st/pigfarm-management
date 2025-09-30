@@ -9,17 +9,17 @@ using PigFarmManagement.Shared.Models;
 
 namespace PigFarmManagement.Server.Services
 {
-	public class PosposFeedClient : IPosposFeedClient
+	public class PosposTransactionClient : IPosposTransactionClient
 	{
 		private readonly HttpClient _http;
 		private readonly PosposOptions _opts;
-	private readonly Microsoft.Extensions.Logging.ILogger<PosposFeedClient>? _logger;
+	private readonly Microsoft.Extensions.Logging.ILogger<PosposTransactionClient>? _logger;
 
-		public PosposFeedClient(HttpClient http, IOptions<PosposOptions> opts, Microsoft.Extensions.Logging.ILogger<PosposFeedClient>? logger)
+		public PosposTransactionClient(HttpClient http, IOptions<PosposOptions> opts, Microsoft.Extensions.Logging.ILogger<PosposTransactionClient>? logger)
 		{
 			_http = http ?? throw new ArgumentNullException(nameof(http));
 			_opts = opts?.Value ?? new PosposOptions();
-			_logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<PosposFeedClient>.Instance;
+			_logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<PosposTransactionClient>.Instance;
 
 			// allow fallback to environment variables if config keys are not set
 			if (string.IsNullOrWhiteSpace(_opts.TransactionsApiBase) && string.IsNullOrWhiteSpace(_opts.ApiBase))
@@ -33,7 +33,7 @@ namespace PigFarmManagement.Server.Services
 				if (!string.IsNullOrWhiteSpace(envKey)) _opts.ApiKey = envKey;
 			}
 
-			_logger?.LogInformation("PosposFeedClient configured. TransactionsApiBase='{Base}', ApiKeySet={HasKey}", _opts.TransactionsApiBase ?? _opts.ApiBase, !string.IsNullOrEmpty(_opts.ApiKey));
+			_logger?.LogInformation("PosposTransactionClient configured. TransactionsApiBase='{Base}', ApiKeySet={HasKey}", _opts.TransactionsApiBase ?? _opts.ApiBase, !string.IsNullOrEmpty(_opts.ApiKey));
 		}
 
 		private string GetBase() => !string.IsNullOrWhiteSpace(_opts.TransactionsApiBase) ? _opts.TransactionsApiBase : _opts.ApiBase;
@@ -148,7 +148,7 @@ namespace PigFarmManagement.Server.Services
 			}
 		}
 
-		public async Task<List<PosPosFeedTransaction>> GetTransactionsByDateRangeAsync(DateTime from, DateTime to, int pageSize = 100)
+		public async Task<List<PosPosFeedTransaction>> GetTransactionsByDateRangeAsync(DateTime from, DateTime to, int pageSize = 300)
 		{
 			var results = new List<PosPosFeedTransaction>();
 			var page = 1;
@@ -264,4 +264,3 @@ namespace PigFarmManagement.Server.Services
 		}
 	}
 }
-

@@ -38,7 +38,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<FormulaMigrationService, FormulaMigrationService>();
 
     // POSPOS feed client (used to fetch transactions)
-    services.AddHttpClient<IPosposFeedClient, PosposFeedClient>();
+    services.AddHttpClient<IPosposTransactionClient, PosposTransactionClient>();
 
         return services;
     }

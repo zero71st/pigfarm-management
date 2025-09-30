@@ -26,7 +26,7 @@ namespace PigFarmManagement.Server.Services
 
     public class PosposImporter : IPosposImporter
     {
-        private readonly IPosposClient _client;
+        private readonly IPosposMemberClient _client;
         private readonly IMappingStore _mappingStore;
         private readonly Infrastructure.Data.Repositories.ICustomerRepository _customerRepository;
         private readonly ILogger<PosposImporter> _logger;
@@ -35,7 +35,7 @@ namespace PigFarmManagement.Server.Services
         private IDictionary<string, string> _mapping;
         public PosposImportSummary? LastSummary { get; private set; }
 
-        public PosposImporter(IPosposClient client, IMappingStore mappingStore, Infrastructure.Data.Repositories.ICustomerRepository customerRepository, ILogger<PosposImporter> logger)
+        public PosposImporter(IPosposMemberClient client, IMappingStore mappingStore, Infrastructure.Data.Repositories.ICustomerRepository customerRepository, ILogger<PosposImporter> logger)
         {
             _client = client;
             _mappingStore = mappingStore;
