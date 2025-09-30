@@ -14,12 +14,12 @@ namespace PigFarmManagement.Server.Controllers
 {
     [ApiController]
     [Route("import/feeds")]
-    public class ImportFeedsController : ControllerBase
+    public class ImportPosFeedsController : ControllerBase
     {
         private readonly System.Net.Http.IHttpClientFactory _httpFactory;
         private readonly Microsoft.Extensions.Options.IOptions<PigFarmManagement.Server.Infrastructure.Settings.PosposOptions> _opts;
 
-        public ImportFeedsController(System.Net.Http.IHttpClientFactory httpFactory, Microsoft.Extensions.Options.IOptions<PigFarmManagement.Server.Infrastructure.Settings.PosposOptions> opts)
+        public ImportPosFeedsController(System.Net.Http.IHttpClientFactory httpFactory, Microsoft.Extensions.Options.IOptions<PigFarmManagement.Server.Infrastructure.Settings.PosposOptions> opts)
         {
             _httpFactory = httpFactory;
             _opts = opts;

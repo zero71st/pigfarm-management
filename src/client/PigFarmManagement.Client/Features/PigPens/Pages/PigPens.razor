@@ -15,24 +15,24 @@
 <MudPaper Class="pa-4 ma-2" Elevation="2">
     <MudGrid>
         <MudItem xs="12" md="4">
-            <MudSelect T="Guid?" @bind-Value="SelectedCustomerId" Label="Filter Customer" Variant="Variant.Outlined">
+            <MudSelect T="Guid?" @bind-Value="SelectedCustomerId" Margin="Margin.Dense" Label="Filter Customer" Variant="Variant.Outlined">
                 <MudSelectItem T="Guid?" Value="@((Guid?)null)">All Customers</MudSelectItem>
                 @foreach (var customer in customers)
                 {
-                    <MudSelectItem T="Guid?" Value="@((Guid?)customer.Id)">                @customer.DisplayName (@customer.Status)</MudSelectItem>
+                    <MudSelectItem T="Guid?" Value="@((Guid?)customer.Id)">@customer.DisplayName (@customer.Status)</MudSelectItem>
                 }
             </MudSelect>
         </MudItem>
         <MudItem xs="12" md="4">
-            <MudSelect T="PigPenType?" @bind-Value="SelectedPigPenType" Label="Filter Type" Variant="Variant.Outlined">
+            <MudSelect T="PigPenType?" @bind-Value="SelectedPigPenType" Margin="Margin.Dense" Label="Filter Type" Variant="Variant.Outlined">
                 <MudSelectItem T="PigPenType?" Value="@((PigPenType?)null)">All Types</MudSelectItem>
                 <MudSelectItem T="PigPenType?" Value="PigPenType.Cash">Cash</MudSelectItem>
                 <MudSelectItem T="PigPenType?" Value="PigPenType.Project">Project</MudSelectItem>
             </MudSelect>
         </MudItem>
         <MudItem xs="12" md="4">
-            <MudTextField @bind-Value="SearchText" Label="Search" Variant="Variant.Outlined" 
-                         Adornment="Adornment.End" AdornmentIcon="Icons.Material.Filled.Search" />
+            <MudTextField @bind-Value="SearchText" Label="Search" Variant="Variant.Outlined"  Margin="Margin.Dense"
+                         Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" />
         </MudItem>
     </MudGrid>
 </MudPaper>
@@ -44,13 +44,13 @@
         <div class="d-flex gap-2">
             <MudButton Variant="Variant.Outlined" 
                        Color="Color.Info"
-                       StartIcon="Icons.Material.Filled.Refresh"
+                       StartIcon="@Icons.Material.Filled.Refresh"
                        OnClick="RefreshData"
                        Size="Size.Small">
                 Refresh
             </MudButton>
             <MudButton Variant="Variant.Filled" Color="Color.Primary" 
-                       StartIcon="Icons.Material.Filled.Add" OnClick="ShowAddDialog">
+                       StartIcon="@Icons.Material.Filled.Add" OnClick="ShowAddDialog">
                 Add New Pig Pen
             </MudButton>
         </div>
@@ -137,7 +137,7 @@
                               Style="min-width: 32px; font-size: 16px; line-height: 1;"
                             OnClick="() => ShowPosImportDialog(context.Id, GetCustomerName(context.CustomerId), context.PenCode, GetCustomerCode(context.CustomerId))"
                               Title="Import feeds">
-                        📥
+                        <MudIcon Icon="@Icons.Material.Filled.Download" Size="Size.Small" />
                     </MudButton>
                     <MudButton Size="Size.Small"
                               Variant="Variant.Text"
@@ -146,7 +146,7 @@
                               Style="min-width: 32px; font-size: 16px; line-height: 1;"
                               OnClick="() => NavigateToPigPenDetail(context.Id)"
                               Title="View details">
-                        👁️
+                        <MudIcon Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" />
                     </MudButton>
                     <MudButton Size="Size.Small"
                               Variant="Variant.Text"
@@ -156,7 +156,7 @@
                               OnClick="() => ShowEditDialog(context)"
                               Disabled="@IsPigPenClosed(context)"
                               Title="Edit">
-                        ✏️
+                        <MudIcon Icon="@Icons.Material.Filled.Edit" Size="Size.Small" />
                     </MudButton>
                     <MudButton Size="Size.Small"
                               Variant="Variant.Text"
@@ -165,7 +165,7 @@
                               Style="min-width: 32px; font-size: 16px; line-height: 1;"
                               OnClick="() => ShowDeleteDialog(context)"
                               Title="Delete">
-                        🗑️
+                        <MudIcon Icon="@Icons.Material.Filled.Delete" Size="Size.Small" />
                     </MudButton>
                 </div>
             </MudTd>

@@ -7,7 +7,7 @@ namespace PigFarmManagement.Server.Controllers
 {
     [ApiController]
     [Route("import")]
-    public class ImportController : ControllerBase
+    public class ImportPosMemberController : ControllerBase
     {
         private readonly IPosposImporter _importer;
         private readonly IPosposMemberClient _posposClient;
@@ -15,7 +15,7 @@ namespace PigFarmManagement.Server.Controllers
         private readonly System.Net.Http.IHttpClientFactory _httpClientFactory;
         private readonly Features.Customers.ICustomerService _customerService;
 
-        public ImportController(IPosposImporter importer, IPosposMemberClient posposClient, Microsoft.Extensions.Options.IOptions<PigFarmManagement.Server.Infrastructure.Settings.PosposOptions> posposOptions, System.Net.Http.IHttpClientFactory httpClientFactory, Features.Customers.ICustomerService customerService)
+        public ImportPosMemberController(IPosposImporter importer, IPosposMemberClient posposClient, Microsoft.Extensions.Options.IOptions<PigFarmManagement.Server.Infrastructure.Settings.PosposOptions> posposOptions, System.Net.Http.IHttpClientFactory httpClientFactory, Features.Customers.ICustomerService customerService)
         {
             _importer = importer;
             _posposClient = posposClient;
