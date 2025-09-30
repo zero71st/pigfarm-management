@@ -10,5 +10,5 @@ public interface IPosposTransactionClient
     /// <summary>
     /// Fetch transactions within a date range by iterating pages until no more results.
     /// </summary>
-    Task<List<PosPosFeedTransaction>> GetTransactionsByDateRangeAsync(DateTime from, DateTime to, int pageSize = 100);
+    Task<List<PosPosFeedTransaction>> GetTransactionsByDateRangeAsync(DateTime from, DateTime to, int pageSize = 300);
 }

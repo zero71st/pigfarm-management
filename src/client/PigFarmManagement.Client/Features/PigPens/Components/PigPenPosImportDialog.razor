@@ -232,15 +232,15 @@
     private HashSet<PosPosFeedTransaction> _selectedTransactions = new();
     private List<PosPosFeedTransaction> _selectedTransactionDetails = new();
     private FeedImportResult? _importResult;
-    private DateTime? _fromDate; // Default to 3 days ago
+    private DateTime? _fromDate; // Default to  1 week ago
     private DateTime? _toDate; // Default to today
 
     protected override async Task OnInitializedAsync()
     {
         _customerCode = CustomerCode;
-        
-        // Set default date range: 3 days ago to today
-        _fromDate = DateTime.Today.AddDays(-3);
+
+        // Set default date range: 2 days ago to today
+        _fromDate = DateTime.Today.AddDays(-2);
         _toDate = DateTime.Today;
         
         await LoadAvailableTransactions();
@@ -276,8 +276,8 @@
             }
             else
             {
-                // No date filter - default to last 3 days
-                var from = DateTime.Today.AddDays(-3);
+                // No date filter - default to last 2 days
+                var from = DateTime.Today.AddDays(-2);
                 var to = DateTime.Today;
                 allTransactions = await FeedImportService.GetPosPosFeedByCustomerAndDateRangeAsync(_customerCode, from, to);
             }
