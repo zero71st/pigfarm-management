@@ -69,14 +69,14 @@
             </div>
             <div>
                 <MudButton Variant="Variant.Outlined" 
-                           StartIcon="Icons.Material.Filled.ArrowBack"
+                           StartIcon="@Icons.Material.Filled.ArrowBack"
                            OnClick="@(() => Navigation.NavigateTo("/pigpens"))"
                            Class="mr-2">
                     Back to List
                 </MudButton>
                 <MudButton Variant="Variant.Filled" 
                            Color="Color.Primary"
-                           StartIcon="Icons.Material.Filled.Edit"
+                           StartIcon="@Icons.Material.Filled.Edit"
                            OnClick="EditPigPen"
                            Disabled="@IsPigPenClosed()">
                     Edit
@@ -101,7 +101,7 @@
             <MudCardHeader>
                 <CardHeaderContent>
                     <MudText Typo="Typo.h5">
-                        <MudIcon Icon="Icons.Material.Filled.Info" Class="mr-2" />
+                        <MudIcon Icon="@Icons.Material.Filled.Info" Class="mr-2" />
                         Pig Pen Information
                     </MudText>
                 </CardHeaderContent>
@@ -111,6 +111,10 @@
                     <MudItem xs="12" md="6">
                         <MudSimpleTable Style="overflow-x: auto;" Dense="true">
                             <tbody>
+                                <tr>
+                                    <td><strong>Customer:</strong></td>
+                                    <td>@(customer?.DisplayName ?? "Unknown Customer")</td>
+                                </tr>
                                 <tr>
                                     <td><strong>Pen Code:</strong></td>
                                     <td>@pigPen.PenCode</td>
@@ -232,14 +236,14 @@
                 <MudCardHeader>
                     <CardHeaderContent>
                         <MudText Typo="Typo.h5">
-                            <MudIcon Icon="Icons.Material.Filled.AccountBalance" Class="mr-2" />
+                            <MudIcon Icon="@Icons.Material.Filled.AccountBalance" Class="mr-2" />
                             Deposits (@deposits.Count)
                         </MudText>
                     </CardHeaderContent>
                     <CardHeaderActions>
                         <MudButton Variant="Variant.Filled" 
                                    Color="Color.Primary"
-                                   StartIcon="Icons.Material.Filled.Add"
+                                   StartIcon="@Icons.Material.Filled.Add"
                                    OnClick="AddDeposit">
                             Add Deposit
                         </MudButton>
@@ -357,7 +361,7 @@
             <MudCardHeader>
                 <CardHeaderContent>
                     <MudText Typo="Typo.h5">
-                        <MudIcon Icon="Icons.Material.Filled.Fastfood" Class="mr-2" />
+                        <MudIcon Icon="@Icons.Material.Filled.Fastfood" Class="mr-2" />
                         Feed History (@feeds.Count)
                     </MudText>
                     @if (pigPen?.IsCalculationLocked == true)
@@ -366,7 +370,7 @@
                                  Size="Size.Small" 
                                  Variant="Variant.Filled" 
                                  Class="ml-3"
-                                 Icon="Icons.Material.Filled.Lock">
+                                 Icon="@Icons.Material.Filled.Lock">
                             Calculations Locked
                         </MudChip>
                     }
@@ -374,7 +378,7 @@
                 <CardHeaderActions>
                     <MudButton Variant="Variant.Filled" 
                                Color="Color.Primary"
-                               StartIcon="Icons.Material.Filled.Download"
+                               StartIcon="@Icons.Material.Filled.Download"
                                OnClick="ImportFeeds">
                         Import Feeds
                     </MudButton>
@@ -495,7 +499,7 @@
                                     @if (row.IsUnmatchedFeed && !string.IsNullOrEmpty(row.ProductCode) && row.IsFirstProductRow)
                                     {
                                         <MudTooltip Text="This feed was used but doesn't match any assigned formula - possible substitute feed due to stock shortage">
-                                            <MudIcon Icon="Icons.Material.Filled.Warning" 
+                                            <MudIcon Icon="@Icons.Material.Filled.Warning" 
                                                      Color="Color.Warning" 
                                                      Size="Size.Small" 
                                                      Class="mr-1" />
@@ -545,14 +549,14 @@
             <MudCardHeader>
                 <CardHeaderContent>
                     <MudText Typo="Typo.h5">
-                        <MudIcon Icon="Icons.Material.Filled.Agriculture" Class="mr-2" />
+                        <MudIcon Icon="@Icons.Material.Filled.Agriculture" Class="mr-2" />
                         Harvest Records (@harvests.Count)
                     </MudText>
                 </CardHeaderContent>
                 <CardHeaderActions>
                     <MudButton Variant="Variant.Filled" 
                                Color="Color.Primary"
-                               StartIcon="Icons.Material.Filled.Add"
+                               StartIcon="@Icons.Material.Filled.Add"
                                OnClick="AddHarvest">
                         Add Harvest
                     </MudButton>
@@ -708,6 +712,7 @@
 
     private bool loading = true;
     private PigPen? pigPen;
+    private Customer? customer;
     private PigPenSummary? summary;
     private List<FeedItem> feeds = new();
     private List<GroupedFeedItem> groupedFeeds = new();
@@ -746,6 +751,10 @@
 
             if (pigPen != null)
             {
+                // Load customer information
+                var customers = await Http.GetFromJsonAsync<List<Customer>>("/api/customers") ?? new();
+                customer = customers.FirstOrDefault(c => c.Id == pigPen.CustomerId);
+
                 // Load summary
                 summary = await Http.GetFromJsonAsync<PigPenSummary>($"/api/pigpens/{PigPenId}/summary");
 
@@ -1906,7 +1915,7 @@
 
         try
         {
-            // Find and remove feeds with the specified invoice number and product code
+            // Find feeds with the specified invoice number and product code
             var feedsToRemove = feeds.Where(f => f.ProductCode == productCode && 
                                                (f.InvoiceNumber == invoiceNumber || 
                                                 (string.IsNullOrEmpty(f.InvoiceNumber) && invoiceNumber == "N/A")))
@@ -1914,7 +1923,9 @@
 
             if (!feedsToRemove.Any())
             {
-                Snackbar.Add("Invoice not found", Severity.Warning);
+                Snackbar.Add($"Invoice '{invoiceNumber}' for product '{productCode}' was not found or has already been deleted.", Severity.Info);
+                // Still refresh to ensure UI is up to date
+                await RefreshFeeds();
                 return;
             }
 
@@ -1928,33 +1939,50 @@
 
             if (confirmed == true)
             {
-                // Remove the feeds from the local collection
+                // Delete feeds from the server one by one to handle partial failures gracefully
+                var successfulDeletes = 0;
+                var failedDeletes = 0;
+                
                 foreach (var feed in feedsToRemove)
                 {
-                    feeds.Remove(feed);
+                    try
+                    {
+                        Console.WriteLine($"Attempting to delete feed {feed.Id} for pig pen {pigPen!.Id}");
+                        var result = await PigPenService.DeleteFeedItemAsync(pigPen!.Id, feed.Id);
+                        Console.WriteLine($"Delete result for feed {feed.Id}: {result}");
+                        if (result)
+                        {
+                            successfulDeletes++;
+                        }
+                        else
+                        {
+                            failedDeletes++;
+                            Console.WriteLine($"Failed to delete feed {feed.Id} - HTTP request failed");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Exception deleting feed {feed.Id}: {ex.Message}");
+                        failedDeletes++;
+                    }
                 }
 
-                // Update grouped feeds
-                groupedFeeds = feeds
-                    .Where(f => !string.IsNullOrEmpty(f.ProductCode))
-                    .GroupBy(f => f.ProductCode)
-                    .Select(g => new GroupedFeedItem
-                    {
-                        ProductCode = g.Key,
-                        ProductName = g.First().ProductName ?? g.Key,
-                        TotalQuantity = g.Sum(f => f.QuantityKg),
-                        FeedCount = g.Count()
-                    })
-                    .OrderBy(g => g.ProductCode)
-                    .ToList();
+                // Always refresh feeds data from server
+                await RefreshFeeds();
 
-                // Rebuild comparison data
-                BuildComparisonData();
-
-                // Refresh the UI
-                StateHasChanged();
-
-                Snackbar.Add($"Removed invoice '{invoiceNumber}' - {feedsToRemove.Count} feed record(s) deleted", Severity.Success);
+                // Show appropriate message based on results
+                if (failedDeletes == 0)
+                {
+                    Snackbar.Add($"Successfully removed invoice '{invoiceNumber}' - {successfulDeletes} feed record(s) deleted", Severity.Success);
+                }
+                else if (successfulDeletes > 0)
+                {
+                    Snackbar.Add($"Partially removed invoice '{invoiceNumber}' - {successfulDeletes} record(s) deleted, {failedDeletes} failed. Some records may have already been deleted.", Severity.Warning);
+                }
+                else
+                {
+                    Snackbar.Add($"Failed to remove invoice '{invoiceNumber}' - all {failedDeletes} record(s) could not be deleted. They may have already been removed.", Severity.Error);
+                }
             }
         }
         catch (Exception ex)

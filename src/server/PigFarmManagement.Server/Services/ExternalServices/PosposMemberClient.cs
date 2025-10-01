@@ -8,15 +8,15 @@ using Microsoft.Extensions.Options;
 using PigFarmManagement.Server.Infrastructure.Settings;
 using PigFarmManagement.Server.Models;
 
-namespace PigFarmManagement.Server.Services
+namespace PigFarmManagement.Server.Services.ExternalServices
 {
-    public class PosposClient : IPosposClient
+    public class PosposMemberClient : IPosposMemberClient
     {
         private readonly HttpClient _http;
         private readonly PosposOptions _opts;
-        private readonly Microsoft.Extensions.Logging.ILogger<PosposClient> _logger;
+        private readonly Microsoft.Extensions.Logging.ILogger<PosposMemberClient> _logger;
 
-        public PosposClient(HttpClient http, IOptions<PosposOptions> opts, Microsoft.Extensions.Logging.ILogger<PosposClient> logger)
+        public PosposMemberClient(HttpClient http, IOptions<PosposOptions> opts, Microsoft.Extensions.Logging.ILogger<PosposMemberClient> logger)
         {
             _http = http;
             _opts = opts.Value;
@@ -33,7 +33,7 @@ namespace PigFarmManagement.Server.Services
                 if (!string.IsNullOrWhiteSpace(envKey))
                     _opts.ApiKey = envKey;
             }
-            logger.LogInformation("PosposClient configured. ApiBase='{ApiBase}', ApiKeySet={HasKey}", _opts.ApiBase, !string.IsNullOrEmpty(_opts.ApiKey));
+            logger.LogInformation("PosposMemberClient configured. ApiBase='{ApiBase}', ApiKeySet={HasKey}", _opts.ApiBase, !string.IsNullOrEmpty(_opts.ApiKey));
             _logger = logger;
         }
 

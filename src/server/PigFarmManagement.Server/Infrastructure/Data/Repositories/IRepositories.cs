@@ -32,6 +32,7 @@ public interface IFeedRepository
     Task<Feed> UpdateAsync(Feed feed);
     Task DeleteAsync(Guid id);
     Task<IEnumerable<Feed>> CreateManyAsync(IEnumerable<Feed> feeds);
+    Task<bool> ExistsByInvoiceNumberAsync(string invoiceNumber);
 }
 
 public interface IDepositRepository

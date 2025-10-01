@@ -12,19 +12,28 @@ public record FeedItem(
     string ProductCode, 
     string ProductName, 
     string InvoiceNumber,
-    decimal QuantityKg, 
-    decimal PricePerKg, 
+    decimal Quantity, // number of bags
+    decimal PricePerBag, 
     decimal Cost,
     DateTime Date)
 {
+    // Backwards-compatible convenience properties expected by the UI
+    // Some UI code references QuantityKg and PricePerKg; expose them here
+    public decimal QuantityKg => Quantity; // quantity is provided in kilograms by service mapping
+    public decimal PricePerKg => PricePerBag; // price per kg (service mapping sets this)
+
     public string? ExternalReference { get; init; }
+    public string? ExternalProductCode { get; init; }
+    public string? ExternalProductName { get; init; }
+    public bool UnmappedProduct { get; init; }
+    public string? InvoiceReferenceCode { get; init; }
     public string? Notes { get; init; }
     public DateTime CreatedAt { get; init; } = DateTime.Now;
     public DateTime UpdatedAt { get; init; } = DateTime.Now;
     
     // Value calculations
-    public decimal TotalCost => QuantityKg * PricePerKg;
-    public bool IsExpensive => PricePerKg > 50; // Business rule for expensive feed
+    public decimal TotalCost => Quantity * PricePerBag;
+    public bool IsExpensive => PricePerBag > 50; // Business rule for expensive feed
 };
 
 public record Deposit(Guid Id, Guid PigPenId, decimal Amount, DateTime Date, string? Remark)

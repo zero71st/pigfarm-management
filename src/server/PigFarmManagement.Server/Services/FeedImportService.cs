@@ -2,6 +2,7 @@ using System.Text.Json;
 using PigFarmManagement.Shared.Models;
 using PigFarmManagement.Shared.Contracts;
 using PigFarmManagement.Server.Infrastructure.Data.Repositories;
+using PigFarmManagement.Server.Services.ExternalServices;
 
 namespace PigFarmManagement.Server.Services;
 
@@ -10,7 +11,8 @@ public class FeedImportService : IFeedImportService
     private readonly IPigPenRepository _pigPenRepository;
     private readonly ICustomerRepository _customerRepository;
     private readonly IFeedRepository _feedRepository;
-    private readonly IPosposFeedClient _posposFeedClient;
+    private readonly Infrastructure.Data.Repositories.IFeedRepository _efFeedRepository;
+    private readonly IPosposTransactionClient _posposTrasactionClient;
 
     // Keep legacy in-memory data for mock POSPOS transactions
     private readonly List<PigPen> _pigPens = new();
@@ -20,12 +22,15 @@ public class FeedImportService : IFeedImportService
         IPigPenRepository pigPenRepository,
         ICustomerRepository customerRepository,
         IFeedRepository feedRepository,
-        IPosposFeedClient posposFeedClient)
+        Infrastructure.Data.Repositories.IFeedRepository efFeedRepository,
+        IPosposTransactionClient posposTransactionClient)
     {
         _pigPenRepository = pigPenRepository;
         _customerRepository = customerRepository;
         _feedRepository = feedRepository;
-        _posposFeedClient = posposFeedClient;
+        _efFeedRepository = efFeedRepository;
+        _posposTrasactionClient = posposTransactionClient;
+
         InitializeData(); // Still needed for mock data
     }
 
@@ -121,7 +126,7 @@ public class FeedImportService : IFeedImportService
         // Default to last 30 days for customer-only queries
         var to = DateTime.UtcNow;
         var from = to.AddDays(-30);
-        var transactions = await _posposFeedClient.GetTransactionsByDateRangeAsync(from, to);
+        var transactions = await _posposTrasactionClient.GetTransactionsByDateRangeAsync(from, to);
         return transactions
             .Where(t => t.BuyerDetail != null && (
                 t.BuyerDetail.Code.Equals(customerCode, StringComparison.OrdinalIgnoreCase) ||
@@ -132,21 +137,23 @@ public class FeedImportService : IFeedImportService
 
     public async Task<List<PosPosFeedTransaction>> GetPosPosFeedByDateRangeAsync(DateTime fromDate, DateTime toDate)
     {
-        var transactions = await _posposFeedClient.GetTransactionsByDateRangeAsync(fromDate, toDate);
-        return transactions
-            .Where(t => t.Timestamp >= fromDate && t.Timestamp <= toDate)
-            .ToList();
+        return await _posposTrasactionClient.GetTransactionsByDateRangeAsync(fromDate, toDate);
     }
 
     public async Task<List<PosPosFeedTransaction>> GetPosPosFeedByCustomerAndDateRangeAsync(string customerCode, DateTime fromDate, DateTime toDate)
     {
-        var transactions = await _posposFeedClient.GetTransactionsByDateRangeAsync(fromDate, toDate);
+        var transactions = await _posposTrasactionClient.GetTransactionsByDateRangeAsync(fromDate, toDate);
         return transactions
             .Where(t => t.BuyerDetail != null && (
                 t.BuyerDetail.Code.Equals(customerCode, StringComparison.OrdinalIgnoreCase) ||
                 (!string.IsNullOrWhiteSpace(t.BuyerDetail.KeyCardId) && t.BuyerDetail.KeyCardId.Equals(customerCode, StringComparison.OrdinalIgnoreCase))
-            ) && t.Timestamp >= fromDate && t.Timestamp <= toDate)
+            ))
             .ToList();
+    }
+
+    public async Task<List<PosPosFeedTransaction>> GetAllPosPosFeedByDateRangeAsync(DateTime fromDate, DateTime toDate)
+    {
+        return await _posposTrasactionClient.GetTransactionsByDateRangeAsync(fromDate, toDate);
     }
 
     public async Task<FeedImportResult> ImportPosPosFeedByDateRangeAsync(DateTime fromDate, DateTime toDate)
@@ -215,14 +222,14 @@ public class FeedImportService : IFeedImportService
         // Legacy initialization for mock data - keeping for compatibility
         // This will be removed once all data comes from repositories
     }
-        // Legacy initialization for mock data - kept only as a historical placeholder.
+    // Legacy initialization for mock data - kept only as a historical placeholder.
     private async Task ProcessTransactionAsync(PosPosFeedTransaction transaction, FeedImportResult result)
     {
         // Find or create customer based on buyer detail
         var customer = FindOrCreateCustomer(transaction.BuyerDetail);
 
         // Find pig pen for this customer (for demo, we'll use the first available)
-        var pigPen = _pigPens.FirstOrDefault(p => p.CustomerId == customer.Id) 
+        var pigPen = _pigPens.FirstOrDefault(p => p.CustomerId == customer.Id)
                     ?? _pigPens.FirstOrDefault(); // fallback
 
         if (pigPen == null)
@@ -235,32 +242,58 @@ public class FeedImportService : IFeedImportService
 
     private async Task ProcessTransactionForPigPenAsync(PosPosFeedTransaction transaction, PigPen pigPen, FeedImportResult result)
     {
+        // Idempotency: skip processing if a feed with the same InvoiceNumber already exists globally
+        if (!string.IsNullOrWhiteSpace(transaction.Code))
+        {
+            var exists = await _efFeedRepository.ExistsByInvoiceNumberAsync(transaction.Code);
+            if (exists)
+            {
+                result.FailedImports++;
+                result.Errors.Add($"Transaction {transaction.Code} skipped: invoice already imported");
+                return;
+            }
+        }
+
         foreach (var orderItem in transaction.OrderList)
         {
-            // stock is decimal (bags). Convert to kilograms (25 kg per bag).
-            var kilograms = orderItem.Stock * 25m;
-            // Quantity in Feed DTO is int (kg). Round to nearest integer to store.
-            var quantityKg = (int)Math.Round(kilograms, MidpointRounding.AwayFromZero);
+            // stock is decimal representing number of bags. Coerce to integer bag count.
+            var bags = (int)Math.Round(orderItem.Stock, MidpointRounding.AwayFromZero);
+
+            // UnitPrice is price-per-bag (POSPOS price is per-bag)
+            var unitPricePerBag = orderItem.Price;
+
+            // Determine product mapping: prefer exact code match, fallback to exact name match
+            var normalizedCode = (orderItem.Code ?? string.Empty).Trim();
+            var normalizedName = (orderItem.Name ?? string.Empty).Trim();
+
+            // NOTE: repository for product catalog is not available; rely on ProductCode/Name being stored on Feed
 
             var feed = new Feed
             {
                 Id = Guid.NewGuid(),
                 PigPenId = pigPen.Id,
                 ProductType = "อาหารสัตว์",
-                ProductCode = orderItem.Code,
-                ProductName = orderItem.Name,
+                ProductCode = normalizedCode,
+                ProductName = normalizedName,
                 InvoiceNumber = transaction.Code,
-                Quantity = quantityKg,
-                UnitPrice = orderItem.Price / 25m, // Price per kg
+                InvoiceReferenceCode = transaction.InvoiceReference?.Code,
+                Quantity = bags,
+                UnitPrice = unitPricePerBag,
                 TotalPrice = orderItem.TotalPriceIncludeDiscount,
                 FeedDate = transaction.Timestamp,
                 ExternalReference = $"POSPOS-{transaction.Code}-{orderItem.Code}",
                 Notes = $"Imported from POSPOS transaction {transaction.Code}",
+                ExternalProductCode = normalizedCode,
+                ExternalProductName = normalizedName,
+                UnmappedProduct = true, // default to true until a product mapping routine updates this
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
 
-            await _feedRepository.CreateAsync(feed);
+            // If we had product lookup logic, we would set UnmappedProduct=false and set ProductCode/ProductName accordingly.
+
+            await _efFeedRepository.CreateAsync(feed);
+
             result.TotalFeedItems++;
         }
     }
@@ -275,17 +308,17 @@ public class FeedImportService : IFeedImportService
             return existingCustomer;
         }
 
-            // Create new customer
-            var newCustomer = new Customer(
-                Guid.NewGuid(),
-                buyerDetail.Code,
-                CustomerStatus.Active)
-            {
-                FirstName = buyerDetail.FirstName,
-                LastName = buyerDetail.LastName,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
+        // Create new customer
+        var newCustomer = new Customer(
+            Guid.NewGuid(),
+            buyerDetail.Code,
+            CustomerStatus.Active)
+        {
+            FirstName = buyerDetail.FirstName,
+            LastName = buyerDetail.LastName,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
 
         _customers.Add(newCustomer);
         return newCustomer;

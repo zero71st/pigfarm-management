@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using PigFarmManagement.Shared.Models;
 using PigFarmManagement.Shared.Contracts;
 using PigFarmManagement.Server.Services;
+using PigFarmManagement.Server.Services.ExternalServices;
 
 namespace PigFarmManagement.Server.Features.Feeds;
 
@@ -39,6 +40,10 @@ public static class FeedImportEndpoints
         group.MapGet("/pospos/customer/{customerCode}/daterange", GetPosPosFeedByCustomerAndDateRange)
             .WithName("GetPosPosFeedByCustomerAndDateRange")
             .WithSummary("Get POSPOS feed transactions by customer code and date range");
+
+        group.MapGet("/pospos/daterange/all", GetAllPosPosFeedByDateRange)
+            .WithName("GetAllPosPosFeedByDateRange")
+            .WithSummary("Get all POSPOS feed transactions by date range (without customer filtering)");
 
         // Debug: raw fetch from POSPOS for a customer (no import)
         group.MapGet("/pospos/customer/{customerCode}/raw", GetRawPosPosByCustomer)
@@ -166,6 +171,22 @@ public static class FeedImportEndpoints
         }
     }
 
+    private static async Task<IResult> GetAllPosPosFeedByDateRange(
+        DateTime fromDate,
+        DateTime toDate,
+        IFeedImportService feedImportService)
+    {
+        try
+        {
+            var transactions = await feedImportService.GetAllPosPosFeedByDateRangeAsync(fromDate, toDate);
+            return Results.Ok(transactions);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Failed to get transactions: {ex.Message}");
+        }
+    }
+
     private static async Task<IResult> ImportPosPosFeedByDateRange(
         [FromBody] DateRangeImportRequest request,
         IFeedImportService feedImportService)
@@ -185,7 +206,7 @@ public static class FeedImportEndpoints
         string customerCode,
         [FromQuery] string? from,
         [FromQuery] string? to,
-        IPosposFeedClient posposFeedClient)
+        IPosposTransactionClient posposFeedClient)
     {
         try
         {
@@ -213,7 +234,7 @@ public static class FeedImportEndpoints
     private static async Task<IResult> FetchAndImportPosPosByDateRange(
         [FromBody] DateRangeImportRequest request,
         IFeedImportService feedImportService,
-        IPosposFeedClient posposFeedClient)
+        IPosposTransactionClient posposFeedClient)
     {
         try
         {

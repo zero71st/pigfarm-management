@@ -6,6 +6,7 @@ using PigFarmManagement.Server.Features.FeedFormulas;
 using PigFarmManagement.Server.Features.FeedProgress;
 using PigFarmManagement.Server.Features.Dashboard;
 using PigFarmManagement.Server.Services;
+using PigFarmManagement.Server.Services.ExternalServices;
 using PigFarmManagement.Shared.Contracts;
 
 namespace PigFarmManagement.Server.Infrastructure.Extensions;
@@ -38,7 +39,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<FormulaMigrationService, FormulaMigrationService>();
 
     // POSPOS feed client (used to fetch transactions)
-    services.AddHttpClient<IPosposFeedClient, PosposFeedClient>();
+    services.AddHttpClient<IPosposTransactionClient, PosposTransactionClient>();
 
         return services;
     }

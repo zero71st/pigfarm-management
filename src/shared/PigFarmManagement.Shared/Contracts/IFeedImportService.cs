@@ -42,6 +42,11 @@ public interface IFeedImportService
     Task<List<PosPosFeedTransaction>> GetPosPosFeedByCustomerAndDateRangeAsync(string customerCode, DateTime fromDate, DateTime toDate);
     
     /// <summary>
+    /// Get all POSPOS feed data by date range (without customer filtering)
+    /// </summary>
+    Task<List<PosPosFeedTransaction>> GetAllPosPosFeedByDateRangeAsync(DateTime fromDate, DateTime toDate);
+    
+    /// <summary>
     /// Import POSPOS feed data by date range
     /// </summary>
     Task<FeedImportResult> ImportPosPosFeedByDateRangeAsync(DateTime fromDate, DateTime toDate);

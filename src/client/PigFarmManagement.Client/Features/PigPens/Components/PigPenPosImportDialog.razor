@@ -11,7 +11,8 @@
                 <MudText Typo="Typo.body2">
                     <strong>Customer:</strong> @CustomerDisplayName<br/>
                     <strong>Pen Code:</strong> @PenCode<br/>
-                    Select which POSPOS invoices should be applied to this pig pen.
+                    <strong>Note:</strong> Showing POSPOS transactions for customer code @_customerCode. 
+                    Select the transactions you want to import for this pig pen.
                 </MudText>
             </MudAlert>
             
@@ -176,13 +177,13 @@
             {
                 <MudAlert Severity="Severity.Warning">
                     <MudText Typo="Typo.body1">
-                        No POSPOS transactions found for customer code: <strong>@_customerCode</strong>
+                        No POSPOS transactions found in the selected date range
                     </MudText>
                     <MudText Typo="Typo.body2" Class="mt-2">
                         This could mean:
-                        <br/>• No transactions exist for this customer in POSPOS
-                        <br/>• Customer code doesn't match between systems
-                        <br/>• POSPOS data hasn't been synced yet
+                        <br/>• No transactions exist in POSPOS for the selected date range
+                        <br/>• POSPOS API is not returning data
+                        <br/>• Try adjusting the date range
                     </MudText>
                 </MudAlert>
             }
@@ -231,12 +232,17 @@
     private HashSet<PosPosFeedTransaction> _selectedTransactions = new();
     private List<PosPosFeedTransaction> _selectedTransactionDetails = new();
     private FeedImportResult? _importResult;
-    private DateTime? _fromDate; // Default to no filter
-    private DateTime? _toDate; // Default to no filter
+    private DateTime? _fromDate; // Default to  1 week ago
+    private DateTime? _toDate; // Default to today
 
     protected override async Task OnInitializedAsync()
     {
         _customerCode = CustomerCode;
+
+        // Set default date range: 2 days ago to today
+        _fromDate = DateTime.Today.AddDays(-2);
+        _toDate = DateTime.Today;
+        
         await LoadAvailableTransactions();
     }
 
@@ -249,40 +255,31 @@
         {
             List<PosPosFeedTransaction> allTransactions;
             
-            // Use date range filtering if dates are specified
-            if (_fromDate.HasValue || _toDate.HasValue)
+            // Use customer and date range filtering to get only transactions for this customer
+            if (_fromDate.HasValue && _toDate.HasValue)
             {
-                if (_fromDate.HasValue && _toDate.HasValue)
-                {
-                    // Both dates specified - use customer and date range endpoint
-                    allTransactions = await FeedImportService.GetPosPosFeedByCustomerAndDateRangeAsync(
-                        _customerCode, _fromDate.Value, _toDate.Value);
-                }
-                else if (_fromDate.HasValue)
-                {
-                    // Only from date - call the date-range endpoint (from -> now) then filter by customer
-                    var to = DateTime.UtcNow;
-                    var range = await FeedImportService.GetPosPosFeedByDateRangeAsync(_fromDate.Value, to);
-                    allTransactions = range
-                        .Where(t => t.BuyerDetail.Code.Equals(_customerCode, StringComparison.OrdinalIgnoreCase) &&
-                                   t.Timestamp >= _fromDate.Value)
-                        .ToList();
-                }
-                else // _toDate.HasValue
-                {
-                    // Only to date - call the date-range endpoint (earliest -> to) then filter by customer
-                    var from = DateTime.MinValue;
-                    var range = await FeedImportService.GetPosPosFeedByDateRangeAsync(from, _toDate!.Value);
-                    allTransactions = range
-                        .Where(t => t.BuyerDetail.Code.Equals(_customerCode, StringComparison.OrdinalIgnoreCase) &&
-                                   t.Timestamp <= _toDate!.Value)
-                        .ToList();
-                }
+                // Both dates specified - get customer transactions in date range
+                allTransactions = await FeedImportService.GetPosPosFeedByCustomerAndDateRangeAsync(
+                    _customerCode, _fromDate.Value, _toDate.Value);
+            }
+            else if (_fromDate.HasValue)
+            {
+                // Only from date - get customer transactions from date to now
+                var to = DateTime.UtcNow;
+                allTransactions = await FeedImportService.GetPosPosFeedByCustomerAndDateRangeAsync(_customerCode, _fromDate.Value, to);
+            }
+            else if (_toDate.HasValue)
+            {
+                // Only to date - get customer transactions up to that date
+                var from = DateTime.UtcNow.AddDays(-30); // Default to last 30 days if no from date
+                allTransactions = await FeedImportService.GetPosPosFeedByCustomerAndDateRangeAsync(_customerCode, from, _toDate.Value);
             }
             else
             {
-                // No date filter - use existing customer-only endpoint
-                allTransactions = await FeedImportService.GetPosPosFeedByCustomerCodeAsync(_customerCode);
+                // No date filter - default to last 2 days
+                var from = DateTime.Today.AddDays(-2);
+                var to = DateTime.Today;
+                allTransactions = await FeedImportService.GetPosPosFeedByCustomerAndDateRangeAsync(_customerCode, from, to);
             }
             
             _availableTransactions = allTransactions
@@ -292,12 +289,12 @@
             if (_availableTransactions.Any())
             {
                 var dateRangeText = GetDateRangeDisplayText();
-                Snackbar.Add($"Found {_availableTransactions.Count} POSPOS transaction(s) for customer {_customerCode}{dateRangeText}", Severity.Success);
+                Snackbar.Add($"Found {_availableTransactions.Count} POSPOS transaction(s) for customer {_customerCode}{dateRangeText}.", Severity.Success);
             }
             else
             {
                 var dateRangeText = GetDateRangeDisplayText();
-                Snackbar.Add($"No POSPOS transactions found for customer code: {_customerCode}{dateRangeText}", Severity.Warning);
+                Snackbar.Add($"No POSPOS transactions found{dateRangeText}", Severity.Warning);
             }
         }
         catch (Exception ex)

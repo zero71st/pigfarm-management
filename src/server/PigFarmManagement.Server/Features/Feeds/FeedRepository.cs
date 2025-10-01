@@ -61,13 +61,17 @@ public class FeedRepository : IFeedRepository
             feed.ProductCode, // ProductCode
             feed.ProductName, // ProductName
             feed.InvoiceNumber, // InvoiceNumber
-            feed.Quantity * 25m,    // Convert bags to kg (25kg per bag)
-            feed.UnitPrice / 25m,   // Convert price per bag to price per kg
+            feed.Quantity,    // Quantity represents number of bags
+            feed.UnitPrice,   // UnitPrice represents price per bag
             feed.TotalPrice,  // Cost from TotalPrice
             feed.FeedDate     // Date from FeedDate
         )
         {
             ExternalReference = feed.ExternalReference,
+            ExternalProductCode = feed.ExternalProductCode,
+            ExternalProductName = feed.ExternalProductName,
+            InvoiceReferenceCode = feed.InvoiceReferenceCode,
+            UnmappedProduct = feed.UnmappedProduct,
             Notes = feed.Notes,
             CreatedAt = feed.CreatedAt,
             UpdatedAt = feed.UpdatedAt
@@ -84,11 +88,15 @@ public class FeedRepository : IFeedRepository
             ProductCode = feedItem.ProductCode, // Add ProductCode mapping
             ProductName = feedItem.ProductName, // Add ProductName mapping
             InvoiceNumber = feedItem.InvoiceNumber, // Add InvoiceNumber mapping
-            Quantity = (int)feedItem.QuantityKg, // Convert decimal to int
-            UnitPrice = feedItem.PricePerKg,
+            Quantity = (int)feedItem.Quantity, // Quantity stored as bags (int)
+            UnitPrice = feedItem.PricePerBag,
             TotalPrice = feedItem.Cost,
             FeedDate = feedItem.Date,
             ExternalReference = feedItem.ExternalReference,
+            ExternalProductCode = feedItem.ExternalProductCode,
+            ExternalProductName = feedItem.ExternalProductName,
+            InvoiceReferenceCode = feedItem.InvoiceReferenceCode,
+            UnmappedProduct = feedItem.UnmappedProduct,
             Notes = feedItem.Notes,
             CreatedAt = feedItem.CreatedAt,
             UpdatedAt = feedItem.UpdatedAt
