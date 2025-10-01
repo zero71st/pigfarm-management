@@ -110,3 +110,45 @@
 
 Additional note: This spec intentionally marks the idempotency/migration task as separate (see TODO list). The next phase is implementation: update DTO numeric types, adjust mapping logic in `FeedImportService.ProcessTransactionForPigPenAsync`, add tolerant JSON parsing, and validate import results with sample POSPOS JSON.
 - [ ] No implementation details (languages, frameworks, APIs)
+
+## Update: Root Cause, Proposal & Acceptance
+
+### Root Cause
+- POSPOS payload field mapping mismatch: in some payloads the `stock` and `price` fields were interpreted incorrectly causing quantity and unit price to be swapped.
+- Missing validation allowed zero/negative quantities or unit prices to be persisted.
+- Sync retries created duplicate feed records because imports were not idempotent (missing compound key such as `posReceiptId + lineItemId`).
+
+### Proposed Changes
+- Explicitly map POSPOS fields to internal model properties (feedId/lineItemId, code, name, stock, price, total_price_include_discount).
+- Add validation rules: `Quantity` &gt; 0, `UnitPrice` &gt;= 0, and `TotalPrice` ≈ `Quantity * UnitPrice` (tolerance 0.5%). Reject or flag records that violate these rules.
+- Enforce idempotent imports using a unique compound key (e.g., `posReceiptId` + `lineItemId`). If a matching record exists, update instead of insert.
+- Reconcile incoming records against existing feed entries: update when the idempotency key matches, otherwise insert new records and mark unmapped products.
+- Improve JSON deserialization to accept numeric strings and decimals; coerce `stock` to integer bag counts.
+- Add logging and import result metadata to surface skipped/flagged records to the operator.
+
+### Acceptance Criteria
+- Re-importing the same POSPOS transaction MUST NOT create duplicate `Feed` records.
+- For valid payloads, `Feed.TotalPrice` must equal `Quantity * UnitPrice` within 0.5% tolerance; otherwise the item is rejected or flagged for manual review.
+- Records with `Quantity <= 0` or `UnitPrice < 0` are rejected and logged with a clear error.
+- Unmapped products should create `Feed` entries with `UnmappedProduct = true` and include `ExternalProductCode`/`ExternalProductName` for manual mapping.
+- Tests: unit and integration tests covering successful sync, retry/no-duplicate behavior, swapped-field detection/fix, and invalid-value rejection.
+
+### Migration / Fix Steps
+1. Add DB unique constraint on `(posReceiptId, lineItemId)` (or equivalent) to prevent duplicates at the storage level.
+2. Deploy validation and reconciliation code to import pipeline.
+3. Run a reconciliation job to find suspect existing records where `abs(totalPrice - quantity * unitPrice) / totalPrice > 0.005` and flag them for manual review or auto-correct when safe.
+4. Update docs (`docs/feed-sync.md`) and `CHANGELOG.md`.
+
+### Files to update
+- `server/Features/Feeds/*` (sync handler, DTOs, import service)
+- `specs/004-fix-incorrect-feed/spec.md` (this file)
+- `specs/004-fix-incorrect-feed/plan.md` (update tasks & migration notes)
+- `specs/004-fix-incorrect-feed/tasks.md` (add test tasks)
+- `docs/feed-sync.md` (new mapping & validation notes)
+- `tests/*` (unit & integration tests for feed sync)
+
+### Test Plan (high level)
+- Unit tests for mapping and numeric coercion (string -> decimal/int), validation rules, and idempotency logic.
+- Integration tests exercising the import pipeline using saved POSPOS JSON samples (including cases with swapped fields and invalid values).
+- Reconciliation job test: run against sample DB dump and assert flagged records match expected anomalies.
+
