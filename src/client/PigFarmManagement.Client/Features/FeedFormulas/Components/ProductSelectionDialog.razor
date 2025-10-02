@@ -1,0 +1,296 @@
+@using MudBlazor
+@using PigFarmManagement.Client.Features.FeedFormulas.Services
+@inject IFeedFormulaService FeedFormulaService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <div style="display: flex; align-items: center;">
+            <MudIcon Icon="@Icons.Material.Filled.CloudDownload" Class="mr-2" />
+            <MudText Typo="Typo.h6">Select Products to Import from POSPOS</MudText>
+        </div>
+    </TitleContent>
+    
+    <DialogContent>
+        <MudContainer Style="max-width: 900px; max-height: 600px;">
+            @if (loading)
+            {
+                <div style="display: flex; justify-content: center; align-items: center; height: 200px;">
+                    <MudProgressCircular Size="Size.Large" Indeterminate="true" />
+                    <MudText Class="ml-3">Loading products from POSPOS...</MudText>
+                </div>
+            }
+            else if (products.Count == 0)
+            {
+                <MudAlert Severity="Severity.Warning">
+                    No products found from POSPOS API. Please check your configuration.
+                </MudAlert>
+            }
+            else
+            {
+                <MudStack Spacing="3">
+                    <!-- Selection Summary -->
+                    <MudPaper Class="pa-3" Elevation="1">
+                        <MudGrid AlignItems="Center">
+                            <MudItem xs="8">
+                                <MudText Typo="Typo.body1">
+                                    <strong>@selectedProducts.Count</strong> of <strong>@filteredProducts.Count</strong> products selected
+                                    @if (filteredProducts.Count != products.Count)
+                                    {
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">(@products.Count total products available)</MudText>
+                                    }
+                                </MudText>
+                            </MudItem>
+                            <MudItem xs="4" Class="d-flex justify-end">
+                                <MudButtonGroup Size="Size.Small" Variant="Variant.Outlined">
+                                    <MudButton OnClick="SelectAll" 
+                                              StartIcon="@Icons.Material.Filled.SelectAll"
+                                              Disabled="@(selectedProducts.Count == filteredProducts.Count)">
+                                        Select All
+                                    </MudButton>
+                                    <MudButton OnClick="ClearSelection" 
+                                              StartIcon="@Icons.Material.Filled.Clear"
+                                              Disabled="@(selectedProducts.Count == 0)">
+                                        Clear
+                                    </MudButton>
+                                </MudButtonGroup>
+                            </MudItem>
+                        </MudGrid>
+                    </MudPaper>
+
+                    <!-- Product Search and Filters -->
+                    <MudGrid Spacing="2">
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="searchText"
+                                         Label="Search products..."
+                                         Variant="Variant.Outlined"
+                                         Adornment="Adornment.Start"
+                                         AdornmentIcon="@Icons.Material.Filled.Search"
+                                         @oninput="OnSearchChanged"
+                                         Clearable="true" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudSelect @bind-Value="selectedCategory"
+                                      Label="Filter by Category"
+                                      Variant="Variant.Outlined"
+                                      Clearable="true"
+                                      @onchange="OnCategoryChanged">
+                                <MudSelectItem Value="@((string?)null)">All Categories</MudSelectItem>
+                                @foreach (var category in availableCategories)
+                                {
+                                    <MudSelectItem Value="@category">@category</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                    </MudGrid>
+
+                    <!-- Products Grid -->
+                    <MudDataGrid T="PosposProductDto" 
+                                Items="@filteredProducts" 
+                                Dense="true" 
+                                Hover="true" 
+                                MultiSelection="true"
+                                @bind-SelectedItems="selectedProductsHashSet"
+                                SelectOnRowClick="true"
+                                Height="350px"
+                                FixedHeader="true">
+                        
+                        <Columns>
+                            <SelectColumn T="PosposProductDto" />
+                            <PropertyColumn Property="x => x.Code" Title="Code" />
+                            <PropertyColumn Property="x => x.Name" Title="Product Name" />
+                            <TemplateColumn Title="Category">
+                                <CellTemplate>
+                                    <MudChip Size="Size.Small" Color="Color.Info">
+                                        @(context.Item.Category?.Name ?? "N/A")
+                                    </MudChip>
+                                </CellTemplate>
+                            </TemplateColumn>
+                            <PropertyColumn Property="x => x.Cost" Title="Cost" Format="N2" />
+                            <TemplateColumn Title="Unit">
+                                <CellTemplate>
+                                    @(context.Item.Unit?.Name ?? "N/A")
+                                </CellTemplate>
+                            </TemplateColumn>
+                        </Columns>
+
+                        <NoRecordsContent>
+                            <MudText>No products match your search criteria.</MudText>
+                        </NoRecordsContent>
+                    </MudDataGrid>
+                </MudStack>
+            }
+        </MudContainer>
+    </DialogContent>
+    
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton Color="Color.Primary" 
+                  Variant="Variant.Filled" 
+                  OnClick="ImportSelected"
+                  StartIcon="@Icons.Material.Filled.Download"
+                  Disabled="@(selectedProducts.Count == 0 || importing)">
+            @if (importing)
+            {
+                <MudProgressCircular Class="mr-2" Size="Size.Small" Indeterminate="true" />
+                <span>Importing @selectedProducts.Count products...</span>
+            }
+            else
+            {
+                <span>Import @selectedProducts.Count Selected</span>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
+
+    private List<PosposProductDto> products = new();
+    private List<PosposProductDto> filteredProducts = new();
+    private HashSet<PosposProductDto> selectedProductsHashSet = new();
+    private List<PosposProductDto> selectedProducts => selectedProductsHashSet.ToList();
+    
+    private bool loading = true;
+    private bool importing = false;
+    private string searchText = string.Empty;
+    private string? selectedCategory = "อาหารสัตว์"; // Default to feed category
+    private List<string> availableCategories = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProducts();
+    }
+
+    private async Task LoadProducts()
+    {
+        try
+        {
+            loading = true;
+            // We'll need to add this method to get all products without importing
+            var allProducts = await FeedFormulaService.GetPosposProductsAsync();
+            products = allProducts.OrderBy(p => p.Name).ToList(); // Order by name
+            
+            // Extract unique categories
+            availableCategories = products
+                .Where(p => !string.IsNullOrEmpty(p.Category?.Name))
+                .Select(p => p.Category!.Name!)
+                .Distinct()
+                .OrderBy(c => c)
+                .ToList();
+            
+            ApplyFilter();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading products: {ex.Message}", Severity.Error);
+            products = new List<PosposProductDto>();
+            filteredProducts = new List<PosposProductDto>();
+        }
+        finally
+        {
+            loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void OnSearchChanged(ChangeEventArgs e)
+    {
+        searchText = e.Value?.ToString() ?? string.Empty;
+        ApplyFilter();
+    }
+
+    private void OnCategoryChanged()
+    {
+        ApplyFilter();
+    }
+
+    private void ApplyFilter()
+    {
+        var filtered = products.AsEnumerable();
+
+        // Apply category filter
+        if (!string.IsNullOrEmpty(selectedCategory))
+        {
+            filtered = filtered.Where(p => 
+                string.Equals(p.Category?.Name, selectedCategory, StringComparison.OrdinalIgnoreCase));
+        }
+
+        // Apply search filter
+        if (!string.IsNullOrWhiteSpace(searchText))
+        {
+            var search = searchText.ToLowerInvariant();
+            filtered = filtered.Where(p => 
+                (p.Code?.ToLowerInvariant().Contains(search) ?? false) ||
+                (p.Name?.ToLowerInvariant().Contains(search) ?? false) ||
+                (p.Category?.Name?.ToLowerInvariant().Contains(search) ?? false)
+            );
+        }
+
+        filteredProducts = filtered.OrderBy(p => p.Name).ToList();
+        StateHasChanged();
+    }
+
+    private void SelectAll()
+    {
+        selectedProductsHashSet = filteredProducts.ToHashSet();
+        StateHasChanged();
+    }
+
+    private void ClearSelection()
+    {
+        selectedProductsHashSet.Clear();
+        StateHasChanged();
+    }
+
+    private async Task ImportSelected()
+    {
+        if (selectedProducts.Count == 0)
+        {
+            Snackbar.Add("Please select at least one product to import", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            importing = true;
+            StateHasChanged();
+
+            var productCodes = selectedProducts.Select(p => p.Code ?? "").Where(c => !string.IsNullOrEmpty(c)).ToList();
+            var result = await FeedFormulaService.ImportSelectedFromPosposAsync(productCodes);
+
+            // Show results
+            if (result.SuccessCount > 0)
+            {
+                Snackbar.Add($"✅ Successfully imported {result.SuccessCount} products", Severity.Success);
+            }
+
+            if (result.SkippedCount > 0)
+            {
+                Snackbar.Add($"⚠️ Skipped {result.SkippedCount} duplicate products", Severity.Warning);
+            }
+
+            if (result.ErrorCount > 0)
+            {
+                Snackbar.Add($"❌ Failed to import {result.ErrorCount} products", Severity.Error);
+            }
+
+            // Close dialog and return result
+            MudDialog.Close(DialogResult.Ok(result));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Import failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            importing = false;
+            StateHasChanged();
+        }
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}

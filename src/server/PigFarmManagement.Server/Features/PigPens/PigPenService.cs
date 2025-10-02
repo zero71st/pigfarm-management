@@ -77,9 +77,9 @@ public class PigPenService : IPigPenService
             // Get all feed formulas
             var allFormulas = await _feedFormulaService.GetAllFeedFormulasAsync();
             
-            // Filter formulas by brand
+            // Filter formulas by category name (replacing brand filter)
             var brandFormulas = allFormulas
-                .Where(f => f.Brand.Equals(brand, StringComparison.OrdinalIgnoreCase))
+                .Where(f => f.CategoryName != null && f.CategoryName.Equals(brand, StringComparison.OrdinalIgnoreCase))
                 .ToList();
 
             if (!brandFormulas.Any())
@@ -95,13 +95,13 @@ public class PigPenService : IPigPenService
                     Id: Guid.NewGuid(),
                     PigPenId: pigPenId,
                     OriginalFormulaId: formula.Id,
-                    ProductCode: formula.ProductCode,
-                    ProductName: formula.ProductName,
-                    Brand: formula.Brand,
+                    ProductCode: formula.Code ?? string.Empty,
+                    ProductName: formula.Name ?? string.Empty,
+                    Brand: formula.CategoryName ?? string.Empty,
                     Stage: null, // Single formula, no stage
                     AssignedPigQuantity: pigQty,
-                    AssignedBagPerPig: formula.BagPerPig,
-                    AssignedTotalBags: formula.BagPerPig * pigQty,
+                    AssignedBagPerPig: formula.ConsumeRate ?? 0,
+                    AssignedTotalBags: (formula.ConsumeRate ?? 0) * pigQty,
                     AssignedAt: now,
                     EffectiveUntil: null, // Always effective
                     IsActive: true,

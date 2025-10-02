@@ -1,4 +1,4 @@
-# Quickstart: Import POSPOS Stock to Feed Formula
+# Quickstart: Import POSPOS Product to Feed Formula
 
 ## Prerequisites
 - .NET 8 SDK
@@ -15,8 +15,8 @@
 ### Scenario 1: Successful Import
 1. Prepare POSPOS product JSON data
 2. Call POST /api/feed-formulas with import request
-3. Verify FeedFormula created with correct fields
-4. Check pigpen feed history displays code, name, unit name
+3. Verify FeedFormula created with code, name, cost, unit name
+4. Check pigpen feed history displays code, name, cost, unit name
 
 ### Scenario 2: Handle Network Timeout
 1. Simulate POSPOS API timeout
@@ -31,5 +31,6 @@
 
 ### Scenario 4: Profit Calculation
 1. Create FeedFormula with cost
-2. Calculate special price using cost
-3. Verify profit margin applied correctly
+2. Import POSPOS transaction with special price in order list
+3. Calculate profit by comparing FeedFormula cost with transaction special price
+4. Verify profit margin calculated correctly

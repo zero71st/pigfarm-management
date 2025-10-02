@@ -7,12 +7,12 @@
 
 ## Clarifications
 
-### Session 2025-10-01
-- Q: What are the explicit out-of-scope items for this feature? (e.g., authentication, reporting, etc.) → A: as is feature, no auth
-- Q: How does the Feed Formula relate to POSPOS Transaction in terms of data flow? (e.g., one-to-one mapping, batch import, etc.) → A: one to many, per invoice
-- Q: What is the critical user journey for importing and using the stock data? (e.g., trigger import, view history, calculate profit) → A: trigger import
-- Q: What are the failure modes for POSPOS integration? (e.g., network failure, invalid data, rate limiting) → A: Network timeout
-- Q: What are the key edge cases for stock data handling? (e.g., zero stock, duplicate codes, invalid units) → A: Duplicate product code
+### Session 2025-10-02
+- Q: What are the expected data volumes for products and transactions (e.g., number of products, transactions per day/week)? → A: Small (<100 products, <10 transactions/day)
+- Q: What are the performance requirements for the import process (e.g., maximum time to import products)? → A: <10 seconds total import
+- Q: Are there any rate limiting or throttling considerations for the POSPOS API? → A: Yes, 10 requests/minute
+- Q: What other failure modes besides network timeout should be handled for POSPOS integration? → A: Service unavailable
+- Q: Who are the primary user roles for this feature? → A: Farm managers only
 
 ## Execution Flow (main)
 ```
@@ -61,16 +61,16 @@ When creating this spec from a user prompt:
 
 ---
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios *(mandatory)*
 
 ### Primary User Story
-As a farm manager, I want to import stock data from the POSPOS system into the Feed Formula so that I can use the product information (code, name, unit name) in the pigpen feed history display and calculate profit by using the cost to determine special prices.
+As a **farm manager**, I want to import product data from the POSPOS system into the Feed Formula so that I can use the product information (code, name, cost, unit name) in the pigpen feed history display and calculate profit by comparing cost from Feed Formula with special prices from transaction order lists.
 
 ### Acceptance Scenarios
-1. **Given** POSPOS has stock data for a product, **When** importing to Feed Formula, **Then** the Feed Formula should contain the stock quantity, product code, name, unit name, and cost.
-2. **Given** a pigpen feed history view, **When** displaying feed items, **Then** it should show the product code, name, and unit name from the imported Feed Formula.
-3. **Given** a Feed Formula with cost data, **When** calculating special price for profit, **Then** it should use the cost from the Feed Formula to determine the special price.
-4. **Given** a user triggers the import process, **When** the import completes successfully, **Then** Feed Formula items are created with stock data from POSPOS.
+1. **Given** POSPOS has product data for a feed item, **When** importing to Feed Formula, **Then** the Feed Formula should contain the product code, name, cost, and unit name.
+2. **Given** a pigpen feed history view, **When** displaying feed items, **Then** it should show the product code, name, cost, and unit name from the imported Feed Formula.
+3. **Given** a Feed Formula with cost data and transaction with special price, **When** calculating profit, **Then** it should compare the cost from Feed Formula with the special price from the transaction order list.
+4. **Given** a user triggers the import process, **When** the import completes successfully, **Then** Feed Formula items are created with product data from POSPOS.
 
 ### Edge Cases
 - What happens when POSPOS stock data is missing or invalid for a product?
@@ -78,18 +78,25 @@ As a farm manager, I want to import stock data from the POSPOS system into the F
 - What if the POSPOS transaction order list has zero or negative stock quantities?
 - What happens when POSPOS integration fails due to network timeout?
 - How does the system handle duplicate product codes in stock data?
+- What happens when POSPOS API rate limit (10 requests/minute) is exceeded?
+- What happens when POSPOS service is unavailable (5xx errors)?
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
-- **FR-001**: System MUST import stock data from POSPOS system into Feed Formula entities.
-- **FR-002**: System MUST use product code, name, and unit name from Feed Formula in pigpen feed history display.
-- **FR-003**: System MUST use cost from Feed Formula to calculate special price for profit determination.
+- **FR-001**: System MUST import product data from POSPOS system into Feed Formula entities.
+- **FR-002**: System MUST use product code, name, cost, and unit name from Feed Formula in pigpen feed history display.
+- **FR-003**: System MUST use cost from Feed Formula and special price from POSPOS transaction order list for profit calculations.
 - **FR-004**: System MUST use stock quantity from POSPOS transaction order list for feed calculations.
 
 ### Key Entities *(include if feature involves data)*
-- **Feed Formula**: Represents feed products with stock data, including code, name, unit name, and cost imported from POSPOS. One POSPOS Transaction can create multiple Feed Formula items per invoice (one-to-many relationship).
+- **Feed Formula**: Represents feed products with product data, including code, name, cost, and unit name imported from POSPOS. One POSPOS Transaction can create multiple Feed Formula items per invoice (one-to-many relationship).
 - **POSPOS Transaction**: External transaction containing order list with stock quantities for products, linked to multiple Feed Formula items.
+
+## Non-Functional Requirements *(optional)*
+- **Data Volume**: Small scale (<100 products, <10 transactions/day)
+- **Performance**: Import process should complete within <10 seconds total
+- **Reliability**: Handle network timeout failures gracefully
 
 ## Out-of-Scope
 - Authentication and authorization
@@ -137,7 +144,7 @@ As a farm manager, I want to import stock data from the POSPOS system into the F
    → Identify: actors, actions, data, constraints
 3. For each unclear aspect:
    → Mark with [NEEDS CLARIFICATION: specific question]
-4. Fill User Scenarios & Testing section
+4. Fill User Scenarios section
    → If no clear user flow: ERROR "Cannot determine user scenarios"
 5. Generate Functional Requirements
    → Each requirement must be testable
@@ -176,7 +183,7 @@ When creating this spec from a user prompt:
 
 ---
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios *(mandatory)*
 
 ### Primary User Story
 [Describe the main user journey in plain language]

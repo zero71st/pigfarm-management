@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using PigFarmManagement.Server.Features.FeedFormulas;
 using PigFarmManagement.Server.Services;
+using PigFarmManagement.Server.Services.ExternalServices;
 
 namespace PigFarmManagement.Server.Features.FeedFormulas;
 
@@ -46,6 +47,24 @@ public static class FeedFormulaEndpoints
             .WithSummary("Check if feed formula exists by product code")
             .Produces<bool>();
 
+        group.MapPost("/import", ImportProductsFromPospos)
+            .WithName("ImportProductsFromPospos")
+            .WithSummary("Import feed formula products from POSPOS API")
+            .Produces<ImportResultResponse>()
+            .Produces(400);
+
+        group.MapGet("/pospos-products", GetPosposProducts)
+            .WithName("GetPosposProducts")
+            .WithSummary("Get all available products from POSPOS API without importing")
+            .Produces<IEnumerable<PosposProductDto>>()
+            .Produces(400);
+
+        group.MapPost("/import-selected", ImportSelectedProductsFromPospos)
+            .WithName("ImportSelectedProductsFromPospos")
+            .WithSummary("Import selected feed formula products from POSPOS API")
+            .Produces<ImportResultResponse>()
+            .Produces(400);
+
         group.MapPost("/maintenance/validate", ValidateFormulaSystem)
             .WithName("ValidateFormulaSystem")
             .WithSummary("Validate the unified formula assignment system")
@@ -72,15 +91,17 @@ public static class FeedFormulaEndpoints
             var response = feedFormulas.Select(f => new FeedFormulaResponse
             {
                 Id = f.Id,
-                ProductCode = f.ProductCode,
-                ProductName = f.ProductName,
+                Code = f.Code,
+                Name = f.Name,
+                CategoryName = f.CategoryName,
                 Brand = f.Brand,
-                BagPerPig = f.BagPerPig,
+                ConsumeRate = f.ConsumeRate ?? 0,
+                Cost = f.Cost ?? 0,
+                UnitName = f.UnitName,
                 CreatedAt = f.CreatedAt,
                 UpdatedAt = f.UpdatedAt,
                 DisplayName = f.DisplayName,
-                ConsumptionRate = f.ConsumptionRate,
-                BrandDisplayName = f.BrandDisplayName
+                ConsumptionRate = f.ConsumptionRate
             });
 
             return Results.Ok(response);
@@ -102,15 +123,17 @@ public static class FeedFormulaEndpoints
             var response = new FeedFormulaResponse
             {
                 Id = feedFormula.Id,
-                ProductCode = feedFormula.ProductCode,
-                ProductName = feedFormula.ProductName,
+                Code = feedFormula.Code,
+                Name = feedFormula.Name,
+                CategoryName = feedFormula.CategoryName,
                 Brand = feedFormula.Brand,
-                BagPerPig = feedFormula.BagPerPig,
+                ConsumeRate = feedFormula.ConsumeRate ?? 0,
+                Cost = feedFormula.Cost ?? 0,
+                UnitName = feedFormula.UnitName,
                 CreatedAt = feedFormula.CreatedAt,
                 UpdatedAt = feedFormula.UpdatedAt,
                 DisplayName = feedFormula.DisplayName,
-                ConsumptionRate = feedFormula.ConsumptionRate,
-                BrandDisplayName = feedFormula.BrandDisplayName
+                ConsumptionRate = feedFormula.ConsumptionRate
             };
 
             return Results.Ok(response);
@@ -126,24 +149,26 @@ public static class FeedFormulaEndpoints
         try
         {
             // Check if product code already exists
-            if (await feedFormulaService.ExistsAsync(dto.ProductCode))
+            if (dto.Code != null && await feedFormulaService.ExistsAsync(dto.Code))
             {
-                return Results.BadRequest($"Feed formula with product code '{dto.ProductCode}' already exists");
+                return Results.BadRequest($"Feed formula with code '{dto.Code}' already exists");
             }
 
             var feedFormula = await feedFormulaService.CreateFeedFormulaAsync(dto);
             var response = new FeedFormulaResponse
             {
                 Id = feedFormula.Id,
-                ProductCode = feedFormula.ProductCode,
-                ProductName = feedFormula.ProductName,
+                Code = feedFormula.Code,
+                Name = feedFormula.Name,
+                CategoryName = feedFormula.CategoryName,
                 Brand = feedFormula.Brand,
-                BagPerPig = feedFormula.BagPerPig,
+                ConsumeRate = feedFormula.ConsumeRate ?? 0,
+                Cost = feedFormula.Cost ?? 0,
+                UnitName = feedFormula.UnitName,
                 CreatedAt = feedFormula.CreatedAt,
                 UpdatedAt = feedFormula.UpdatedAt,
                 DisplayName = feedFormula.DisplayName,
-                ConsumptionRate = feedFormula.ConsumptionRate,
-                BrandDisplayName = feedFormula.BrandDisplayName
+                ConsumptionRate = feedFormula.ConsumptionRate
             };
 
             return Results.Created($"/api/feed-formulas/{feedFormula.Id}", response);
@@ -162,15 +187,17 @@ public static class FeedFormulaEndpoints
             var response = new FeedFormulaResponse
             {
                 Id = feedFormula.Id,
-                ProductCode = feedFormula.ProductCode,
-                ProductName = feedFormula.ProductName,
+                Code = feedFormula.Code,
+                Name = feedFormula.Name,
+                CategoryName = feedFormula.CategoryName,
                 Brand = feedFormula.Brand,
-                BagPerPig = feedFormula.BagPerPig,
+                ConsumeRate = feedFormula.ConsumeRate ?? 0,
+                Cost = feedFormula.Cost ?? 0,
+                UnitName = feedFormula.UnitName,
                 CreatedAt = feedFormula.CreatedAt,
                 UpdatedAt = feedFormula.UpdatedAt,
                 DisplayName = feedFormula.DisplayName,
-                ConsumptionRate = feedFormula.ConsumptionRate,
-                BrandDisplayName = feedFormula.BrandDisplayName
+                ConsumptionRate = feedFormula.ConsumptionRate
             };
 
             return Results.Ok(response);
@@ -201,16 +228,92 @@ public static class FeedFormulaEndpoints
         }
     }
 
-    private static async Task<IResult> CheckFeedFormulaExists(string productCode, IFeedFormulaService feedFormulaService)
+    private static async Task<IResult> CheckFeedFormulaExists(string code, IFeedFormulaService feedFormulaService)
     {
         try
         {
-            var exists = await feedFormulaService.ExistsAsync(productCode);
+            var exists = await feedFormulaService.ExistsAsync(code);
             return Results.Ok(exists);
         }
         catch (Exception ex)
         {
             return Results.Problem($"Error checking feed formula existence: {ex.Message}");
+        }
+    }
+
+    private static async Task<IResult> ImportProductsFromPospos(IFeedFormulaService feedFormulaService)
+    {
+        try
+        {
+            var result = await feedFormulaService.ImportProductsFromPosposAsync();
+            
+            var response = new ImportResultResponse
+            {
+                SuccessCount = result.SuccessCount,
+                ErrorCount = result.ErrorCount,
+                SkippedCount = result.SkippedCount,
+                Errors = result.Errors,
+                ImportedCodes = result.ImportedCodes
+            };
+
+            if (result.ErrorCount > 0 && result.SuccessCount == 0)
+            {
+                return Results.BadRequest(response);
+            }
+
+            return Results.Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Error importing products from POSPOS: {ex.Message}");
+        }
+    }
+
+    private static async Task<IResult> GetPosposProducts(IFeedFormulaService feedFormulaService)
+    {
+        try
+        {
+            var products = await feedFormulaService.GetPosposProductsAsync();
+            return Results.Ok(products);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Error fetching POSPOS products: {ex.Message}");
+        }
+    }
+
+    private static async Task<IResult> ImportSelectedProductsFromPospos(
+        IFeedFormulaService feedFormulaService,
+        ImportSelectedProductsRequest request)
+    {
+        try
+        {
+            if (request.ProductCodes == null || !request.ProductCodes.Any())
+            {
+                return Results.BadRequest("No product codes provided for import");
+            }
+
+            var result = await feedFormulaService.ImportSelectedProductsFromPosposAsync(request.ProductCodes);
+            
+            var response = new ImportResultResponse
+            {
+                SuccessCount = result.SuccessCount,
+                ErrorCount = result.ErrorCount,
+                SkippedCount = result.SkippedCount,
+                Errors = result.Errors,
+                ImportedCodes = result.ImportedCodes
+            };
+
+            if (result.ErrorCount > 0 && result.SuccessCount == 0)
+            {
+                return Results.BadRequest(response);
+            }
+
+            return Results.Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Error importing selected products from POSPOS: {ex.Message}");
         }
     }
 
@@ -288,15 +391,17 @@ public static class FeedFormulaEndpoints
 public class FeedFormulaResponse
 {
     public Guid Id { get; set; }
-    public string ProductCode { get; set; } = string.Empty;
-    public string ProductName { get; set; } = string.Empty;
-    public string Brand { get; set; } = string.Empty;
-    public decimal BagPerPig { get; set; }
+    public string? Code { get; set; }
+    public string? Name { get; set; }
+    public string? CategoryName { get; set; }
+    public string? Brand { get; set; }
+    public decimal ConsumeRate { get; set; }
+    public decimal Cost { get; set; }
+    public string? UnitName { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public string DisplayName { get; set; } = string.Empty;
     public string ConsumptionRate { get; set; } = string.Empty;
-    public string BrandDisplayName { get; set; } = string.Empty;
 }
 
 public class FormulaSystemValidationResponse
@@ -330,4 +435,18 @@ public class FormulaSystemStatsResponse
     public int ActiveAssignments { get; set; }
     public int LockedAssignments { get; set; }
     public DateTime LastUpdated { get; set; }
+}
+
+public class ImportResultResponse
+{
+    public int SuccessCount { get; set; }
+    public int ErrorCount { get; set; }
+    public int SkippedCount { get; set; }
+    public List<string> Errors { get; set; } = new();
+    public List<string> ImportedCodes { get; set; } = new();
+}
+
+public class ImportSelectedProductsRequest
+{
+    public List<string> ProductCodes { get; set; } = new();
 }

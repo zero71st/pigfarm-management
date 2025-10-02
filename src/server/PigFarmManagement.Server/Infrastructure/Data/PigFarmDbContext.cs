@@ -119,11 +119,14 @@ public class PigFarmDbContext : DbContext
         modelBuilder.Entity<FeedFormulaEntity>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.HasIndex(e => e.ProductCode).IsUnique();
-            entity.Property(e => e.ProductCode).IsRequired().HasMaxLength(50);
-            entity.Property(e => e.ProductName).IsRequired().HasMaxLength(200);
-            entity.Property(e => e.Brand).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.BagPerPig).HasColumnType("decimal(18,2)");
+            entity.HasIndex(e => e.Code);
+            entity.HasIndex(e => e.ExternalId);
+            entity.Property(e => e.Code).HasMaxLength(50);
+            entity.Property(e => e.Name).HasMaxLength(200);
+            entity.Property(e => e.CategoryName).HasMaxLength(100);
+            entity.Property(e => e.UnitName).HasMaxLength(50);
+            entity.Property(e => e.Cost).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.ConsumeRate).HasColumnType("decimal(18,2)");
         });
 
     // Seed Data
@@ -183,10 +186,10 @@ public class PigFarmDbContext : DbContext
             feedFormulas.Add(new FeedFormulaEntity
             {
                 Id = id,
-                ProductCode = formula.Code,
-                ProductName = formula.Name,
-                Brand = "เจ็ท",
-                BagPerPig = formula.BagPerPig,
+                Code = formula.Code,
+                Name = formula.Name,
+                CategoryName = "อาหารสัตว์",
+                ConsumeRate = formula.BagPerPig,
                 CreatedAt = now.AddDays(-365),
                 UpdatedAt = now.AddDays(-30)
             });
@@ -198,30 +201,30 @@ public class PigFarmDbContext : DbContext
             new FeedFormulaEntity
             {
                 Id = Guid.NewGuid(),
-                ProductCode = "PURE001",
-                ProductName = "เพียว บรีดเดอร์",
-                Brand = "เพียว",
-                BagPerPig = 2.8m,
+                Code = "PURE001",
+                Name = "เพียว บรีดเดอร์",
+                CategoryName = "อาหารสัตว์",
+                ConsumeRate = 2.8m,
                 CreatedAt = now.AddDays(-365),
                 UpdatedAt = now.AddDays(-30)
             },
             new FeedFormulaEntity
             {
                 Id = Guid.NewGuid(),
-                ProductCode = "PURE002",
-                ProductName = "เพียว พรีเมียม",
-                Brand = "เพียว",
-                BagPerPig = 1.8m,
+                Code = "PURE002",
+                Name = "เพียว พรีเมียม",
+                CategoryName = "อาหารสัตว์",
+                ConsumeRate = 1.8m,
                 CreatedAt = now.AddDays(-365),
                 UpdatedAt = now.AddDays(-30)
             },
             new FeedFormulaEntity
             {
                 Id = Guid.NewGuid(),
-                ProductCode = "PURE003",
-                ProductName = "เพียว ออร์แกนิก",
-                Brand = "เพียว",
-                BagPerPig = 2.5m,
+                Code = "PURE003",
+                Name = "เพียว ออร์แกนิก",
+                CategoryName = "อาหารสัตว์",
+                ConsumeRate = 2.5m,
                 CreatedAt = now.AddDays(-365),
                 UpdatedAt = now.AddDays(-30)
             }
@@ -250,7 +253,7 @@ public class PigFarmDbContext : DbContext
             }
             else if (random.Next(0, 100) < 60) // 12% use เพียว
             {
-                var pureFormulas = feedFormulas.Where(f => f.Brand == "เพียว").ToList();
+                var pureFormulas = feedFormulas.Where(f => f.Code != null && f.Code.StartsWith("PURE")).ToList();
                 if (pureFormulas.Any())
                 {
                     selectedFeedFormulaId = pureFormulas[random.Next(pureFormulas.Count)].Id;

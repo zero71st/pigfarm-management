@@ -27,12 +27,13 @@
 **Rationale**: Use stock from POSPOS transaction order_list as quantity. Convert to appropriate units if needed (e.g., bags to kg).
 
 **Alternatives Considered**:
-- Fetch stock from product endpoint: Rejected as transaction order_list is the source of truth for purchased quantities.
+- Fetch product data from product endpoint: Rejected as transaction order_list is the source of truth for purchased quantities.
 
 ### Decision: Cost Calculation for Profit
-**Rationale**: Use Cost from FeedFormula for special price calculation. Formula: SpecialPrice = Cost * (1 + ProfitMargin).
+**Rationale**: Use Cost from FeedFormula and SpecialPrice from POSPOS transaction order list for profit calculations. SpecialPrice comes directly from transaction data.
 
 **Alternatives Considered**:
+- Calculate SpecialPrice from Cost: Rejected as POSPOS provides actual transaction pricing.
 - Use external pricing API: Rejected for simplicity and offline capability.
 
 ### Decision: Failure Handling

@@ -21,24 +21,43 @@
                              RequiredError="Product name is required"
                              For="@(() => productName)" />
 
+                <MudTextField @bind-Value="categoryName"
+                             Label="Category"
+                             Required="true"
+                             RequiredError="Category is required"
+                             For="@(() => categoryName)" />
+
                 <MudTextField @bind-Value="brand"
                              Label="Brand"
-                             Required="true"
-                             RequiredError="Brand is required"
+                             Required="false"
+                             HelperText="Set brand manually as needed"
                              For="@(() => brand)" />
 
-                <MudNumericField @bind-Value="bagPerPig"
-                               Label="Bags per Pig"
+                <MudNumericField @bind-Value="consumeRate"
+                               Label="Consume Rate"
                                Required="true"
-                               RequiredError="Bags per pig is required"
+                               RequiredError="Consume rate is required"
                                Min="0.1m"
                                Max="10.0m"
                                Step="0.1m"
-                               Format="F1"
-                               For="@(() => bagPerPig)" />
+                               Format="F2"
+                               For="@(() => consumeRate)" />
+
+                <MudNumericField @bind-Value="cost"
+                               Label="Cost"
+                               Required="true"
+                               RequiredError="Cost is required"
+                               Min="0m"
+                               Step="0.01m"
+                               Format="F2"
+                               For="@(() => cost)" />
+
+                <MudTextField @bind-Value="unitName"
+                             Label="Unit"
+                             For="@(() => unitName)" />
 
                 <MudText Typo="Typo.caption" Class="mt-2">
-                    Consumption rate: @bagPerPig.ToString("F1") bags/pig
+                    Consumption rate: @consumeRate.ToString("F2") per pig
                 </MudText>
             </MudForm>
         </MudContainer>
@@ -72,8 +91,11 @@
 
     private string productCode = "";
     private string productName = "";
+    private string categoryName = "";
     private string brand = "";
-    private decimal bagPerPig = 1.0m;
+    private decimal consumeRate = 1.0m;
+    private decimal cost = 0m;
+    private string unitName = "";
 
     private async Task<string> ValidateProductCode(string code)
     {
@@ -106,7 +128,7 @@
             if (!isValid)
                 return;
 
-            var dto = new FeedFormulaCreateDto(productCode, productName, brand, bagPerPig);
+            var dto = new FeedFormulaCreateDto(productCode, productName, categoryName, brand, consumeRate, cost, unitName);
             await FeedFormulaService.CreateFeedFormulaAsync(dto);
             
             MudDialog.Close(DialogResult.Ok(true));

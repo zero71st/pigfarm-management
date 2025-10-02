@@ -59,10 +59,10 @@ public class FeedProgressService : IFeedProgressService
         }
         else if (!string.IsNullOrEmpty(pigPen.SelectedBrand))
         {
-            // Fallback: Get all formulas for the selected brand
+            // Fallback: Get all formulas for the selected brand (using CategoryName)
             var allFormulas = await _feedFormulaService.GetAllFeedFormulasAsync();
             feedFormulas = allFormulas
-                .Where(f => f.Brand.Equals(pigPen.SelectedBrand, StringComparison.OrdinalIgnoreCase))
+                .Where(f => f.CategoryName != null && f.CategoryName.Equals(pigPen.SelectedBrand, StringComparison.OrdinalIgnoreCase))
                 .ToList();
         }
 
@@ -105,7 +105,7 @@ public class FeedProgressService : IFeedProgressService
         }
 
         // Calculate TOTAL required bags by summing ALL feed formulas for the brand
-        var totalBagPerPig = feedFormulas.Sum(f => f.BagPerPig);
+        var totalBagPerPig = feedFormulas.Sum(f => f.ConsumeRate ?? 0);
         var requiredBags = totalBagPerPig * pigPen.PigQty;
         
         // Calculate actual bags consumed

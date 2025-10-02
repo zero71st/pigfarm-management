@@ -31,18 +31,47 @@
 - Phase 3-4: Implementation execution (manual or via tools)
 
 ## Summary
-Import stock data from POSPOS system into Feed Formula entities to enable display of product code, name, and unit name in pigpen feed history, and use cost for calculating special prices to determine profit. Quantity uses stock from POSPOS transaction order list. Technical approach: Update FeedFormula record to mirror POSPOS product fields, add import logic to fetch and store stock data, handle one-to-many relationship per invoice, and manage failure modes like network timeout.
+Import product data from POSPOS system into Feed Formula entities to enable display of product code, name, cost, and unit name in pigpen feed history, and use cost from Feed Formula with special prices from POSPOS transaction order lists to determine profit. Quantity uses stock from POSPOS transaction order list. Technical approach: Create PosposProductClient for low-level HTTP communication, FeedFormulaService for business logic and data transformation, FeedFormulaEndpoints for API layer, update FeedFormula record to mirror POSPOS product fields, handle one-to-many relationship per invoice, and manage failure modes including network timeout, service unavailable, and rate limiting (10 requests/minute).
 
 ## Technical Context
 **Language/Version**: C# .NET 8  
 **Primary Dependencies**: Blazor WebAssembly, .NET Core Web API, Entity Framework Core  
 **Storage**: SQLite (development), Supabase PostgreSQL (production)  
-**Testing**: xUnit, integration tests  
 **Target Platform**: Web application (Blazor)  
 **Project Type**: Web application (frontend + backend)  
-**Performance Goals**: Fast import for small farm data (<100 transactions/min)  
-**Constraints**: Handle network failures gracefully, maintain data integrity  
-**Scale/Scope**: Small farm management (10-50 pig pens, 100-1000 feed records)
+**Performance Goals**: Import completes in <10 seconds total for small datasets  
+**Constraints**: Handle network timeout and service unavailable failures gracefully; Respect POSPOS API rate limit (10 requests/minute)  
+**Scale/Scope**: Small farm management (<100 products, <10 transactions/day)  
+**User Roles**: Farm managers only
+
+## Component Responsibilities
+
+### PosposProductClient (Services/PosposProductClient.cs)
+**Low-level HTTP Client Layer**
+- Handle HTTP communication with POSPOS API
+- Implement rate limiting (10 requests/minute)
+- Manage authentication and API keys
+- Handle network timeouts and retries
+- Parse raw JSON responses
+- Return structured data or throw appropriate exceptions
+
+### FeedFormulaService (Services/FeedFormulaService.cs) 
+**Business Logic Layer**
+- Orchestrate product import workflow
+- Use PosposProductClient to fetch data
+- Transform POSPOS data to FeedFormula entities
+- Handle business rules (duplicate detection, validation)
+- Persist data to database
+- Return operation results with success/failure status
+
+### FeedFormulaEndpoints (Features/Feeds/FeedFormulaEndpoints.cs)
+**API Layer**
+- Define HTTP endpoints (POST /api/feed-formulas)
+- Validate incoming requests
+- Call FeedFormulaService methods
+- Handle HTTP response formatting
+- Return appropriate HTTP status codes
+- Map service results to API responses
 
 ## Constitution Check
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
@@ -72,19 +101,17 @@ specs/[###-feature]/
 ```
 backend/
 ├── src/server/
-│   ├── Features/Feeds/  # Update FeedFormula, import logic
-│   ├── Infrastructure/Data/  # Entity updates
-│   └── Services/  # POSPOS client updates
-└── tests/
+│   ├── Features/Feeds/  # FeedFormulaEndpoints (API layer - HTTP requests/responses)
+│   ├── Infrastructure/Data/  # Entity updates, DB migrations
+│   └── Services/  # PosposProductClient (HTTP client), FeedFormulaService (business logic)
 
 frontend/
 ├── src/client/
 │   ├── Features/Feeds/  # UI for feed history display
 │   └── Shared/  # Updated models
-└── tests/
 ```
 
-**Structure Decision**: Web application structure with backend (API) and frontend (Blazor). Feature updates in Features/Feeds for backend, UI updates in client Features/Feeds.
+**Structure Decision**: Web application structure with backend (API) and frontend (Blazor). Feature-based architecture with clear separation: FeedFormulaEndpoints handle HTTP API layer for feed formula operations, FeedFormulaService manages business logic, PosposProductClient handles low-level HTTP communication.
 
 ## Phase 0: Outline & Research
 1. **Extract unknowns from Technical Context** above:
@@ -120,16 +147,7 @@ frontend/
    - Use standard REST/GraphQL patterns
    - Output OpenAPI/GraphQL schema to `/contracts/`
 
-3. **Generate contract tests** from contracts:
-   - One test file per endpoint
-   - Assert request/response schemas
-   - Tests must fail (no implementation yet)
-
-4. **Extract test scenarios** from user stories:
-   - Each story → integration test scenario
-   - Quickstart test = story validation steps
-
-5. **Update agent file incrementally** (O(1) operation):
+3. **Update agent file incrementally** (O(1) operation):
    - Run `.specify/scripts/powershell/update-agent-context.ps1 -AgentType copilot`
      **IMPORTANT**: Execute it exactly as specified above. Do not add or remove any arguments.
    - If exists: Add only NEW tech from current plan
@@ -138,7 +156,7 @@ frontend/
    - Keep under 150 lines for token efficiency
    - Output to repository root
 
-**Output**: data-model.md, /contracts/*, failing tests, quickstart.md, agent-specific file
+**Output**: data-model.md, /contracts/*, quickstart.md, agent-specific file
 
 ## Phase 2: Task Planning Approach
 *This section describes what the /tasks command will do - DO NOT execute during /plan*
@@ -146,13 +164,11 @@ frontend/
 **Task Generation Strategy**:
 - Load tasks-template.md as base
 - Generate tasks from Phase 1 design docs (contracts, data model, quickstart)
-- Each API contract → contract test task [P]
+- Each API contract → implementation task [P]
 - Each entity → model update task [P] 
-- Each test scenario → integration test task
 - Implementation tasks for FeedFormula updates, import logic, UI updates
 
 **Ordering Strategy**:
-- TDD order: Tests before implementation 
 - Dependency order: Models before services before UI
 - Mark [P] for parallel execution (independent files)
 
@@ -165,7 +181,7 @@ frontend/
 
 **Phase 3**: Task execution (/tasks command creates tasks.md)  
 **Phase 4**: Implementation (execute tasks.md following constitutional principles)  
-**Phase 5**: Validation (run tests, execute quickstart.md, performance validation)
+**Phase 5**: Validation (execute quickstart.md, performance validation)
 
 ## Complexity Tracking
 *Fill ONLY if Constitution Check has violations that must be justified*
@@ -178,14 +194,12 @@ frontend/
 ## Progress Tracking
 - [x] Initial Constitution Check: PASS
 - [x] Phase 0: Research complete (research.md created)
-- [x] Phase 1: Design complete (data-model.md, contracts/, quickstart.md, agent file updated)
+- [x] Phase 1: Design complete (data-model.md, contracts/, quickstart.md created)
 - [x] Post-Design Constitution Check: PASS
-- [ ] Phase 2: Task generation (/tasks command)
-- [ ] Phase 3+: Implementation
-
-
-## Progress Tracking
-*This checklist is updated during execution flow*
+- [x] Phase 2: Task planning complete (tasks.md created with service architecture updates)
+- [x] Architecture Refinement: Component responsibilities defined (PosposProductClient, FeedFormulaService, FeedFormulaEndpoints)
+- [x] Phase 3: Implementation (T001-T005: DB migration, PosposProductClient, FeedFormulaService, FeedFormulaEndpoints) - **COMPLETED October 2, 2025**
+- [ ] Phase 4: Validation (execute quickstart.md, performance validation)
 
 **Phase Status**:
 - [ ] Phase 0: Research complete (/plan command)

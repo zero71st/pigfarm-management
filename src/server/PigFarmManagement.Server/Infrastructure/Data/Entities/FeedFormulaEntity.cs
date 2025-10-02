@@ -8,20 +8,31 @@ public class FeedFormulaEntity
 {
     public Guid Id { get; set; }
     
-    [Required]
+    // POSPOS fields
+    public Guid? ExternalId { get; set; } // from POSPOS _id
+    
     [MaxLength(50)]
-    public string ProductCode { get; set; } = string.Empty;
+    public string? Code { get; set; } // POSPOS code, primary product code
     
-    [Required]
     [MaxLength(200)]
-    public string ProductName { get; set; } = string.Empty;
-    
-    [Required]
-    [MaxLength(100)]
-    public string Brand { get; set; } = string.Empty;
+    public string? Name { get; set; } // POSPOS name
     
     [Column(TypeName = "decimal(18,2)")]
-    public decimal BagPerPig { get; set; }
+    public decimal? Cost { get; set; } // POSPOS cost, used for profit calculations
+    
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal? ConsumeRate { get; set; } // user input, e.g., 0.5 per pig
+    
+    [MaxLength(100)]
+    public string? CategoryName { get; set; } // POSPOS category.name
+    
+    [MaxLength(100)]
+    public string? Brand { get; set; } // User-defined brand, different from CategoryName
+    
+    [MaxLength(50)]
+    public string? UnitName { get; set; } // POSPOS unit.name
+    
+    public DateTime? LastUpdate { get; set; } // POSPOS lastupdate
     
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
@@ -31,10 +42,15 @@ public class FeedFormulaEntity
     {
         return new FeedFormula(
             Id: Id,
-            ProductCode: ProductCode,
-            ProductName: ProductName,
+            ExternalId: ExternalId,
+            Code: Code,
+            Name: Name,
+            Cost: Cost,
+            ConsumeRate: ConsumeRate,
+            CategoryName: CategoryName,
             Brand: Brand,
-            BagPerPig: BagPerPig,
+            UnitName: UnitName,
+            LastUpdate: LastUpdate,
             CreatedAt: CreatedAt,
             UpdatedAt: UpdatedAt
         );
@@ -45,10 +61,15 @@ public class FeedFormulaEntity
         return new FeedFormulaEntity
         {
             Id = feedFormula.Id,
-            ProductCode = feedFormula.ProductCode,
-            ProductName = feedFormula.ProductName,
+            ExternalId = feedFormula.ExternalId,
+            Code = feedFormula.Code,
+            Name = feedFormula.Name,
+            Cost = feedFormula.Cost,
+            ConsumeRate = feedFormula.ConsumeRate,
+            CategoryName = feedFormula.CategoryName,
             Brand = feedFormula.Brand,
-            BagPerPig = feedFormula.BagPerPig,
+            UnitName = feedFormula.UnitName,
+            LastUpdate = feedFormula.LastUpdate,
             CreatedAt = feedFormula.CreatedAt,
             UpdatedAt = feedFormula.UpdatedAt
         };

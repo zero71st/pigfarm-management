@@ -6,7 +6,7 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
-<PageTitle>Feed Formula Management - PigTrack Pro</PageTitle>
+<PageTitle>Feed Formula Management</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-4">
     <MudText Typo="Typo.h4" GutterBottom="true" Class="mb-4">
@@ -42,7 +42,7 @@
                         <div style="display: flex; align-items: center;">
                             <MudIcon Icon="Icons.Material.Filled.LocalShipping" Color="Color.Primary" Style="margin-right: 8px;" />
                             <div>
-                                <MudText Typo="Typo.h6">เจ็ท Brand</MudText>
+                                <MudText Typo="Typo.h6">เจ็ท</MudText>
                                 <MudText Typo="Typo.h4" Color="Color.Primary">@GetBrandCount("เจ็ท")</MudText>
                             </div>
                         </div>
@@ -55,7 +55,7 @@
                         <div style="display: flex; align-items: center;">
                             <MudIcon Icon="Icons.Material.Filled.LocalShipping" Color="Color.Secondary" Style="margin-right: 8px;" />
                             <div>
-                                <MudText Typo="Typo.h6">เพียว Brand</MudText>
+                                <MudText Typo="Typo.h6">เพียว</MudText>
                                 <MudText Typo="Typo.h4" Color="Color.Secondary">@GetBrandCount("เพียว")</MudText>
                             </div>
                         </div>
@@ -72,10 +72,26 @@
                              Label="Filter by Brand" 
                              Variant="Variant.Outlined"
                              Clearable="true"
-                             @onchange="OnBrandFilterChanged">
+                             @onchange="OnFilterChanged">
                         <MudSelectItem T="string" Value="@((string?)null)">All Brands</MudSelectItem>
-                        <MudSelectItem T="string" Value="@("เจ็ท")">เจ็ท (@GetBrandCount("เจ็ท"))</MudSelectItem>
-                        <MudSelectItem T="string" Value="@("เพียว")">เพียว (@GetBrandCount("เพียว"))</MudSelectItem>
+                        @foreach (var brand in GetUniqueBrands())
+                        {
+                            <MudSelectItem T="string" Value="@brand">@brand (@GetBrandCount(brand))</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudSelect T="string" 
+                             @bind-Value="selectedCategoryFilter" 
+                             Label="Filter by Category" 
+                             Variant="Variant.Outlined"
+                             Clearable="true"
+                             @onchange="OnFilterChanged">
+                        <MudSelectItem T="string" Value="@((string?)null)">All Categories</MudSelectItem>
+                        @foreach (var category in GetUniqueCategories())
+                        {
+                            <MudSelectItem T="string" Value="@category">@category (@GetCategoryCount(category))</MudSelectItem>
+                        }
                     </MudSelect>
                 </MudItem>
                 <MudItem xs="12" sm="6" md="2">
@@ -97,9 +113,9 @@
                         <MudButton Variant="Variant.Outlined" 
                                   Color="Color.Secondary" 
                                   StartIcon="@Icons.Material.Filled.Clear"
-                                  OnClick="ClearFilter"
+                                  OnClick="ClearFilters"
                                   Size="Size.Small"
-                                  Disabled="@(string.IsNullOrEmpty(selectedBrandFilter))">
+                                  Disabled="@(string.IsNullOrEmpty(selectedBrandFilter) && string.IsNullOrEmpty(selectedCategoryFilter))">
                             Clear
                         </MudButton>
                         <MudButton Variant="Variant.Outlined" 
@@ -113,18 +129,22 @@
                 </MudItem>
                 <MudItem xs="12" sm="6" md="2">
                     <MudButton Variant="Variant.Filled" 
-                              Color="Color.Primary" 
-                              StartIcon="@Icons.Material.Filled.Add"
-                              OnClick="@(() => OpenCreateDialog())">
-                        Add New Feed Formula
+                              Color="Color.Success" 
+                              StartIcon="@Icons.Material.Filled.CloudDownload"
+                              OnClick="@ImportFromPospos">
+                        Import from POSPOS
                     </MudButton>
                 </MudItem>
-                <MudItem xs="12" md="3" Class="d-flex align-center">
+                <MudItem xs="12" md="12" Class="d-flex align-center">
                     <MudText Typo="Typo.body2" Color="Color.Secondary">
                         Showing @filteredFeedFormulas.Count of @feedFormulas.Count feed formulas
                         @if (!string.IsNullOrEmpty(selectedBrandFilter))
                         {
                             <text> for brand "@selectedBrandFilter"</text>
+                        }
+                        @if (!string.IsNullOrEmpty(selectedCategoryFilter))
+                        {
+                            <text> in category "@selectedCategoryFilter"</text>
                         }
                     </MudText>
                 </MudItem>
@@ -142,19 +162,21 @@
                      Groupable="false">
             
             <Columns>
-                <PropertyColumn Property="x => x.ProductCode" Title="Product Code" />
-                <TemplateColumn Title="Brand" Sortable="false" Filterable="true">
+                <PropertyColumn Property="x => x.Code" Title="Product Code" />
+                <PropertyColumn Property="x => x.Name" Title="Product Name" />
+                <TemplateColumn Title="Category (POSPOS)" Sortable="false" Filterable="true">
                     <CellTemplate>
-                        <MudChip Color="@GetBrandColor(context.Item.Brand)" 
+                        <MudChip Color="@GetBrandColor(context.Item.CategoryName ?? "")" 
                                 Size="Size.Small" 
                                 Variant="Variant.Filled">
-                            @context.Item.Brand
+                            @context.Item.CategoryName
                         </MudChip>
                     </CellTemplate>
                 </TemplateColumn>
-                <PropertyColumn Property="x => x.ProductName" Title="Product Name" />
-                <PropertyColumn Property="x => x.BagPerPig" Title="Bags/Pig" Format="F1" />
-                <PropertyColumn Property="x => x.ConsumptionRate" Title="Consumption Rate" />
+                <PropertyColumn Property="x => x.Brand" Title="Brand (Manual)" />
+                <PropertyColumn Property="x => x.Cost" Title="Cost" Format="N2" />
+                <PropertyColumn Property="x => x.UnitName" Title="Unit" />
+                <PropertyColumn Property="x => x.ConsumeRate" Title="Consume Rate" Format="F2" />
                 <PropertyColumn Property="x => x.CreatedAt" Title="Created" Format="yyyy-MM-dd" />
                 <PropertyColumn Property="x => x.UpdatedAt" Title="Updated" Format="yyyy-MM-dd" />
                 
@@ -184,6 +206,7 @@
     private List<FeedFormulaResponse> filteredFeedFormulas = new();
     private bool loading = true;
     private string? selectedBrandFilter;
+    private string? selectedCategoryFilter;
 
     protected override async Task OnInitializedAsync()
     {
@@ -197,7 +220,7 @@
             loading = true;
             var result = await FeedFormulaService.GetAllFeedFormulasAsync();
             feedFormulas = result.ToList();
-            ApplyBrandFilter();
+            ApplyFilters();
         }
         catch (Exception ex)
         {
@@ -209,35 +232,59 @@
         }
     }
 
-    private void OnBrandFilterChanged()
+    private void OnFilterChanged()
     {
-        ApplyBrandFilter();
+        ApplyFilters();
     }
 
-    private void ApplyBrandFilter()
+    private void ApplyFilters()
     {
-        if (string.IsNullOrEmpty(selectedBrandFilter))
+        filteredFeedFormulas = feedFormulas.Where(f =>
         {
-            filteredFeedFormulas = feedFormulas.ToList();
-        }
-        else
-        {
-            filteredFeedFormulas = feedFormulas
-                .Where(f => f.Brand.Equals(selectedBrandFilter, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-        }
+            var matchesBrand = string.IsNullOrEmpty(selectedBrandFilter) || 
+                              (f.Brand ?? "").Contains(selectedBrandFilter, StringComparison.OrdinalIgnoreCase);
+            
+            var matchesCategory = string.IsNullOrEmpty(selectedCategoryFilter) || 
+                                 (f.CategoryName ?? "").Equals(selectedCategoryFilter, StringComparison.OrdinalIgnoreCase);
+            
+            return matchesBrand && matchesCategory;
+        }).ToList();
         StateHasChanged();
     }
 
-    private void ClearFilter()
+    private void ClearFilters()
     {
         selectedBrandFilter = null;
-        ApplyBrandFilter();
+        selectedCategoryFilter = null;
+        ApplyFilters();
+    }
+
+    private IEnumerable<string> GetUniqueBrands()
+    {
+        return feedFormulas
+            .Select(f => f.Brand ?? "")
+            .Where(b => !string.IsNullOrEmpty(b))
+            .Distinct()
+            .OrderBy(b => b);
+    }
+
+    private IEnumerable<string> GetUniqueCategories()
+    {
+        return feedFormulas
+            .Select(f => f.CategoryName ?? "")
+            .Where(c => !string.IsNullOrEmpty(c))
+            .Distinct()
+            .OrderBy(c => c);
     }
 
     private int GetBrandCount(string brand)
     {
-        return feedFormulas.Count(f => f.Brand.Equals(brand, StringComparison.OrdinalIgnoreCase));
+        return feedFormulas.Count(f => (f.Brand ?? "").Contains(brand, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private int GetCategoryCount(string category)
+    {
+        return feedFormulas.Count(f => (f.CategoryName ?? "").Equals(category, StringComparison.OrdinalIgnoreCase));
     }
 
     private Color GetBrandColor(string brand)
@@ -246,6 +293,7 @@
         {
             "เจ็ท" => Color.Primary,
             "เพียว" => Color.Secondary,
+            "อาหารสัตว์" => Color.Info,
             _ => Color.Default
         };
     }
@@ -253,31 +301,13 @@
     private void QuickFilterBrand(string brand)
     {
         selectedBrandFilter = selectedBrandFilter == brand ? null : brand;
-        ApplyBrandFilter();
+        ApplyFilters();
     }
 
     private async Task RefreshData()
     {
         await LoadFeedFormulas();
         Snackbar.Add("Feed formulas refreshed", Severity.Info);
-    }
-
-    private async Task OpenCreateDialog()
-    {
-        var parameters = new DialogParameters<AddFeedFormulaDialog>();
-        
-        var dialog = await DialogService.ShowAsync<AddFeedFormulaDialog>("Add New Feed Formula", parameters, new DialogOptions
-        {
-            MaxWidth = MaxWidth.Medium,
-            FullWidth = true
-        });
-
-        var result = await dialog.Result;
-        if (!result.Canceled)
-        {
-            await LoadFeedFormulas();
-            Snackbar.Add("Feed formula created successfully", Severity.Success);
-        }
     }
 
     private async Task OpenEditDialog(FeedFormulaResponse feedFormula)
@@ -305,7 +335,7 @@
     {
         var parameters = new DialogParameters<MudDialog>
         {
-            { "ContentText", $"Are you sure you want to delete '{feedFormula.DisplayName}'? This action cannot be undone." },
+            { "ContentText", $"Are you sure you want to delete '{feedFormula.Name ?? feedFormula.Code}'? This action cannot be undone." },
             { "ButtonText", "Delete" },
             { "Color", Color.Error }
         };
@@ -332,6 +362,37 @@
             {
                 Snackbar.Add($"Error deleting feed formula: {ex.Message}", Severity.Error);
             }
+        }
+    }
+
+    private async Task ImportFromPospos()
+    {
+        try
+        {
+            // Show the product selection dialog
+            var parameters = new DialogParameters();
+            var options = new DialogOptions()
+            {
+                MaxWidth = MaxWidth.Large,
+                CloseOnEscapeKey = true,
+                CloseButton = true,
+                FullWidth = true
+            };
+
+            var dialog = await DialogService.ShowAsync<ProductSelectionDialog>("Select Products to Import", parameters, options);
+            var result = await dialog.Result;
+
+            if (!result.Canceled)
+            {
+                // Dialog completed successfully - products were imported
+                // The dialog handles the import internally and shows its own success messages
+                // Refresh the data grid to show the new imports
+                await LoadFeedFormulas();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error showing product selection dialog: {ex.Message}", Severity.Error);
         }
     }
 }
