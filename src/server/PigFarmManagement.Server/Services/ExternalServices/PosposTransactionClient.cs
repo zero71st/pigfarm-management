@@ -22,9 +22,9 @@ namespace PigFarmManagement.Server.Services.ExternalServices
 			_logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<PosposTransactionClient>.Instance;
 
 			// allow fallback to environment variables if config keys are not set
-			if (string.IsNullOrWhiteSpace(_opts.TransactionsApiBase) && string.IsNullOrWhiteSpace(_opts.ApiBase))
+			if (string.IsNullOrWhiteSpace(_opts.TransactionsApiBase) && string.IsNullOrWhiteSpace(_opts.ProductApiBase))
 			{
-				var env = Environment.GetEnvironmentVariable("POSPOS_TRANSACTIONS_API_BASE") ?? Environment.GetEnvironmentVariable("POSPOS_API_BASE");
+				var env = Environment.GetEnvironmentVariable("POSPOS_TRANSACTIONS_API_BASE") ?? Environment.GetEnvironmentVariable("POSPOS_PRODUCT_API_BASE") ?? Environment.GetEnvironmentVariable("POSPOS_API_BASE");
 				if (!string.IsNullOrWhiteSpace(env)) _opts.TransactionsApiBase = env;
 			}
 			if (string.IsNullOrWhiteSpace(_opts.ApiKey))
@@ -33,10 +33,10 @@ namespace PigFarmManagement.Server.Services.ExternalServices
 				if (!string.IsNullOrWhiteSpace(envKey)) _opts.ApiKey = envKey;
 			}
 
-			_logger?.LogInformation("PosposTransactionClient configured. TransactionsApiBase='{Base}', ApiKeySet={HasKey}", _opts.TransactionsApiBase ?? _opts.ApiBase, !string.IsNullOrEmpty(_opts.ApiKey));
+			_logger?.LogInformation("PosposTransactionClient configured. TransactionsApiBase='{Base}', ApiKeySet={HasKey}", _opts.TransactionsApiBase ?? _opts.ProductApiBase, !string.IsNullOrEmpty(_opts.ApiKey));
 		}
 
-		private string GetBase() => !string.IsNullOrWhiteSpace(_opts.TransactionsApiBase) ? _opts.TransactionsApiBase : _opts.ApiBase;
+		private string GetBase() => !string.IsNullOrWhiteSpace(_opts.TransactionsApiBase) ? _opts.TransactionsApiBase : _opts.ProductApiBase;
 
 		public async Task<List<PosPosFeedTransaction>> GetTransactionsByDateRangeAsync(DateTime from, DateTime to, int pageSize = 300)
 		{

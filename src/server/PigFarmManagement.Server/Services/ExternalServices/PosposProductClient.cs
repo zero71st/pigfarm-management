@@ -35,11 +35,18 @@ namespace PigFarmManagement.Server.Services.ExternalServices
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
             // Allow fallback to environment variables if config keys are not set
-            if (string.IsNullOrWhiteSpace(_opts.ApiBase))
+            if (string.IsNullOrWhiteSpace(_opts.ProductApiBase))
             {
-                var env = Environment.GetEnvironmentVariable("POSPOS_API_BASE");
+                var env = Environment.GetEnvironmentVariable("POSPOS_PRODUCT_API_BASE");
                 if (!string.IsNullOrWhiteSpace(env)) 
-                    _opts.ApiBase = env;
+                    _opts.ProductApiBase = env;
+                // Fallback to legacy environment variable name
+                else 
+                {
+                    var legacyEnv = Environment.GetEnvironmentVariable("POSPOS_API_BASE");
+                    if (!string.IsNullOrWhiteSpace(legacyEnv)) 
+                        _opts.ProductApiBase = legacyEnv;
+                }
             }
             
             if (string.IsNullOrWhiteSpace(_opts.ApiKey))
@@ -50,8 +57,8 @@ namespace PigFarmManagement.Server.Services.ExternalServices
             }
 
             _logger.LogInformation(
-                "PosposProductClient configured. ApiBase='{Base}', ApiKeySet={HasKey}", 
-                _opts.ApiBase, 
+                "PosposProductClient configured. ProductApiBase='{Base}', ApiKeySet={HasKey}", 
+                _opts.ProductApiBase, 
                 !string.IsNullOrEmpty(_opts.ApiKey));
         }
 
@@ -68,7 +75,7 @@ namespace PigFarmManagement.Server.Services.ExternalServices
             {
                 await ApplyRateLimitAsync();
 
-                var baseUrl = _opts.ApiBase;
+                var baseUrl = _opts.ProductApiBase;
                 if (string.IsNullOrWhiteSpace(baseUrl) || !Uri.IsWellFormedUriString(baseUrl, UriKind.Absolute))
                 {
                     _logger.LogWarning("POSPOS product API base URL not configured");
@@ -110,7 +117,7 @@ namespace PigFarmManagement.Server.Services.ExternalServices
 
             await ApplyRateLimitAsync();
 
-            var baseUrl = _opts.ApiBase;
+            var baseUrl = _opts.ProductApiBase;
             if (string.IsNullOrWhiteSpace(baseUrl) || !Uri.IsWellFormedUriString(baseUrl, UriKind.Absolute))
             {
                 _logger.LogWarning("POSPOS product API base URL not configured");

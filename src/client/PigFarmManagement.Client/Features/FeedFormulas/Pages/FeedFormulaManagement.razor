@@ -71,6 +71,7 @@
                              @bind-Value="selectedBrandFilter" 
                              Label="Filter by Brand" 
                              Variant="Variant.Outlined"
+                             Margin="Margin.Dense"
                              Clearable="true"
                              @onchange="OnFilterChanged">
                         <MudSelectItem T="string" Value="@((string?)null)">All Brands</MudSelectItem>
@@ -85,6 +86,7 @@
                              @bind-Value="selectedCategoryFilter" 
                              Label="Filter by Category" 
                              Variant="Variant.Outlined"
+                             Margin="Margin.Dense"
                              Clearable="true"
                              @onchange="OnFilterChanged">
                         <MudSelectItem T="string" Value="@((string?)null)">All Categories</MudSelectItem>
@@ -333,17 +335,13 @@
 
     private async Task DeleteFeedFormula(FeedFormulaResponse feedFormula)
     {
-        var parameters = new DialogParameters<MudDialog>
-        {
-            { "ContentText", $"Are you sure you want to delete '{feedFormula.Name ?? feedFormula.Code}'? This action cannot be undone." },
-            { "ButtonText", "Delete" },
-            { "Color", Color.Error }
-        };
+        var confirmed = await DialogService.ShowMessageBox(
+            "Delete Feed Formula",
+            $"Are you sure you want to delete '{feedFormula.Name ?? feedFormula.Code}'? This action cannot be undone.",
+            yesText: "Yes, Delete",
+            cancelText: "Cancel");
 
-        var dialog = await DialogService.ShowAsync<MudDialog>("Delete Feed Formula", parameters);
-        var result = await dialog.Result;
-
-        if (!result.Canceled)
+        if (confirmed == true)
         {
             try
             {
