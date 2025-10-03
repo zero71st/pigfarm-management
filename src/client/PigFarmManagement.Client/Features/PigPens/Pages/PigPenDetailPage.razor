@@ -466,8 +466,9 @@
                         <HeaderContent>
                             <MudTh>Product Code</MudTh>
                             <MudTh>Product Name</MudTh>
-                            <MudTh Style="text-align: center">Formula (Per Pig / Per Pen)</MudTh>
-                            <MudTh Style="text-align: center">Invoice No</MudTh>
+                            <MudTh Style="text-align: center">Formula (Bags)</MudTh>
+                            <MudTh Style="text-align: center">Inv No</MudTh>
+                            <MudTh Style="text-align: center">Inv Date</MudTh>
                             <MudTh Style="text-align: center">Actual (Bags)</MudTh>
                             <MudTh Style="text-align: center">Actions</MudTh>
                         </HeaderContent>
@@ -516,6 +517,9 @@
                             </MudTd>
                             <MudTd Style="@($"text-align: center; {rowStyle}")">
                                 <span style="@textStyle">@row.InvoiceNo</span>
+                            </MudTd>
+                            <MudTd Style="@($"text-align: center; {rowStyle}")">
+                                <span style="@textStyle">@row.InvDate</span>
                             </MudTd>
                             <MudTd Style="@($"text-align: center; {rowStyle}")">
                                 <span style="@textStyle">@row.PerInvoiceBags</span>
@@ -1374,7 +1378,8 @@
                     .Select(g => new FeedHistoryEntry
                     {
                         InvoiceReferenceCode = g.Key ?? "N/A",
-                        Quantity = g.Sum(f => f.QuantityKg) / 25m // Convert KG to bags
+                        Quantity = g.Sum(f => f.QuantityKg) / 25m, // Convert KG to bags
+                        FeedDate = g.OrderByDescending(f => f.Date).First().Date // Take the most recent date in the group
                     })
                     .ToList();
 
@@ -1420,7 +1425,8 @@
                     .Select(g => new FeedHistoryEntry
                     {
                         InvoiceReferenceCode = g.Key ?? "N/A",
-                        Quantity = g.Sum(f => f.QuantityKg) / 25m
+                        Quantity = g.Sum(f => f.QuantityKg) / 25m,
+                        FeedDate = g.OrderByDescending(f => f.Date).First().Date // Take the most recent date in the group
                     })
                     .ToList();
 
@@ -1509,6 +1515,7 @@
                     ProductName = comparison.ProductName,
                     PerPigPerPenBags = combinedFormula,
                     InvoiceNo = firstInvoice.InvoiceReferenceCode,
+                    InvDate = firstInvoice.FeedDate.ToString("MM/dd/yyyy"),
                     PerInvoiceBags = firstInvoice.Quantity.ToString("0"),
                     IsSubTotal = false,
                     IsUnmatchedFeed = comparison.IsUnmatchedFeed,
@@ -1524,6 +1531,7 @@
                         ProductName = "",
                         PerPigPerPenBags = "",
                         InvoiceNo = invoice.InvoiceReferenceCode,
+                        InvDate = invoice.FeedDate.ToString("MM/dd/yyyy"),
                         PerInvoiceBags = invoice.Quantity.ToString("0"),
                         IsSubTotal = false,
                         IsUnmatchedFeed = comparison.IsUnmatchedFeed,
@@ -1538,6 +1546,7 @@
                     ProductName = "",
                     PerPigPerPenBags = "",
                     InvoiceNo = "Sub Total",
+                    InvDate = "",
                     PerInvoiceBags = comparison.ActualTotal.ToString("0"),
                     IsSubTotal = true,
                     IsUnmatchedFeed = comparison.IsUnmatchedFeed,
@@ -1557,6 +1566,7 @@
                     ProductName = comparison.ProductName,
                     PerPigPerPenBags = combinedFormula,
                     InvoiceNo = "No Feeds",
+                    InvDate = "",
                     PerInvoiceBags = "0",
                     IsSubTotal = false,
                     IsUnmatchedFeed = comparison.IsUnmatchedFeed,
@@ -1582,6 +1592,7 @@
             ProductName = "",
             PerPigPerPenBags = grandTotalCombined,
             InvoiceNo = "Grand Total",
+            InvDate = "",
             PerInvoiceBags = grandTotalPerInvoice.ToString("0"),
             IsSubTotal = false,
             IsGrandTotal = true,
@@ -1598,6 +1609,7 @@
         public string ProductName { get; set; } = "";
         public string PerPigPerPenBags { get; set; } = ""; // Combined: "PerPig / PerPen"
         public string InvoiceNo { get; set; } = "";
+        public string InvDate { get; set; } = "";
         public string PerInvoiceBags { get; set; } = "";
         public bool IsSubTotal { get; set; }
         public bool IsGrandTotal { get; set; }
@@ -1618,8 +1630,9 @@
 
     public class FeedHistoryEntry
     {
-    public string InvoiceReferenceCode { get; set; } = "";
+        public string InvoiceReferenceCode { get; set; } = "";
         public decimal Quantity { get; set; }
+        public DateTime FeedDate { get; set; }
     }
 
     // Deposit-related helper methods
