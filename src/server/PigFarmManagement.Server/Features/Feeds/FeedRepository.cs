@@ -60,7 +60,7 @@ public class FeedRepository : IFeedRepository
             feed.ProductName, // FeedType from ProductName
             feed.ProductCode, // ProductCode
             feed.ProductName, // ProductName
-            feed.InvoiceNumber, // InvoiceNumber
+            feed.TransactionCode, // TransactionCode
             feed.Quantity,    // Quantity represents number of bags
             feed.UnitPrice,   // UnitPrice represents price per bag
             feed.TotalPrice,  // Cost from TotalPrice
@@ -87,7 +87,7 @@ public class FeedRepository : IFeedRepository
             ProductType = feedItem.FeedType,
             ProductCode = feedItem.ProductCode, // Add ProductCode mapping
             ProductName = feedItem.ProductName, // Add ProductName mapping
-            InvoiceNumber = feedItem.InvoiceNumber, // Add InvoiceNumber mapping
+            TransactionCode = feedItem.TransactionCode, // Add TransactionCode mapping
             Quantity = (int)feedItem.Quantity, // Quantity stored as bags (int)
             UnitPrice = feedItem.PricePerBag,
             TotalPrice = feedItem.Cost,

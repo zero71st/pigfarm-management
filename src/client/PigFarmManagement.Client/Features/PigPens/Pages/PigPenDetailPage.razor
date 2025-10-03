@@ -1368,12 +1368,12 @@
                 var matchingFeeds = feeds.Where(f => f.ProductCode == formula.ProductCode).ToList();
                 Console.WriteLine($"Found {matchingFeeds.Count} matching feeds for assigned formula {formula.ProductCode}");
 
-                // Group by invoice number for detailed breakdown
+                // Group by transaction code for detailed breakdown
                 var feedHistoryEntries = matchingFeeds
-                    .GroupBy(f => string.IsNullOrEmpty(f.InvoiceNumber) ? "N/A" : f.InvoiceNumber)
+                    .GroupBy(f => string.IsNullOrEmpty(f.TransactionCode) ? "N/A" : f.TransactionCode)
                     .Select(g => new FeedHistoryEntry
                     {
-                        InvoiceNumber = g.Key ?? "N/A",
+                        TransactionCode = g.Key ?? "N/A",
                         Quantity = g.Sum(f => f.QuantityKg) / 25m // Convert KG to bags
                     })
                     .ToList();
@@ -1414,12 +1414,12 @@
 
                 Console.WriteLine($"Processing unmatched feed: {productCode} - {productName}, total: {totalQuantity:F1} bags");
 
-                // Group by invoice number for unmatched feeds too
+                // Group by transaction code for unmatched feeds too
                 var feedHistoryEntries = group
-                    .GroupBy(f => string.IsNullOrEmpty(f.InvoiceNumber) ? "N/A" : f.InvoiceNumber)
+                    .GroupBy(f => string.IsNullOrEmpty(f.TransactionCode) ? "N/A" : f.TransactionCode)
                     .Select(g => new FeedHistoryEntry
                     {
-                        InvoiceNumber = g.Key ?? "N/A",
+                        TransactionCode = g.Key ?? "N/A",
                         Quantity = g.Sum(f => f.QuantityKg) / 25m
                     })
                     .ToList();
@@ -1508,7 +1508,7 @@
                     ProductCode = comparison.ProductCode,
                     ProductName = comparison.ProductName,
                     PerPigPerPenBags = combinedFormula,
-                    InvoiceNo = firstInvoice.InvoiceNumber,
+                    InvoiceNo = firstInvoice.TransactionCode,
                     PerInvoiceBags = firstInvoice.Quantity.ToString("0"),
                     IsSubTotal = false,
                     IsUnmatchedFeed = comparison.IsUnmatchedFeed,
@@ -1523,7 +1523,7 @@
                         ProductCode = comparison.ProductCode, // Include ProductCode for delete functionality
                         ProductName = "",
                         PerPigPerPenBags = "",
-                        InvoiceNo = invoice.InvoiceNumber,
+                        InvoiceNo = invoice.TransactionCode,
                         PerInvoiceBags = invoice.Quantity.ToString("0"),
                         IsSubTotal = false,
                         IsUnmatchedFeed = comparison.IsUnmatchedFeed,
@@ -1618,7 +1618,7 @@
 
     public class FeedHistoryEntry
     {
-        public string InvoiceNumber { get; set; } = "";
+        public string TransactionCode { get; set; } = "";
         public decimal Quantity { get; set; }
     }
 
@@ -1928,10 +1928,10 @@
 
         try
         {
-            // Find feeds with the specified invoice number and product code
+            // Find feeds with the specified transaction code and product code
             var feedsToRemove = feeds.Where(f => f.ProductCode == productCode && 
-                                               (f.InvoiceNumber == invoiceNumber || 
-                                                (string.IsNullOrEmpty(f.InvoiceNumber) && invoiceNumber == "N/A")))
+                                               (f.TransactionCode == invoiceNumber || 
+                                                (string.IsNullOrEmpty(f.TransactionCode) && invoiceNumber == "N/A")))
                                     .ToList();
 
             if (!feedsToRemove.Any())

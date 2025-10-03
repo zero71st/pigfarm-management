@@ -21,7 +21,7 @@ public class FeedEntity
     public string ProductName { get; set; } = string.Empty;
     
     [MaxLength(50)]
-    public string InvoiceNumber { get; set; } = string.Empty;
+    public string TransactionCode { get; set; } = string.Empty;
     
     public int Quantity { get; set; }
     
@@ -57,7 +57,7 @@ public class FeedEntity
             ProductType = ProductType,
             ProductCode = ProductCode,
             ProductName = ProductName,
-            InvoiceNumber = InvoiceNumber,
+            InvoiceNumber = TransactionCode,
             Quantity = Quantity,
             UnitPrice = UnitPrice,
             TotalPrice = TotalPrice,
@@ -83,7 +83,7 @@ public class FeedEntity
             ProductType = feed.ProductType,
             ProductCode = feed.ProductCode,
             ProductName = feed.ProductName,
-            InvoiceNumber = feed.InvoiceNumber,
+            TransactionCode = feed.InvoiceNumber,
             Quantity = feed.Quantity,
             UnitPrice = feed.UnitPrice,
             TotalPrice = feed.TotalPrice,

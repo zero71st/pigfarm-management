@@ -78,7 +78,7 @@ public class PigPenDetailService : IPigPenDetailService
             f.ProductName, // Use ProductName as FeedType to show actual product name
             f.ProductCode, // Pass the product code
             f.ProductName, // Pass the product name
-            f.InvoiceNumber, // Pass the invoice number
+            f.TransactionCode, // Pass the transaction code
             f.Quantity * 25m, // Convert bags to kg (assuming 25kg per bag)
             f.UnitPrice / 25m, // Convert price per bag to price per kg
             f.TotalPrice, // Use TotalPrice (total cost of the bags)

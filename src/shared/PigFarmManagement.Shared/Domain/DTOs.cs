@@ -12,7 +12,7 @@ public class Feed
     public string ProductType { get; set; } = "";
     public string ProductCode { get; set; } = ""; // Add product code field
     public string ProductName { get; set; } = ""; // Add product name field
-    public string InvoiceNumber { get; set; } = ""; // Add invoice number field
+    public string TransactionCode { get; set; } = ""; // Add transaction code field (formerly InvoiceNumber)
     public string? InvoiceReferenceCode { get; set; }
     public int Quantity { get; set; }
     public decimal UnitPrice { get; set; }
@@ -26,6 +26,14 @@ public class Feed
     public bool UnmappedProduct { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.Now;
     public DateTime UpdatedAt { get; set; } = DateTime.Now;
+    
+    // Backward compatibility property
+    [Obsolete("Use TransactionCode instead")]
+    public string InvoiceNumber
+    {
+        get => TransactionCode;
+        set => TransactionCode = value;
+    }
     
     // Helper methods for external integration
     public void RecalculateTotalPrice()

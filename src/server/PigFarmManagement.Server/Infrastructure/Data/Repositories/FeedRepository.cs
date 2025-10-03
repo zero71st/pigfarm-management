@@ -82,7 +82,8 @@ public class FeedRepository : IFeedRepository
 
     public async Task<bool> ExistsByInvoiceNumberAsync(string invoiceNumber)
     {
+        // Note: Method name kept for backward compatibility, but checks TransactionCode field
         if (string.IsNullOrWhiteSpace(invoiceNumber)) return false;
-        return await _context.Feeds.AnyAsync(f => f.InvoiceNumber == invoiceNumber);
+        return await _context.Feeds.AnyAsync(f => f.TransactionCode == invoiceNumber);
     }
 }

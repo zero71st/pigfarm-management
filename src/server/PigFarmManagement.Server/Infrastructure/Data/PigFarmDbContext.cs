@@ -312,7 +312,7 @@ public class PigFarmDbContext : DbContext
                 ProductType = "อาหารสัตว์",
                 ProductCode = product.Code,
                 ProductName = product.Name,
-                InvoiceNumber = $"ST68{i:D6}",
+                TransactionCode = $"ST68{i:D6}",
                 Quantity = quantity,
                 UnitPrice = unitPrice,
                 TotalPrice = quantity * unitPrice,
