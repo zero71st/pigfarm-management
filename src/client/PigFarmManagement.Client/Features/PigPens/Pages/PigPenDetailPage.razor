@@ -1368,12 +1368,12 @@
                 var matchingFeeds = feeds.Where(f => f.ProductCode == formula.ProductCode).ToList();
                 Console.WriteLine($"Found {matchingFeeds.Count} matching feeds for assigned formula {formula.ProductCode}");
 
-                // Group by transaction code for detailed breakdown
+                // Group by invoice reference code for detailed breakdown
                 var feedHistoryEntries = matchingFeeds
-                    .GroupBy(f => string.IsNullOrEmpty(f.TransactionCode) ? "N/A" : f.TransactionCode)
+                    .GroupBy(f => string.IsNullOrEmpty(f.InvoiceReferenceCode) ? "N/A" : f.InvoiceReferenceCode)
                     .Select(g => new FeedHistoryEntry
                     {
-                        TransactionCode = g.Key ?? "N/A",
+                        InvoiceReferenceCode = g.Key ?? "N/A",
                         Quantity = g.Sum(f => f.QuantityKg) / 25m // Convert KG to bags
                     })
                     .ToList();
@@ -1414,12 +1414,12 @@
 
                 Console.WriteLine($"Processing unmatched feed: {productCode} - {productName}, total: {totalQuantity:F1} bags");
 
-                // Group by transaction code for unmatched feeds too
+                // Group by invoice reference code for unmatched feeds too
                 var feedHistoryEntries = group
-                    .GroupBy(f => string.IsNullOrEmpty(f.TransactionCode) ? "N/A" : f.TransactionCode)
+                    .GroupBy(f => string.IsNullOrEmpty(f.InvoiceReferenceCode) ? "N/A" : f.InvoiceReferenceCode)
                     .Select(g => new FeedHistoryEntry
                     {
-                        TransactionCode = g.Key ?? "N/A",
+                        InvoiceReferenceCode = g.Key ?? "N/A",
                         Quantity = g.Sum(f => f.QuantityKg) / 25m
                     })
                     .ToList();
@@ -1508,7 +1508,7 @@
                     ProductCode = comparison.ProductCode,
                     ProductName = comparison.ProductName,
                     PerPigPerPenBags = combinedFormula,
-                    InvoiceNo = firstInvoice.TransactionCode,
+                    InvoiceNo = firstInvoice.InvoiceReferenceCode,
                     PerInvoiceBags = firstInvoice.Quantity.ToString("0"),
                     IsSubTotal = false,
                     IsUnmatchedFeed = comparison.IsUnmatchedFeed,
@@ -1523,7 +1523,7 @@
                         ProductCode = comparison.ProductCode, // Include ProductCode for delete functionality
                         ProductName = "",
                         PerPigPerPenBags = "",
-                        InvoiceNo = invoice.TransactionCode,
+                        InvoiceNo = invoice.InvoiceReferenceCode,
                         PerInvoiceBags = invoice.Quantity.ToString("0"),
                         IsSubTotal = false,
                         IsUnmatchedFeed = comparison.IsUnmatchedFeed,
@@ -1618,7 +1618,7 @@
 
     public class FeedHistoryEntry
     {
-        public string TransactionCode { get; set; } = "";
+    public string InvoiceReferenceCode { get; set; } = "";
         public decimal Quantity { get; set; }
     }
 
@@ -1918,9 +1918,9 @@
         return pigPen.ActHarvestDate.HasValue || pigPen.IsCalculationLocked;
     }
 
-    private async Task RemoveInvoice(string productCode, string invoiceNumber)
+    private async Task RemoveInvoice(string productCode, string invoiceReferenceCode)
     {
-        if (string.IsNullOrEmpty(productCode) || string.IsNullOrEmpty(invoiceNumber) || invoiceNumber == "N/A")
+        if (string.IsNullOrEmpty(productCode) || string.IsNullOrEmpty(invoiceReferenceCode) || invoiceReferenceCode == "N/A")
         {
             Snackbar.Add("Cannot remove this invoice entry", Severity.Warning);
             return;
@@ -1928,15 +1928,15 @@
 
         try
         {
-            // Find feeds with the specified transaction code and product code
+            // Find feeds with the specified invoice reference code and product code
             var feedsToRemove = feeds.Where(f => f.ProductCode == productCode && 
-                                               (f.TransactionCode == invoiceNumber || 
-                                                (string.IsNullOrEmpty(f.TransactionCode) && invoiceNumber == "N/A")))
+                                               (f.InvoiceReferenceCode == invoiceReferenceCode || 
+                                                (string.IsNullOrEmpty(f.InvoiceReferenceCode) && invoiceReferenceCode == "N/A")))
                                     .ToList();
 
             if (!feedsToRemove.Any())
             {
-                Snackbar.Add($"Invoice '{invoiceNumber}' for product '{productCode}' was not found or has already been deleted.", Severity.Info);
+                Snackbar.Add($"Invoice '{invoiceReferenceCode}' for product '{productCode}' was not found or has already been deleted.", Severity.Info);
                 // Still refresh to ensure UI is up to date
                 await RefreshFeeds();
                 return;
@@ -1946,7 +1946,7 @@
             var totalQuantity = feedsToRemove.Sum(f => f.QuantityKg);
             var confirmed = await DialogService.ShowMessageBox(
                 "Confirm Removal",
-                $"Are you sure you want to remove invoice '{invoiceNumber}' for product '{productCode}'? This will remove {feedsToRemove.Count} feed record(s) totaling {totalQuantity:N1} kg.",
+                $"Are you sure you want to remove invoice '{invoiceReferenceCode}' for product '{productCode}'? This will remove {feedsToRemove.Count} feed record(s) totaling {totalQuantity:N1} kg.",
                 yesText: "Remove Invoice",
                 cancelText: "Cancel");
 
@@ -1986,15 +1986,15 @@
                 // Show appropriate message based on results
                 if (failedDeletes == 0)
                 {
-                    Snackbar.Add($"Successfully removed invoice '{invoiceNumber}' - {successfulDeletes} feed record(s) deleted", Severity.Success);
+                    Snackbar.Add($"Successfully removed invoice '{invoiceReferenceCode}' - {successfulDeletes} feed record(s) deleted", Severity.Success);
                 }
                 else if (successfulDeletes > 0)
                 {
-                    Snackbar.Add($"Partially removed invoice '{invoiceNumber}' - {successfulDeletes} record(s) deleted, {failedDeletes} failed. Some records may have already been deleted.", Severity.Warning);
+                    Snackbar.Add($"Partially removed invoice '{invoiceReferenceCode}' - {successfulDeletes} record(s) deleted, {failedDeletes} failed. Some records may have already been deleted.", Severity.Warning);
                 }
                 else
                 {
-                    Snackbar.Add($"Failed to remove invoice '{invoiceNumber}' - all {failedDeletes} record(s) could not be deleted. They may have already been removed.", Severity.Error);
+                    Snackbar.Add($"Failed to remove invoice '{invoiceReferenceCode}' - all {failedDeletes} record(s) could not be deleted. They may have already been removed.", Severity.Error);
                 }
             }
         }

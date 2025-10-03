@@ -47,6 +47,7 @@ public class FeedService : IFeedService
             "", // ProductCode - empty for manually added feeds
             dto.FeedType, // ProductName - use FeedType as product name
             "", // TransactionCode - empty for manually added feeds
+            null, // InvoiceReferenceCode - null for manually added feeds
             dto.QuantityKg,
             dto.PricePerKg,
             totalCost,

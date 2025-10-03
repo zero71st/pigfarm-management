@@ -79,6 +79,7 @@ public class PigPenDetailService : IPigPenDetailService
             f.ProductCode, // Pass the product code
             f.ProductName, // Pass the product name
             f.TransactionCode, // Pass the transaction code
+            f.InvoiceReferenceCode, // Pass the invoice reference code
             f.Quantity * 25m, // Convert bags to kg (assuming 25kg per bag)
             f.UnitPrice / 25m, // Convert price per bag to price per kg
             f.TotalPrice, // Use TotalPrice (total cost of the bags)

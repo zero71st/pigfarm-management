@@ -61,6 +61,7 @@ public class FeedRepository : IFeedRepository
             feed.ProductCode, // ProductCode
             feed.ProductName, // ProductName
             feed.TransactionCode, // TransactionCode
+            feed.InvoiceReferenceCode, // InvoiceReferenceCode
             feed.Quantity,    // Quantity represents number of bags
             feed.UnitPrice,   // UnitPrice represents price per bag
             feed.TotalPrice,  // Cost from TotalPrice
