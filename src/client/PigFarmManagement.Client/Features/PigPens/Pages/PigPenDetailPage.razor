@@ -816,8 +816,21 @@
                 {
                     try
                     {
+                        // Get formula assignments for this pig pen from the API
+                        var assignments = await PigPenService.GetFormulaAssignmentsAsync(pigPen.Id);
+                        Console.WriteLine($"[LoadData] Loaded {assignments?.Count ?? 0} formula assignments from API");
+
+                        if (assignments?.Any() == true)
+                        {
+                            Console.WriteLine($"[LoadData] Assignment details:");
+                            foreach (var assignment in assignments)
+                            {
+                                Console.WriteLine($"  - {assignment.ProductCode}: {assignment.ProductName}, Active={assignment.IsActive}, Locked={assignment.IsLocked}");
+                            }
+                        }
+
                         // Get active formula assignments for this pig pen
-                        var activeAssignments = pigPen.FormulaAssignments
+                        var activeAssignments = (assignments ?? new List<PigPenFormulaAssignment>())
                             .Where(fa => fa.IsActive && !fa.IsLocked)
                             .ToList();
 
@@ -836,7 +849,7 @@
                                 PigCount = assignment.AssignedPigQuantity,
                                 CreatedAt = assignment.AssignedAt,
                                 UpdatedAt = assignment.AssignedAt,
-                                DisplayName = assignment.DisplayName,
+                                DisplayName = $"{assignment.ProductCode} - {assignment.ProductName}",
                                 ConsumptionRate = $"{assignment.AssignedBagPerPig:F1} bags/pig",
                                 BrandDisplayName = $"{assignment.Brand} - {assignment.ProductName}"
                             }).ToList();
@@ -844,7 +857,7 @@
                         else if (pigPen.IsCalculationLocked)
                         {
                             // Fallback to locked assignments for locked pig pens
-                            var lockedAssignments = pigPen.FormulaAssignments
+                            var lockedAssignments = (assignments ?? new List<PigPenFormulaAssignment>())
                                 .Where(fa => fa.IsLocked)
                                 .ToList();
 
@@ -862,7 +875,7 @@
                                     PigCount = assignment.AssignedPigQuantity,
                                     CreatedAt = assignment.AssignedAt,
                                     UpdatedAt = assignment.AssignedAt,
-                                    DisplayName = assignment.DisplayName,
+                                    DisplayName = $"{assignment.ProductCode} - {assignment.ProductName}",
                                     ConsumptionRate = $"{assignment.AssignedBagPerPig:F1} bags/pig",
                                     BrandDisplayName = $"{assignment.Brand} - {assignment.ProductName}"
                                 }).ToList();

@@ -15,6 +15,8 @@ public interface IPigPenService
     Task<bool> DeletePigPenAsync(Guid id);
     Task<List<PigPen>> GetPigPensByCustomerIdAsync(Guid customerId);
     Task<PigPen> ForceClosePigPenAsync(Guid id);
+    Task<List<PigPenFormulaAssignment>> GetFormulaAssignmentsAsync(Guid pigPenId);
+    Task<List<PigPenFormulaAssignment>> RegenerateFormulaAssignmentsAsync(Guid pigPenId);
 }
 
 public class PigPenService : IPigPenService
@@ -77,10 +79,18 @@ public class PigPenService : IPigPenService
             // Get all feed formulas
             var allFormulas = await _feedFormulaService.GetAllFeedFormulasAsync();
             
-            // Filter formulas by category name (replacing brand filter)
+            // Filter formulas by brand field (the brand selected by user)
             var brandFormulas = allFormulas
-                .Where(f => f.CategoryName != null && f.CategoryName.Equals(brand, StringComparison.OrdinalIgnoreCase))
+                .Where(f => f.Brand != null && f.Brand.Equals(brand, StringComparison.OrdinalIgnoreCase))
                 .ToList();
+
+            if (!brandFormulas.Any())
+            {
+                // If no formulas found by brand, try category name as fallback
+                brandFormulas = allFormulas
+                    .Where(f => f.CategoryName != null && f.CategoryName.Equals(brand, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+            }
 
             if (!brandFormulas.Any())
                 return new List<PigPenFormulaAssignment>();
@@ -97,7 +107,7 @@ public class PigPenService : IPigPenService
                     OriginalFormulaId: formula.Id,
                     ProductCode: formula.Code ?? string.Empty,
                     ProductName: formula.Name ?? string.Empty,
-                    Brand: formula.CategoryName ?? string.Empty,
+                    Brand: formula.Brand ?? string.Empty,
                     Stage: null, // Single formula, no stage
                     AssignedPigQuantity: pigQty,
                     AssignedBagPerPig: formula.ConsumeRate ?? 0,
@@ -193,5 +203,37 @@ public class PigPenService : IPigPenService
         };
 
         return await _pigPenRepository.UpdateAsync(forceClosedPigPen);
+    }
+
+    public async Task<List<PigPenFormulaAssignment>> GetFormulaAssignmentsAsync(Guid pigPenId)
+    {
+        var pigPen = await _pigPenRepository.GetByIdAsync(pigPenId);
+        if (pigPen == null)
+        {
+            throw new InvalidOperationException("Pig pen not found");
+        }
+
+        return pigPen.FormulaAssignments.OrderByDescending(a => a.AssignedAt).ToList();
+    }
+
+    public async Task<List<PigPenFormulaAssignment>> RegenerateFormulaAssignmentsAsync(Guid pigPenId)
+    {
+        var pigPen = await _pigPenRepository.GetByIdAsync(pigPenId);
+        if (pigPen == null)
+        {
+            throw new InvalidOperationException("Pig pen not found");
+        }
+
+        // Clear existing assignments
+        pigPen.FormulaAssignments.Clear();
+
+        // Regenerate assignments based on the pig pen's selected brand
+        if (!string.IsNullOrEmpty(pigPen.SelectedBrand))
+        {
+            await CreateAutomaticFormulaAssignments(pigPen.Id, pigPen.SelectedBrand, pigPen.PigQty);
+            await _pigPenRepository.UpdateAsync(pigPen);
+        }
+
+        return pigPen.FormulaAssignments.OrderByDescending(a => a.AssignedAt).ToList();
     }
 }

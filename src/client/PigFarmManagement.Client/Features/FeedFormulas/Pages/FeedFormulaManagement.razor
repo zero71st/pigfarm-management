@@ -10,7 +10,7 @@
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-4">
     <MudText Typo="Typo.h4" GutterBottom="true" Class="mb-4">
-        <MudIcon Icon="Icons.Material.Filled.Science" Class="mr-2" />
+        <MudIcon Icon="@Icons.Material.Filled.Science" Class="mr-2" />
         Feed Formula Management
     </MudText>
 
@@ -96,20 +96,7 @@
                         }
                     </MudSelect>
                 </MudItem>
-                <MudItem xs="12" sm="6" md="2">
-                    <MudButtonGroup Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small">
-                        <MudButton OnClick="@(() => QuickFilterBrand("เจ็ท"))" 
-                                  Color="@(selectedBrandFilter == "เจ็ท" ? Color.Primary : Color.Default)"
-                                  Variant="@(selectedBrandFilter == "เจ็ท" ? Variant.Filled : Variant.Outlined)">
-                            เจ็ท
-                        </MudButton>
-                        <MudButton OnClick="@(() => QuickFilterBrand("เพียว"))" 
-                                  Color="@(selectedBrandFilter == "เพียว" ? Color.Secondary : Color.Default)"
-                                  Variant="@(selectedBrandFilter == "เพียว" ? Variant.Filled : Variant.Outlined)">
-                            เพียว
-                        </MudButton>
-                    </MudButtonGroup>
-                </MudItem>
+               
                 <MudItem xs="12" sm="6" md="2">
                     <MudStack Row Spacing="1">
                         <MudButton Variant="Variant.Outlined" 
@@ -134,7 +121,7 @@
                               Color="Color.Success" 
                               StartIcon="@Icons.Material.Filled.CloudDownload"
                               OnClick="@ImportFromPospos">
-                        Import from POSPOS
+                        Import Products
                     </MudButton>
                 </MudItem>
                 <MudItem xs="12" md="12" Class="d-flex align-center">
@@ -179,9 +166,7 @@
                 <PropertyColumn Property="x => x.Cost" Title="Cost" Format="N2" />
                 <PropertyColumn Property="x => x.UnitName" Title="Unit" />
                 <PropertyColumn Property="x => x.ConsumeRate" Title="Consume Rate" Format="F2" />
-                <PropertyColumn Property="x => x.CreatedAt" Title="Created" Format="yyyy-MM-dd" />
-                <PropertyColumn Property="x => x.UpdatedAt" Title="Updated" Format="yyyy-MM-dd" />
-                
+                           
                 <TemplateColumn Title="Actions" CellClass="d-flex justify-end" Sortable="false" Filterable="false">
                     <CellTemplate>
                         <div style="display: flex; gap: 8px;">

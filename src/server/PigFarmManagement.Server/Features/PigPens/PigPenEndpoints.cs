@@ -36,6 +36,9 @@ public static class PigPenEndpoints
         group.MapGet("/{id:guid}/harvests", GetPigPenHarvests)
             .WithName("GetPigPenHarvests");
 
+        group.MapGet("/{id:guid}/formula-assignments", GetPigPenFormulaAssignments)
+            .WithName("GetPigPenFormulaAssignments");
+
         // CRUD for deposits
         group.MapPost("/{id:guid}/deposits", CreateDeposit)
             .WithName("CreateDeposit");
@@ -59,6 +62,9 @@ public static class PigPenEndpoints
         // Special actions
         group.MapPost("/{id:guid}/force-close", ForceClosePigPen)
             .WithName("ForceClosePigPen");
+
+        group.MapPost("/{id:guid}/regenerate-assignments", RegenerateFormulaAssignments)
+            .WithName("RegenerateFormulaAssignments");
 
         return builder;
     }
@@ -313,6 +319,23 @@ public static class PigPenEndpoints
         }
     }
 
+    private static async Task<IResult> GetPigPenFormulaAssignments(Guid id, IPigPenService pigPenService)
+    {
+        try
+        {
+            var assignments = await pigPenService.GetFormulaAssignmentsAsync(id);
+            return Results.Ok(assignments);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Results.BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Error retrieving formula assignments: {ex.Message}");
+        }
+    }
+
     private static async Task<IResult> ForceClosePigPen(Guid id, IPigPenService pigPenService)
     {
         try
@@ -347,6 +370,23 @@ public static class PigPenEndpoints
         catch (Exception ex)
         {
             return Results.Problem($"Error force closing pig pen: {ex.Message}");
+        }
+    }
+
+    private static async Task<IResult> RegenerateFormulaAssignments(Guid id, IPigPenService pigPenService)
+    {
+        try
+        {
+            var result = await pigPenService.RegenerateFormulaAssignmentsAsync(id);
+            return Results.Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Results.BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Error regenerating formula assignments: {ex.Message}");
         }
     }
 }

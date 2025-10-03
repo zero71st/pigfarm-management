@@ -16,7 +16,12 @@ builder.Services.Configure<PigFarmManagement.Server.Infrastructure.Settings.Posp
 
 // Add Entity Framework
 builder.Services.AddDbContext<PigFarmDbContext>(options =>
-    options.UseInMemoryDatabase("PigFarmManagement"));
+{
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+                          ?? Environment.GetEnvironmentVariable("PIGFARM_CONNECTION")
+                          ?? "Data Source=pigfarm.db";
+    options.UseSqlite(connectionString);
+});
 
 // Add application services
 builder.Services.AddApplicationServices();
