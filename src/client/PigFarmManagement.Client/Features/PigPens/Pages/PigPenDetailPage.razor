@@ -474,6 +474,7 @@
                             <MudTh Style="text-align: center">Price+Discount</MudTh>
                             <MudTh Style="text-align: center">Sys Total</MudTh>
                             <MudTh Style="text-align: center">POS Total</MudTh>
+                            <MudTh Style="text-align: center">Profit</MudTh>
                             <MudTh Style="text-align: center">Actions</MudTh>
                         </HeaderContent>
                         <RowTemplate>
@@ -539,6 +540,9 @@
                             </MudTd>
                             <MudTd Style="@($"text-align: center; {rowStyle}")">
                                 <span style="@textStyle">@row.PosTotalPriceIncludeDiscount</span>
+                            </MudTd>
+                            <MudTd Style="@($"text-align: center; {rowStyle}")">
+                                <span style="@textStyle">@row.Profit</span>
                             </MudTd>
                             <MudTd Style="@($"text-align: center; {rowStyle}")">
                                 @if (!row.IsSubTotal && !row.IsGrandTotal && !string.IsNullOrEmpty(row.ProductCode) && !string.IsNullOrEmpty(row.InvoiceNo) && row.InvoiceNo != "No Feeds" && row.InvoiceNo != "Sub Total" && row.InvoiceNo != "Grand Total")
@@ -1508,6 +1512,58 @@
         return efficiency >= 95 ? Severity.Success : efficiency >= 85 ? Severity.Warning : Severity.Error;
     }
 
+    // Helper method to calculate profit: POS Total - (cost * quantity)
+    private string CalculateProfit(decimal? posTotal, decimal? feedCost, decimal quantity)
+    {
+        if (!posTotal.HasValue || !feedCost.HasValue)
+            return "-";
+        
+        var totalCost = feedCost.Value * quantity;
+        var profit = posTotal.Value - totalCost;
+        return profit.ToString("N2");
+    }
+
+    // Helper method to calculate subtotal profit for a list of feed history entries
+    private string CalculateSubTotalProfit(List<FeedHistoryEntry> entries)
+    {
+        decimal totalProfit = 0;
+        bool hasValidData = false;
+
+        foreach (var entry in entries)
+        {
+            if (entry.PosTotalPriceIncludeDiscount.HasValue && entry.FeedCost.HasValue)
+            {
+                var totalCost = entry.FeedCost.Value * entry.Quantity;
+                totalProfit += entry.PosTotalPriceIncludeDiscount.Value - totalCost;
+                hasValidData = true;
+            }
+        }
+
+        return hasValidData ? totalProfit.ToString("N2") : "-";
+    }
+
+    // Helper method to calculate grand total profit for all comparison data
+    private string CalculateGrandTotalProfit(List<FeedComparisonData> comparisonData)
+    {
+        decimal totalProfit = 0;
+        bool hasValidData = false;
+
+        foreach (var comparison in comparisonData)
+        {
+            foreach (var entry in comparison.FeedHistoryEntries)
+            {
+                if (entry.PosTotalPriceIncludeDiscount.HasValue && entry.FeedCost.HasValue)
+                {
+                    var totalCost = entry.FeedCost.Value * entry.Quantity;
+                    totalProfit += entry.PosTotalPriceIncludeDiscount.Value - totalCost;
+                    hasValidData = true;
+                }
+            }
+        }
+
+        return hasValidData ? totalProfit.ToString("N2") : "-";
+    }
+
     public class GroupedFeedItem
     {
         public string ProductCode { get; set; } = "";
@@ -1547,6 +1603,7 @@
                     PriceIncludeDiscount = firstInvoice.PriceIncludeDiscount?.ToString("N2") ?? "-",
                     SysTotalPriceIncludeDiscount = firstInvoice.SysTotalPriceIncludeDiscount?.ToString("N2") ?? "-",
                     PosTotalPriceIncludeDiscount = firstInvoice.PosTotalPriceIncludeDiscount?.ToString("N2") ?? "-",
+                    Profit = CalculateProfit(firstInvoice.PosTotalPriceIncludeDiscount, firstInvoice.FeedCost, firstInvoice.Quantity),
                     IsSubTotal = false,
                     IsUnmatchedFeed = comparison.IsUnmatchedFeed,
                     IsFirstProductRow = true // This is the first row for this product
@@ -1567,6 +1624,7 @@
                         PriceIncludeDiscount = invoice.PriceIncludeDiscount?.ToString("N2") ?? "-",
                         SysTotalPriceIncludeDiscount = invoice.SysTotalPriceIncludeDiscount?.ToString("N2") ?? "-",
                         PosTotalPriceIncludeDiscount = invoice.PosTotalPriceIncludeDiscount?.ToString("N2") ?? "-",
+                        Profit = CalculateProfit(invoice.PosTotalPriceIncludeDiscount, invoice.FeedCost, invoice.Quantity),
                         IsSubTotal = false,
                         IsUnmatchedFeed = comparison.IsUnmatchedFeed,
                         IsFirstProductRow = false // Not the first row for this product
@@ -1576,6 +1634,7 @@
                 // Add Sub Total row for this product
                 var subTotalSysTotal = comparison.FeedHistoryEntries.Sum(e => e.SysTotalPriceIncludeDiscount ?? 0);
                 var subTotalPosTotal = comparison.FeedHistoryEntries.Sum(e => e.PosTotalPriceIncludeDiscount ?? 0);
+                var subTotalProfit = CalculateSubTotalProfit(comparison.FeedHistoryEntries);
                 
                 rows.Add(new TableRowData
                 {
@@ -1589,6 +1648,7 @@
                     PriceIncludeDiscount = "-",
                     SysTotalPriceIncludeDiscount = subTotalSysTotal > 0 ? subTotalSysTotal.ToString("N2") : "-",
                     PosTotalPriceIncludeDiscount = subTotalPosTotal > 0 ? subTotalPosTotal.ToString("N2") : "-",
+                    Profit = subTotalProfit,
                     IsSubTotal = true,
                     IsUnmatchedFeed = comparison.IsUnmatchedFeed,
                     IsFirstProductRow = false
@@ -1613,6 +1673,7 @@
                     PriceIncludeDiscount = "-",
                     SysTotalPriceIncludeDiscount = "-",
                     PosTotalPriceIncludeDiscount = "-",
+                    Profit = "-",
                     IsSubTotal = false,
                     IsUnmatchedFeed = comparison.IsUnmatchedFeed,
                     IsFirstProductRow = true // This is the only row for this product
@@ -1633,6 +1694,7 @@
         
         var grandTotalSysTotal = comparisonData.SelectMany(c => c.FeedHistoryEntries).Sum(e => e.SysTotalPriceIncludeDiscount ?? 0);
         var grandTotalPosTotal = comparisonData.SelectMany(c => c.FeedHistoryEntries).Sum(e => e.PosTotalPriceIncludeDiscount ?? 0);
+        var grandTotalProfit = CalculateGrandTotalProfit(comparisonData);
         
         rows.Add(new TableRowData
         {
@@ -1646,6 +1708,7 @@
             PriceIncludeDiscount = "-",
             SysTotalPriceIncludeDiscount = grandTotalSysTotal > 0 ? grandTotalSysTotal.ToString("N2") : "-",
             PosTotalPriceIncludeDiscount = grandTotalPosTotal > 0 ? grandTotalPosTotal.ToString("N2") : "-",
+            Profit = grandTotalProfit,
             IsSubTotal = false,
             IsGrandTotal = true,
             IsUnmatchedFeed = false,
@@ -1667,6 +1730,7 @@
         public string PriceIncludeDiscount { get; set; } = ""; // UnitPrice - CostDiscountPrice
         public string SysTotalPriceIncludeDiscount { get; set; } = ""; // System calculated total
         public string PosTotalPriceIncludeDiscount { get; set; } = ""; // POS provided total
+        public string Profit { get; set; } = ""; // POS Total - (cost * quantity)
         public bool IsSubTotal { get; set; }
         public bool IsGrandTotal { get; set; }
         public bool IsUnmatchedFeed { get; set; } // True if this feed doesn't match any assigned formula
