@@ -75,7 +75,12 @@ public class FeedRepository : IFeedRepository
             UnmappedProduct = feed.UnmappedProduct,
             Notes = feed.Notes,
             CreatedAt = feed.CreatedAt,
-            UpdatedAt = feed.UpdatedAt
+            UpdatedAt = feed.UpdatedAt,
+            FeedCost = feed.Cost,
+            CostDiscountPrice = feed.CostDiscountPrice,
+            PriceIncludeDiscount = feed.PriceIncludeDiscount,
+            Sys_TotalPriceIncludeDiscount = feed.Sys_TotalPriceIncludeDiscount,
+            Pos_TotalPriceIncludeDiscount = feed.Pos_TotalPriceIncludeDiscount
         };
     }
 

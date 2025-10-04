@@ -59,13 +59,24 @@ public class FeedRepository : IFeedRepository
         entity.PigPenId = feed.PigPenId;
         entity.FeedDate = feed.FeedDate;
         entity.ProductType = feed.ProductType;
+        entity.ProductCode = feed.ProductCode;
+        entity.ProductName = feed.ProductName;
+        entity.TransactionCode = feed.TransactionCode;
+        entity.InvoiceReferenceCode = feed.InvoiceReferenceCode;
         entity.Quantity = feed.Quantity;
-    entity.UnitPrice = feed.UnitPrice;
-    entity.TotalPriceIncludeDiscount = feed.TotalPriceIncludeDiscount;
+        entity.UnitPrice = feed.UnitPrice;
+        entity.Cost = feed.Cost;
+        entity.CostDiscountPrice = feed.CostDiscountPrice;
+        entity.PriceIncludeDiscount = feed.PriceIncludeDiscount;
+        entity.Sys_TotalPriceIncludeDiscount = feed.Sys_TotalPriceIncludeDiscount;
+        entity.TotalPriceIncludeDiscount = feed.TotalPriceIncludeDiscount;
+        entity.Pos_TotalPriceIncludeDiscount = feed.Pos_TotalPriceIncludeDiscount;
         entity.ExternalReference = feed.ExternalReference;
+        entity.ExternalProductCode = feed.ExternalProductCode;
+        entity.ExternalProductName = feed.ExternalProductName;
+        entity.UnmappedProduct = feed.UnmappedProduct;
         entity.Notes = feed.Notes;
         entity.UpdatedAt = DateTime.UtcNow;
-    entity.TotalPriceIncludeDiscount = feed.TotalPriceIncludeDiscount; // Updated assignment
 
         await _context.SaveChangesAsync();
         return entity.ToModel();

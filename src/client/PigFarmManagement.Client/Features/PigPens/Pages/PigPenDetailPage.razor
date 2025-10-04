@@ -468,8 +468,12 @@
                             <MudTh>Product Name</MudTh>
                             <MudTh Style="text-align: center">Formula (Bags)</MudTh>
                             <MudTh Style="text-align: center">Inv No</MudTh>
-                            <MudTh Style="text-align: center">Inv Date</MudTh>
+                            <MudTh Style="text-align: center">INV Date</MudTh>
                             <MudTh Style="text-align: center">Actual (Bags)</MudTh>
+                            <MudTh Style="text-align: center">Cost</MudTh>
+                            <MudTh Style="text-align: center">Price+Discount</MudTh>
+                            <MudTh Style="text-align: center">Sys Total</MudTh>
+                            <MudTh Style="text-align: center">POS Total</MudTh>
                             <MudTh Style="text-align: center">Actions</MudTh>
                         </HeaderContent>
                         <RowTemplate>
@@ -523,6 +527,18 @@
                             </MudTd>
                             <MudTd Style="@($"text-align: center; {rowStyle}")">
                                 <span style="@textStyle">@row.PerInvoiceBags</span>
+                            </MudTd>
+                            <MudTd Style="@($"text-align: center; {rowStyle}")">
+                                <span style="@textStyle">@row.FeedCost</span>
+                            </MudTd>
+                            <MudTd Style="@($"text-align: center; {rowStyle}")">
+                                <span style="@textStyle">@row.PriceIncludeDiscount</span>
+                            </MudTd>
+                            <MudTd Style="@($"text-align: center; {rowStyle}")">
+                                <span style="@textStyle">@row.SysTotalPriceIncludeDiscount</span>
+                            </MudTd>
+                            <MudTd Style="@($"text-align: center; {rowStyle}")">
+                                <span style="@textStyle">@row.PosTotalPriceIncludeDiscount</span>
                             </MudTd>
                             <MudTd Style="@($"text-align: center; {rowStyle}")">
                                 @if (!row.IsSubTotal && !row.IsGrandTotal && !string.IsNullOrEmpty(row.ProductCode) && !string.IsNullOrEmpty(row.InvoiceNo) && row.InvoiceNo != "No Feeds" && row.InvoiceNo != "Sub Total" && row.InvoiceNo != "Grand Total")
@@ -1379,8 +1395,13 @@
                     {
                         InvoiceReferenceCode = g.Key ?? "N/A",
                         Quantity = g.Sum(f => f.QuantityKg) / 25m, // Convert KG to bags
-                        FeedDate = g.OrderByDescending(f => f.Date).First().Date // Take the most recent date in the group
+                        FeedDate = g.OrderByDescending(f => f.Date).First().Date, // Take the most recent date in the group
+                        FeedCost = g.FirstOrDefault()?.FeedCost,
+                        PriceIncludeDiscount = g.FirstOrDefault()?.PriceIncludeDiscount,
+                        SysTotalPriceIncludeDiscount = g.Sum(f => f.Sys_TotalPriceIncludeDiscount ?? 0),
+                        PosTotalPriceIncludeDiscount = g.Sum(f => f.Pos_TotalPriceIncludeDiscount ?? 0)
                     })
+                    .OrderBy(e => e.InvoiceReferenceCode) // Sort by InvoiceReferenceCode
                     .ToList();
 
                 var result = new FeedComparisonData
@@ -1426,8 +1447,13 @@
                     {
                         InvoiceReferenceCode = g.Key ?? "N/A",
                         Quantity = g.Sum(f => f.QuantityKg) / 25m,
-                        FeedDate = g.OrderByDescending(f => f.Date).First().Date // Take the most recent date in the group
+                        FeedDate = g.OrderByDescending(f => f.Date).First().Date, // Take the most recent date in the group
+                        FeedCost = g.FirstOrDefault()?.FeedCost,
+                        PriceIncludeDiscount = g.FirstOrDefault()?.PriceIncludeDiscount,
+                        SysTotalPriceIncludeDiscount = g.Sum(f => f.Sys_TotalPriceIncludeDiscount ?? 0),
+                        PosTotalPriceIncludeDiscount = g.Sum(f => f.Pos_TotalPriceIncludeDiscount ?? 0)
                     })
+                    .OrderBy(e => e.InvoiceReferenceCode) // Sort by InvoiceReferenceCode
                     .ToList();
 
                 comparisonData.Add(new FeedComparisonData
@@ -1517,6 +1543,10 @@
                     InvoiceNo = firstInvoice.InvoiceReferenceCode,
                     InvDate = firstInvoice.FeedDate.ToString("MM/dd/yyyy"),
                     PerInvoiceBags = firstInvoice.Quantity.ToString("0"),
+                    FeedCost = firstInvoice.FeedCost?.ToString("N2") ?? "-",
+                    PriceIncludeDiscount = firstInvoice.PriceIncludeDiscount?.ToString("N2") ?? "-",
+                    SysTotalPriceIncludeDiscount = firstInvoice.SysTotalPriceIncludeDiscount?.ToString("N2") ?? "-",
+                    PosTotalPriceIncludeDiscount = firstInvoice.PosTotalPriceIncludeDiscount?.ToString("N2") ?? "-",
                     IsSubTotal = false,
                     IsUnmatchedFeed = comparison.IsUnmatchedFeed,
                     IsFirstProductRow = true // This is the first row for this product
@@ -1533,6 +1563,10 @@
                         InvoiceNo = invoice.InvoiceReferenceCode,
                         InvDate = invoice.FeedDate.ToString("MM/dd/yyyy"),
                         PerInvoiceBags = invoice.Quantity.ToString("0"),
+                        FeedCost = invoice.FeedCost?.ToString("N2") ?? "-",
+                        PriceIncludeDiscount = invoice.PriceIncludeDiscount?.ToString("N2") ?? "-",
+                        SysTotalPriceIncludeDiscount = invoice.SysTotalPriceIncludeDiscount?.ToString("N2") ?? "-",
+                        PosTotalPriceIncludeDiscount = invoice.PosTotalPriceIncludeDiscount?.ToString("N2") ?? "-",
                         IsSubTotal = false,
                         IsUnmatchedFeed = comparison.IsUnmatchedFeed,
                         IsFirstProductRow = false // Not the first row for this product
@@ -1540,6 +1574,9 @@
                 }
 
                 // Add Sub Total row for this product
+                var subTotalSysTotal = comparison.FeedHistoryEntries.Sum(e => e.SysTotalPriceIncludeDiscount ?? 0);
+                var subTotalPosTotal = comparison.FeedHistoryEntries.Sum(e => e.PosTotalPriceIncludeDiscount ?? 0);
+                
                 rows.Add(new TableRowData
                 {
                     ProductCode = "",
@@ -1548,6 +1585,10 @@
                     InvoiceNo = "Sub Total",
                     InvDate = "",
                     PerInvoiceBags = comparison.ActualTotal.ToString("0"),
+                    FeedCost = "-",
+                    PriceIncludeDiscount = "-",
+                    SysTotalPriceIncludeDiscount = subTotalSysTotal > 0 ? subTotalSysTotal.ToString("N2") : "-",
+                    PosTotalPriceIncludeDiscount = subTotalPosTotal > 0 ? subTotalPosTotal.ToString("N2") : "-",
                     IsSubTotal = true,
                     IsUnmatchedFeed = comparison.IsUnmatchedFeed,
                     IsFirstProductRow = false
@@ -1568,6 +1609,10 @@
                     InvoiceNo = "No Feeds",
                     InvDate = "",
                     PerInvoiceBags = "0",
+                    FeedCost = "-",
+                    PriceIncludeDiscount = "-",
+                    SysTotalPriceIncludeDiscount = "-",
+                    PosTotalPriceIncludeDiscount = "-",
                     IsSubTotal = false,
                     IsUnmatchedFeed = comparison.IsUnmatchedFeed,
                     IsFirstProductRow = true // This is the only row for this product
@@ -1586,6 +1631,9 @@
             ? $"{grandTotalPerPig.ToString("F1")} / {grandTotalPerPigPen.ToString("0")}" 
             : "N/A";
         
+        var grandTotalSysTotal = comparisonData.SelectMany(c => c.FeedHistoryEntries).Sum(e => e.SysTotalPriceIncludeDiscount ?? 0);
+        var grandTotalPosTotal = comparisonData.SelectMany(c => c.FeedHistoryEntries).Sum(e => e.PosTotalPriceIncludeDiscount ?? 0);
+        
         rows.Add(new TableRowData
         {
             ProductCode = "",
@@ -1594,6 +1642,10 @@
             InvoiceNo = "Grand Total",
             InvDate = "",
             PerInvoiceBags = grandTotalPerInvoice.ToString("0"),
+            FeedCost = "-",
+            PriceIncludeDiscount = "-",
+            SysTotalPriceIncludeDiscount = grandTotalSysTotal > 0 ? grandTotalSysTotal.ToString("N2") : "-",
+            PosTotalPriceIncludeDiscount = grandTotalPosTotal > 0 ? grandTotalPosTotal.ToString("N2") : "-",
             IsSubTotal = false,
             IsGrandTotal = true,
             IsUnmatchedFeed = false,
@@ -1611,6 +1663,10 @@
         public string InvoiceNo { get; set; } = "";
         public string InvDate { get; set; } = "";
         public string PerInvoiceBags { get; set; } = "";
+        public string FeedCost { get; set; } = ""; // From FeedFormula.Cost
+        public string PriceIncludeDiscount { get; set; } = ""; // UnitPrice - CostDiscountPrice
+        public string SysTotalPriceIncludeDiscount { get; set; } = ""; // System calculated total
+        public string PosTotalPriceIncludeDiscount { get; set; } = ""; // POS provided total
         public bool IsSubTotal { get; set; }
         public bool IsGrandTotal { get; set; }
         public bool IsUnmatchedFeed { get; set; } // True if this feed doesn't match any assigned formula
@@ -1633,6 +1689,10 @@
         public string InvoiceReferenceCode { get; set; } = "";
         public decimal Quantity { get; set; }
         public DateTime FeedDate { get; set; }
+        public decimal? FeedCost { get; set; } // From FeedFormula.Cost
+        public decimal? PriceIncludeDiscount { get; set; } // UnitPrice - CostDiscountPrice
+        public decimal? SysTotalPriceIncludeDiscount { get; set; } // System calculated total
+        public decimal? PosTotalPriceIncludeDiscount { get; set; } // POS provided total
     }
 
     // Deposit-related helper methods

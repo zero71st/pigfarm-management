@@ -89,7 +89,12 @@ public class PigPenDetailService : IPigPenDetailService
             ExternalReference = f.ExternalReference,
             Notes = f.Notes,
             CreatedAt = f.CreatedAt,
-            UpdatedAt = f.UpdatedAt
+            UpdatedAt = f.UpdatedAt,
+            FeedCost = f.Cost,
+            CostDiscountPrice = f.CostDiscountPrice,
+            PriceIncludeDiscount = f.PriceIncludeDiscount,
+            Sys_TotalPriceIncludeDiscount = f.Sys_TotalPriceIncludeDiscount,
+            Pos_TotalPriceIncludeDiscount = f.Pos_TotalPriceIncludeDiscount
         }).ToList();
     }
 

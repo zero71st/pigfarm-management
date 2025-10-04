@@ -81,6 +81,13 @@ public class PigFarmDbContext : DbContext
             entity.Property(e => e.ProductType).IsRequired().HasMaxLength(100);
             entity.Property(e => e.UnitPrice).HasColumnType("decimal(18,2)");
             entity.Property(e => e.TotalPriceIncludeDiscount).HasColumnType("decimal(18,2)");
+            
+            // New pricing fields configuration
+            entity.Property(e => e.Cost).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.CostDiscountPrice).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.PriceIncludeDiscount).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.Sys_TotalPriceIncludeDiscount).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.Pos_TotalPriceIncludeDiscount).HasColumnType("decimal(18,2)");
 
             entity.HasOne(e => e.PigPen)
                   .WithMany(e => e.Feeds)

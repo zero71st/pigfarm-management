@@ -87,8 +87,20 @@ As a farm manager I want POSPOS transaction data imported into the system and tr
 
 ---
 
+## Clarifications Added During Implementation
+
+**Coverage Percentage Display**: When BagPerPig is unknown (no matching feed formula), CoveragePct should display as empty/N/A rather than attempting calculation. This prevents misleading coverage metrics for unassigned or substitute feeds.
+
+**UI Field Headers**: 
+- "Inv Date" changed to "INV Date" for consistency
+- New columns added: Cost, Price+Discount, Sys Total, POS Total
+- Totals calculated and displayed at sub-total and grand-total levels
+
+---
+
 ## Execution Status
 
 - [x] Spec created and populated
-- [ ] Clarifications complete (none outstanding)
-- [ ] Ready for planning
+- [x] Clarifications complete
+- [x] Implementation complete
+- [x] Ready for verification

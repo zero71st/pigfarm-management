@@ -1,41 +1,45 @@
 using System;
-using System.Data.SQLite;
+using Microsoft.Data.Sqlite;
 
-namespace DirectDatabaseTest
+// Simple test to check if CostDiscountPrice column exists and can store data
+var connectionString = @"Data Source=D:\dz Projects\PigFarmManagement\src\server\PigFarmManagement.Server\pigfarm.db";
+
+using var connection = new SqliteConnection(connectionString);
+connection.Open();
+
+// Check if CostDiscountPrice column exists
+var checkCommand = new SqliteCommand("PRAGMA table_info(Feeds);", connection);
+using var reader = checkCommand.ExecuteReader();
+
+Console.WriteLine("Feeds table columns:");
+while (reader.Read())
 {
-    class Program
-    {
-        static void Main(string[] args)
-        {
-            string connectionString = "Data Source=../../src/server/PigFarmManagement.Server/pigfarm.db";
-            
-            using (var connection = new SQLiteConnection(connectionString))
-            {
-                connection.Open();
-                
-                // Test the exact query that EF Core would run
-                string selectQuery = @"
-                    SELECT 
-                        Id, TransactionCode, InvoiceReferenceCode, ProductCode, ProductName
-                    FROM Feeds 
-                    WHERE PigPenId = 'bb6b86b3-90b8-4db4-ad80-32f7da4e810a'
-                    ORDER BY FeedDate DESC;";
-                
-                using (var command = new SQLiteCommand(selectQuery, connection))
-                using (var reader = command.ExecuteReader())
-                {
-                    Console.WriteLine("Direct database query results:");
-                    Console.WriteLine("Id\t\t\t\t\tProductCode\tTransactionCode\tInvoiceReferenceCode");
-                    while (reader.Read())
-                    {
-                        var id = reader["Id"]?.ToString() ?? "NULL";
-                        var productCode = reader["ProductCode"]?.ToString() ?? "NULL";
-                        var transactionCode = reader["TransactionCode"]?.ToString() ?? "NULL";
-                        var invoiceRefCode = reader["InvoiceReferenceCode"]?.ToString() ?? "NULL";
-                        Console.WriteLine($"{id}\t{productCode}\t{transactionCode}\t{invoiceRefCode}");
-                    }
-                }
-            }
-        }
-    }
+    var name = reader.GetString(1);
+    var type = reader.GetString(2);
+    Console.WriteLine($"  {name}: {type}");
 }
+reader.Close();
+
+// Check existing data for CostDiscountPrice - look for recently imported data
+var dataCommand = new SqliteCommand(@"
+    SELECT Id, ProductName, CostDiscountPrice, UnitPrice, TransactionCode, CreatedAt 
+    FROM Feeds 
+    WHERE CreatedAt >= datetime('now', '-1 hour')
+    ORDER BY CreatedAt DESC 
+    LIMIT 10;", connection);
+using var dataReader = dataCommand.ExecuteReader();
+
+Console.WriteLine("\nRecently imported feeds with CostDiscountPrice:");
+while (dataReader.Read())
+{
+    var id = dataReader.GetString(0);
+    var name = dataReader.GetString(1);
+    var costDiscount = dataReader.IsDBNull(2) ? 0 : dataReader.GetDecimal(2);
+    var unitPrice = dataReader.IsDBNull(3) ? 0 : dataReader.GetDecimal(3);
+    var transactionCode = dataReader.IsDBNull(4) ? "NULL" : dataReader.GetString(4);
+    var createdAt = dataReader.GetString(5);
+    Console.WriteLine($"  {transactionCode}: {name} - CostDiscountPrice: {costDiscount:C}, UnitPrice: {unitPrice:C}, Created: {createdAt}");
+}
+dataReader.Close();
+
+connection.Close();

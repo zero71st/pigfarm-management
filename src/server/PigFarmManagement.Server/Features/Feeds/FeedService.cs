@@ -51,7 +51,15 @@ public class FeedService : IFeedService
             dto.QuantityKg,
             dto.PricePerKg,
             totalCost,
-            dto.Date);
+            dto.Date)
+        {
+            // For manually added feeds, new pricing fields are null since they don't come from POSPOS
+            FeedCost = null,
+            CostDiscountPrice = null,
+            PriceIncludeDiscount = null,
+            Sys_TotalPriceIncludeDiscount = null,
+            Pos_TotalPriceIncludeDiscount = null
+        };
 
         return await _feedRepository.CreateAsync(feedItem);
     }
