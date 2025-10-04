@@ -27,9 +27,19 @@ public class FeedEntity
     
     [Column(TypeName = "decimal(18,2)")]
     public decimal UnitPrice { get; set; }
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal? Cost { get; set; }
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal? CostDiscountPrice { get; set; }
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal? PriceIncludeDiscount { get; set; }
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal? Sys_TotalPriceIncludeDiscount { get; set; }
     
     [Column(TypeName = "decimal(18,2)")]
-    public decimal TotalPrice { get; set; }
+    public decimal TotalPriceIncludeDiscount { get; set; }
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal? Pos_TotalPriceIncludeDiscount { get; set; }
     
     public DateTime FeedDate { get; set; }
     
@@ -57,10 +67,15 @@ public class FeedEntity
             ProductType = ProductType,
             ProductCode = ProductCode,
             ProductName = ProductName,
-            InvoiceNumber = TransactionCode,
+            TransactionCode = TransactionCode,
             Quantity = Quantity,
             UnitPrice = UnitPrice,
-            TotalPrice = TotalPrice,
+            Cost = Cost,
+            CostDiscountPrice = CostDiscountPrice,
+            PriceIncludeDiscount = PriceIncludeDiscount,
+            Sys_TotalPriceIncludeDiscount = Sys_TotalPriceIncludeDiscount,
+            TotalPriceIncludeDiscount = TotalPriceIncludeDiscount,
+            Pos_TotalPriceIncludeDiscount = Pos_TotalPriceIncludeDiscount,
             FeedDate = FeedDate,
             ExternalReference = ExternalReference,
             ExternalProductCode = ExternalProductCode,
@@ -83,10 +98,15 @@ public class FeedEntity
             ProductType = feed.ProductType,
             ProductCode = feed.ProductCode,
             ProductName = feed.ProductName,
-            TransactionCode = feed.InvoiceNumber,
+            TransactionCode = feed.TransactionCode,
             Quantity = feed.Quantity,
             UnitPrice = feed.UnitPrice,
-            TotalPrice = feed.TotalPrice,
+            Cost = feed.Cost,
+            CostDiscountPrice = feed.CostDiscountPrice,
+            PriceIncludeDiscount = feed.PriceIncludeDiscount,
+            Sys_TotalPriceIncludeDiscount = feed.Sys_TotalPriceIncludeDiscount,
+            TotalPriceIncludeDiscount = feed.TotalPriceIncludeDiscount,
+            Pos_TotalPriceIncludeDiscount = feed.Pos_TotalPriceIncludeDiscount,
             FeedDate = feed.FeedDate,
             ExternalReference = feed.ExternalReference,
             ExternalProductCode = feed.ExternalProductCode,

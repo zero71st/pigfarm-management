@@ -16,7 +16,17 @@ public class Feed
     public string? InvoiceReferenceCode { get; set; }
     public int Quantity { get; set; }
     public decimal UnitPrice { get; set; }
-    public decimal TotalPrice { get; set; }
+    // Cost from FeedFormula (per bag) if available
+    public decimal? Cost { get; set; }
+    // Discount-like cost coming from the POSPOS order item (per bag)
+    public decimal? CostDiscountPrice { get; set; }
+    // Price per bag after including discount (UnitPrice - CostDiscountPrice)
+    public decimal? PriceIncludeDiscount { get; set; }
+    // System-calculated total price based on PriceIncludeDiscount * Quantity
+    public decimal? Sys_TotalPriceIncludeDiscount { get; set; }
+    public decimal TotalPriceIncludeDiscount { get; set; }
+    // POS-provided total price preserved for comparison
+    public decimal? Pos_TotalPriceIncludeDiscount { get; set; }
     public DateTime FeedDate { get; set; }
     public string? Notes { get; set; }
     public string? ExternalReference { get; set; }
@@ -38,7 +48,7 @@ public class Feed
     // Helper methods for external integration
     public void RecalculateTotalPrice()
     {
-        TotalPrice = Quantity * UnitPrice;
+        TotalPriceIncludeDiscount = Quantity * UnitPrice;
     }
     
     public bool IsValidForImport()

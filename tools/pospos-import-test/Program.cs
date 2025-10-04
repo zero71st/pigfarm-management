@@ -117,7 +117,7 @@ internal class Program
         var all = (await efFeedRepo.GetAllAsync()).OrderByDescending(f => f.CreatedAt).Take(20);
         foreach (var f in all)
         {
-            Console.WriteLine($"Id={f.Id}, Transaction={f.TransactionCode}, InvoiceRef={f.InvoiceReferenceCode}, ProductCode={f.ProductCode}, ExternalCode={f.ExternalProductCode}, Qty={f.Quantity}, UnitPrice={f.UnitPrice}, Total={f.TotalPrice}, Unmapped={f.UnmappedProduct}");
+            Console.WriteLine($"Id={f.Id}, Transaction={f.TransactionCode}, InvoiceRef={f.InvoiceReferenceCode}, ProductCode={f.ProductCode}, ExternalCode={f.ExternalProductCode}, Qty={f.Quantity}, UnitPrice={f.UnitPrice}, Total={f.TotalPriceIncludeDiscount}, CostDiscountPrice={f.CostDiscountPrice}, Unmapped={f.UnmappedProduct}");
         }
 
         Console.WriteLine("Done.");

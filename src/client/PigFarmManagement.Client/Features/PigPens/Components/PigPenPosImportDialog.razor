@@ -25,7 +25,8 @@
                     </MudText>
                     
                     <div class="d-flex gap-4 align-center">
-                        <MudDatePicker @bind-Date="_fromDate"
+                        <MudDatePicker Date="_fromDate"
+                                     DateChanged="OnFromDateChanged"
                                      Label="From Date"
                                      Variant="Variant.Outlined"
                                      DateFormat="yyyy-MM-dd"
@@ -376,6 +377,17 @@
         {
             _isImporting = false;
         }
+    }
+
+    private void OnFromDateChanged(DateTime? newFromDate)
+    {
+        _fromDate = newFromDate;
+        // When FromDate changes, set ToDate to the same date
+        if (newFromDate.HasValue)
+        {
+            _toDate = newFromDate.Value;
+        }
+        StateHasChanged();
     }
 
     private void Cancel() => MudDialog.Cancel();

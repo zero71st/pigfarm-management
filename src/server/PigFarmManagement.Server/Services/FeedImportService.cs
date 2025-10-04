@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using PigFarmManagement.Shared.Models;
 using PigFarmManagement.Shared.Contracts;
 using PigFarmManagement.Server.Infrastructure.Data.Repositories;
@@ -13,6 +14,8 @@ public class FeedImportService : IFeedImportService
     private readonly IFeedRepository _feedRepository;
     private readonly Infrastructure.Data.Repositories.IFeedRepository _efFeedRepository;
     private readonly IPosposTransactionClient _posposTrasactionClient;
+    private readonly PigFarmManagement.Server.Features.FeedFormulas.IFeedFormulaService _feedFormulaService;
+    private readonly ILogger<FeedImportService> _logger;
 
     // Keep legacy in-memory data for mock POSPOS transactions
     private readonly List<PigPen> _pigPens = new();
@@ -23,19 +26,25 @@ public class FeedImportService : IFeedImportService
         ICustomerRepository customerRepository,
         IFeedRepository feedRepository,
         Infrastructure.Data.Repositories.IFeedRepository efFeedRepository,
-        IPosposTransactionClient posposTransactionClient)
+        IPosposTransactionClient posposTransactionClient,
+        PigFarmManagement.Server.Features.FeedFormulas.IFeedFormulaService feedFormulaService,
+        ILogger<FeedImportService> logger)
     {
         _pigPenRepository = pigPenRepository;
         _customerRepository = customerRepository;
         _feedRepository = feedRepository;
         _efFeedRepository = efFeedRepository;
         _posposTrasactionClient = posposTransactionClient;
+        _feedFormulaService = feedFormulaService;
+        _logger = logger;
 
         InitializeData(); // Still needed for mock data
     }
 
     public async Task<FeedImportResult> ImportPosPosFeedDataAsync(List<PosPosFeedTransaction> transactions)
     {
+        _logger.LogInformation("Starting POSPOS feed import with {TransactionCount} transactions", transactions.Count);
+        
         var result = new FeedImportResult
         {
             TotalTransactions = transactions.Count
@@ -47,12 +56,28 @@ public class FeedImportService : IFeedImportService
             {
                 await ProcessTransactionAsync(transaction, result);
                 result.SuccessfulImports++;
+                
+                _logger.LogDebug("Successfully processed transaction {TransactionCode} with {ItemCount} items", 
+                    transaction.Code, transaction.OrderList?.Count ?? 0);
             }
             catch (Exception ex)
             {
                 result.FailedImports++;
                 result.Errors.Add($"Transaction {transaction.Code}: {ex.Message}");
+                _logger.LogError(ex, "Failed to process transaction {TransactionCode}", transaction.Code);
             }
+        }
+
+        // Log structured import summary
+        var totalExpense = result.TotalImportValue;
+        _logger.LogInformation("POSPOS feed import completed: {SuccessfulImports} successful, {FailedImports} failed, " +
+                              "TotalValue: {TotalExpense:C}, ErrorRate: {ErrorRate:F1}%",
+                              result.SuccessfulImports, result.FailedImports, totalExpense, result.ErrorRate);
+
+        if (result.Errors.Any())
+        {
+            _logger.LogWarning("Import completed with {ErrorCount} errors: {Errors}", 
+                              result.Errors.Count, string.Join("; ", result.Errors));
         }
 
         return result;
@@ -186,7 +211,7 @@ public class FeedImportService : IFeedImportService
                 TransactionCode = $"DEMO-{DateTime.Now:yyyyMMdd}-001",
                 Quantity = 50,
                 UnitPrice = 580,
-                TotalPrice = 29000,
+                TotalPriceIncludeDiscount = 29000,
                 FeedDate = DateTime.UtcNow.AddDays(-1),
                 ExternalReference = "DEMO-FEED-001",
                 Notes = "Demo feed for testing",
@@ -242,6 +267,8 @@ public class FeedImportService : IFeedImportService
 
     private async Task ProcessTransactionForPigPenAsync(PosPosFeedTransaction transaction, PigPen pigPen, FeedImportResult result)
     {
+        _logger.LogDebug("Processing transaction {TransactionCode} for pig pen {PigPenId}", transaction.Code, pigPen.Id);
+        
         // Idempotency: skip processing if a feed with the same InvoiceNumber already exists globally
         if (!string.IsNullOrWhiteSpace(transaction.Code))
         {
@@ -250,9 +277,20 @@ public class FeedImportService : IFeedImportService
             {
                 result.FailedImports++;
                 result.Errors.Add($"Transaction {transaction.Code} skipped: invoice already imported");
+                _logger.LogWarning("Skipping duplicate transaction {TransactionCode}", transaction.Code);
                 return;
             }
         }
+
+        // Preload feed formulas to avoid repeated DB calls
+        var formulas = (await _feedFormulaService.GetAllFeedFormulasAsync()).ToList();
+        var formulaByCode = formulas
+            .Where(f => !string.IsNullOrWhiteSpace(f.Code))
+            .ToDictionary(f => f.Code!, StringComparer.OrdinalIgnoreCase);
+
+        var processedItems = 0;
+        var formulaMatchCount = 0;
+        var totalValue = 0m;
 
         foreach (var orderItem in transaction.OrderList)
         {
@@ -268,6 +306,23 @@ public class FeedImportService : IFeedImportService
 
             // NOTE: repository for product catalog is not available; rely on ProductCode/Name being stored on Feed
 
+            // Try to find a feed formula by product code
+            decimal? formulaCost = null;
+            if (!string.IsNullOrWhiteSpace(normalizedCode) && formulaByCode.TryGetValue(normalizedCode, out var ff))
+            {
+                formulaCost = ff.Cost;
+                formulaMatchCount++;
+                _logger.LogDebug("Found formula cost {Cost:C} for product {ProductCode}", formulaCost, normalizedCode);
+            }
+
+            // Use CostDiscountPrice directly from POSPOS (no internal calculation)
+            var costDiscountPrice = orderItem.CostDiscountPrice;
+            
+            _logger.LogDebug("Processing order item {ProductCode}: Price={Price:C}, Stock={Stock}, CostDiscountPrice={CostDiscountPrice:C}",
+                normalizedCode, orderItem.Price, orderItem.Stock, costDiscountPrice);
+
+            var priceIncludeDiscount = unitPricePerBag - costDiscountPrice;
+
             var feed = new Feed
             {
                 Id = Guid.NewGuid(),
@@ -279,7 +334,12 @@ public class FeedImportService : IFeedImportService
                 InvoiceReferenceCode = transaction.InvoiceReference?.Code,
                 Quantity = bags,
                 UnitPrice = unitPricePerBag,
-                TotalPrice = orderItem.TotalPriceIncludeDiscount,
+                Cost = formulaCost,
+                CostDiscountPrice = costDiscountPrice,
+                PriceIncludeDiscount = priceIncludeDiscount,
+                Sys_TotalPriceIncludeDiscount = priceIncludeDiscount * bags,
+                TotalPriceIncludeDiscount = orderItem.TotalPriceIncludeDiscount,
+                Pos_TotalPriceIncludeDiscount = orderItem.TotalPriceIncludeDiscount,
                 FeedDate = transaction.Timestamp,
                 ExternalReference = $"POSPOS-{transaction.Code}-{orderItem.Code}",
                 Notes = $"Imported from POSPOS transaction {transaction.Code}",
@@ -295,7 +355,12 @@ public class FeedImportService : IFeedImportService
             await _efFeedRepository.CreateAsync(feed);
 
             result.TotalFeedItems++;
+            processedItems++;
+            totalValue += orderItem.TotalPriceIncludeDiscount;
         }
+        
+        _logger.LogInformation("Transaction {TransactionCode} processed: {ProcessedItems} items, {FormulaMatches} formula matches, total value {TotalValue:C}",
+            transaction.Code, processedItems, formulaMatchCount, totalValue);
     }
 
     private Customer FindOrCreateCustomer(PosPosBuyerDetail buyerDetail)

@@ -80,7 +80,14 @@ public class PigFarmDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.ProductType).IsRequired().HasMaxLength(100);
             entity.Property(e => e.UnitPrice).HasColumnType("decimal(18,2)");
-            entity.Property(e => e.TotalPrice).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.TotalPriceIncludeDiscount).HasColumnType("decimal(18,2)");
+            
+            // New pricing fields configuration
+            entity.Property(e => e.Cost).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.CostDiscountPrice).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.PriceIncludeDiscount).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.Sys_TotalPriceIncludeDiscount).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.Pos_TotalPriceIncludeDiscount).HasColumnType("decimal(18,2)");
 
             entity.HasOne(e => e.PigPen)
                   .WithMany(e => e.Feeds)
@@ -315,7 +322,7 @@ public class PigFarmDbContext : DbContext
                 TransactionCode = $"ST68{i:D6}",
                 Quantity = quantity,
                 UnitPrice = unitPrice,
-                TotalPrice = quantity * unitPrice,
+                TotalPriceIncludeDiscount = quantity * unitPrice,
                 FeedDate = now.AddDays(-random.Next(1, 90)),
                 ExternalReference = $"POSPOS-ST68{i:D6}-{product.Code}",
                 Notes = random.Next(0, 3) == 0 ? $"อาหารสัตว์คุณภาพสูง, {product.Type}" : null,

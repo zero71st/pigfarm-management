@@ -52,20 +52,18 @@ public class PigPenDetailService : IPigPenDetailService
         var deposits = await _depositRepository.GetByPigPenIdAsync(pigPenId);
         var harvests = await _harvestRepository.GetByPigPenIdAsync(pigPenId);
 
-        var totalFeedCost = feeds.Sum(f => f.TotalPrice);
+        var totalFeedCost = feeds.Sum(f => f.TotalPriceIncludeDiscount);
         var totalDeposit = deposits.Sum(d => d.Amount);
         var totalRevenue = harvests.Sum(h => h.Revenue);
-        var investment = pigPen.Investment;
+        var investment = totalFeedCost - totalDeposit; // Investment = FeedCost - Total Deposit
         var profitLoss = totalRevenue - totalFeedCost - investment;
-        var netBalance = totalDeposit - totalFeedCost;
 
         return new PigPenSummary(
             pigPenId,
             totalFeedCost,
             totalDeposit,
             investment,
-            profitLoss,
-            netBalance
+            profitLoss
         );
     }
 
@@ -82,14 +80,19 @@ public class PigPenDetailService : IPigPenDetailService
             f.InvoiceReferenceCode, // Pass the invoice reference code
             f.Quantity * 25m, // Convert bags to kg (assuming 25kg per bag)
             f.UnitPrice / 25m, // Convert price per bag to price per kg
-            f.TotalPrice, // Use TotalPrice (total cost of the bags)
+            f.TotalPriceIncludeDiscount, // Use TotalPriceIncludeDiscount (total cost from POS)
             f.FeedDate
         )
         {
             ExternalReference = f.ExternalReference,
             Notes = f.Notes,
             CreatedAt = f.CreatedAt,
-            UpdatedAt = f.UpdatedAt
+            UpdatedAt = f.UpdatedAt,
+            FeedCost = f.Cost,
+            CostDiscountPrice = f.CostDiscountPrice,
+            PriceIncludeDiscount = f.PriceIncludeDiscount,
+            Sys_TotalPriceIncludeDiscount = f.Sys_TotalPriceIncludeDiscount,
+            Pos_TotalPriceIncludeDiscount = f.Pos_TotalPriceIncludeDiscount
         }).ToList();
     }
 

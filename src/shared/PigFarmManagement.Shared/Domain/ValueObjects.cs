@@ -31,6 +31,13 @@ public record FeedItem(
     public DateTime CreatedAt { get; init; } = DateTime.Now;
     public DateTime UpdatedAt { get; init; } = DateTime.Now;
     
+    // New pricing fields from POSPOS import enhancement
+    public decimal? FeedCost { get; init; } // From FeedFormula.Cost
+    public decimal? CostDiscountPrice { get; init; } // From PosPosFeedItem.CostDiscountPrice directly
+    public decimal? PriceIncludeDiscount { get; init; } // UnitPrice - CostDiscountPrice
+    public decimal? Sys_TotalPriceIncludeDiscount { get; init; } // PriceIncludeDiscount * Quantity
+    public decimal? Pos_TotalPriceIncludeDiscount { get; init; } // POS-provided total for comparison
+    
     // Backward compatibility property
     [Obsolete("Use TransactionCode instead")]
     public string InvoiceNumber => TransactionCode;
