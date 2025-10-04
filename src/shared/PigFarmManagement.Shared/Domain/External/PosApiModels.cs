@@ -73,10 +73,6 @@ public class PosPosFeedItem
     [JsonConverter(typeof(TolerantDecimalConverter))]
     public decimal Price { get; set; }
     
-    [JsonPropertyName("special_price")]
-    [JsonConverter(typeof(TolerantDecimalConverter))]
-    public decimal SpecialPrice { get; set; }
-    
     [JsonPropertyName("code")]
     public string Code { get; set; } = "";
     
@@ -84,12 +80,14 @@ public class PosPosFeedItem
     [JsonConverter(typeof(TolerantDecimalConverter))]
     public decimal TotalPriceIncludeDiscount { get; set; }
     
+    [JsonPropertyName("cost_discount_price")]
+    [JsonConverter(typeof(TolerantDecimalConverter))]
+    public decimal CostDiscountPrice { get; set; }
+    
     [JsonPropertyName("note_in_order")]
     public List<string> NoteInOrder { get; set; } = new();
     
-    // Business logic for feed item
-    public bool HasDiscount => SpecialPrice < Price;
-    public decimal DiscountAmount => Price - SpecialPrice;
+    // Business logic for feed item  
     public string NotesText => string.Join(", ", NoteInOrder);
 }
 

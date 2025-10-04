@@ -15,7 +15,7 @@
         "stock": "5",
         "price": "580",
         "total_price_include_discount": "2900",
-        "special_price": "0"
+        "cost_discount_price": "30"
       },
       {
         "code": "UNKNOWN-CODE",
@@ -23,7 +23,7 @@
         "stock": 3.2,
         "price": 500.5,
         "total_price_include_discount": 1601.5,
-        "special_price": 0
+        "cost_discount_price": 25.0
       }
     ],
     "invoice_reference": { "code": "INV-REF-999" }

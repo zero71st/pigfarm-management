@@ -20,7 +20,6 @@ public class PosposParsingTests
         Assert.NotNull(item);
         Assert.Equal(5m, item!.Stock);
         Assert.Equal(12.5m, item.Price);
-        Assert.Equal(10m, item.SpecialPrice);
         Assert.Equal(50m, item.TotalPriceIncludeDiscount);
     }
 
@@ -36,7 +35,6 @@ public class PosposParsingTests
         Assert.NotNull(item);
         Assert.Equal(0m, item!.Stock);
         Assert.Equal(0m, item.Price);
-        Assert.Equal(0m, item.SpecialPrice);
         Assert.Equal(0m, item.TotalPriceIncludeDiscount);
     }
 }

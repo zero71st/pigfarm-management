@@ -29,7 +29,6 @@ for (int i = 0; i < samples.Length; i++)
         }
         Console.WriteLine($"  Stock: {item.Stock}");
         Console.WriteLine($"  Price: {item.Price}");
-        Console.WriteLine($"  SpecialPrice: {item.SpecialPrice}");
         Console.WriteLine($"  TotalPriceIncludeDiscount: {item.TotalPriceIncludeDiscount}");
     }
     catch (Exception ex)
