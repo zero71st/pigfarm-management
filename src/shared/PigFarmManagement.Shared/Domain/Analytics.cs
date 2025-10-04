@@ -6,10 +6,9 @@ namespace PigFarmManagement.Shared.Models;
 /// </summary>
 
 public record PigPenSummary(Guid PigPenId, decimal TotalFeedCost, decimal TotalDeposit, 
-    decimal Investment, decimal ProfitLoss, decimal NetBalance)
+    decimal Investment, decimal ProfitLoss)
 {
     // Analytics calculations
-    public decimal ROI => Investment != 0 ? (ProfitLoss / Investment) * 100 : 0;
     public decimal CostEfficiencyRatio => TotalDeposit != 0 ? TotalFeedCost / TotalDeposit : 0;
     public bool IsProfitable => ProfitLoss > 0;
     public string PerformanceCategory => ProfitLoss switch

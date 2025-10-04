@@ -54,9 +54,8 @@ public class DashboardService : IDashboardService
         decimal revenue = harvests.Sum(h => h.Revenue);
         decimal investment = totalFeed - totalDeposit;
         decimal profitLoss = revenue - totalFeed;
-        decimal net = revenue - totalFeed + totalDeposit;
 
-        return new PigPenSummary(pigPenId, totalFeed, totalDeposit, investment, profitLoss, net);
+        return new PigPenSummary(pigPenId, totalFeed, totalDeposit, investment, profitLoss);
     }
 
     public async Task<DashboardOverview> GetDashboardOverviewAsync()

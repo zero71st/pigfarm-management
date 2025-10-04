@@ -205,22 +205,6 @@
                                             </MudText>
                                         </td>
                                     </tr>
-                                    <tr>
-                                        <td><strong>Net Balance:</strong></td>
-                                        <td class="text-right">
-                                            <MudText Color="@(summary.NetBalance >= 0 ? Color.Success : Color.Warning)">
-                                                ฿@summary.NetBalance.ToString("N0")
-                                            </MudText>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>ROI:</strong></td>
-                                        <td class="text-right">
-                                            <MudText Color="@(summary.ROI >= 0 ? Color.Success : Color.Error)">
-                                                @summary.ROI.ToString("N1")%
-                                            </MudText>
-                                        </td>
-                                    </tr>
                                 </tbody>
                             </MudSimpleTable>
                         }
@@ -479,19 +463,19 @@
                 {
                     <MudTable Items="@GetFilteredTableRows()" Hover="true" Striped="true">
                         <HeaderContent>
-                            <MudTh>Product Code</MudTh>
-                            <MudTh>Product Name</MudTh>
-                            <MudTh Style="text-align: center">Formula (Bags)</MudTh>
-                            <MudTh Style="text-align: center">Inv No</MudTh>
-                            <MudTh Style="text-align: center">INV Date</MudTh>
-                            <MudTh Style="text-align: center">Actual (Bags)</MudTh>
+                            <MudTh>รหัสสินค้า</MudTh>
+                            <MudTh>ชื่อสินค้า</MudTh>
+                            <MudTh Style="text-align: center">สูตร (กระสอบ)</MudTh>
+                            <MudTh Style="text-align: center">ใบแจ้งหนี้</MudTh>
+                            <MudTh Style="text-align: center">วันที่ใบแจ้งหนี้</MudTh>
+                            <MudTh Style="text-align: center">จำนวน (กระสอบ)</MudTh>
                             @if (_showFinancial)
                             {
-                                <MudTh Style="text-align: center">Cost</MudTh>
-                                <MudTh Style="text-align: center">Price+Discount</MudTh>
-                                <MudTh Style="text-align: center">Sys Total</MudTh>
-                                <MudTh Style="text-align: center">POS Total</MudTh>
-                                <MudTh Style="text-align: center">Profit</MudTh>
+                                <MudTh Style="text-align: center">ต้นทุน</MudTh>
+                                <MudTh Style="text-align: center">ราคา+ส่วนลด</MudTh>
+                                <MudTh Style="text-align: center">รวม (ระบบ)</MudTh>
+                                <MudTh Style="text-align: center">รวม (POS)</MudTh>
+                                <MudTh Style="text-align: center">กำไร</MudTh>
                             }
                             <MudTh Style="text-align: center">Actions</MudTh>
                         </HeaderContent>

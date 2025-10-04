@@ -52,20 +52,18 @@ public class PigPenDetailService : IPigPenDetailService
         var deposits = await _depositRepository.GetByPigPenIdAsync(pigPenId);
         var harvests = await _harvestRepository.GetByPigPenIdAsync(pigPenId);
 
-    var totalFeedCost = feeds.Sum(f => f.TotalPriceIncludeDiscount);
+        var totalFeedCost = feeds.Sum(f => f.TotalPriceIncludeDiscount);
         var totalDeposit = deposits.Sum(d => d.Amount);
         var totalRevenue = harvests.Sum(h => h.Revenue);
-        var investment = pigPen.Investment;
+        var investment = totalFeedCost - totalDeposit; // Investment = FeedCost - Total Deposit
         var profitLoss = totalRevenue - totalFeedCost - investment;
-        var netBalance = totalDeposit - totalFeedCost;
 
         return new PigPenSummary(
             pigPenId,
             totalFeedCost,
             totalDeposit,
             investment,
-            profitLoss,
-            netBalance
+            profitLoss
         );
     }
 
