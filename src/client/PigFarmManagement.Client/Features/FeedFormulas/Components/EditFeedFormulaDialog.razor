@@ -26,24 +26,43 @@
                                  RequiredError="Product name is required"
                                  For="@(() => productName)" />
 
+                    <MudTextField @bind-Value="categoryName"
+                                 Label="Category (from POSPOS)"
+                                 ReadOnly="true"
+                                 Disabled="true"
+                                 For="@(() => categoryName)" />
+
                     <MudTextField @bind-Value="brand"
                                  Label="Brand"
-                                 Required="true"
-                                 RequiredError="Brand is required"
+                                 Required="false"
+                                 HelperText="Update brand manually as needed"
                                  For="@(() => brand)" />
 
-                    <MudNumericField @bind-Value="bagPerPig"
-                                   Label="Bags per Pig"
+                    <MudNumericField @bind-Value="consumeRate"
+                                   Label="Consume Rate"
                                    Required="true"
-                                   RequiredError="Bags per pig is required"
+                                   RequiredError="Consume rate is required"
                                    Min="0.1m"
                                    Max="10.0m"
                                    Step="0.1m"
-                                   Format="F1"
-                                   For="@(() => bagPerPig)" />
+                                   Format="F2"
+                                   For="@(() => consumeRate)" />
+
+                    <MudNumericField @bind-Value="cost"
+                                   Label="Cost"
+                                   Required="true"
+                                   RequiredError="Cost is required"
+                                   Min="0m"
+                                   Step="0.01m"
+                                   Format="F2"
+                                   For="@(() => cost)" />
+
+                    <MudTextField @bind-Value="unitName"
+                                 Label="Unit"
+                                 For="@(() => unitName)" />
 
                     <MudText Typo="Typo.caption" Class="mt-2">
-                        Consumption rate: @bagPerPig.ToString("F1") bags/pig
+                        Consumption rate: @consumeRate.ToString("F2") per pig
                     </MudText>
                 </MudForm>
             }
@@ -68,7 +87,7 @@
             }
             else
             {
-                <MudText>Update Feed Formula</MudText>
+                <MudText>Update</MudText>
             }
         </MudButton>
     </DialogActions>
@@ -87,8 +106,11 @@
     private FeedFormulaResponse? feedFormula;
     private string productCode = "";
     private string productName = "";
+    private string categoryName = "";
     private string brand = "";
-    private decimal bagPerPig = 1.0m;
+    private decimal consumeRate = 1.0m;
+    private decimal cost = 0m;
+    private string unitName = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -104,10 +126,13 @@
             
             if (feedFormula != null)
             {
-                productCode = feedFormula.ProductCode;
-                productName = feedFormula.ProductName;
-                brand = feedFormula.Brand;
-                bagPerPig = feedFormula.BagPerPig;
+                productCode = feedFormula.Code ?? "";
+                productName = feedFormula.Name ?? "";
+                categoryName = feedFormula.CategoryName ?? "";
+                brand = feedFormula.Brand ?? "";
+                consumeRate = feedFormula.ConsumeRate;
+                cost = feedFormula.Cost;
+                unitName = feedFormula.UnitName ?? "";
             }
         }
         catch (Exception ex)
@@ -132,7 +157,7 @@
             if (!isValid || feedFormula == null)
                 return;
 
-            var dto = new FeedFormulaUpdateDto(productCode, productName, brand, bagPerPig);
+            var dto = new FeedFormulaUpdateDto(productCode, productName, categoryName, brand, consumeRate, cost, unitName);
             await FeedFormulaService.UpdateFeedFormulaAsync(FeedFormulaId, dto);
             
             MudDialog.Close(DialogResult.Ok(true));

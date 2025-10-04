@@ -15,6 +15,7 @@ public interface IPigPenService
     Task<List<FeedItem>> GetFeedItemsAsync(Guid pigPenId);
     Task<List<Deposit>> GetDepositsAsync(Guid pigPenId);
     Task<List<HarvestResult>> GetHarvestResultsAsync(Guid pigPenId);
+    Task<List<PigPenFormulaAssignment>> GetFormulaAssignmentsAsync(Guid pigPenId);
     Task<FeedItem> AddFeedItemAsync(Guid pigPenId, FeedCreateDto feedItem);
     Task<bool> DeleteFeedItemAsync(Guid pigPenId, Guid feedItemId);
     Task<Deposit> AddDepositAsync(Guid pigPenId, DepositCreateDto deposit);
@@ -155,6 +156,12 @@ public class PigPenService : IPigPenService
         response.EnsureSuccessStatusCode();
         var closedPigPen = await response.Content.ReadFromJsonAsync<PigPen>();
         return closedPigPen!;
+    }
+
+    public async Task<List<PigPenFormulaAssignment>> GetFormulaAssignmentsAsync(Guid pigPenId)
+    {
+        var assignments = await _httpClient.GetFromJsonAsync<List<PigPenFormulaAssignment>>($"api/pigpens/{pigPenId}/formula-assignments");
+        return assignments ?? new List<PigPenFormulaAssignment>();
     }
 }
 

@@ -32,7 +32,7 @@ public interface IFeedRepository
     Task<Feed> UpdateAsync(Feed feed);
     Task DeleteAsync(Guid id);
     Task<IEnumerable<Feed>> CreateManyAsync(IEnumerable<Feed> feeds);
-    Task<bool> ExistsByInvoiceNumberAsync(string invoiceNumber);
+    Task<bool> ExistsByInvoiceNumberAsync(string invoiceNumber); // Note: actually checks TransactionCode field
 }
 
 public interface IDepositRepository

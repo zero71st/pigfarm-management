@@ -100,3 +100,11 @@ Thumbs.db
 
 # Ignore Visual Studio launchSettings which may contain secrets (e.g. API keys)
 **/Properties/launchSettings.json
+
+# SQLite database files
+*.db
+*.db-shm
+*.db-wal
+pigfarm.db
+pigfarm.db-shm
+pigfarm.db-wal

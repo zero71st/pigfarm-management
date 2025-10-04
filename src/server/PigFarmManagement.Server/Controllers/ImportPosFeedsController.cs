@@ -32,11 +32,11 @@ namespace PigFarmManagement.Server.Controllers
         public async Task<IActionResult> GetRawPosposTransactions([FromQuery] string? start = null, [FromQuery] string? end = null, [FromQuery] int page = 1, [FromQuery] int limit = 200)
         {
             var opts = _opts?.Value;
-            if (opts == null || (string.IsNullOrWhiteSpace(opts.TransactionsApiBase) && string.IsNullOrWhiteSpace(opts.ApiBase)))
-                return BadRequest(new { message = "POSPOS transactions endpoint not configured (TransactionsApiBase or ApiBase)" });
+            if (opts == null || (string.IsNullOrWhiteSpace(opts.TransactionsApiBase) && string.IsNullOrWhiteSpace(opts.ProductApiBase)))
+                return BadRequest(new { message = "POSPOS transactions endpoint not configured (TransactionsApiBase or ProductApiBase)" });
 
-            // Prefer TransactionsApiBase when provided, otherwise fall back to ApiBase
-            var baseUri = !string.IsNullOrWhiteSpace(opts.TransactionsApiBase) ? opts.TransactionsApiBase : opts.ApiBase;
+            // Prefer TransactionsApiBase when provided, otherwise fall back to ProductApiBase
+            var baseUri = !string.IsNullOrWhiteSpace(opts.TransactionsApiBase) ? opts.TransactionsApiBase : opts.ProductApiBase;
             // Build URI with query params
             var uri = baseUri.TrimEnd('/');
             // If ApiBase already contains query string, append appropriately
@@ -100,8 +100,8 @@ namespace PigFarmManagement.Server.Controllers
         public async Task<IActionResult> GetAllPosPosTransactionsByDateRange([FromQuery] DateTime fromDate, [FromQuery] DateTime toDate)
         {
             var opts = _opts?.Value;
-            if (opts == null || (string.IsNullOrWhiteSpace(opts.TransactionsApiBase) && string.IsNullOrWhiteSpace(opts.ApiBase)))
-                return BadRequest(new { message = "POSPOS transactions endpoint not configured (TransactionsApiBase or ApiBase)" });
+            if (opts == null || (string.IsNullOrWhiteSpace(opts.TransactionsApiBase) && string.IsNullOrWhiteSpace(opts.ProductApiBase)))
+                return BadRequest(new { message = "POSPOS transactions endpoint not configured (TransactionsApiBase or ProductApiBase)" });
 
             try
             {
@@ -146,7 +146,7 @@ namespace PigFarmManagement.Server.Controllers
 
             while (true)
             {
-                var baseUri = !string.IsNullOrWhiteSpace(opts.TransactionsApiBase) ? opts.TransactionsApiBase : opts.ApiBase;
+                var baseUri = !string.IsNullOrWhiteSpace(opts.TransactionsApiBase) ? opts.TransactionsApiBase : opts.ProductApiBase;
                 var uri = baseUri.TrimEnd('/');
                 var hasQuery = uri.Contains('?');
                 var q = new List<string>();

@@ -120,11 +120,6 @@ namespace PigFarmManagement.Server.Infrastructure.Data.Migrations
                     b.Property<DateTime>("FeedDate")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("InvoiceNumber")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("InvoiceReferenceCode")
                         .HasColumnType("TEXT");
 
@@ -155,6 +150,11 @@ namespace PigFarmManagement.Server.Infrastructure.Data.Migrations
                     b.Property<decimal>("TotalPrice")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<string>("TransactionCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
                     b.Property<decimal>("UnitPrice")
                         .HasColumnType("decimal(18,2)");
 
@@ -177,25 +177,39 @@ namespace PigFarmManagement.Server.Infrastructure.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<decimal>("BagPerPig")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<string>("Brand")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
+
+                    b.Property<string>("CategoryName")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Code")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("ConsumeRate")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("Cost")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("ProductCode")
-                        .IsRequired()
-                        .HasMaxLength(50)
+                    b.Property<Guid?>("ExternalId")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("ProductName")
-                        .IsRequired()
+                    b.Property<DateTime?>("LastUpdate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
                         .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UnitName")
+                        .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -203,8 +217,9 @@ namespace PigFarmManagement.Server.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProductCode")
-                        .IsUnique();
+                    b.HasIndex("Code");
+
+                    b.HasIndex("ExternalId");
 
                     b.ToTable("FeedFormulas");
                 });

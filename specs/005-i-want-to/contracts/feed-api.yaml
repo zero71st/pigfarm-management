@@ -1,0 +1,99 @@
+openapi: 3.0.0
+info:
+  title: Feed Formula API
+  version: 1.0.0
+paths:
+  /api/feed-formulas:
+    get:
+      summary: Get all feed formulas
+      responses:
+        '200':
+          description: List of feed formulas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FeedFormula'
+    post:
+      summary: Import feed formulas from POSPOS
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportRequest'
+      responses:
+        '200':
+          description: Import result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportResult'
+  /api/feed-formulas/{id}:
+    get:
+      summary: Get feed formula by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Feed formula details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedFormula'
+
+components:
+  schemas:
+    FeedFormula:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        externalId:
+          type: string
+          format: uuid
+        code:
+          type: string
+        name:
+          type: string
+        brand:
+          type: string
+        specialPrice:
+          type: number
+        cost:
+          type: number
+        costDiscountPrice:
+          type: number
+        consumeRate:
+          type: number
+        categoryName:
+          type: string
+        unitName:
+          type: string
+        lastUpdate:
+          type: string
+          format: date-time
+    ImportRequest:
+      type: object
+      properties:
+        posposData:
+          type: array
+          items:
+            type: object  # POSPOS product JSON
+    ImportResult:
+      type: object
+      properties:
+        successCount:
+          type: integer
+        errorCount:
+          type: integer
+        errors:
+          type: array
+          items:
+            type: string

@@ -56,17 +56,27 @@ public record PigPen(Guid Id, Guid CustomerId, string PenCode, int PigQty,
     public decimal CalculateFeedCost(decimal bagPerPig, decimal bagPrice) => CalculateRequiredBags(bagPerPig) * bagPrice;
 };
 
-public record FeedFormula(Guid Id, string ProductCode, string ProductName, 
-    string Brand, decimal BagPerPig, DateTime CreatedAt, DateTime UpdatedAt)
+public record FeedFormula(
+    Guid Id,
+    Guid? ExternalId, // from POSPOS _id
+    string? Code, // POSPOS code, primary product code
+    string? Name, // POSPOS name
+    decimal? Cost, // POSPOS cost, used for profit calculations
+    decimal? ConsumeRate, // user input, e.g., 0.5 per pig
+    string? CategoryName, // POSPOS category.name
+    string? Brand, // User-defined brand, different from CategoryName
+    string? UnitName, // POSPOS unit.name
+    DateTime? LastUpdate, // POSPOS lastupdate
+    DateTime CreatedAt,
+    DateTime UpdatedAt)
 {
     // Business computed properties
-    public string DisplayName => $"{ProductName} ({ProductCode})";
-    public string ConsumptionRate => $"{BagPerPig:F1} bags/pig";
-    public string BrandDisplayName => $"{Brand} - {ProductName}";
+    public string DisplayName => $"{Name} ({Code})";
+    public string ConsumptionRate => ConsumeRate.HasValue ? $"{ConsumeRate:F1} per pig" : "Not set";
     
     // Business logic
-    public decimal CalculateTotalBags(int pigCount) => pigCount * BagPerPig;
-    public decimal CalculateCost(int pigCount, decimal bagPrice) => CalculateTotalBags(pigCount) * bagPrice;
+    public decimal CalculateTotalConsumption(int pigCount) => pigCount * (ConsumeRate ?? 0);
+    public decimal CalculateCost(int pigCount) => CalculateTotalConsumption(pigCount) * (Cost ?? 0);
 };
 
 /// <summary>

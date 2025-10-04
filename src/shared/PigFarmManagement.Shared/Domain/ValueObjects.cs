@@ -11,7 +11,8 @@ public record FeedItem(
     string FeedType, 
     string ProductCode, 
     string ProductName, 
-    string InvoiceNumber,
+    string TransactionCode,
+    string? InvoiceReferenceCode,
     decimal Quantity, // number of bags
     decimal PricePerBag, 
     decimal Cost,
@@ -26,10 +27,13 @@ public record FeedItem(
     public string? ExternalProductCode { get; init; }
     public string? ExternalProductName { get; init; }
     public bool UnmappedProduct { get; init; }
-    public string? InvoiceReferenceCode { get; init; }
     public string? Notes { get; init; }
     public DateTime CreatedAt { get; init; } = DateTime.Now;
     public DateTime UpdatedAt { get; init; } = DateTime.Now;
+    
+    // Backward compatibility property
+    [Obsolete("Use TransactionCode instead")]
+    public string InvoiceNumber => TransactionCode;
     
     // Value calculations
     public decimal TotalCost => Quantity * PricePerBag;

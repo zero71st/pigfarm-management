@@ -11,9 +11,9 @@ public static class FeedFormulaCalculationEndpoints
         var group = endpoints.MapGroup("/api/feed-formulas")
             .WithTags("Feed Formula Calculations");
 
-        group.MapGet("/by-brand/{brand}", GetFeedFormulasByBrand)
-            .WithName("GetFeedFormulasByBrand")
-            .WithSummary("Get feed formulas by brand")
+        group.MapGet("/by-category/{categoryName}", GetFeedFormulasByCategory)
+            .WithName("GetFeedFormulasByCategory")
+            .WithSummary("Get feed formulas by category name")
             .Produces<IEnumerable<FeedFormulaWithCalculationResponse>>();
 
         group.MapPost("/calculate-requirements", CalculateFeedRequirements)
@@ -22,34 +22,33 @@ public static class FeedFormulaCalculationEndpoints
             .Produces<FeedCalculationResponse>();
     }
 
-    private static async Task<IResult> GetFeedFormulasByBrand(string brand, int? pigCount, IFeedFormulaService feedFormulaService)
+    private static async Task<IResult> GetFeedFormulasByCategory(string categoryName, int? pigCount, IFeedFormulaService feedFormulaService)
     {
         try
         {
             var feedFormulas = await feedFormulaService.GetAllFeedFormulasAsync();
-            var formulasByBrand = feedFormulas
-                .Where(f => f.Brand.Equals(brand, StringComparison.OrdinalIgnoreCase))
+            var formulasByCategory = feedFormulas
+                .Where(f => !string.IsNullOrEmpty(f.CategoryName) && f.CategoryName.Equals(categoryName, StringComparison.OrdinalIgnoreCase))
                 .Select(f => new FeedFormulaWithCalculationResponse
                 {
                     Id = f.Id,
-                    ProductCode = f.ProductCode,
-                    ProductName = f.ProductName,
-                    Brand = f.Brand,
-                    BagPerPig = f.BagPerPig,
+                    Code = f.Code ?? string.Empty,
+                    Name = f.Name ?? string.Empty,
+                    CategoryName = f.CategoryName ?? string.Empty,
+                    ConsumeRate = f.ConsumeRate ?? 0,
+                    Cost = f.Cost ?? 0,
+                    UnitName = f.UnitName ?? string.Empty,
                     CreatedAt = f.CreatedAt,
                     UpdatedAt = f.UpdatedAt,
-                    DisplayName = f.DisplayName,
-                    ConsumptionRate = f.ConsumptionRate,
-                    BrandDisplayName = f.BrandDisplayName,
-                    TotalBagsRequired = pigCount.HasValue ? f.CalculateTotalBags(pigCount.Value) : 0,
+                    TotalBagsRequired = pigCount.HasValue ? (f.ConsumeRate ?? 0) * pigCount.Value : 0,
                     PigCount = pigCount ?? 0
                 });
 
-            return Results.Ok(formulasByBrand);
+            return Results.Ok(formulasByCategory);
         }
         catch (Exception ex)
         {
-            return Results.Problem($"Error retrieving feed formulas by brand: {ex.Message}");
+            return Results.Problem($"Error retrieving feed formulas by category: {ex.Message}");
         }
     }
 
@@ -61,16 +60,16 @@ public static class FeedFormulaCalculationEndpoints
             if (feedFormula == null)
                 return Results.NotFound($"Feed formula with ID {request.FeedFormulaId} not found");
 
-            var totalBags = feedFormula.CalculateTotalBags(request.PigCount);
+            var totalBags = (feedFormula.ConsumeRate ?? 0) * request.PigCount;
             var totalCost = request.BagPrice.HasValue ? (decimal?)(totalBags * request.BagPrice.Value) : null;
 
             var response = new FeedCalculationResponse
             {
                 FeedFormulaId = feedFormula.Id,
-                ProductName = feedFormula.ProductName,
-                Brand = feedFormula.Brand,
+                Name = feedFormula.Name ?? string.Empty,
+                CategoryName = feedFormula.CategoryName ?? string.Empty,
                 PigCount = request.PigCount,
-                BagPerPig = feedFormula.BagPerPig,
+                ConsumeRate = feedFormula.ConsumeRate ?? 0,
                 TotalBagsRequired = totalBags,
                 BagPrice = request.BagPrice,
                 TotalCost = totalCost,
@@ -92,15 +91,14 @@ public record FeedCalculationRequest(Guid FeedFormulaId, int PigCount, decimal? 
 public class FeedFormulaWithCalculationResponse
 {
     public Guid Id { get; set; }
-    public string ProductCode { get; set; } = string.Empty;
-    public string ProductName { get; set; } = string.Empty;
-    public string Brand { get; set; } = string.Empty;
-    public decimal BagPerPig { get; set; }
+    public string Code { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string CategoryName { get; set; } = string.Empty;
+    public decimal ConsumeRate { get; set; }
+    public decimal Cost { get; set; }
+    public string UnitName { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
-    public string DisplayName { get; set; } = string.Empty;
-    public string ConsumptionRate { get; set; } = string.Empty;
-    public string BrandDisplayName { get; set; } = string.Empty;
     public decimal TotalBagsRequired { get; set; }
     public int PigCount { get; set; }
 }
@@ -108,10 +106,10 @@ public class FeedFormulaWithCalculationResponse
 public class FeedCalculationResponse
 {
     public Guid FeedFormulaId { get; set; }
-    public string ProductName { get; set; } = string.Empty;
-    public string Brand { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string CategoryName { get; set; } = string.Empty;
     public int PigCount { get; set; }
-    public decimal BagPerPig { get; set; }
+    public decimal ConsumeRate { get; set; }
     public decimal TotalBagsRequired { get; set; }
     public decimal? BagPrice { get; set; }
     public decimal? TotalCost { get; set; }

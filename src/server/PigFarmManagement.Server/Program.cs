@@ -16,7 +16,12 @@ builder.Services.Configure<PigFarmManagement.Server.Infrastructure.Settings.Posp
 
 // Add Entity Framework
 builder.Services.AddDbContext<PigFarmDbContext>(options =>
-    options.UseInMemoryDatabase("PigFarmManagement"));
+{
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+                          ?? Environment.GetEnvironmentVariable("PIGFARM_CONNECTION")
+                          ?? "Data Source=pigfarm.db";
+    options.UseSqlite(connectionString);
+});
 
 // Add application services
 builder.Services.AddApplicationServices();
@@ -24,6 +29,7 @@ builder.Services.AddApplicationServices();
 // Pospos services
 builder.Services.AddSingleton<PigFarmManagement.Server.Services.IMappingStore, PigFarmManagement.Server.Services.FileMappingStore>();
 builder.Services.AddHttpClient<IPosposMemberClient, PosposMemberClient>();
+builder.Services.AddHttpClient<IPosposProductClient, PosposProductClient>();
 // PosposImporter depends on scoped services (ICustomerRepository). Register as scoped to avoid
 // injecting scoped services into a singleton which causes runtime DI errors.
 builder.Services.AddScoped<PigFarmManagement.Server.Services.IPosposImporter, PigFarmManagement.Server.Services.PosposImporter>();

@@ -69,8 +69,8 @@ namespace PigFarmManagement.Server.Controllers
         {
             var opts = _posposOptions?.Value;
             if (opts == null)
-                return Ok(new { ApiBase = (string?)null, HasApiKey = false });
-            return Ok(new { ApiBase = string.IsNullOrWhiteSpace(opts.ApiBase) ? null : opts.ApiBase, HasApiKey = !string.IsNullOrWhiteSpace(opts.ApiKey) });
+                return Ok(new { MemberApiBase = (string?)null, HasApiKey = false });
+            return Ok(new { MemberApiBase = string.IsNullOrWhiteSpace(opts.MemberApiBase) ? null : opts.MemberApiBase, HasApiKey = !string.IsNullOrWhiteSpace(opts.ApiKey) });
         }
 
         // Temporary debug endpoint: fetch raw POSPOS API response body so we can inspect its JSON shape
@@ -78,11 +78,11 @@ namespace PigFarmManagement.Server.Controllers
         public async Task<IActionResult> DebugPosposRaw()
         {
             var opts = _posposOptions?.Value;
-            if (opts == null || string.IsNullOrWhiteSpace(opts.ApiBase))
-                return BadRequest(new { message = "POSPOS ApiBase not configured" });
+            if (opts == null || string.IsNullOrWhiteSpace(opts.MemberApiBase))
+                return BadRequest(new { message = "POSPOS MemberApiBase not configured" });
 
             var client = _httpClientFactory.CreateClient();
-            var req = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, opts.ApiBase);
+            var req = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, opts.MemberApiBase);
             if (!string.IsNullOrWhiteSpace(opts.ApiKey)) req.Headers.Add("apikey", opts.ApiKey);
 
             try
@@ -102,11 +102,11 @@ namespace PigFarmManagement.Server.Controllers
         public async Task<IActionResult> DebugPosposInspect()
         {
             var opts = _posposOptions?.Value;
-            if (opts == null || string.IsNullOrWhiteSpace(opts.ApiBase))
-                return BadRequest(new { message = "POSPOS ApiBase not configured" });
+            if (opts == null || string.IsNullOrWhiteSpace(opts.MemberApiBase))
+                return BadRequest(new { message = "POSPOS MemberApiBase not configured" });
 
             var client = _httpClientFactory.CreateClient();
-            var req = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, opts.ApiBase);
+            var req = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, opts.MemberApiBase);
             if (!string.IsNullOrWhiteSpace(opts.ApiKey)) req.Headers.Add("apikey", opts.ApiKey);
 
             try

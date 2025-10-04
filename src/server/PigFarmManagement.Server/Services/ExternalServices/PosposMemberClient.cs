@@ -21,11 +21,14 @@ namespace PigFarmManagement.Server.Services.ExternalServices
             _http = http;
             _opts = opts.Value;
             // If configuration wasn't provided via appsettings, allow environment variables as a fallback
-            if (string.IsNullOrWhiteSpace(_opts.ApiBase))
+            if (string.IsNullOrWhiteSpace(_opts.MemberApiBase))
             {
-                var envBase = Environment.GetEnvironmentVariable("POSPOS_API_BASE");
+                var envBase = Environment.GetEnvironmentVariable("POSPOS_MEMBER_API_BASE");
                 if (!string.IsNullOrWhiteSpace(envBase))
-                    _opts.ApiBase = envBase;
+                    _opts.MemberApiBase = envBase;
+                // Fallback to ProductApiBase if MemberApiBase not set
+                else if (!string.IsNullOrWhiteSpace(_opts.ProductApiBase))
+                    _opts.MemberApiBase = _opts.ProductApiBase;
             }
             if (string.IsNullOrWhiteSpace(_opts.ApiKey))
             {
@@ -33,20 +36,20 @@ namespace PigFarmManagement.Server.Services.ExternalServices
                 if (!string.IsNullOrWhiteSpace(envKey))
                     _opts.ApiKey = envKey;
             }
-            logger.LogInformation("PosposMemberClient configured. ApiBase='{ApiBase}', ApiKeySet={HasKey}", _opts.ApiBase, !string.IsNullOrEmpty(_opts.ApiKey));
+            logger.LogInformation("PosposMemberClient configured. MemberApiBase='{MemberApiBase}', ApiKeySet={HasKey}", _opts.MemberApiBase, !string.IsNullOrEmpty(_opts.ApiKey));
             _logger = logger;
         }
 
         public async Task<IEnumerable<PosposMember>> GetMembersAsync()
         {
-            // If ApiBase is not configured or not an absolute URI, log and return empty list
-            if (string.IsNullOrWhiteSpace(_opts.ApiBase) || !Uri.IsWellFormedUriString(_opts.ApiBase, UriKind.Absolute))
+            // If MemberApiBase is not configured or not an absolute URI, log and return empty list
+            if (string.IsNullOrWhiteSpace(_opts.MemberApiBase) || !Uri.IsWellFormedUriString(_opts.MemberApiBase, UriKind.Absolute))
             {
-                _logger.LogWarning("POSPOS ApiBase is not configured or invalid ('{ApiBase}'). No candidates will be returned. Set POSPOS_API_BASE and POSPOS_API_KEY to use the real API.", _opts.ApiBase);
+                _logger.LogWarning("POSPOS MemberApiBase is not configured or invalid ('{MemberApiBase}'). No candidates will be returned. Set POSPOS_MEMBER_API_BASE and POSPOS_API_KEY to use the real API.", _opts.MemberApiBase);
                 return Array.Empty<PosposMember>();
             }
 
-            var request = new HttpRequestMessage(HttpMethod.Get, _opts.ApiBase);
+            var request = new HttpRequestMessage(HttpMethod.Get, _opts.MemberApiBase);
             // POSPOS expects 'apikey' header per user guidance
             request.Headers.Add("apikey", _opts.ApiKey);
 
