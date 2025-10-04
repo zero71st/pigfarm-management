@@ -459,10 +459,25 @@
                     </MudCard>
                 }
 
+                <!-- Product Visibility Control -->
+                <div class="d-flex justify-end mb-3 gap-4">
+                    <MudSwitch @bind-Value="_showFinancial" 
+                               Color="Color.Primary" 
+                               Label="Show Financial" 
+                               ThumbIcon="@(_showFinancial ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)"
+                               UnCheckedColor="Color.Default" />
+                    
+                    <MudSwitch @bind-Value="_showSpecificProducts" 
+                               Color="Color.Secondary" 
+                               Label="Show Service Charges" 
+                               ThumbIcon="@(_showSpecificProducts ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)"
+                               UnCheckedColor="Color.Default" />
+                </div>
+
                 <!-- Simple Feed Formula Comparison Table -->
                 @if ((feedFormulaCalculations != null && feedFormulaCalculations.Any()) || (comparisonData != null && comparisonData.Any()))
                 {
-                    <MudTable Items="@GetTableRows()" Hover="true" Striped="true">
+                    <MudTable Items="@GetFilteredTableRows()" Hover="true" Striped="true">
                         <HeaderContent>
                             <MudTh>Product Code</MudTh>
                             <MudTh>Product Name</MudTh>
@@ -470,11 +485,14 @@
                             <MudTh Style="text-align: center">Inv No</MudTh>
                             <MudTh Style="text-align: center">INV Date</MudTh>
                             <MudTh Style="text-align: center">Actual (Bags)</MudTh>
-                            <MudTh Style="text-align: center">Cost</MudTh>
-                            <MudTh Style="text-align: center">Price+Discount</MudTh>
-                            <MudTh Style="text-align: center">Sys Total</MudTh>
-                            <MudTh Style="text-align: center">POS Total</MudTh>
-                            <MudTh Style="text-align: center">Profit</MudTh>
+                            @if (_showFinancial)
+                            {
+                                <MudTh Style="text-align: center">Cost</MudTh>
+                                <MudTh Style="text-align: center">Price+Discount</MudTh>
+                                <MudTh Style="text-align: center">Sys Total</MudTh>
+                                <MudTh Style="text-align: center">POS Total</MudTh>
+                                <MudTh Style="text-align: center">Profit</MudTh>
+                            }
                             <MudTh Style="text-align: center">Actions</MudTh>
                         </HeaderContent>
                         <RowTemplate>
@@ -518,10 +536,10 @@
                                 <span style="@textStyle">@(row.IsFirstProductRow ? row.ProductName : "")</span>
                             </MudTd>
                             <MudTd Style="@($"text-align: center; {rowStyle}")">
-                                <span style="@textStyle">@row.PerPigPerPenBags</span>
+                                <span style="@textStyle">@row.Formula</span>
                             </MudTd>
                             <MudTd Style="@($"text-align: center; {rowStyle}")">
-                                <span style="@textStyle">@row.InvoiceNo</span>
+                                <span style="@textStyle">@row.InvNo</span>
                             </MudTd>
                             <MudTd Style="@($"text-align: center; {rowStyle}")">
                                 <span style="@textStyle">@row.InvDate</span>
@@ -529,29 +547,32 @@
                             <MudTd Style="@($"text-align: center; {rowStyle}")">
                                 <span style="@textStyle">@row.PerInvoiceBags</span>
                             </MudTd>
+                            @if (_showFinancial)
+                            {
+                                <MudTd Style="@($"text-align: center; {rowStyle}")">
+                                    <span style="@textStyle">@row.FeedCost</span>
+                                </MudTd>
+                                <MudTd Style="@($"text-align: center; {rowStyle}")">
+                                    <span style="@textStyle">@row.PriceIncludeDiscount</span>
+                                </MudTd>
+                                <MudTd Style="@($"text-align: center; {rowStyle}")">
+                                    <span style="@textStyle">@row.SysTotalPriceIncludeDiscount</span>
+                                </MudTd>
+                                <MudTd Style="@($"text-align: center; {rowStyle}")">
+                                    <span style="@textStyle">@row.PosTotalPriceIncludeDiscount</span>
+                                </MudTd>
+                                <MudTd Style="@($"text-align: center; {rowStyle}")">
+                                    <span style="@textStyle">@row.Profit</span>
+                                </MudTd>
+                            }
                             <MudTd Style="@($"text-align: center; {rowStyle}")">
-                                <span style="@textStyle">@row.FeedCost</span>
-                            </MudTd>
-                            <MudTd Style="@($"text-align: center; {rowStyle}")">
-                                <span style="@textStyle">@row.PriceIncludeDiscount</span>
-                            </MudTd>
-                            <MudTd Style="@($"text-align: center; {rowStyle}")">
-                                <span style="@textStyle">@row.SysTotalPriceIncludeDiscount</span>
-                            </MudTd>
-                            <MudTd Style="@($"text-align: center; {rowStyle}")">
-                                <span style="@textStyle">@row.PosTotalPriceIncludeDiscount</span>
-                            </MudTd>
-                            <MudTd Style="@($"text-align: center; {rowStyle}")">
-                                <span style="@textStyle">@row.Profit</span>
-                            </MudTd>
-                            <MudTd Style="@($"text-align: center; {rowStyle}")">
-                                @if (!row.IsSubTotal && !row.IsGrandTotal && !string.IsNullOrEmpty(row.ProductCode) && !string.IsNullOrEmpty(row.InvoiceNo) && row.InvoiceNo != "No Feeds" && row.InvoiceNo != "Sub Total" && row.InvoiceNo != "Grand Total")
+                                @if (!row.IsSubTotal && !row.IsGrandTotal && !string.IsNullOrEmpty(row.ProductCode) && !string.IsNullOrEmpty(row.InvNo) && row.InvNo != "No Feeds" && row.InvNo != "Sub Total" && row.InvNo != "Grand Total")
                                 {
                                     <MudButton Color="Color.Error" 
                                              Size="Size.Small"
                                              Variant="Variant.Outlined"
                                              Title="Delete Invoice"
-                                             OnClick="() => RemoveInvoice(row.ProductCode, row.InvoiceNo)">
+                                             OnClick="() => RemoveInvoice(row.ProductCode, row.InvNo)">
                                         🗑️ Delete
                                     </MudButton>
                                 }
@@ -742,6 +763,10 @@
     private List<GroupedFeedItem> groupedFeeds = new();
     private List<Deposit> deposits = new();
     private List<HarvestResult> harvests = new();
+    
+    // Product visibility control
+    private bool _showFinancial = false;
+    private bool _showSpecificProducts = false; // Default to true to show these products
     
     // Deposit calculation information
     private DepositCalculationInfo? depositCalculationInfo;
@@ -1515,9 +1540,14 @@
     // Helper method to calculate profit: POS Total - (cost * quantity)
     private string CalculateProfit(decimal? posTotal, decimal? feedCost, decimal quantity)
     {
-        if (!posTotal.HasValue || !feedCost.HasValue)
+        // If no POS total, cannot determine profit
+        if (!posTotal.HasValue)
             return "-";
-        
+
+        // If cost is missing, treat entire POS total as profit
+        if (!feedCost.HasValue)
+            return posTotal.Value.ToString("N2");
+
         var totalCost = feedCost.Value * quantity;
         var profit = posTotal.Value - totalCost;
         return profit.ToString("N2");
@@ -1527,41 +1557,59 @@
     private string CalculateSubTotalProfit(List<FeedHistoryEntry> entries)
     {
         decimal totalProfit = 0;
-        bool hasValidData = false;
+        bool hasPosTotal = false;
 
         foreach (var entry in entries)
         {
-            if (entry.PosTotalPriceIncludeDiscount.HasValue && entry.FeedCost.HasValue)
+            if (entry.PosTotalPriceIncludeDiscount.HasValue)
             {
-                var totalCost = entry.FeedCost.Value * entry.Quantity;
-                totalProfit += entry.PosTotalPriceIncludeDiscount.Value - totalCost;
-                hasValidData = true;
+                hasPosTotal = true;
+
+                if (entry.FeedCost.HasValue)
+                {
+                    var totalCost = entry.FeedCost.Value * entry.Quantity;
+                    totalProfit += entry.PosTotalPriceIncludeDiscount.Value - totalCost;
+                }
+                else
+                {
+                    // If cost missing, entire POS total counts as profit
+                    totalProfit += entry.PosTotalPriceIncludeDiscount.Value;
+                }
             }
         }
 
-        return hasValidData ? totalProfit.ToString("N2") : "-";
+        return hasPosTotal ? totalProfit.ToString("N2") : "-";
     }
 
     // Helper method to calculate grand total profit for all comparison data
     private string CalculateGrandTotalProfit(List<FeedComparisonData> comparisonData)
     {
         decimal totalProfit = 0;
-        bool hasValidData = false;
+        bool hasPosTotal = false;
 
         foreach (var comparison in comparisonData)
         {
             foreach (var entry in comparison.FeedHistoryEntries)
             {
-                if (entry.PosTotalPriceIncludeDiscount.HasValue && entry.FeedCost.HasValue)
+                if (entry.PosTotalPriceIncludeDiscount.HasValue)
                 {
-                    var totalCost = entry.FeedCost.Value * entry.Quantity;
-                    totalProfit += entry.PosTotalPriceIncludeDiscount.Value - totalCost;
-                    hasValidData = true;
+                    hasPosTotal = true;
+
+                    if (entry.FeedCost.HasValue)
+                    {
+                        var totalCost = entry.FeedCost.Value * entry.Quantity;
+                        totalProfit += entry.PosTotalPriceIncludeDiscount.Value - totalCost;
+                    }
+                    else
+                    {
+                        // If cost missing, entire POS total counts as profit
+                        totalProfit += entry.PosTotalPriceIncludeDiscount.Value;
+                    }
                 }
             }
         }
 
-        return hasValidData ? totalProfit.ToString("N2") : "-";
+        return hasPosTotal ? totalProfit.ToString("N2") : "-";
     }
 
     public class GroupedFeedItem
@@ -1595,8 +1643,8 @@
                 {
                     ProductCode = comparison.ProductCode,
                     ProductName = comparison.ProductName,
-                    PerPigPerPenBags = combinedFormula,
-                    InvoiceNo = firstInvoice.InvoiceReferenceCode,
+                    Formula = combinedFormula,
+                    InvNo = firstInvoice.InvoiceReferenceCode,
                     InvDate = firstInvoice.FeedDate.ToString("MM/dd/yyyy"),
                     PerInvoiceBags = firstInvoice.Quantity.ToString("0"),
                     FeedCost = firstInvoice.FeedCost?.ToString("N2") ?? "-",
@@ -1616,8 +1664,8 @@
                     {
                         ProductCode = comparison.ProductCode, // Include ProductCode for delete functionality
                         ProductName = "",
-                        PerPigPerPenBags = "",
-                        InvoiceNo = invoice.InvoiceReferenceCode,
+                        Formula = "",
+                        InvNo = invoice.InvoiceReferenceCode,
                         InvDate = invoice.FeedDate.ToString("MM/dd/yyyy"),
                         PerInvoiceBags = invoice.Quantity.ToString("0"),
                         FeedCost = invoice.FeedCost?.ToString("N2") ?? "-",
@@ -1640,8 +1688,8 @@
                 {
                     ProductCode = "",
                     ProductName = "",
-                    PerPigPerPenBags = "",
-                    InvoiceNo = "Sub Total",
+                    Formula = "",
+                    InvNo = "Sub Total",
                     InvDate = "",
                     PerInvoiceBags = comparison.ActualTotal.ToString("0"),
                     FeedCost = "-",
@@ -1665,8 +1713,8 @@
                 {
                     ProductCode = comparison.ProductCode,
                     ProductName = comparison.ProductName,
-                    PerPigPerPenBags = combinedFormula,
-                    InvoiceNo = "No Feeds",
+                    Formula = combinedFormula,
+                    InvNo = "No Feeds",
                     InvDate = "",
                     PerInvoiceBags = "0",
                     FeedCost = "-",
@@ -1700,8 +1748,8 @@
         {
             ProductCode = "",
             ProductName = "",
-            PerPigPerPenBags = grandTotalCombined,
-            InvoiceNo = "Grand Total",
+            Formula = grandTotalCombined,
+            InvNo = "Grand Total",
             InvDate = "",
             PerInvoiceBags = grandTotalPerInvoice.ToString("0"),
             FeedCost = "-",
@@ -1718,12 +1766,110 @@
         return rows;
     }
 
+    // Method to get filtered table rows based on product visibility settings
+    private List<TableRowData> GetFilteredTableRows()
+    {
+        var allRows = GetTableRows();
+        
+        if (_showSpecificProducts)
+        {
+            // Show all rows when specific products switch is enabled
+            return allRows;
+        }
+        
+        // Filter out specific product codes when switch is disabled
+        var specificProductCodes = new[] { "PK66000956", "PK66000957" };
+        var filteredRows = new List<TableRowData>();
+        
+        // First, filter the comparison data to exclude specific products
+        var filteredComparisonData = comparisonData?.Where(c => !specificProductCodes.Contains(c.ProductCode)).ToList() ?? new List<FeedComparisonData>();
+        
+        foreach (var row in allRows)
+        {
+            // For Grand Total, recalculate based on filtered data
+            if (row.IsGrandTotal)
+            {
+                var grandTotalPerInvoice = filteredComparisonData.Sum(c => c.ActualTotal);
+                var grandTotalSysTotal = filteredComparisonData.SelectMany(c => c.FeedHistoryEntries).Sum(e => e.SysTotalPriceIncludeDiscount ?? 0);
+                var grandTotalPosTotal = filteredComparisonData.SelectMany(c => c.FeedHistoryEntries).Sum(e => e.PosTotalPriceIncludeDiscount ?? 0);
+                var grandTotalProfit = CalculateGrandTotalProfit(filteredComparisonData);
+                
+                // Calculate new formula totals (excluding specific products)
+                var assignedFormulas = filteredComparisonData.Where(c => !c.IsUnmatchedFeed);
+                var grandTotalPerPig = assignedFormulas.Sum(c => c.FormulaPerPig);
+                var grandTotalPerPigPen = assignedFormulas.Sum(c => c.FormulaTotal);
+                var grandTotalCombined = grandTotalPerPig > 0 || grandTotalPerPigPen > 0 
+                    ? $"{grandTotalPerPig.ToString("F1")} / {grandTotalPerPigPen.ToString("0")}" 
+                    : "N/A";
+                
+                var updatedGrandTotal = new TableRowData
+                {
+                    ProductCode = "",
+                    ProductName = "",
+                    Formula = grandTotalCombined,
+                    InvNo = "Grand Total",
+                    InvDate = "",
+                    PerInvoiceBags = grandTotalPerInvoice.ToString("0"),
+                    FeedCost = "-",
+                    PriceIncludeDiscount = "-",
+                    SysTotalPriceIncludeDiscount = grandTotalSysTotal > 0 ? grandTotalSysTotal.ToString("N2") : "-",
+                    PosTotalPriceIncludeDiscount = grandTotalPosTotal > 0 ? grandTotalPosTotal.ToString("N2") : "-",
+                    Profit = grandTotalProfit,
+                    IsSubTotal = false,
+                    IsGrandTotal = true,
+                    IsUnmatchedFeed = false,
+                    IsFirstProductRow = false
+                };
+                filteredRows.Add(updatedGrandTotal);
+                continue;
+            }
+            
+            // For regular product rows, check if it's a specific product
+            if (!string.IsNullOrEmpty(row.ProductCode) && specificProductCodes.Contains(row.ProductCode))
+            {
+                // Skip this product and all its related rows
+                continue;
+            }
+            
+            // For empty product code rows (additional invoice rows), check the previous row to determine the product
+            if (string.IsNullOrEmpty(row.ProductCode) && !row.IsGrandTotal && !row.IsSubTotal)
+            {
+                // Look backward to find the parent product row
+                var lastProductRow = filteredRows.LastOrDefault(r => !string.IsNullOrEmpty(r.ProductCode) && !r.IsGrandTotal && !r.IsSubTotal);
+                if (lastProductRow != null && specificProductCodes.Contains(lastProductRow.ProductCode))
+                {
+                    // Skip this row as it belongs to a filtered product
+                    continue;
+                }
+            }
+            
+            // For subtotal rows, check if they belong to a filtered product by looking at recent context
+            if (row.IsSubTotal)
+            {
+                // Look at the last few rows to see if we're in a filtered product context
+                var recentProductRows = allRows.TakeWhile(r => r != row).Reverse().Take(10)
+                    .Where(r => !string.IsNullOrEmpty(r.ProductCode) && !r.IsGrandTotal && !r.IsSubTotal);
+                
+                var lastRelevantProduct = recentProductRows.FirstOrDefault();
+                if (lastRelevantProduct != null && specificProductCodes.Contains(lastRelevantProduct.ProductCode))
+                {
+                    // Skip this subtotal as it belongs to a filtered product
+                    continue;
+                }
+            }
+            
+            filteredRows.Add(row);
+        }
+        
+        return filteredRows;
+    }
+
     public class TableRowData
     {
         public string ProductCode { get; set; } = "";
         public string ProductName { get; set; } = "";
-        public string PerPigPerPenBags { get; set; } = ""; // Combined: "PerPig / PerPen"
-        public string InvoiceNo { get; set; } = "";
+        public string Formula { get; set; } = ""; // Combined: "PerPig / PerPen"
+        public string InvNo { get; set; } = "";
         public string InvDate { get; set; } = "";
         public string PerInvoiceBags { get; set; } = "";
         public string FeedCost { get; set; } = ""; // From FeedFormula.Cost

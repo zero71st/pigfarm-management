@@ -73,6 +73,26 @@ T013 (Polish) — Add migration + rollback QA and update README [✅ COMPLETED]
 - Path: `README.md`, `specs/006-update-import-feed/tasks.md`
 - Action: Document the migration steps, how to run imports locally with sample JSON and how to interpret the new fields. Add rollback instructions for schema changes.
 
+T014 (Enhancement) — Fix feed progress calculation exclusions [✅ COMPLETED]
+- Path: `src/server/PigFarmManagement.Server/Features/FeedProgress/FeedProgressService.cs`
+- Action: Exclude service charges (PK66000956, PK66000957) from feed progress calculations since they represent service charges, not actual feed consumption.
+- Output: Feed progress now accurately reflects only actual feed bag consumption.
+
+T015 (UI Enhancement) — Implement dual visibility control system [✅ COMPLETED]
+- Path: `src/client/PigFarmManagement.Client/Features/PigPens/Pages/PigPenDetailPage.razor`
+- Action: Add two independent MudBlazor switches - one for financial column visibility (Cost, Price+Discount, Sys Total, POS Total, Profit) and another for specific product visibility (PK66000956 & PK66000957).
+- Output: Sophisticated filtering system with `GetFilteredTableRows()` method that maintains data integrity and recalculates totals.
+
+T016 (Business Logic) — Enhance profit calculation for NULL cost scenarios [✅ COMPLETED]
+- Path: `src/client/PigFarmManagement.Client/Features/PigPens/Pages/PigPenDetailPage.razor`
+- Action: Update `CalculateProfit()`, `CalculateSubTotalProfit()`, and `CalculateGrandTotalProfit()` methods to treat NULL cost as 100% profit scenario.
+- Output: When cost data is missing, entire POS_Total is considered profit instead of showing "-".
+
+T017 (UX Improvement) — Fix date picker coordination in import dialog [✅ COMPLETED]
+- Path: `src/client/PigFarmManagement.Client/Features/PigPens/Components/PigPenPosImportDialog.razor`
+- Action: Add `OnFromDateChanged` method to auto-sync ToDate when FromDate is selected, while preserving independent ToDate selection.
+- Output: Improved user experience for date range selection in POSPOS import dialog.
+
 ---
 
 Parallel execution groups (examples)

@@ -96,6 +96,28 @@ As a farm manager I want POSPOS transaction data imported into the system and tr
 - New columns added: Cost, Price+Discount, Sys Total, POS Total
 - Totals calculated and displayed at sub-total and grand-total levels
 
+**Feed Progress Calculation Fix**: 
+- Service charges (product codes PK66000956, PK66000957) are now excluded from feed progress calculations
+- These items represent service charges, not actual feed, so should not contribute to bag consumption metrics
+- Updated both main progress calculation and feed usage history to filter out these codes
+
+**UI Visibility Controls**: 
+- Added dual MudBlazor switch system for granular data visibility control
+- Financial Columns Switch: Controls visibility of Cost, Price+Discount, Sys Total, POS Total, and Profit columns
+- Product-Specific Switch: Controls visibility of service charge products (PK66000956 & PK66000957) including their subtotals
+- Sophisticated filtering logic maintains data integrity and recalculates totals when products are filtered
+
+**Profit Calculation Enhancement**:
+- Updated profit calculation logic to handle NULL cost scenarios
+- When cost is NULL, the entire POS_Total is treated as 100% profit
+- Formula: `profit = POS_Total - (cost_per_bag * quantity_in_bags)` where NULL cost = 0 cost
+- Applied to individual profit calculations, subtotal aggregations, and grand total calculations
+
+**Date Picker Behavior**:
+- Fixed date picker coordination in import dialog
+- When FromDate is selected, ToDate automatically syncs to the same date
+- ToDate remains independently selectable for date range imports
+
 ---
 
 ## Execution Status
@@ -103,4 +125,8 @@ As a farm manager I want POSPOS transaction data imported into the system and tr
 - [x] Spec created and populated
 - [x] Clarifications complete
 - [x] Implementation complete
+- [x] Feed progress calculation fixes applied
+- [x] UI visibility controls implemented
+- [x] Profit calculation enhanced for NULL cost handling
+- [x] Date picker behavior improvements applied
 - [x] Ready for verification
