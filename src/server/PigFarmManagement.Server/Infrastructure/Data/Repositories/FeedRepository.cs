@@ -60,11 +60,12 @@ public class FeedRepository : IFeedRepository
         entity.FeedDate = feed.FeedDate;
         entity.ProductType = feed.ProductType;
         entity.Quantity = feed.Quantity;
-        entity.UnitPrice = feed.UnitPrice;
-        entity.TotalPrice = feed.TotalPrice;
+    entity.UnitPrice = feed.UnitPrice;
+    entity.TotalPriceIncludeDiscount = feed.TotalPriceIncludeDiscount;
         entity.ExternalReference = feed.ExternalReference;
         entity.Notes = feed.Notes;
         entity.UpdatedAt = DateTime.UtcNow;
+    entity.TotalPriceIncludeDiscount = feed.TotalPriceIncludeDiscount; // Updated assignment
 
         await _context.SaveChangesAsync();
         return entity.ToModel();

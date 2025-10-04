@@ -64,7 +64,7 @@ public class FeedRepository : IFeedRepository
             feed.InvoiceReferenceCode, // InvoiceReferenceCode
             feed.Quantity,    // Quantity represents number of bags
             feed.UnitPrice,   // UnitPrice represents price per bag
-            feed.TotalPrice,  // Cost from TotalPrice
+            feed.TotalPriceIncludeDiscount,  // Cost from TotalPriceIncludeDiscount
             feed.FeedDate     // Date from FeedDate
         )
         {
@@ -91,7 +91,7 @@ public class FeedRepository : IFeedRepository
             TransactionCode = feedItem.TransactionCode, // Add TransactionCode mapping
             Quantity = (int)feedItem.Quantity, // Quantity stored as bags (int)
             UnitPrice = feedItem.PricePerBag,
-            TotalPrice = feedItem.Cost,
+            TotalPriceIncludeDiscount = feedItem.Cost,
             FeedDate = feedItem.Date,
             ExternalReference = feedItem.ExternalReference,
             ExternalProductCode = feedItem.ExternalProductCode,

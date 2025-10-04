@@ -52,7 +52,7 @@ public class PigPenDetailService : IPigPenDetailService
         var deposits = await _depositRepository.GetByPigPenIdAsync(pigPenId);
         var harvests = await _harvestRepository.GetByPigPenIdAsync(pigPenId);
 
-        var totalFeedCost = feeds.Sum(f => f.TotalPrice);
+    var totalFeedCost = feeds.Sum(f => f.TotalPriceIncludeDiscount);
         var totalDeposit = deposits.Sum(d => d.Amount);
         var totalRevenue = harvests.Sum(h => h.Revenue);
         var investment = pigPen.Investment;
@@ -82,7 +82,7 @@ public class PigPenDetailService : IPigPenDetailService
             f.InvoiceReferenceCode, // Pass the invoice reference code
             f.Quantity * 25m, // Convert bags to kg (assuming 25kg per bag)
             f.UnitPrice / 25m, // Convert price per bag to price per kg
-            f.TotalPrice, // Use TotalPrice (total cost of the bags)
+            f.TotalPriceIncludeDiscount, // Use TotalPriceIncludeDiscount (total cost from POS)
             f.FeedDate
         )
         {

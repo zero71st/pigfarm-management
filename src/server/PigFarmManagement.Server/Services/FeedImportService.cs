@@ -13,6 +13,7 @@ public class FeedImportService : IFeedImportService
     private readonly IFeedRepository _feedRepository;
     private readonly Infrastructure.Data.Repositories.IFeedRepository _efFeedRepository;
     private readonly IPosposTransactionClient _posposTrasactionClient;
+    private readonly PigFarmManagement.Server.Features.FeedFormulas.IFeedFormulaService _feedFormulaService;
 
     // Keep legacy in-memory data for mock POSPOS transactions
     private readonly List<PigPen> _pigPens = new();
@@ -23,13 +24,15 @@ public class FeedImportService : IFeedImportService
         ICustomerRepository customerRepository,
         IFeedRepository feedRepository,
         Infrastructure.Data.Repositories.IFeedRepository efFeedRepository,
-        IPosposTransactionClient posposTransactionClient)
+        IPosposTransactionClient posposTransactionClient,
+        PigFarmManagement.Server.Features.FeedFormulas.IFeedFormulaService feedFormulaService)
     {
         _pigPenRepository = pigPenRepository;
         _customerRepository = customerRepository;
         _feedRepository = feedRepository;
         _efFeedRepository = efFeedRepository;
-        _posposTrasactionClient = posposTransactionClient;
+    _posposTrasactionClient = posposTransactionClient;
+    _feedFormulaService = feedFormulaService;
 
         InitializeData(); // Still needed for mock data
     }
@@ -186,7 +189,7 @@ public class FeedImportService : IFeedImportService
                 TransactionCode = $"DEMO-{DateTime.Now:yyyyMMdd}-001",
                 Quantity = 50,
                 UnitPrice = 580,
-                TotalPrice = 29000,
+                TotalPriceIncludeDiscount = 29000,
                 FeedDate = DateTime.UtcNow.AddDays(-1),
                 ExternalReference = "DEMO-FEED-001",
                 Notes = "Demo feed for testing",
@@ -254,6 +257,12 @@ public class FeedImportService : IFeedImportService
             }
         }
 
+        // Preload feed formulas to avoid repeated DB calls
+        var formulas = (await _feedFormulaService.GetAllFeedFormulasAsync()).ToList();
+        var formulaByCode = formulas
+            .Where(f => !string.IsNullOrWhiteSpace(f.Code))
+            .ToDictionary(f => f.Code!, StringComparer.OrdinalIgnoreCase);
+
         foreach (var orderItem in transaction.OrderList)
         {
             // stock is decimal representing number of bags. Coerce to integer bag count.
@@ -268,6 +277,18 @@ public class FeedImportService : IFeedImportService
 
             // NOTE: repository for product catalog is not available; rely on ProductCode/Name being stored on Feed
 
+            // Try to find a feed formula by product code
+            decimal? formulaCost = null;
+            if (!string.IsNullOrWhiteSpace(normalizedCode) && formulaByCode.TryGetValue(normalizedCode, out var ff))
+            {
+                formulaCost = ff.Cost;
+            }
+
+            // Use PosPos discount amount as the requested cost_discount_price
+            var costDiscountPrice = orderItem.DiscountAmount;
+
+            var priceIncludeDiscount = unitPricePerBag - costDiscountPrice;
+
             var feed = new Feed
             {
                 Id = Guid.NewGuid(),
@@ -279,7 +300,12 @@ public class FeedImportService : IFeedImportService
                 InvoiceReferenceCode = transaction.InvoiceReference?.Code,
                 Quantity = bags,
                 UnitPrice = unitPricePerBag,
-                TotalPrice = orderItem.TotalPriceIncludeDiscount,
+                Cost = formulaCost,
+                CostDiscountPrice = costDiscountPrice,
+                PriceIncludeDiscount = priceIncludeDiscount,
+                Sys_TotalPriceIncludeDiscount = priceIncludeDiscount * bags,
+                TotalPriceIncludeDiscount = orderItem.TotalPriceIncludeDiscount,
+                Pos_TotalPriceIncludeDiscount = orderItem.TotalPriceIncludeDiscount,
                 FeedDate = transaction.Timestamp,
                 ExternalReference = $"POSPOS-{transaction.Code}-{orderItem.Code}",
                 Notes = $"Imported from POSPOS transaction {transaction.Code}",
