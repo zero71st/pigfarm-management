@@ -10,8 +10,8 @@ public interface ICustomerRepository
     Task<Customer?> GetByIdAsync(Guid id);
     Task<Customer?> GetByIdIncludingDeletedAsync(Guid id);
     Task<Customer?> GetByCodeAsync(string code);
-    Task<Customer> CreateAsync(Customer customer);
-    Task<Customer> UpdateAsync(Customer customer);
+    Task<Customer> CreateAsync(CustomerCreateDto dto);
+    Task<Customer> UpdateAsync(Guid id, CustomerUpdateDto dto);
     Task DeleteAsync(Guid id);
 }
 

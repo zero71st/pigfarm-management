@@ -77,7 +77,7 @@ namespace PigFarmManagement.Server.Services
                             {
                                 // If update fails because not found, create instead
                                 _logger.LogWarning(ex, "Update failed for mapped customer id {Id}, will try create", internalId);
-                                var created = await _customerRepository.CreateAsync(mapped);
+                                var created = await _customerRepository.CreateAsync(mapped.ToCreateDto());
                                 _mapping[m.Id] = created.Id.ToString();
                                 summary.Created++;
                             }
@@ -85,7 +85,7 @@ namespace PigFarmManagement.Server.Services
                         else
                         {
                             // create new via repository
-                            var created = await _customerRepository.CreateAsync(mapped);
+                            var created = await _customerRepository.CreateAsync(mapped.ToCreateDto());
                             _mapping[m.Id] = created.Id.ToString();
                             summary.Created++;
                         }

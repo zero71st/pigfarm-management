@@ -8,8 +8,8 @@ public interface ICustomerService
 {
     Task<List<Customer>> GetAllCustomersAsync();
     Task<Customer?> GetCustomerByIdAsync(Guid id);
-    Task<Customer> CreateCustomerAsync(Customer customer);
-    Task<Customer> UpdateCustomerAsync(Customer customer);
+    Task<Customer> CreateCustomerAsync(CustomerCreateDto dto);
+    Task<Customer> UpdateCustomerAsync(Guid id, CustomerUpdateDto dto);
     Task<bool> DeleteCustomerAsync(Guid id);
     
     // Location management
@@ -50,35 +50,38 @@ public class CustomerService : ICustomerService
         return await _customerRepository.GetByIdAsync(id);
     }
 
-    public async Task<Customer> CreateCustomerAsync(Customer customer)
+    public async Task<Customer> CreateCustomerAsync(CustomerCreateDto dto)
     {
         // Business logic: Check if customer code already exists
-        var existingCustomer = await _customerRepository.GetByCodeAsync(customer.Code);
+        var existingCustomer = await _customerRepository.GetByCodeAsync(dto.Code);
         if (existingCustomer != null)
         {
             throw new InvalidOperationException("Customer code already exists");
         }
 
-        return await _customerRepository.CreateAsync(customer);
+        return await _customerRepository.CreateAsync(dto);
     }
 
-    public async Task<Customer> UpdateCustomerAsync(Customer customer)
+    public async Task<Customer> UpdateCustomerAsync(Guid id, CustomerUpdateDto dto)
     {
         // Business logic: Check if customer exists
-        var existingCustomer = await _customerRepository.GetByIdIncludingDeletedAsync(customer.Id);
+        var existingCustomer = await _customerRepository.GetByIdIncludingDeletedAsync(id);
         if (existingCustomer == null)
         {
             throw new InvalidOperationException("Customer not found");
         }
 
         // Business logic: Check if customer code already exists for another customer
-        var codeConflict = await _customerRepository.GetByCodeAsync(customer.Code);
-        if (codeConflict != null && codeConflict.Id != customer.Id)
+        if (dto.Code != null)
         {
-            throw new InvalidOperationException("Customer code already exists");
+            var codeConflict = await _customerRepository.GetByCodeAsync(dto.Code);
+            if (codeConflict != null && codeConflict.Id != id)
+            {
+                throw new InvalidOperationException("Customer code already exists");
+            }
         }
 
-        return await _customerRepository.UpdateAsync(customer);
+        return await _customerRepository.UpdateAsync(id, dto);
     }
 
     public async Task<bool> DeleteCustomerAsync(Guid id)

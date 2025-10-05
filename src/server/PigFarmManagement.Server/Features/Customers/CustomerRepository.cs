@@ -7,8 +7,8 @@ public interface ICustomerRepository
 {
     Task<List<Customer>> GetAllAsync();
     Task<Customer?> GetByIdAsync(Guid id);
-    Task<Customer> CreateAsync(Customer customer);
-    Task<Customer> UpdateAsync(Customer customer);
+    Task<Customer> CreateAsync(CustomerCreateDto dto);
+    Task<Customer> UpdateAsync(Guid id, CustomerUpdateDto dto);
     Task<bool> DeleteAsync(Guid id);
     Task<bool> ExistsWithCodeAsync(string code, Guid? excludeId = null);
     Task<bool> HasAssociatedPigPensAsync(Guid customerId);
@@ -38,14 +38,14 @@ public class CustomerRepository : ICustomerRepository
         return await _efCustomerRepository.GetByIdAsync(id);
     }
 
-    public async Task<Customer> CreateAsync(Customer customer)
+    public async Task<Customer> CreateAsync(CustomerCreateDto dto)
     {
-        return await _efCustomerRepository.CreateAsync(customer);
+        return await _efCustomerRepository.CreateAsync(dto);
     }
 
-    public async Task<Customer> UpdateAsync(Customer customer)
+    public async Task<Customer> UpdateAsync(Guid id, CustomerUpdateDto dto)
     {
-        return await _efCustomerRepository.UpdateAsync(customer);
+        return await _efCustomerRepository.UpdateAsync(id, dto);
     }
 
     public async Task<bool> DeleteAsync(Guid id)

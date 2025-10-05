@@ -73,11 +73,11 @@ public static class CustomerEndpoints
         }
     }
 
-    private static async Task<IResult> CreateCustomer(Customer customer, ICustomerService customerService)
+    private static async Task<IResult> CreateCustomer(CustomerCreateDto dto, ICustomerService customerService)
     {
         try
         {
-            var createdCustomer = await customerService.CreateCustomerAsync(customer);
+            var createdCustomer = await customerService.CreateCustomerAsync(dto);
             return Results.Created($"/api/customers/{createdCustomer.Id}", createdCustomer);
         }
         catch (InvalidOperationException ex)
@@ -90,17 +90,11 @@ public static class CustomerEndpoints
         }
     }
 
-    private static async Task<IResult> UpdateCustomer(Guid id, Customer customer, ICustomerService customerService)
+    private static async Task<IResult> UpdateCustomer(Guid id, CustomerUpdateDto dto, ICustomerService customerService)
     {
         try
         {
-            // Ensure the ID in the URL matches the customer ID
-            if (id != customer.Id)
-            {
-                return Results.BadRequest("Customer ID mismatch");
-            }
-
-            var updatedCustomer = await customerService.UpdateCustomerAsync(customer);
+            var updatedCustomer = await customerService.UpdateCustomerAsync(id, dto);
             return Results.Ok(updatedCustomer);
         }
         catch (InvalidOperationException ex)
