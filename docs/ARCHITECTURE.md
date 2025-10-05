@@ -90,14 +90,48 @@ PigFarmManagement/
 
 ## 🎯 **Feature Architecture Details**
 
-### **1. 👥 Customer Feature**
+### **1. 👥 Enhanced Customer Management Feature**
 
-**Structure:**
+**Complete Architecture:**
 ```
 Features/Customers/
-├── Pages/CustomersPage.razor          # Main page with routing
+├── Pages/
+│   └── CustomerManagement.razor       # Main customer management page
 ├── Components/
-│   ├── CustomerCard.razor             # Individual customer display
+│   ├── CustomerCard.razor             # Customer card view display
+│   ├── CustomerTableView.razor        # Table view component
+│   ├── ViewModeToggle.razor           # Toggle between card/table views
+│   ├── CustomerEmptyState.razor       # Empty state display
+│   ├── CustomerStatistics.razor       # Customer statistics dashboard
+│   ├── AddCustomerDialog.razor        # Add new customer dialog
+│   ├── EditCustomerDialog.razor       # Edit customer with full data model
+│   ├── DeleteCustomerDialog.razor     # Delete confirmation with safety checks
+│   ├── CustomerDetailsDialog.razor    # View customer details
+│   └── CustomerLocationMap.razor      # Google Maps integration component
+└── Services/
+    ├── CustomerService.cs             # Enhanced API service
+    ├── ICustomerLocationService.cs     # Location management interface
+    ├── CustomerLocationService.cs     # Location operations
+    ├── IGoogleMapsService.cs          # Google Maps integration interface
+    └── GoogleMapsService.cs           # Maps API service implementation
+```
+
+**Key Capabilities:**
+- **CRUD Operations**: Complete customer lifecycle management with soft deletion
+- **Location Integration**: Google Maps with coordinate management and validation
+- **View Modes**: Persistent card/table view switching with user preferences
+- **Advanced Filtering**: Real-time search and status filtering (Active/Inactive/All)
+- **POS Integration**: Manual sync with POSPOS system and conflict resolution
+- **Modern UI**: Icon-only buttons, responsive design, comprehensive validation
+
+**Data Flow:**
+```
+UI Components → Customer Service → API Endpoints → Business Logic → Database
+                     ↓
+              Google Maps Service → Maps JavaScript API
+                     ↓
+              Location Service → Coordinate Validation
+```
 │   ├── CustomerEmptyState.razor       # No customers found state
 │   ├── CustomerStatistics.razor       # Statistics summary
 │   ├── AddCustomerDialog.razor        # Create new customer
@@ -428,43 +462,85 @@ This architecture provides a solid foundation for a production-ready pig farm ma
 
 ---
 
-## 🖥️ **Server-Side Feature Architecture (NEW!)**
+## 🖥️ **Enhanced Server-Side Feature Architecture**
 
-### **📁 Feature-Based Server Structure**
+### **📁 Updated Feature-Based Server Structure**
 ```
 src/server/PigFarmManagement.Server/
 ├── 🏗️ **Features/                    # FEATURE-BASED ARCHITECTURE**
 │   │
-│   ├── 👥 **Customers/**              # Customer Management Feature
-│   │   ├── CustomerEndpoints.cs       # API endpoint definitions
-│   │   ├── CustomerService.cs         # Business logic & domain rules
-│   │   └── CustomerRepository.cs      # Data access layer
+│   ├── 👥 **Customers/**              # Enhanced Customer Management Feature
+│   │   ├── CustomerEndpoints.cs       # Extended API endpoints with CRUD operations
+│   │   ├── CustomerService.cs         # Enhanced business logic & domain rules
+│   │   ├── CustomerRepository.cs      # Data access with soft deletion & location
+│   │   ├── CustomerLocationService.cs # Location-specific operations
+│   │   ├── CustomerDeletionService.cs # Soft deletion business logic
+│   │   └── DTOs/
+│   │       ├── CustomerDto.cs         # Enhanced with location fields
+│   │       ├── CustomerLocationDto.cs # Location update operations
+│   │       └── CustomerDeletionRequest.cs # Deletion validation
 │   │
-│   ├── 🐷 **PigPens/**               # Pig Pen Management Feature
+│   ├── 🐷 **PigPens/**               # Pig Pen Management Feature (unchanged)
 │   │   ├── PigPenEndpoints.cs        # API endpoint definitions
 │   │   ├── PigPenService.cs          # Business logic & domain rules
 │   │   └── PigPenRepository.cs       # Data access layer
 │   │
-│   ├── 🍽️ **Feeds/**                # Feed Management Feature
-│   │   ├── FeedEndpoints.cs          # API endpoint definitions
-│   │   ├── FeedService.cs            # Business logic & domain rules
+│   ├── 🍽️ **Feeds/**                # Feed Management Feature (enhanced)
+│   │   ├── FeedEndpoints.cs          # Enhanced POSPOS import endpoints
+│   │   ├── FeedService.cs            # Enhanced pricing & calculation logic
 │   │   └── FeedRepository.cs         # Data access layer
 │   │
 │   └── 📊 **Dashboard/**             # Dashboard Feature
 │       ├── DashboardEndpoints.cs     # API endpoint definitions
 │       └── DashboardService.cs       # Cross-feature aggregation
 │
-├── 🏗️ **Infrastructure/              # Cross-Cutting Concerns**
+├── 🏗️ **Infrastructure/              # Enhanced Cross-Cutting Concerns**
 │   ├── Data/
-│   │   └── InMemoryDataStore.cs      # Centralized data management
+│   │   ├── PigFarmDbContext.cs       # Entity Framework Core context
+│   │   ├── Entities/                 # Database entities
+│   │   │   ├── Customer.cs           # Enhanced with location & soft deletion
+│   │   │   ├── PigPen.cs            # Entity relationships
+│   │   │   └── Feed.cs              # Enhanced with pricing fields
+│   │   └── Migrations/               # EF Core migrations
+│   │       ├── AddCustomerLocationFields.cs
+│   │       └── AddCustomerSoftDeletion.cs
+│   ├── Services/
+│   │   ├── PosposImporter.cs         # Enhanced POS integration
+│   │   └── GoogleMapsApiService.cs   # Google Maps backend integration
 │   └── Extensions/
-│       ├── ServiceCollectionExtensions.cs  # DI registration
-│       └── WebApplicationExtensions.cs     # Endpoint mapping
+│       ├── ServiceCollectionExtensions.cs  # Enhanced DI registration
+│       └── WebApplicationExtensions.cs     # Enhanced endpoint mapping
 │
-└── Program.cs                        # Minimal startup configuration (40 lines!)
+└── Program.cs                        # Enhanced startup with EF Core & CORS
 ```
 
-### **🎯 Server Architecture Benefits**
+### **🎯 Enhanced Customer Management Server Features**
+
+#### **📡 API Endpoints Layer**
+```csharp
+// Features/Customers/CustomerEndpoints.cs
+app.MapGet("/api/customers", GetCustomers);
+app.MapGet("/api/customers/{id}", GetCustomer);
+app.MapPost("/api/customers", CreateCustomer);
+app.MapPut("/api/customers/{id}", UpdateCustomer);
+app.MapPut("/api/customers/{id}/location", UpdateCustomerLocation);
+app.MapDelete("/api/customers/{id}", DeleteCustomer);  // Soft delete
+app.MapPost("/api/customers/sync/pospos", SyncFromPospos);
+```
+
+#### **🧠 Enhanced Business Logic Layer**
+- **Soft Deletion**: Preserves data integrity with audit trail
+- **Location Validation**: Coordinate range validation (-90≤lat≤90, -180≤lng≤180)
+- **POS Conflict Resolution**: POS data takes precedence during sync
+- **Relationship Validation**: Prevents deletion of customers with active pig pens
+
+#### **💾 Enhanced Data Access Layer**
+- **Entity Framework Core**: SQLite for development, PostgreSQL for production
+- **Soft Delete Queries**: Automatic filtering of deleted records
+- **Location Indexing**: Optimized queries for geographic data
+- **Audit Trail**: Comprehensive logging of all customer operations
+
+### **🎯 Previous Server Architecture Benefits**
 
 #### **✅ Complete Feature Isolation**
 - Each feature contains its own **Endpoints**, **Services**, and **Repositories**
@@ -476,6 +552,54 @@ src/server/PigFarmManagement.Server/
 2. **🧠 Service Layer**: Business logic, domain rules, validation  
 3. **💾 Repository Layer**: Data access with async patterns
 4. **🏗️ Infrastructure Layer**: DI, CORS, health checks
+
+#### **📦 Enhanced Dependency Injection Pattern**
+```csharp
+// Infrastructure/Extensions/ServiceCollectionExtensions.cs
+services.AddScoped<ICustomerService, CustomerService>();
+services.AddScoped<ICustomerRepository, CustomerRepository>();
+services.AddScoped<ICustomerLocationService, CustomerLocationService>();
+services.AddScoped<ICustomerDeletionService, CustomerDeletionService>();
+services.AddScoped<IGoogleMapsService, GoogleMapsService>();
+services.AddDbContext<PigFarmDbContext>(options => 
+    options.UseSqlite(connectionString));
+```
+
+### **🗃️ Enhanced Database Architecture**
+
+#### **📊 Entity Framework Core Schema**
+```csharp
+// Enhanced Customer Entity
+public class Customer
+{
+    public Guid Id { get; set; }
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+    public string Code { get; set; }
+    public string? Phone { get; set; }
+    public string? Email { get; set; }
+    public string? Address { get; set; }
+    
+    // Enhanced Location Fields
+    public decimal? Latitude { get; set; }   // -90 to 90
+    public decimal? Longitude { get; set; }  // -180 to 180
+    
+    // Enhanced Soft Deletion
+    public bool IsDeleted { get; set; }
+    public DateTime? DeletedAt { get; set; }
+    public string? DeletedBy { get; set; }
+    
+    // Audit Fields
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
+```
+
+#### **🔄 Migration Strategy**
+- **Incremental Migrations**: Each feature enhancement gets its own migration
+- **Backward Compatibility**: All migrations preserve existing data
+- **Schema Validation**: Automatic validation on application startup
+- **Development/Production**: SQLite → PostgreSQL with identical schema
 
 #### **📦 Dependency Injection Pattern**
 ```csharp

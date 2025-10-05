@@ -1,14 +1,47 @@
 # PigFarmManagement
 
-Initial scaffold based on PRD. Contains:
+Comprehensive pig farm management system with integrated customer management, POS system synchronization, and feed tracking capabilities.
 
-* Server: Minimal API (.NET 8) with POSPOS integration for live feed imports
-* Shared: DTO / record models
-* Client: Blazor WebAssembly basic UI for Pig Pens list + detail (feeds, deposits, harvest)
-* Shared: DTO / record models
-* Client: Blazor WebAssembly basic UI for Pig Pens list + detail (feeds, deposits, harvest)
+* **Server**: .NET 8 Web API with POSPOS integration for live feed imports
+* **Client**: Blazor WebAssembly application with modern UI for managing pig pens, customers, and operations
+* **Shared**: DTO / record models for seamless client-server communication
 
 ## Features
+
+### Enhanced Customer Management (Feature 008)
+
+Complete customer lifecycle management with modern UI and location tracking:
+
+#### Core Customer Operations
+- **Customer Database**: Full CRUD operations for customer records with soft deletion support
+- **Dual View Modes**: Switch between card view (default) and table view for optimal workflow
+- **Advanced Filtering**: Filter customers by status (Active/Inactive) with real-time search across all fields
+- **Bulk Operations**: Import and sync customer data from POS systems
+
+#### Location & Mapping Integration
+- **Google Maps Integration**: Interactive maps showing customer locations
+- **Coordinate Management**: Manual entry and editing of latitude/longitude coordinates
+- **Location Validation**: Automatic validation of coordinate ranges and data integrity
+- **Address Display**: Full address information with geographic context
+
+#### POS System Integration
+- **Manual Sync**: Admin-triggered synchronization with POSPOS for customer data updates
+- **Conflict Resolution**: POS data takes precedence during sync conflicts (authoritative source)
+- **Real-time Updates**: Automatic UI refresh after successful synchronization
+- **Audit Trail**: Complete logging of all customer modifications and sync activities
+
+#### Modern UI/UX Features
+- **Icon-Only Buttons**: Clean, modern interface with tooltips for enhanced usability
+- **Responsive Design**: Optimized for desktop and mobile devices using MudBlazor components
+- **Real-time Filtering**: Instant search and filter results without page refreshes
+- **Enhanced Dialogs**: Full-featured customer editing with comprehensive field support
+
+### Database Schema Enhancements
+
+**Customer Entity Updates**:
+- Added location fields: `Latitude`, `Longitude`
+- Implemented soft deletion: `IsDeleted`, `DeletedAt`, `DeletedBy`
+- Enhanced audit tracking for compliance and debugging
 
 ### POSPOS Feed Import Enhancement (Feature 006)
 
@@ -31,6 +64,19 @@ The Pig Pen detail page now displays enhanced feed information:
 
 ## Database Schema Changes
 
+### Customer Management Enhancement
+
+**Migrations**: `AddCustomerLocationFields`, `AddCustomerSoftDeletion`
+
+New columns added to `Customers` table:
+- `Latitude` (decimal?) - Geographic latitude coordinate (-90 to 90)
+- `Longitude` (decimal?) - Geographic longitude coordinate (-180 to 180)
+- `IsDeleted` (bool) - Soft deletion flag for data retention
+- `DeletedAt` (DateTime?) - Timestamp of deletion for audit trail
+- `DeletedBy` (string?) - User identifier who performed deletion
+
+### Feed Import Enhancement
+
 **Migration**: `AddPosTotalPriceIncludeDiscount`
 
 New columns added to `Feeds` table:
@@ -40,6 +86,38 @@ New columns added to `Feeds` table:
 - `Sys_TotalPriceIncludeDiscount` (decimal?) - System calculated total
 - `TotalPriceIncludeDiscount` (decimal) - Renamed from TotalPrice for clarity
 - `Pos_TotalPriceIncludeDiscount` (decimal?) - POS-provided total for comparison
+
+### Migration Commands
+
+Apply all migrations:
+```bash
+cd src/server/PigFarmManagement.Server
+dotnet ef database update
+```
+
+## Configuration
+
+### Google Maps API Setup
+
+1. **Get API Key**: Obtain a Google Maps JavaScript API key from [Google Cloud Console](https://console.cloud.google.com/)
+2. **Configure Client**: Add the API key to your client configuration:
+   ```json
+   {
+     "GoogleMaps": {
+       "ApiKey": "YOUR_GOOGLE_MAPS_API_KEY"
+     }
+   }
+   ```
+3. **Enable APIs**: Ensure the following APIs are enabled in Google Cloud Console:
+   - Maps JavaScript API
+   - Geocoding API (optional, for address lookup)
+
+### Environment Variables
+
+For development, you can also set:
+```bash
+GOOGLE_MAPS_API_KEY=your_api_key_here
+```
 
 ### Migration Commands
 
@@ -91,7 +169,82 @@ Use this sample POSPOS JSON to test the new functionality:
 ]
 ```
 
+## Testing Enhanced Customer Management
+
+### Feature Testing Checklist
+
+#### Customer CRUD Operations
+- ✅ **Create**: Add new customers with all required and optional fields
+- ✅ **Read**: View customer details in both card and table views  
+- ✅ **Update**: Edit customer information with real-time validation
+- ✅ **Delete**: Soft delete customers with confirmation dialog
+
+#### Location Management
+- ✅ **Coordinate Entry**: Manual input of latitude/longitude values
+- ✅ **Map Display**: Google Maps integration showing customer locations
+- ✅ **Validation**: Coordinate range validation (-90 to 90 lat, -180 to 180 lng)
+
+#### View Mode Switching
+- ✅ **Card View**: Default view with customer cards showing key information
+- ✅ **Table View**: Comprehensive table with sortable columns
+- ✅ **Persistence**: View preference remembered across sessions
+
+#### Filtering & Search
+- ✅ **Status Filter**: Filter by Active/Inactive status with "All Statuses" option
+- ✅ **Text Search**: Real-time search across name, code, phone, and email fields
+- ✅ **Combined Filters**: Status and text filters work together
+
+#### POS Integration
+- ✅ **Manual Sync**: Admin-triggered synchronization with POS system
+- ✅ **Conflict Resolution**: POS data takes precedence during conflicts
+- ✅ **UI Updates**: Real-time refresh after successful sync
+
 ### API Testing
+
+#### Customer Management Endpoints
+
+**Get All Customers**:
+```bash
+curl -X GET "http://localhost:5000/api/customers"
+```
+
+**Create Customer**:
+```bash
+curl -X POST "http://localhost:5000/api/customers" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "firstName": "John",
+    "lastName": "Doe", 
+    "code": "C001",
+    "phone": "0123456789",
+    "email": "john.doe@example.com",
+    "address": "123 Farm Road",
+    "latitude": 13.7563,
+    "longitude": 100.5018
+  }'
+```
+
+**Update Customer Location**:
+```bash
+curl -X PUT "http://localhost:5000/api/customers/{id}/location" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "latitude": 13.7563,
+    "longitude": 100.5018
+  }'
+```
+
+**Delete Customer** (Soft Delete):
+```bash
+curl -X DELETE "http://localhost:5000/api/customers/{id}"
+```
+
+**Sync from POS**:
+```bash
+curl -X POST "http://localhost:5000/api/customers/sync/pospos"
+```
+
+#### Feed Import Testing
 
 Import via JSON endpoint:
 ```bash
@@ -112,21 +265,66 @@ For the sample data:
 
 **Difference Analysis**: The 100.00 difference (14900 - 14800) represents POS-specific pricing logic or rounding that differs from the system calculation.
 
-## Run (Dev)
+## Run (Development)
 
-1. Open solution folder `src` in VS Code / terminal
-2. Run server:
-```
-dotnet run --project .\server\PigFarmManagement.Server\PigFarmManagement.Server.csproj
-```
-(Default: http://localhost:5000 if you set ASPNETCORE_URLS; otherwise shown in output.)
-3. Run client:
-```
-dotnet run --project .\client\PigFarmManagement.Client\PigFarmManagement.Client.csproj
-```
-4. Open the client dev URL printed (typically https://localhost:7xxx) and ensure the server base address in `Program.cs` matches the server port.
+### Prerequisites
+- .NET 8 SDK
+- Google Maps API key (for location features)
+
+### Setup & Configuration
+
+1. **Configure Google Maps API** (Required for customer location features):
+   ```bash
+   # Set environment variable (optional)
+   set GOOGLE_MAPS_API_KEY=your_api_key_here
+   
+   # Or add to appsettings.Development.json in client project
+   ```
+
+2. **Apply Database Migrations**:
+   ```bash
+   cd src/server/PigFarmManagement.Server
+   dotnet ef database update
+   ```
+
+### Running the Application
+
+1. **Open solution folder** `src` in VS Code / terminal
+
+2. **Run server** (Terminal 1):
+   ```bash
+   dotnet run --project .\server\PigFarmManagement.Server\PigFarmManagement.Server.csproj --urls http://localhost:5000
+   ```
+
+3. **Run client** (Terminal 2):
+   ```bash
+   dotnet run --project .\client\PigFarmManagement.Client\PigFarmManagement.Client.csproj --urls http://localhost:7000
+   ```
+
+4. **Access the application**:
+   - Client: http://localhost:7000
+   - Server API: http://localhost:5000
+   - Swagger UI: http://localhost:5000/swagger
+
+### Using the Customer Management Features
+
+1. **Navigate to Customer Management**: Click on "Customers" in the main navigation
+2. **View Modes**: Toggle between card view (default) and table view using the view toggle
+3. **Add Customers**: Use the "+" button to add new customers with location data
+4. **Edit Customers**: Click on any customer card or table row to edit details
+5. **Filter & Search**: Use the status filter and search box to find specific customers
+6. **POS Sync**: Use the sync button to import/update customer data from POS system
+7. **Location Mapping**: View customer locations on the integrated Google Maps
 
 ## Next Steps
+
+### Immediate Improvements
+* Enhanced location features: address geocoding, location search
+* Advanced customer analytics and reporting
+* Bulk customer operations (import/export)
+* Customer relationship tracking with pig pens and transactions
+
+### System Enhancements
 
 * Add proper solution file & projects referencing (generate via `dotnet new sln && dotnet sln add ...`)
 * Implement authentication & roles
