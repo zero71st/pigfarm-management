@@ -33,6 +33,7 @@ builder.Services.AddMudServices();
 // Register feature services
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<ICustomerLocationService, CustomerLocationService>();
+builder.Services.AddScoped<IGoogleMapsService, GoogleMapsService>();
 builder.Services.AddScoped<IPigPenService, PigPenService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IFeedService, FeedService>();

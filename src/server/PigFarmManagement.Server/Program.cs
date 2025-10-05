@@ -14,6 +14,9 @@ builder.Services.AddControllers();
 // Bind POSPOS options from configuration / environment
 builder.Services.Configure<PigFarmManagement.Server.Infrastructure.Settings.PosposOptions>(builder.Configuration.GetSection("Pospos"));
 
+// Bind Google Maps options from configuration / environment
+builder.Services.Configure<PigFarmManagement.Server.Infrastructure.Settings.GoogleMapsOptions>(builder.Configuration.GetSection("GoogleMaps"));
+
 // Add Entity Framework
 builder.Services.AddDbContext<PigFarmDbContext>(options =>
 {
@@ -68,7 +71,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<PigFarmDbContext>();
-    context.Database.EnsureCreated();
+    context.Database.Migrate();
 }
 
 // Configure the HTTP request pipeline
