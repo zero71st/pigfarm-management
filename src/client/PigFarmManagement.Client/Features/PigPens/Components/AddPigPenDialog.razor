@@ -102,6 +102,15 @@
                         </MudAlert>
                     </MudItem>
                 }
+
+                <!-- Note Section -->
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="note" 
+                                 Label="Note" 
+                                 Variant="Variant.Outlined" 
+                                 Lines="3"
+                                 Placeholder="Enter any additional notes about this pig pen..." />
+                </MudItem>
             </MudGrid>
         </MudContainer>
     </DialogContent>
@@ -132,6 +141,9 @@
 
     // Feed brand selection property
     private string? selectedBrand;
+    
+    // Note property
+    private string? note;
 
     protected override async Task OnInitializedAsync()
     {
@@ -227,7 +239,8 @@
                 estimatedHarvestDate,
                 selectedType,
                 selectedBrand, // Save the selected brand
-                depositPerPig // Custom deposit per pig amount
+                depositPerPig, // Custom deposit per pig amount
+                note // Note
             );
 
             var createdPigPen = await PigPenService.CreatePigPenAsync(pigPenDto);

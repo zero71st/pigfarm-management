@@ -144,6 +144,13 @@
                                     <td><strong>Est. Harvest:</strong></td>
                                     <td>@(pigPen.EstimatedHarvestDate?.ToString("dd/MM/yyyy") ?? "Not set")</td>
                                 </tr>
+                                @if (!string.IsNullOrWhiteSpace(pigPen.Note))
+                                {
+                                    <tr>
+                                        <td><strong>Note:</strong></td>
+                                        <td style="max-width: 300px; word-wrap: break-word;">@pigPen.Note</td>
+                                    </tr>
+                                }
                             </tbody>
                         </MudSimpleTable>
                     </MudItem>
@@ -694,36 +701,6 @@
                             </MudTd>
                         </RowTemplate>
                     </MudTable>
-                    
-                    <!-- Harvest Summary -->
-                    <MudDivider Class="my-4" />
-                    <MudText Typo="Typo.h6" Class="mb-2">Harvest Summary</MudText>
-                    <MudGrid>
-                        <MudItem xs="12" sm="3">
-                            <MudPaper Class="pa-3" Elevation="1">
-                                <MudText Typo="Typo.body2" Color="Color.Secondary">Total Pigs Sold</MudText>
-                                <MudText Typo="Typo.h6">@harvests.Sum(h => h.PigCount)</MudText>
-                            </MudPaper>
-                        </MudItem>
-                        <MudItem xs="12" sm="3">
-                            <MudPaper Class="pa-3" Elevation="1">
-                                <MudText Typo="Typo.body2" Color="Color.Secondary">Total Weight</MudText>
-                                <MudText Typo="Typo.h6">@harvests.Sum(h => h.TotalWeight).ToString("N1") kg</MudText>
-                            </MudPaper>
-                        </MudItem>
-                        <MudItem xs="12" sm="3">
-                            <MudPaper Class="pa-3" Elevation="1">
-                                <MudText Typo="Typo.body2" Color="Color.Secondary">Avg Price per Kg</MudText>
-                                <MudText Typo="Typo.h6">฿@harvests.Average(h => h.SalePricePerKg).ToString("N2")</MudText>
-                            </MudPaper>
-                        </MudItem>
-                        <MudItem xs="12" sm="3">
-                            <MudPaper Class="pa-3" Elevation="1">
-                                <MudText Typo="Typo.body2" Color="Color.Secondary">Total Revenue</MudText>
-                                <MudText Typo="Typo.h6" Color="Color.Success">฿@harvests.Sum(h => h.Revenue).ToString("N2")</MudText>
-                            </MudPaper>
-                        </MudItem>
-                    </MudGrid>
                 }
                 else
                 {

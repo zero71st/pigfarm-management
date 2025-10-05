@@ -34,6 +34,9 @@ public record PigPen(Guid Id, Guid CustomerId, string PenCode, int PigQty,
     // Feed formula brand selection (for display purposes)
     public string? SelectedBrand { get; init; }
     
+    // Note field for additional information
+    public string? Note { get; init; }
+    
     // Unified formula assignments - replaces the old FeedFormulaId, FeedFormulaSnapshot, and FeedFormulaAllocations systems
     public List<PigPenFormulaAssignment> FormulaAssignments { get; init; } = new();
     
