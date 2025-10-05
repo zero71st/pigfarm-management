@@ -1,0 +1,73 @@
+@using Microsoft.AspNetCore.Components
+@using MudBlazor
+@using PigFarmManagement.Shared.Models
+
+<div class="view-mode-toggle-container">
+    <MudIconButton Icon="@GetCurrentIcon()"
+                   Color="Color.Primary"
+                   Size="Size.Medium"
+                   Class="view-mode-toggle"
+                   Disabled="@IsLoading"
+                   OnClick="@ToggleViewMode" />
+    
+    <MudTooltip Text="@GetTooltipText()">
+        <span class="view-mode-label">@GetCurrentViewText()</span>
+    </MudTooltip>
+</div>
+
+@code {
+    [Parameter] public ViewMode CurrentMode { get; set; } = ViewMode.Card;
+    [Parameter] public EventCallback<ViewMode> CurrentModeChanged { get; set; }
+    [Parameter] public bool IsLoading { get; set; } = false;
+
+    private async Task ToggleViewMode()
+    {
+        var newMode = CurrentMode == ViewMode.Card ? ViewMode.Table : ViewMode.Card;
+        CurrentMode = newMode;
+        await CurrentModeChanged.InvokeAsync(newMode);
+    }
+
+    private string GetCurrentIcon()
+    {
+        return CurrentMode == ViewMode.Card 
+            ? Icons.Material.Filled.ViewModule
+            : Icons.Material.Filled.TableRows;
+    }
+
+    private string GetTooltipText()
+    {
+        return CurrentMode == ViewMode.Card 
+            ? "Switch to table view" 
+            : "Switch to card view";
+    }
+
+    private string GetCurrentViewText()
+    {
+        return CurrentMode == ViewMode.Card 
+            ? "Card View" 
+            : "Table View";
+    }
+}
+
+<style>
+    .view-mode-toggle-container {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .view-mode-toggle {
+        transition: all 0.2s ease-in-out;
+    }
+
+    .view-mode-toggle:hover {
+        transform: scale(1.05);
+    }
+
+    .view-mode-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--mud-palette-text-primary);
+        user-select: none;
+    }
+</style>

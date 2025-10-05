@@ -66,11 +66,11 @@ namespace PigFarmManagement.Server.Services
 
                         if (_mapping.TryGetValue(m.Id, out var internalId))
                         {
-                            // existing mapping -> update via repository
+                            // existing mapping -> update via repository, preserving location data
                             try
                             {
                                 var withId = mapped with { Id = Guid.Parse(internalId) };
-                                await _customerRepository.UpdateAsync(withId);
+                                await UpdateCustomerPreservingLocationAsync(withId);
                                 summary.Updated++;
                             }
                             catch (Exception ex)
@@ -147,7 +147,7 @@ namespace PigFarmManagement.Server.Services
                             try
                             {
                                 var withId = mapped with { Id = Guid.Parse(internalId) };
-                                await _customerRepository.UpdateAsync(withId);
+                                await UpdateCustomerPreservingLocationAsync(withId);
                                 summary.Updated++;
                             }
                             catch (Exception ex)
@@ -256,6 +256,28 @@ namespace PigFarmManagement.Server.Services
             }
 
             return DateTime.UtcNow;
+        }
+
+        /// <summary>
+        /// Updates customer from POS data while preserving location fields (Latitude, Longitude)
+        /// </summary>
+        private async Task UpdateCustomerPreservingLocationAsync(PigFarmManagement.Shared.Models.Customer updatedCustomer)
+        {
+            // Get existing customer to preserve location data
+            var existingCustomer = await _customerRepository.GetByIdAsync(updatedCustomer.Id);
+            if (existingCustomer == null)
+            {
+                throw new ArgumentException($"Customer with ID {updatedCustomer.Id} not found");
+            }
+
+            // Create updated customer preserving location fields
+            var customerWithPreservedLocation = updatedCustomer with 
+            { 
+                Latitude = existingCustomer.Latitude,
+                Longitude = existingCustomer.Longitude
+            };
+
+            await _customerRepository.UpdateAsync(customerWithPreservedLocation);
         }
     }
 }

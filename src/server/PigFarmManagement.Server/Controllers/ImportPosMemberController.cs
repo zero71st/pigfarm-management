@@ -271,5 +271,36 @@ namespace PigFarmManagement.Server.Controllers
                 return NotFound(new { message = "No import has been run yet." });
             return Ok(summary);
         }
+
+        /// <summary>
+        /// Manual POS sync trigger endpoint with location preservation.
+        /// This endpoint triggers a full sync from POS system while preserving existing location data.
+        /// Use this when you want to manually synchronize customer data from POS without affecting locations.
+        /// </summary>
+        [HttpPost("customers/sync")]
+        public async Task<IActionResult> ManualPosSync([FromQuery] bool persist = true)
+        {
+            try
+            {
+                var summary = await _importer.RunImportAsync(persist);
+                return Ok(new 
+                { 
+                    success = true,
+                    message = "Manual POS sync completed successfully",
+                    summary = summary,
+                    timestamp = DateTime.UtcNow
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new 
+                { 
+                    success = false,
+                    message = "Manual POS sync failed",
+                    error = ex.Message,
+                    timestamp = DateTime.UtcNow
+                });
+            }
+        }
     }
 }

@@ -1,0 +1,227 @@
+openapi: 3.0.3
+info:
+  title: Customer Management API
+  description: Enhanced customer management with deletion, location, and POS sync
+  version: 1.0.0
+servers:
+  - url: https://api.pigfarm.local
+    description: Development server
+
+paths:
+  /customers/{id}/delete:
+    delete:
+      summary: Delete customer (soft or hard)
+      description: Delete customer with validation checks for active relationships
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: force
+          in: query
+          description: Force hard deletion even with blocking relationships
+          required: false
+          schema:
+            type: boolean
+            default: false
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  description: Reason for deletion
+                deletedBy:
+                  type: string
+                  description: User performing deletion
+              required:
+                - deletedBy
+      responses:
+        '200':
+          description: Customer soft deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  customerId:
+                    type: string
+                    format: uuid
+                  deletionType:
+                    type: string
+                    enum: [soft, hard]
+                  deletedAt:
+                    type: string
+                    format: date-time
+        '204':
+          description: Customer hard deleted successfully
+        '409':
+          description: Cannot delete due to active relationships
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerDeletionValidation'
+
+  /customers/{id}/deletion-validation:
+    get:
+      summary: Validate if customer can be deleted
+      description: Check for blocking relationships before deletion
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Deletion validation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerDeletionValidation'
+
+  /customers/{id}/location:
+    put:
+      summary: Update customer location
+      description: Set or update customer geographic coordinates
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerLocationDto'
+      responses:
+        '200':
+          description: Location updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerLocationDto'
+        '400':
+          description: Invalid coordinates
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid coordinates"
+                  details:
+                    type: array
+                    items:
+                      type: string
+                    example: ["Latitude must be between -90 and 90"]
+
+  /customers/sync-pos:
+    post:
+      summary: Manual POS sync trigger
+      description: Trigger manual synchronization with POS system
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customerIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  description: Specific customers to sync (empty = all)
+                preserveLocation:
+                  type: boolean
+                  default: true
+                  description: Preserve manually entered location data
+      responses:
+        '200':
+          description: Sync completed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  syncId:
+                    type: string
+                    format: uuid
+                  timestamp:
+                    type: string
+                    format: date-time
+                  results:
+                    type: object
+                    properties:
+                      updated:
+                        type: integer
+                      created:
+                        type: integer
+                      errors:
+                        type: array
+                        items:
+                          type: string
+        '409':
+          description: POS API unavailable or sync in progress
+
+components:
+  schemas:
+    CustomerLocationDto:
+      type: object
+      properties:
+        customerId:
+          type: string
+          format: uuid
+        latitude:
+          type: number
+          format: decimal
+          minimum: -90
+          maximum: 90
+        longitude:
+          type: number
+          format: decimal
+          minimum: -180
+          maximum: 180
+        address:
+          type: string
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - customerId
+        - latitude
+        - longitude
+
+    CustomerDeletionValidation:
+      type: object
+      properties:
+        canDelete:
+          type: boolean
+        blockingReasons:
+          type: array
+          items:
+            type: string
+        activePigPenCount:
+          type: integer
+        activeTransactionCount:
+          type: integer
+        hasRecentActivity:
+          type: boolean
+      required:
+        - canDelete
+        - blockingReasons
+        - activePigPenCount
+        - activeTransactionCount
+        - hasRecentActivity

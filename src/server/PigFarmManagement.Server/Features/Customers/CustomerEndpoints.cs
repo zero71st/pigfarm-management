@@ -23,6 +23,27 @@ public static class CustomerEndpoints
         group.MapDelete("/{id:guid}", DeleteCustomer)
             .WithName("DeleteCustomer");
 
+        // T018: Customer deletion validation endpoint
+        group.MapPost("/{id:guid}/validate-deletion", ValidateCustomerDeletion)
+            .WithName("ValidateCustomerDeletion");
+
+        // T019: Customer deletion endpoint (soft/hard)
+        group.MapPost("/{id:guid}/soft-delete", SoftDeleteCustomer)
+            .WithName("SoftDeleteCustomer");
+            
+        group.MapPost("/{id:guid}/hard-delete", HardDeleteCustomer)
+            .WithName("HardDeleteCustomer");
+
+        // T020: Customer location update endpoint
+        group.MapGet("/{id:guid}/location", GetCustomerLocation)
+            .WithName("GetCustomerLocation");
+            
+        group.MapPut("/{id:guid}/location", UpdateCustomerLocation)
+            .WithName("UpdateCustomerLocation");
+            
+        group.MapDelete("/{id:guid}/location", DeleteCustomerLocation)
+            .WithName("DeleteCustomerLocation");
+
         return builder;
     }
 
@@ -106,6 +127,129 @@ public static class CustomerEndpoints
         catch (Exception ex)
         {
             return Results.Problem($"Error deleting customer: {ex.Message}");
+        }
+    }
+
+    // T018: Customer deletion validation endpoint
+    private static async Task<IResult> ValidateCustomerDeletion(Guid id, ICustomerService customerService)
+    {
+        try
+        {
+            var validation = await customerService.ValidateCustomerDeletionAsync(id);
+            return Results.Ok(validation);
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Error validating customer deletion: {ex.Message}");
+        }
+    }
+
+    // T019: Customer deletion endpoints (soft/hard)
+    private static async Task<IResult> SoftDeleteCustomer(Guid id, ICustomerService customerService, CustomerDeletionRequest request)
+    {
+        try
+        {
+            // Ensure the ID in the request matches the route parameter
+            request.CustomerId = id;
+            var customer = await customerService.SoftDeleteCustomerAsync(request);
+            return Results.Ok(customer);
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.NotFound(ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Results.BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Error soft deleting customer: {ex.Message}");
+        }
+    }
+
+    private static async Task<IResult> HardDeleteCustomer(Guid id, ICustomerService customerService, CustomerDeletionRequest request)
+    {
+        try
+        {
+            // Ensure the ID in the request matches the route parameter
+            request.CustomerId = id;
+            await customerService.HardDeleteCustomerAsync(request);
+            return Results.Ok(new { message = "Customer permanently deleted", deletedId = id });
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.NotFound(ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Results.BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Error hard deleting customer: {ex.Message}");
+        }
+    }
+
+    // T020: Customer location endpoints
+    private static async Task<IResult> GetCustomerLocation(Guid id, ICustomerService customerService)
+    {
+        try
+        {
+            var location = await customerService.GetCustomerLocationAsync(id);
+            return location == null ? Results.NotFound() : Results.Ok(location);
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Error retrieving customer location: {ex.Message}");
+        }
+    }
+
+    private static async Task<IResult> UpdateCustomerLocation(Guid id, ICustomerService customerService, CustomerLocationDto location)
+    {
+        try
+        {
+            // Ensure the ID in the location matches the route parameter
+            location.CustomerId = id;
+            var updatedLocation = await customerService.UpdateCustomerLocationAsync(location);
+            return Results.Ok(updatedLocation);
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.NotFound(ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Results.BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Error updating customer location: {ex.Message}");
+        }
+    }
+
+    private static async Task<IResult> DeleteCustomerLocation(Guid id, ICustomerService customerService)
+    {
+        try
+        {
+            await customerService.DeleteCustomerLocationAsync(id);
+            return Results.Ok(new { message = "Customer location deleted", customerId = id });
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Error deleting customer location: {ex.Message}");
         }
     }
 }

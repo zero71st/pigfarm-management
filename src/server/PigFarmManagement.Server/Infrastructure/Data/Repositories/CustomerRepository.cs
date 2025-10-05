@@ -15,11 +15,35 @@ public class CustomerRepository : ICustomerRepository
 
     public async Task<IEnumerable<Customer>> GetAllAsync()
     {
+        var entities = await _context.Customers
+            .Where(c => !c.IsDeleted)
+            .ToListAsync();
+        return entities.Select(e => e.ToModel());
+    }
+
+    public async Task<IEnumerable<Customer>> GetAllIncludingDeletedAsync()
+    {
         var entities = await _context.Customers.ToListAsync();
         return entities.Select(e => e.ToModel());
     }
 
+    public async Task<IEnumerable<Customer>> GetDeletedAsync()
+    {
+        var entities = await _context.Customers
+            .Where(c => c.IsDeleted)
+            .ToListAsync();
+        return entities.Select(e => e.ToModel());
+    }
+
     public async Task<Customer?> GetByIdAsync(Guid id)
+    {
+        var entity = await _context.Customers
+            .Where(c => c.Id == id && !c.IsDeleted)
+            .FirstOrDefaultAsync();
+        return entity?.ToModel();
+    }
+
+    public async Task<Customer?> GetByIdIncludingDeletedAsync(Guid id)
     {
         var entity = await _context.Customers.FindAsync(id);
         return entity?.ToModel();
@@ -27,7 +51,8 @@ public class CustomerRepository : ICustomerRepository
 
     public async Task<Customer?> GetByCodeAsync(string code)
     {
-        var entity = await _context.Customers.FirstOrDefaultAsync(c => c.Code == code);
+        var entity = await _context.Customers
+            .FirstOrDefaultAsync(c => c.Code == code && !c.IsDeleted);
         return entity?.ToModel();
     }
 
@@ -45,12 +70,24 @@ public class CustomerRepository : ICustomerRepository
         if (entity == null)
             throw new ArgumentException($"Customer with ID {customer.Id} not found");
 
-    entity.Code = customer.Code;
-    // Name removed in favor of FirstName/LastName
-    entity.FirstName = customer.FirstName;
-    entity.LastName = customer.LastName;
-    entity.Status = customer.Status;
-    entity.UpdatedAt = DateTime.UtcNow;
+        // Update all fields from the customer model
+        entity.Code = customer.Code;
+        entity.FirstName = customer.FirstName;
+        entity.LastName = customer.LastName;
+        entity.Status = customer.Status;
+        entity.Phone = customer.Phone;
+        entity.Email = customer.Email;
+        entity.ExternalId = customer.ExternalId;
+        entity.KeyCardId = customer.KeyCardId;
+        entity.Address = customer.Address;
+        entity.Sex = customer.Sex;
+        entity.Zipcode = customer.Zipcode;
+        entity.Latitude = customer.Latitude;
+        entity.Longitude = customer.Longitude;
+        entity.IsDeleted = customer.IsDeleted;
+        entity.DeletedAt = customer.DeletedAt;
+        entity.DeletedBy = customer.DeletedBy;
+        entity.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
         return entity.ToModel();

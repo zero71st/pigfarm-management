@@ -29,6 +29,8 @@ public static class ServiceCollectionExtensions
 
         // Services
         services.AddScoped<ICustomerService, CustomerService>();
+        services.AddScoped<ICustomerLocationService, CustomerLocationService>();
+        services.AddScoped<ICustomerDeletionService, CustomerDeletionService>();
         services.AddScoped<IPigPenService, PigPenService>();
         services.AddScoped<IPigPenDetailService, PigPenDetailService>();
         services.AddScoped<IFeedService, FeedService>();

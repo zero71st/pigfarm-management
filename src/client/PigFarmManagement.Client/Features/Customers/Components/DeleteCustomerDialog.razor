@@ -1,0 +1,196 @@
+@using Microsoft.AspNetCore.Components
+@using MudBlazor
+@using PigFarmManagement.Shared.Models
+
+<MudDialog>
+    <DialogContent>
+        <div class="mb-4">
+            <MudAlert Severity="Severity.Warning" Class="mb-3">
+                <strong>Warning:</strong> This action cannot be undone. Please review the deletion impact below.
+            </MudAlert>
+
+            <MudText Typo="Typo.h6" Class="mb-3">
+                Delete Customer: @Customer?.DisplayName
+            </MudText>
+
+            @if (ValidationResult != null)
+            {
+                <MudCard Class="mb-3">
+                    <MudCardContent>
+                        <MudText Typo="Typo.subtitle1" Class="mb-2">Deletion Impact:</MudText>
+                        
+                        @if (!ValidationResult.CanDelete)
+                        {
+                            <MudAlert Severity="Severity.Error" Class="mb-2">
+                                <strong>Cannot delete this customer:</strong>
+                            </MudAlert>
+                        }
+
+                        @if (ValidationResult.ActivePigPenCount > 0)
+                        {
+                            <MudChip Color="Color.Error" Size="Size.Small" Class="mr-2 mb-1">
+                                @ValidationResult.ActivePigPenCount Active Pig Pens
+                            </MudChip>
+                        }
+
+                        @if (ValidationResult.ActiveTransactionCount > 0)
+                        {
+                            <MudChip Color="Color.Warning" Size="Size.Small" Class="mr-2 mb-1">
+                                @ValidationResult.ActiveTransactionCount Recent Transactions
+                            </MudChip>
+                        }
+
+                        @if (ValidationResult.BlockingReasons.Any())
+                        {
+                            @foreach (var reason in ValidationResult.BlockingReasons)
+                            {
+                                <MudText Typo="Typo.body2" Color="Color.Error" Class="mt-2">
+                                    @reason
+                                </MudText>
+                            }
+                        }
+                    </MudCardContent>
+                </MudCard>
+            }
+
+            @if (IsLoading)
+            {
+                <div class="d-flex justify-center">
+                    <MudProgressCircular Indeterminate="true" />
+                    <MudText Class="ml-3">Validating deletion...</MudText>
+                </div>
+            }
+            else if (ValidationResult?.CanDelete == true)
+            {
+                <MudCard Class="mb-3">
+                    <MudCardContent>
+                        <MudText Typo="Typo.subtitle2" Class="mb-2">Deletion Options:</MudText>
+                        
+                        <MudRadioGroup @bind-Value="selectedDeletionType">
+                            <MudRadio Value="DeletionType.Soft" Color="Color.Primary">
+                                <div>
+                                    <MudText Typo="Typo.body1">Soft Delete (Recommended)</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Default">
+                                        Hide customer from normal views but preserve data for audit purposes
+                                    </MudText>
+                                </div>
+                            </MudRadio>
+                            
+                            <MudRadio Value="DeletionType.Hard" Color="Color.Error">
+                                <div>
+                                    <MudText Typo="Typo.body1">Permanent Delete</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Error">
+                                        Permanently remove all customer data (requires confirmation)
+                                    </MudText>
+                                </div>
+                            </MudRadio>
+                        </MudRadioGroup>
+                    </MudCardContent>
+                </MudCard>
+
+                <MudTextField @bind-Value="deletionReason" 
+                              Label="Reason for deletion (optional)" 
+                              Placeholder="Enter reason for deleting this customer..."
+                              Lines="3"
+                              Variant="Variant.Outlined"
+                              Class="mb-3" />
+
+                @if (selectedDeletionType == DeletionType.Hard)
+                {
+                    <MudAlert Severity="Severity.Error" Class="mb-3">
+                        <MudText Typo="Typo.body2">
+                            <strong>Final Warning:</strong> Permanent deletion will remove all customer data forever.
+                        </MudText>
+                        
+                        <MudTextField @bind-Value="confirmationText" 
+                                      Label="Type 'DELETE' to confirm" 
+                                      Placeholder="DELETE"
+                                      Class="mt-2" />
+                    </MudAlert>
+                }
+            }
+        </div>
+    </DialogContent>
+    
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">Cancel</MudButton>
+        
+        @if (ValidationResult?.CanDelete == true)
+        {
+            <MudButton Color="@GetDeleteButtonColor()" 
+                       Variant="Variant.Filled" 
+                       OnClick="ConfirmDelete"
+                       Disabled="@(!CanConfirmDelete)"
+                       StartIcon="@Icons.Material.Filled.Delete">
+                @GetDeleteButtonText()
+            </MudButton>
+        }
+        else if (!IsLoading && ValidationResult != null)
+        {
+            <MudButton Color="Color.Info" 
+                       Variant="Variant.Filled" 
+                       OnClick="Cancel">
+                Understood
+            </MudButton>
+        }
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public Customer? Customer { get; set; }
+    [Parameter] public CustomerDeletionValidation? ValidationResult { get; set; }
+    [Parameter] public bool IsLoading { get; set; } = false;
+    [Parameter] public EventCallback<CustomerDeletionRequest> OnDeleteConfirmed { get; set; }
+
+    private enum DeletionType { Soft, Hard }
+    private DeletionType selectedDeletionType = DeletionType.Soft;
+    private string deletionReason = string.Empty;
+    private string confirmationText = string.Empty;
+
+    private bool CanConfirmDelete
+    {
+        get
+        {
+            if (Customer == null || ValidationResult?.CanDelete != true)
+                return false;
+
+            if (selectedDeletionType == DeletionType.Hard)
+                return confirmationText.Equals("DELETE", StringComparison.OrdinalIgnoreCase);
+
+            return true;
+        }
+    }
+
+    private Color GetDeleteButtonColor()
+    {
+        return selectedDeletionType == DeletionType.Hard ? Color.Error : Color.Warning;
+    }
+
+    private string GetDeleteButtonText()
+    {
+        return selectedDeletionType == DeletionType.Hard ? "Permanently Delete" : "Soft Delete";
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (Customer == null || !CanConfirmDelete)
+            return;
+
+        var request = new CustomerDeletionRequest
+        {
+            CustomerId = Customer.Id,
+            ForceDelete = selectedDeletionType == DeletionType.Hard,
+            Reason = deletionReason,
+            DeletedBy = "Current User" // This should be replaced with actual user info
+        };
+
+        await OnDeleteConfirmed.InvokeAsync(request);
+        MudDialog.Close(DialogResult.Ok(request));
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}
