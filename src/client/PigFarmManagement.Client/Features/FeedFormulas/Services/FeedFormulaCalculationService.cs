@@ -2,10 +2,10 @@ using System.Text.Json;
 
 namespace PigFarmManagement.Client.Features.FeedFormulas.Services;
 
-// Request and Response DTOs for client
+// Request and DTO for client
 public record FeedCalculationRequest(Guid FeedFormulaId, int PigCount, decimal? BagPrice = null);
 
-public class FeedFormulaWithCalculationResponse
+public class FeedFormulaWithCalculationDto
 {
     public Guid Id { get; set; }
     public string ProductCode { get; set; } = string.Empty;
@@ -21,7 +21,7 @@ public class FeedFormulaWithCalculationResponse
     public int PigCount { get; set; }
 }
 
-public class FeedCalculationResponse
+public class FeedCalculationDto
 {
     public Guid FeedFormulaId { get; set; }
     public string ProductName { get; set; } = string.Empty;
@@ -36,8 +36,8 @@ public class FeedCalculationResponse
 
 public interface IFeedFormulaCalculationService
 {
-    Task<IEnumerable<FeedFormulaWithCalculationResponse>> GetFeedFormulasByBrandAsync(string brand, int? pigCount = null);
-    Task<FeedCalculationResponse> CalculateFeedRequirementsAsync(FeedCalculationRequest request);
+    Task<IEnumerable<FeedFormulaWithCalculationDto>> GetFeedFormulasByBrandAsync(string brand, int? pigCount = null);
+    Task<FeedCalculationDto> CalculateFeedRequirementsAsync(FeedCalculationRequest request);
 }
 
 public class FeedFormulaCalculationService : IFeedFormulaCalculationService
@@ -54,7 +54,7 @@ public class FeedFormulaCalculationService : IFeedFormulaCalculationService
         };
     }
 
-    public async Task<IEnumerable<FeedFormulaWithCalculationResponse>> GetFeedFormulasByBrandAsync(string brand, int? pigCount = null)
+    public async Task<IEnumerable<FeedFormulaWithCalculationDto>> GetFeedFormulasByBrandAsync(string brand, int? pigCount = null)
     {
         var url = $"api/feed-formulas/by-brand/{Uri.EscapeDataString(brand)}";
         if (pigCount.HasValue)
@@ -75,7 +75,7 @@ public class FeedFormulaCalculationService : IFeedFormulaCalculationService
             var json = await response.Content.ReadAsStringAsync();
             Console.WriteLine($"[FeedFormulaCalculationService] Response JSON: {json}");
             
-            var result = JsonSerializer.Deserialize<IEnumerable<FeedFormulaWithCalculationResponse>>(json, _jsonOptions) ?? [];
+            var result = JsonSerializer.Deserialize<IEnumerable<FeedFormulaWithCalculationDto>>(json, _jsonOptions) ?? [];
             Console.WriteLine($"[FeedFormulaCalculationService] Deserialized {result.Count()} items");
             
             return result;
@@ -88,7 +88,7 @@ public class FeedFormulaCalculationService : IFeedFormulaCalculationService
         }
     }
 
-    public async Task<FeedCalculationResponse> CalculateFeedRequirementsAsync(FeedCalculationRequest request)
+    public async Task<FeedCalculationDto> CalculateFeedRequirementsAsync(FeedCalculationRequest request)
     {
         var json = JsonSerializer.Serialize(request, _jsonOptions);
         var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
@@ -97,6 +97,6 @@ public class FeedFormulaCalculationService : IFeedFormulaCalculationService
         response.EnsureSuccessStatusCode();
         
         var responseJson = await response.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<FeedCalculationResponse>(responseJson, _jsonOptions)!;
+        return JsonSerializer.Deserialize<FeedCalculationDto>(responseJson, _jsonOptions)!;
     }
 }

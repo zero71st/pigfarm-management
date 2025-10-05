@@ -7,8 +7,8 @@ namespace PigFarmManagement.Client.Features.FeedFormulas.Services;
 public record FeedFormulaCreateDto(string Code, string Name, string CategoryName, string Brand, decimal ConsumeRate, decimal Cost, string UnitName);
 public record FeedFormulaUpdateDto(string Code, string Name, string CategoryName, string Brand, decimal ConsumeRate, decimal Cost, string UnitName);
 
-// POSPOS Import Response DTO
-public class ImportResultResponse
+// POSPOS Import DTO
+public class ImportResultDto
 {
     public int SuccessCount { get; set; }
     public int ErrorCount { get; set; }
@@ -17,7 +17,7 @@ public class ImportResultResponse
     public List<string> ImportedCodes { get; set; } = new();
 }
 
-public class FeedFormulaResponse
+public class FeedFormulaDto
 {
     public Guid Id { get; set; }
     
@@ -44,15 +44,15 @@ public class FeedFormulaResponse
 
 public interface IFeedFormulaService
 {
-    Task<IEnumerable<FeedFormulaResponse>> GetAllFeedFormulasAsync();
-    Task<FeedFormulaResponse?> GetFeedFormulaByIdAsync(Guid id);
-    Task<FeedFormulaResponse> CreateFeedFormulaAsync(FeedFormulaCreateDto feedFormula);
-    Task<FeedFormulaResponse> UpdateFeedFormulaAsync(Guid id, FeedFormulaUpdateDto feedFormula);
+    Task<IEnumerable<FeedFormulaDto>> GetAllFeedFormulasAsync();
+    Task<FeedFormulaDto?> GetFeedFormulaByIdAsync(Guid id);
+    Task<FeedFormulaDto> CreateFeedFormulaAsync(FeedFormulaCreateDto feedFormula);
+    Task<FeedFormulaDto> UpdateFeedFormulaAsync(Guid id, FeedFormulaUpdateDto feedFormula);
     Task<bool> DeleteFeedFormulaAsync(Guid id);
     Task<bool> ExistsAsync(string productCode);
-    Task<ImportResultResponse> ImportFromPosposAsync();
+    Task<ImportResultDto> ImportFromPosposAsync();
     Task<IEnumerable<PosposProductDto>> GetPosposProductsAsync();
-    Task<ImportResultResponse> ImportSelectedFromPosposAsync(List<string> productCodes);
+    Task<ImportResultDto> ImportSelectedFromPosposAsync(List<string> productCodes);
     Task<List<PosposProductDto>> SearchPosposProductsAsync(string q);
     Task<PigFarmManagement.Shared.Models.ImportResult> ImportSelectedFromPosposAsync(List<Guid> productIds);
 }
@@ -71,16 +71,16 @@ public class FeedFormulaService : IFeedFormulaService
         };
     }
 
-    public async Task<IEnumerable<FeedFormulaResponse>> GetAllFeedFormulasAsync()
+    public async Task<IEnumerable<FeedFormulaDto>> GetAllFeedFormulasAsync()
     {
         var response = await _httpClient.GetAsync("api/feed-formulas");
         response.EnsureSuccessStatusCode();
         
         var json = await response.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<IEnumerable<FeedFormulaResponse>>(json, _jsonOptions) ?? [];
+        return JsonSerializer.Deserialize<IEnumerable<FeedFormulaDto>>(json, _jsonOptions) ?? [];
     }
 
-    public async Task<FeedFormulaResponse?> GetFeedFormulaByIdAsync(Guid id)
+    public async Task<FeedFormulaDto?> GetFeedFormulaByIdAsync(Guid id)
     {
         var response = await _httpClient.GetAsync($"api/feed-formulas/{id}");
         if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
@@ -89,10 +89,10 @@ public class FeedFormulaService : IFeedFormulaService
         response.EnsureSuccessStatusCode();
         
         var json = await response.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<FeedFormulaResponse>(json, _jsonOptions);
+        return JsonSerializer.Deserialize<FeedFormulaDto>(json, _jsonOptions);
     }
 
-    public async Task<FeedFormulaResponse> CreateFeedFormulaAsync(FeedFormulaCreateDto feedFormula)
+    public async Task<FeedFormulaDto> CreateFeedFormulaAsync(FeedFormulaCreateDto feedFormula)
     {
         var json = JsonSerializer.Serialize(feedFormula, _jsonOptions);
         var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
@@ -101,10 +101,10 @@ public class FeedFormulaService : IFeedFormulaService
         response.EnsureSuccessStatusCode();
         
         var responseJson = await response.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<FeedFormulaResponse>(responseJson, _jsonOptions)!;
+        return JsonSerializer.Deserialize<FeedFormulaDto>(responseJson, _jsonOptions)!;
     }
 
-    public async Task<FeedFormulaResponse> UpdateFeedFormulaAsync(Guid id, FeedFormulaUpdateDto feedFormula)
+    public async Task<FeedFormulaDto> UpdateFeedFormulaAsync(Guid id, FeedFormulaUpdateDto feedFormula)
     {
         var json = JsonSerializer.Serialize(feedFormula, _jsonOptions);
         var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
@@ -113,7 +113,7 @@ public class FeedFormulaService : IFeedFormulaService
         response.EnsureSuccessStatusCode();
         
         var responseJson = await response.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<FeedFormulaResponse>(responseJson, _jsonOptions)!;
+        return JsonSerializer.Deserialize<FeedFormulaDto>(responseJson, _jsonOptions)!;
     }
 
     public async Task<bool> DeleteFeedFormulaAsync(Guid id)
@@ -135,13 +135,13 @@ public class FeedFormulaService : IFeedFormulaService
         return JsonSerializer.Deserialize<bool>(json, _jsonOptions);
     }
 
-    public async Task<ImportResultResponse> ImportFromPosposAsync()
+    public async Task<ImportResultDto> ImportFromPosposAsync()
     {
         var response = await _httpClient.PostAsync("api/feed-formulas/import", null);
         response.EnsureSuccessStatusCode();
         
         var json = await response.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<ImportResultResponse>(json, _jsonOptions)!;
+        return JsonSerializer.Deserialize<ImportResultDto>(json, _jsonOptions)!;
     }
 
     public async Task<IEnumerable<PosposProductDto>> GetPosposProductsAsync()
@@ -153,7 +153,7 @@ public class FeedFormulaService : IFeedFormulaService
         return JsonSerializer.Deserialize<IEnumerable<PosposProductDto>>(json, _jsonOptions) ?? [];
     }
 
-    public async Task<ImportResultResponse> ImportSelectedFromPosposAsync(List<string> productCodes)
+    public async Task<ImportResultDto> ImportSelectedFromPosposAsync(List<string> productCodes)
     {
         var request = new { ProductCodes = productCodes };
         var json = JsonSerializer.Serialize(request, _jsonOptions);
@@ -163,7 +163,7 @@ public class FeedFormulaService : IFeedFormulaService
         response.EnsureSuccessStatusCode();
         
         var responseJson = await response.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<ImportResultResponse>(responseJson, _jsonOptions)!;
+        return JsonSerializer.Deserialize<ImportResultDto>(responseJson, _jsonOptions)!;
     }
 
     public async Task<List<PosposProductDto>> SearchPosposProductsAsync(string q)
