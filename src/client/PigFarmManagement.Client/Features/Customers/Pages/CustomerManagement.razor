@@ -36,10 +36,17 @@
                 OnKeyUp="OnSearchKeyUp" Immediate="true" />
         </MudItem>
         <MudItem xs="12" md="3">
-            <MudSelect T="CustomerStatus ?" @bind-Value="selectedCustomerStatus" Label="Filter by Status"
-                Variant="Variant.Outlined" Clearable="true" Margin="Margin.Dense" FullWidth="true">
-                <MudSelectItem T="CustomerStatus ?" Value="@CustomerStatus.Active">Active</MudSelectItem>
-                <MudSelectItem T="CustomerStatus ?" Value="@CustomerStatus.Inactive">Inactive</MudSelectItem>
+            <MudSelect T="CustomerStatus?" Value="selectedCustomerStatus"
+                       ValueChanged="OnStatusFilterChanged"
+                       Label="Filter by Status"
+                       Variant="Variant.Outlined" 
+                       Clearable="true" 
+                       Margin="Margin.Dense" 
+                       FullWidth="true"
+                       AnchorOrigin="Origin.BottomCenter">
+                <MudSelectItem T="CustomerStatus?" Value="@((CustomerStatus?)null)">All Statuses</MudSelectItem>
+                <MudSelectItem T="CustomerStatus?" Value="@CustomerStatus.Active">Active</MudSelectItem>
+                <MudSelectItem T="CustomerStatus?" Value="@CustomerStatus.Inactive">Inactive</MudSelectItem>
             </MudSelect>
         </MudItem>
         <MudItem xs="12" md="3" class="text-right align-self-center">
@@ -50,19 +57,22 @@
                                 IsLoading="isLoading" />
                 
                 <!-- POS Sync Trigger -->
-                <MudButton Variant="Variant.Outlined" 
-                           Color="Color.Info" 
-                           OnClick="TriggerPosSync"
-                           Disabled="_posSyncRunning"
-                           Size="Size.Small">
-                    <MudIcon Icon="@Icons.Material.Filled.Sync" Class="mr-1" />
-                    @if (_posSyncRunning) { <span>Syncing...</span> } else { <span>POS Sync</span> }
-                </MudButton>
+                <MudTooltip Text="@(_posSyncRunning ? "Syncing with POS..." : "Sync with POS system")">
+                    <MudIconButton Icon="@Icons.Material.Filled.Sync" 
+                                   Color="Color.Info" 
+                                   OnClick="TriggerPosSync"
+                                   Disabled="_posSyncRunning"
+                                   Size="Size.Medium"
+                                   Class="@(_posSyncRunning ? "rotate-animation" : "")" />
+                </MudTooltip>
 
-                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="StartImport"
-                    Disabled="_importRunning">
-                    <MudIcon Icon="@Icons.Material.Filled.Download" Class="mr-1" /> Import
-                </MudButton>
+                <MudTooltip Text="Import customers from external source">
+                    <MudIconButton Icon="@Icons.Material.Filled.Download" 
+                                   Color="Color.Secondary" 
+                                   OnClick="StartImport"
+                                   Disabled="_importRunning"
+                                   Size="Size.Medium" />
+                </MudTooltip>
 
                 <MudSwitch @bind-Value="_persistMapping" Color="Color.Primary" />
 
@@ -165,24 +175,36 @@
     private void FilterCustomers()
     {
         filteredCustomers = customers.Where(c =>
-        (string.IsNullOrEmpty(searchText) ||
-        c.DisplayName.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
-        c.Code.Contains(searchText, StringComparison.OrdinalIgnoreCase)) &&
-        (selectedCustomerStatus == null || c.Status == selectedCustomerStatus)
+            // Search filter
+            (string.IsNullOrEmpty(searchText) ||
+             c.DisplayName.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+             c.Code.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+             (!string.IsNullOrEmpty(c.Phone) && c.Phone.Contains(searchText, StringComparison.OrdinalIgnoreCase)) ||
+             (!string.IsNullOrEmpty(c.Email) && c.Email.Contains(searchText, StringComparison.OrdinalIgnoreCase))) &&
+            // Status filter
+            (selectedCustomerStatus == null || c.Status == selectedCustomerStatus.Value)
         ).ToList();
 
         // Show the most recently imported/updated customers first
         // Use UpdatedAt (set by the importer) as the primary sort key. If UpdatedAt is null, treat it as DateTime.MinValue.
         filteredCustomers = filteredCustomers
-        .OrderByDescending(c => c.UpdatedAt)
-        .ThenByDescending(c => c.CreatedAt)
-        .ToList();
+            .OrderByDescending(c => c.UpdatedAt)
+            .ThenByDescending(c => c.CreatedAt)
+            .ToList();
+        
+        StateHasChanged();
     }
 
     private void OnSearchKeyUp(KeyboardEventArgs e)
     {
         FilterCustomers();
         StateHasChanged();
+    }
+
+    private void OnStatusFilterChanged(CustomerStatus? newStatus)
+    {
+        selectedCustomerStatus = newStatus;
+        FilterCustomers();
     }
 
     protected override void OnParametersSet()
@@ -410,3 +432,18 @@
         }
     }
 }
+
+<style>
+    .rotate-animation {
+        animation: rotate 1s linear infinite;
+    }
+
+    @@keyframes rotate {
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+</style>

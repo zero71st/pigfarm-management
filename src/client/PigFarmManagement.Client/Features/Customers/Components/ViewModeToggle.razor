@@ -3,15 +3,13 @@
 @using PigFarmManagement.Shared.Models
 
 <div class="view-mode-toggle-container">
-    <MudIconButton Icon="@GetCurrentIcon()"
-                   Color="Color.Primary"
-                   Size="Size.Medium"
-                   Class="view-mode-toggle"
-                   Disabled="@IsLoading"
-                   OnClick="@ToggleViewMode" />
-    
     <MudTooltip Text="@GetTooltipText()">
-        <span class="view-mode-label">@GetCurrentViewText()</span>
+        <MudIconButton Icon="@GetCurrentIcon()"
+                       Color="Color.Primary"
+                       Size="Size.Medium"
+                       Class="view-mode-toggle"
+                       Disabled="@IsLoading"
+                       OnClick="@ToggleViewMode" />
     </MudTooltip>
 </div>
 

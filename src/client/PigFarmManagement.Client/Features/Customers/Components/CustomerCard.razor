@@ -37,6 +37,31 @@
                     Color="@GetCustomerStatusColor(Customer.Status)" 
                     Size="Size.Small" />
         </MudText>
+        @if (!string.IsNullOrEmpty(Customer.Phone))
+        {
+            <MudText Typo="Typo.body2" Class="mb-2">
+                <strong>Phone:</strong> @Customer.Phone
+            </MudText>
+        }
+        @if (!string.IsNullOrEmpty(Customer.Email))
+        {
+            <MudText Typo="Typo.body2" Class="mb-2">
+                <strong>Email:</strong> @Customer.Email
+            </MudText>
+        }
+        @if (!string.IsNullOrEmpty(Customer.Address))
+        {
+            <MudText Typo="Typo.body2" Class="mb-2">
+                <strong>Address:</strong> @Customer.Address
+            </MudText>
+        }
+        @if (Customer.HasLocation)
+        {
+            <MudText Typo="Typo.body2" Class="mb-2">
+                <MudIcon Icon="@Icons.Material.Filled.LocationOn" Size="Size.Small" Class="mr-1" />
+                <strong>Location:</strong> @Customer.Latitude?.ToString("F4"), @Customer.Longitude?.ToString("F4")
+            </MudText>
+        }
         <MudText Typo="Typo.body2" Class="mb-2">
             <strong>Pig Pens:</strong> @PigPenCount
         </MudText>
