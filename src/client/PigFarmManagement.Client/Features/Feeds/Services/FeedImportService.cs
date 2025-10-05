@@ -21,7 +21,7 @@ public class FeedImportService : IFeedImportService
 
     public async Task<FeedImportResult> ImportFromJsonAsync(string jsonContent)
     {
-        var request = new { JsonContent = jsonContent };
+        var request = new FeedImportJsonRequest(jsonContent);
         var response = await _httpClient.PostAsJsonAsync("/api/feeds/import/pospos/json", request);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<FeedImportResult>() ?? new FeedImportResult();
@@ -65,7 +65,7 @@ public class FeedImportService : IFeedImportService
 
     public async Task<FeedImportResult> ImportPosPosFeedByDateRangeAsync(DateTime fromDate, DateTime toDate)
     {
-        var request = new { FromDate = fromDate, ToDate = toDate };
+        var request = new FeedImportDateRangeRequest(fromDate, toDate);
         var response = await _httpClient.PostAsJsonAsync("/api/feeds/import/pospos/daterange/import", request);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<FeedImportResult>() ?? new FeedImportResult();
