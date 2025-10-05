@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using PigFarmManagement.Server.Features.FeedFormulas;
 using PigFarmManagement.Server.Services;
 using PigFarmManagement.Server.Services.ExternalServices;
+using PigFarmManagement.Shared.Models;
 
 namespace PigFarmManagement.Server.Features.FeedFormulas;
 

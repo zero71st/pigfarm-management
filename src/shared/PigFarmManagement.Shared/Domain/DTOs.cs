@@ -180,3 +180,55 @@ public record FeedBagUsage(
     decimal CostPerBag,
     decimal TotalCost
 );
+
+// DTOs for product import feature (spec 007)
+public class ImportRequest
+{
+    public List<Guid> ProductIds { get; set; } = new();
+}
+
+public class ImportItemResult
+{
+    public Guid? ProductId { get; set; }
+    public string Status { get; set; } = "";
+    public string? Message { get; set; }
+}
+
+public class ImportResult
+{
+    public ImportSummary Summary { get; set; } = new();
+    public List<ImportItemResult> Items { get; set; } = new();
+}
+
+public class ImportSummary
+{
+    public int Created { get; set; }
+    public int Updated { get; set; }
+    public int Failed { get; set; }
+}
+
+// POSPOS external system DTOs (shared between client and server)
+/// <summary>
+/// DTO representing a product from POSPOS API response.
+/// Used for product import and search functionality.
+/// </summary>
+public class PosposProductDto
+{
+    public string Id { get; set; } = string.Empty;
+    public string Code { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public decimal? Cost { get; set; }
+    public PosposCategoryDto? Category { get; set; }
+    public PosposUnitDto? Unit { get; set; }
+    public DateTime? LastUpdate { get; set; }
+}
+
+public class PosposCategoryDto
+{
+    public string Name { get; set; } = string.Empty;
+}
+
+public class PosposUnitDto
+{
+    public string Name { get; set; } = string.Empty;
+}
