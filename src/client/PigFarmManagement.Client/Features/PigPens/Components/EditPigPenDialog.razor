@@ -60,10 +60,14 @@
                                   Required="true" />
                 </MudItem>
                 <MudItem xs="6">
-                    <MudDatePicker @bind-Date="actualHarvestDate" Label="Actual Harvest Date" Variant="Variant.Outlined" />
+                    <MudDatePicker @bind-Date="estimatedHarvestDate" 
+                                  Label="Estimated Harvest Date" 
+                                  Variant="Variant.Outlined" 
+                                  ReadOnly="true"
+                                  HelperText="Auto-calculated: Register Date + 120 days" />
                 </MudItem>
                 <MudItem xs="6">
-                    <MudDatePicker @bind-Date="estimatedHarvestDate" Label="Estimated Harvest Date" Variant="Variant.Outlined" />
+                    <MudDatePicker @bind-Date="actualHarvestDate" Label="Actual Harvest Date" Variant="Variant.Outlined" />
                 </MudItem>
                 
                 <!-- Feed Brand Selection -->
@@ -82,8 +86,10 @@
                              Variant="Variant.Outlined"
                              Required="true">
                         <MudSelectItem T="string" Value="@((string?)null)">-- Select Brand --</MudSelectItem>
-                        <MudSelectItem T="string" Value="@JetBrand">@JetBrand</MudSelectItem>
-                        <MudSelectItem T="string" Value="@PureBrand">@PureBrand</MudSelectItem>
+                        @foreach (var brand in availableBrands)
+                        {
+                            <MudSelectItem T="string" Value="@brand">@brand</MudSelectItem>
+                        }
                     </MudSelect>
                 </MudItem>
 
@@ -113,6 +119,7 @@
     [Parameter] public PigPen PigPen { get; set; } = default!;
 
     private List<Customer> customers = new();
+    private List<string> availableBrands = new();
     private Guid? selectedCustomerId;
     private string penCode = "";
     private PigPenType selectedType = PigPenType.Cash;
@@ -125,13 +132,10 @@
     // Feed brand selection property
     private string? selectedBrand;
 
-    // Brand constants
-    private const string JetBrand = "เจ็ท";
-    private const string PureBrand = "เพียว";
-
     protected override async Task OnInitializedAsync()
     {
         customers = await CustomerService.GetCustomersAsync();
+        await LoadAvailableBrands();
         
         // Populate form with existing pig pen data
         selectedCustomerId = PigPen.CustomerId;
@@ -145,6 +149,24 @@
         
         // Initialize feed brand selection based on existing data
         InitializeFeedBrandSelection();
+    }
+
+    private async Task LoadAvailableBrands()
+    {
+        try
+        {
+            var feedFormulas = await FeedFormulaService.GetAllFeedFormulasAsync();
+            availableBrands = feedFormulas
+                .Select(f => f.Brand ?? "")
+                .Where(b => !string.IsNullOrEmpty(b))
+                .Distinct()
+                .OrderBy(b => b)
+                .ToList();
+        }
+        catch
+        {
+            availableBrands = new();
+        }
     }
 
     private void InitializeFeedBrandSelection()
@@ -166,9 +188,16 @@
             return;
         }
         
-        // Final fallback: Auto-select Jet brand as default
-        Console.WriteLine($"[EditPigPen - InitializeFeedBrandSelection] No saved brand information. Auto-selecting default brand: {JetBrand}");
-        selectedBrand = JetBrand; // Default to เจ็ท brand
+        // Final fallback: Auto-select first available brand as default
+        if (availableBrands.Any())
+        {
+            selectedBrand = availableBrands.First();
+            Console.WriteLine($"[EditPigPen - InitializeFeedBrandSelection] No saved brand information. Auto-selecting default brand: {selectedBrand}");
+        }
+        else
+        {
+            Console.WriteLine($"[EditPigPen - InitializeFeedBrandSelection] No brands available");
+        }
     }
 
 

@@ -8,6 +8,7 @@
 @inject ICustomerService CustomerService
 @inject IPigPenService PigPenService
 @inject IFeedFormulaCalculationService FeedFormulaCalculationService
+@inject IFeedFormulaService FeedFormulaService
 
 <MudDialog>
     <DialogContent>
@@ -58,10 +59,14 @@
                                   Required="true" />
                 </MudItem>
                 <MudItem xs="6">
-                    <MudDatePicker @bind-Date="actualHarvestDate" Label="Actual Harvest Date" Variant="Variant.Outlined" />
+                    <MudDatePicker @bind-Date="estimatedHarvestDate" 
+                                  Label="Estimated Harvest Date" 
+                                  Variant="Variant.Outlined" 
+                                  ReadOnly="true"
+                                  HelperText="Auto-calculated: Register Date + 120 days" />
                 </MudItem>
                 <MudItem xs="6">
-                    <MudDatePicker @bind-Date="estimatedHarvestDate" Label="Estimated Harvest Date" Variant="Variant.Outlined" />
+                    <MudDatePicker @bind-Date="actualHarvestDate" Label="Actual Harvest Date" Variant="Variant.Outlined" />
                 </MudItem>
                 
                 <!-- Feed Brand Selection -->
@@ -80,8 +85,10 @@
                              Variant="Variant.Outlined"
                              Required="true">
                         <MudSelectItem T="string" Value="@((string?)null)">-- Select Brand --</MudSelectItem>
-                        <MudSelectItem T="string" Value="@JetBrand">@JetBrand</MudSelectItem>
-                        <MudSelectItem T="string" Value="@PureBrand">@PureBrand</MudSelectItem>
+                        @foreach (var brand in availableBrands)
+                        {
+                            <MudSelectItem T="string" Value="@brand">@brand</MudSelectItem>
+                        }
                     </MudSelect>
                 </MudItem>
 
@@ -113,25 +120,29 @@
     [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
 
     private List<Customer> customers = new();
+    private List<string> availableBrands = new();
     private Guid? selectedCustomerId;
     private string penCode = "";
-    private PigPenType selectedType = PigPenType.Cash;
+    private PigPenType selectedType = PigPenType.Project;
     private int pigQty = 1;
     private decimal depositPerPig = 1500m;
     private DateTime? registerDate = DateTime.Today;
-    private DateTime? actualHarvestDate;
     private DateTime? estimatedHarvestDate;
-    
+    private DateTime? actualHarvestDate;
+
     // Feed brand selection property
     private string? selectedBrand;
-
-    // Brand constants
-    private const string JetBrand = "เจ็ท";
-    private const string PureBrand = "เพียว";
 
     protected override async Task OnInitializedAsync()
     {
         await LoadCustomers();
+        await LoadAvailableBrands();
+        
+        // Calculate initial estimated harvest date based on default register date
+        if (registerDate.HasValue)
+        {
+            estimatedHarvestDate = registerDate.Value.AddDays(120);
+        }
     }
 
     private async Task LoadCustomers()
@@ -143,6 +154,24 @@
         catch
         {
             customers = new();
+        }
+    }
+
+    private async Task LoadAvailableBrands()
+    {
+        try
+        {
+            var feedFormulas = await FeedFormulaService.GetAllFeedFormulasAsync();
+            availableBrands = feedFormulas
+                .Select(f => f.Brand ?? "")
+                .Where(b => !string.IsNullOrEmpty(b))
+                .Distinct()
+                .OrderBy(b => b)
+                .ToList();
+        }
+        catch
+        {
+            availableBrands = new();
         }
     }
 
