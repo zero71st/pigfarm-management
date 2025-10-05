@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace PigFarmManagement.Server.Features.PigPens;
 
-public record PigPenCreateDto(Guid CustomerId, string PenCode, int PigQty, DateTime RegisterDate, DateTime? ActHarvestDate, DateTime? EstimatedHarvestDate, PigPenType Type, string? SelectedBrand, decimal DepositPerPig = 1500m);
+public record PigPenCreateDto(Guid CustomerId, string PenCode, int PigQty, DateTime RegisterDate, DateTime? ActHarvestDate, DateTime? EstimatedHarvestDate, PigPenType Type, string? SelectedBrand, decimal DepositPerPig = 1500m, string? Note = null);
 
 public interface IPigPenService
 {
@@ -59,7 +59,8 @@ public class PigPenService : IPigPenService
             now, // CreatedAt
             now) // UpdatedAt
         {
-            SelectedBrand = dto.SelectedBrand // Store the selected brand
+            SelectedBrand = dto.SelectedBrand, // Store the selected brand
+            Note = dto.Note // Store the note
         };
 
         // If a brand is selected, automatically assign all formulas for that brand

@@ -81,6 +81,7 @@ public class PigPenRepository : IPigPenRepository
         entity.Type = pigPen.Type;
         entity.DepositPerPig = pigPen.DepositPerPig;
         entity.SelectedBrand = pigPen.SelectedBrand;
+        entity.Note = pigPen.Note;
         entity.IsCalculationLocked = pigPen.IsCalculationLocked;
         entity.UpdatedAt = DateTime.UtcNow;
 

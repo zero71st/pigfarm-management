@@ -1,0 +1,95 @@
+openapi: 3.0.3
+info:
+  title: Product Import API (spec 007)
+  version: '1.0'
+
+paths:
+  /api/products/search:
+    get:
+      summary: Search products by code or name
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+          required: true
+          description: Product code (exact) or name (substring)
+      responses:
+        '200':
+          description: A list of matching products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+
+  /api/products/import:
+    post:
+      summary: Import selected products (upsert duplicates)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportRequest'
+      responses:
+        '200':
+          description: Import result with per-item status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportResult'
+
+components:
+  schemas:
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+
+    ImportRequest:
+      type: object
+      required: [productIds]
+      properties:
+        productIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    ImportItemResult:
+      type: object
+      properties:
+        productId:
+          type: string
+        status:
+          type: string
+          enum: [created, updated, skipped, failed]
+        message:
+          type: string
+
+    ImportResult:
+      type: object
+      properties:
+        summary:
+          type: object
+          properties:
+            created:
+              type: integer
+            updated:
+              type: integer
+            failed:
+              type: integer
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImportItemResult'

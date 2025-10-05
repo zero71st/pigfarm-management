@@ -72,8 +72,7 @@
                              Label="Filter by Brand" 
                              Variant="Variant.Outlined"
                              Margin="Margin.Dense"
-                             Clearable="true"
-                             @onchange="OnFilterChanged">
+                             Clearable="true">
                         <MudSelectItem T="string" Value="@((string?)null)">All Brands</MudSelectItem>
                         @foreach (var brand in GetUniqueBrands())
                         {
@@ -87,8 +86,7 @@
                              Label="Filter by Category" 
                              Variant="Variant.Outlined"
                              Margin="Margin.Dense"
-                             Clearable="true"
-                             @onchange="OnFilterChanged">
+                             Clearable="true">
                         <MudSelectItem T="string" Value="@((string?)null)">All Categories</MudSelectItem>
                         @foreach (var category in GetUniqueCategories())
                         {
@@ -98,7 +96,7 @@
                 </MudItem>
                
                 <MudItem xs="12" sm="6" md="2">
-                    <MudStack Row Spacing="1">
+                    @* <MudStack Row Spacing="1">
                         <MudButton Variant="Variant.Outlined" 
                                   Color="Color.Secondary" 
                                   StartIcon="@Icons.Material.Filled.Clear"
@@ -114,9 +112,9 @@
                                   Size="Size.Small">
                             Refresh
                         </MudButton>
-                    </MudStack>
+                    </MudStack> *@
                 </MudItem>
-                <MudItem xs="12" sm="6" md="2">
+                <MudItem xs="12" sm="6" md="4" Class="d-flex justify-end">
                     <MudButton Variant="Variant.Filled" 
                               Color="Color.Success" 
                               StartIcon="@Icons.Material.Filled.CloudDownload"
@@ -192,8 +190,28 @@
     private List<FeedFormulaResponse> feedFormulas = new();
     private List<FeedFormulaResponse> filteredFeedFormulas = new();
     private bool loading = true;
-    private string? selectedBrandFilter;
-    private string? selectedCategoryFilter;
+    
+    private string? _selectedBrandFilter;
+    private string? selectedBrandFilter
+    {
+        get => _selectedBrandFilter;
+        set
+        {
+            _selectedBrandFilter = value;
+            ApplyFilters();
+        }
+    }
+    
+    private string? _selectedCategoryFilter;
+    private string? selectedCategoryFilter
+    {
+        get => _selectedCategoryFilter;
+        set
+        {
+            _selectedCategoryFilter = value;
+            ApplyFilters();
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -219,11 +237,6 @@
         }
     }
 
-    private void OnFilterChanged()
-    {
-        ApplyFilters();
-    }
-
     private void ApplyFilters()
     {
         filteredFeedFormulas = feedFormulas.Where(f =>
@@ -241,8 +254,8 @@
 
     private void ClearFilters()
     {
-        selectedBrandFilter = null;
-        selectedCategoryFilter = null;
+        _selectedBrandFilter = null;
+        _selectedCategoryFilter = null;
         ApplyFilters();
     }
 
@@ -288,7 +301,7 @@
     private void QuickFilterBrand(string brand)
     {
         selectedBrandFilter = selectedBrandFilter == brand ? null : brand;
-        ApplyFilters();
+        // ApplyFilters() is automatically called by the setter
     }
 
     private async Task RefreshData()

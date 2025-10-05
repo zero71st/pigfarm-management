@@ -28,8 +28,9 @@ public interface IFeedFormulaService
     Task<bool> DeleteFeedFormulaAsync(Guid id);
     Task<bool> ExistsAsync(string code);
     Task<ImportResult> ImportProductsFromPosposAsync();
-    Task<IEnumerable<PigFarmManagement.Server.Services.ExternalServices.PosposProductDto>> GetPosposProductsAsync();
+    Task<IEnumerable<PosposProductDto>> GetPosposProductsAsync();
     Task<ImportResult> ImportSelectedProductsFromPosposAsync(IEnumerable<string> productCodes);
+    Task<PigFarmManagement.Shared.Models.ImportResult> ImportProductsByIdsAsync(ImportRequest request);
 }
 
 public class FeedFormulaService : IFeedFormulaService
@@ -244,7 +245,7 @@ public class FeedFormulaService : IFeedFormulaService
         return new Guid(hash);
     }
 
-    public async Task<IEnumerable<PigFarmManagement.Server.Services.ExternalServices.PosposProductDto>> GetPosposProductsAsync()
+    public async Task<IEnumerable<PosposProductDto>> GetPosposProductsAsync()
     {
         try
         {
@@ -376,6 +377,214 @@ public class FeedFormulaService : IFeedFormulaService
             errors.Add($"Fatal error: {ex.Message}");
             return new ImportResult(successCount, errorCount + 1, skippedCount, errors, importedCodes);
         }
+    }
+
+    /// <summary>
+    /// Import products by their POSPOS IDs with upsert behavior (FR-011).
+    /// Updates existing FeedFormula records and creates new ones.
+    /// </summary>
+    /// <param name="request">Import request containing product IDs</param>
+    /// <returns>Import result with per-item status</returns>
+    public async Task<PigFarmManagement.Shared.Models.ImportResult> ImportProductsByIdsAsync(ImportRequest request)
+    {
+        _logger.LogInformation("Starting import of {Count} products by IDs", request.ProductIds.Count);
+
+        var items = new List<ImportItemResult>();
+        int created = 0, updated = 0, failed = 0;
+
+        try
+        {
+            // Fetch all products from POSPOS to get their details
+            var allPosposProducts = await _posposProductClient.GetAllProductsAsync();
+            
+            // Create a mapping from generated GUIDs back to POSPOS products
+            var posposProductMap = new Dictionary<Guid, PosposProductDto>();
+            foreach (var product in allPosposProducts)
+            {
+                if (!string.IsNullOrWhiteSpace(product.Id))
+                {
+                    var guid = GenerateGuidFromObjectId(product.Id);
+                    posposProductMap[guid] = product;
+                }
+            }
+
+            // Get existing FeedFormula records to check for updates
+            var existingFormulas = await _context.FeedFormulas
+                .Where(f => f.ExternalId.HasValue)
+                .ToListAsync();
+            
+            var existingFormulaMap = existingFormulas
+                .Where(f => f.ExternalId.HasValue)
+                .ToDictionary(f => f.ExternalId!.Value, f => f);
+
+            foreach (var productId in request.ProductIds)
+            {
+                try
+                {
+                    // Find the POSPOS product for this ID
+                    if (!posposProductMap.TryGetValue(productId, out var posposProduct))
+                    {
+                        failed++;
+                        items.Add(new ImportItemResult
+                        {
+                            ProductId = productId,
+                            Status = "Failed",
+                            Message = "Product not found in POSPOS"
+                        });
+                        continue;
+                    }
+
+                    // Validate product has required fields
+                    if (string.IsNullOrWhiteSpace(posposProduct.Code))
+                    {
+                        failed++;
+                        items.Add(new ImportItemResult
+                        {
+                            ProductId = productId,
+                            Status = "Failed", 
+                            Message = "Product has no code"
+                        });
+                        continue;
+                    }
+
+                    // Check if this product already exists
+                    if (existingFormulaMap.TryGetValue(productId, out var existingFormula))
+                    {
+                        // Update existing record
+                        var mappedDto = MapPosposProductToFeedFormula(posposProduct);
+                        
+                        existingFormula.Code = mappedDto.Code;
+                        existingFormula.Name = mappedDto.Name;
+                        existingFormula.Cost = mappedDto.Cost;
+                        existingFormula.CategoryName = mappedDto.CategoryName;
+                        existingFormula.UnitName = mappedDto.UnitName;
+                        existingFormula.LastUpdate = posposProduct.LastUpdate;
+                        existingFormula.UpdatedAt = DateTime.UtcNow;
+
+                        updated++;
+                        items.Add(new ImportItemResult
+                        {
+                            ProductId = productId,
+                            Status = "Updated",
+                            Message = $"Updated feed formula: {posposProduct.Code}"
+                        });
+                    }
+                    else
+                    {
+                        // Create new record
+                        var mappedDto = MapPosposProductToFeedFormula(posposProduct);
+                        var now = DateTime.UtcNow;
+                        
+                        var entity = new FeedFormulaEntity
+                        {
+                            Id = Guid.NewGuid(),
+                            ExternalId = productId,
+                            Code = mappedDto.Code,
+                            Name = mappedDto.Name,
+                            Cost = mappedDto.Cost,
+                            CategoryName = mappedDto.CategoryName,
+                            Brand = mappedDto.Brand,
+                            UnitName = mappedDto.UnitName,
+                            ConsumeRate = mappedDto.ConsumeRate,
+                            LastUpdate = posposProduct.LastUpdate,
+                            CreatedAt = now,
+                            UpdatedAt = now
+                        };
+
+                        _context.FeedFormulas.Add(entity);
+                        created++;
+                        items.Add(new ImportItemResult
+                        {
+                            ProductId = productId,
+                            Status = "Created",
+                            Message = $"Created feed formula: {posposProduct.Code}"
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    failed++;
+                    items.Add(new ImportItemResult
+                    {
+                        ProductId = productId,
+                        Status = "Failed",
+                        Message = $"Error: {ex.Message}"
+                    });
+                    _logger.LogError(ex, "Error importing product {ProductId}", productId);
+                }
+            }
+
+            // Save all changes in a single transaction
+            if (created > 0 || updated > 0)
+            {
+                await _context.SaveChangesAsync();
+                _logger.LogInformation(
+                    "Product import completed: {Created} created, {Updated} updated, {Failed} failed", 
+                    created, updated, failed);
+            }
+
+            return new PigFarmManagement.Shared.Models.ImportResult
+            {
+                Summary = new ImportSummary { Created = created, Updated = updated, Failed = failed },
+                Items = items
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Fatal error during product import");
+            return new PigFarmManagement.Shared.Models.ImportResult
+            {
+                Summary = new ImportSummary { Created = created, Updated = updated, Failed = failed + 1 },
+                Items = items.Concat(new[] { 
+                    new ImportItemResult 
+                    { 
+                        ProductId = Guid.Empty, 
+                        Status = "Failed", 
+                        Message = $"Fatal error: {ex.Message}" 
+                    } 
+                }).ToList()
+            };
+        }
+    }
+
+    /// <summary>
+    /// Maps a PosposProductDto to FeedFormulaCreateDto for import operations.
+    /// Includes product code normalization, name mapping, cost handling, and unit/category mapping.
+    /// </summary>
+    /// <param name="posposProduct">The POSPOS product to map</param>
+    /// <returns>FeedFormulaCreateDto ready for persistence</returns>
+    private static FeedFormulaCreateDto MapPosposProductToFeedFormula(PosposProductDto posposProduct)
+    {
+        // Normalize product code: trim and convert to uppercase
+        var normalizedCode = posposProduct.Code?.Trim().ToUpperInvariant() ?? string.Empty;
+        
+        // Handle name mapping with fallback
+        var name = posposProduct.Name?.Trim() ?? normalizedCode;
+        
+        // Map cost with fallback to 0 if null
+        var cost = posposProduct.Cost ?? 0m;
+        
+        // Map category name with fallback
+        var categoryName = posposProduct.Category?.Name?.Trim() ?? "Unknown";
+        
+        // Map unit name with fallback
+        var unitName = posposProduct.Unit?.Name?.Trim() ?? "Unknown";
+        
+        // Use empty string for brand as POSPOS doesn't provide this field
+        var brand = string.Empty;
+        
+        // Default consume rate for imported products
+        var consumeRate = 1.0m;
+
+        return new FeedFormulaCreateDto(
+            Code: normalizedCode,
+            Name: name,
+            CategoryName: categoryName,
+            Brand: brand,
+            ConsumeRate: consumeRate,
+            Cost: cost,
+            UnitName: unitName
+        );
     }
 
 }

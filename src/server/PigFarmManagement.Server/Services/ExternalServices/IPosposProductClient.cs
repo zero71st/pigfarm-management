@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using PigFarmManagement.Shared.Models;
 
 namespace PigFarmManagement.Server.Services.ExternalServices
 {
@@ -21,31 +22,6 @@ namespace PigFarmManagement.Server.Services.ExternalServices
         /// <param name="code">The product code (e.g., "PK64000158")</param>
         /// <returns>Product DTO or null if not found</returns>
         Task<PosposProductDto?> GetProductByCodeAsync(string code);
-    }
-
-    /// <summary>
-    /// DTO representing a product from POSPOS API response.
-    /// Matches the structure from data-model.md.
-    /// </summary>
-    public class PosposProductDto
-    {
-        public string Id { get; set; } = string.Empty; // _id from POSPOS
-        public string Code { get; set; } = string.Empty;
-        public string Name { get; set; } = string.Empty;
-        public decimal? Cost { get; set; }
-        public PosposCategoryDto? Category { get; set; }
-        public PosposUnitDto? Unit { get; set; }
-        public DateTime? LastUpdate { get; set; } // lastupdate from POSPOS
-    }
-
-    public class PosposCategoryDto
-    {
-        public string Name { get; set; } = string.Empty;
-    }
-
-    public class PosposUnitDto
-    {
-        public string Name { get; set; } = string.Empty;
     }
 
     /// <summary>

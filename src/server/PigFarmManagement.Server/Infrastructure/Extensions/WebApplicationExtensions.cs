@@ -4,6 +4,7 @@ using PigFarmManagement.Server.Features.Feeds;
 using PigFarmManagement.Server.Features.FeedFormulas;
 using PigFarmManagement.Server.Features.FeedProgress;
 using PigFarmManagement.Server.Features.Dashboard;
+using PigFarmManagement.Server.Features.Products;
 
 namespace PigFarmManagement.Server.Infrastructure.Extensions;
 
@@ -20,6 +21,7 @@ public static class WebApplicationExtensions
         app.MapFeedImportEndpoints();
         app.MapFeedProgressEndpoints();
         app.MapDashboardEndpoints();
+        app.MapProductEndpoints();
 
         return app;
     }

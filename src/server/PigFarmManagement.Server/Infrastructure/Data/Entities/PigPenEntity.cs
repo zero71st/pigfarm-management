@@ -36,6 +36,8 @@ public class PigPenEntity
     
     public string? SelectedBrand { get; set; }
     
+    public string? Note { get; set; }
+    
     public bool IsCalculationLocked { get; set; }
     
     public DateTime CreatedAt { get; set; }
@@ -72,6 +74,7 @@ public class PigPenEntity
         )
         {
             SelectedBrand = SelectedBrand,
+            Note = Note,
             FormulaAssignments = FormulaAssignments.Select(fa => fa.ToModel()).ToList(),
             IsCalculationLocked = IsCalculationLocked
         };
@@ -95,6 +98,7 @@ public class PigPenEntity
             Type = pigPen.Type,
             DepositPerPig = pigPen.DepositPerPig,
             SelectedBrand = pigPen.SelectedBrand,
+            Note = pigPen.Note,
             IsCalculationLocked = pigPen.IsCalculationLocked,
             CreatedAt = pigPen.CreatedAt,
             UpdatedAt = pigPen.UpdatedAt,
