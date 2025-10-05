@@ -4,6 +4,7 @@
 @inject NavigationManager Navigation
 @inject IDialogService DialogService
 @inject IPigPenService PigPenService
+@using PigFarmManagement.Shared.Models
 @using PigFarmManagement.Client.Features.FeedFormulas.Services
 @using PigFarmManagement.Client.Features.PigPens.Components
 @inject IFeedFormulaCalculationService FeedFormulaCalculationService
@@ -1042,7 +1043,8 @@
         {
             try
             {
-                var closedPigPen = await PigPenService.ForceClosePigPenAsync(pigPen.Id);
+                var request = new PigPenForceCloseRequest(pigPen.Id, "Force closed by user", true);
+                var closedPigPen = await PigPenService.ForceClosePigPenAsync(request);
                 
                 if (closedPigPen != null)
                 {

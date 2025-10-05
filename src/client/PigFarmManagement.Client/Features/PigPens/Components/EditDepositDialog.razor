@@ -242,16 +242,14 @@
             isSubmitting = true;
             StateHasChanged();
 
-            // Create updated deposit object
-            var updatedDeposit = new Deposit(
-                DepositToEdit.Id,
-                DepositToEdit.PigPenId,
+            // Create updated deposit DTO
+            var updateDto = new DepositUpdateDto(
                 amount,
                 depositDate!.Value,
                 string.IsNullOrWhiteSpace(remark) ? null : remark.Trim()
             );
 
-            var result = await PigPenService.UpdateDepositAsync(updatedDeposit);
+            var result = await PigPenService.UpdateDepositAsync(DepositToEdit.PigPenId, DepositToEdit.Id, updateDto);
             
             Snackbar.Add($"Deposit updated successfully (฿{amount:N2})", Severity.Success);
             MudDialog.Close(DialogResult.Ok(result));

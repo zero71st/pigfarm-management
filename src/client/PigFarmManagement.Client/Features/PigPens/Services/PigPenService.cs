@@ -6,25 +6,34 @@ namespace PigFarmManagement.Client.Features.PigPens.Services;
 
 public interface IPigPenService
 {
+    // Pig Pen CRUD
     Task<List<PigPen>> GetPigPensAsync();
     Task<PigPen?> GetPigPenByIdAsync(Guid id);
     Task<PigPenSummary?> GetPigPenSummaryAsync(Guid id);
-    Task<PigPen> CreatePigPenAsync(PigPenCreateDto pigPen);
-    Task<PigPen> UpdatePigPenAsync(PigPen pigPen);
+    Task<PigPen> CreatePigPenAsync(PigPenCreateDto dto);
+    Task<PigPen> UpdatePigPenAsync(Guid id, PigPenUpdateDto dto);
     Task<bool> DeletePigPenAsync(Guid id);
+    Task<PigPen> ForceClosePigPenAsync(PigPenForceCloseRequest request);
+
+    // Feed Items
     Task<List<FeedItem>> GetFeedItemsAsync(Guid pigPenId);
-    Task<List<Deposit>> GetDepositsAsync(Guid pigPenId);
-    Task<List<HarvestResult>> GetHarvestResultsAsync(Guid pigPenId);
-    Task<List<PigPenFormulaAssignment>> GetFormulaAssignmentsAsync(Guid pigPenId);
-    Task<FeedItem> AddFeedItemAsync(Guid pigPenId, FeedCreateDto feedItem);
+    Task<FeedItem> AddFeedItemAsync(Guid pigPenId, FeedCreateDto dto);
     Task<bool> DeleteFeedItemAsync(Guid pigPenId, Guid feedItemId);
-    Task<Deposit> AddDepositAsync(Guid pigPenId, DepositCreateDto deposit);
-    Task<Deposit> UpdateDepositAsync(Deposit deposit);
+
+    // Deposits
+    Task<List<Deposit>> GetDepositsAsync(Guid pigPenId);
+    Task<Deposit> AddDepositAsync(Guid pigPenId, DepositCreateDto dto);
+    Task<Deposit> UpdateDepositAsync(Guid pigPenId, Guid depositId, DepositUpdateDto dto);
     Task<bool> DeleteDepositAsync(Guid pigPenId, Guid depositId);
-    Task<HarvestResult> AddHarvestResultAsync(Guid pigPenId, HarvestCreateDto harvest);
-    Task<HarvestResult> UpdateHarvestResultAsync(HarvestResult harvest);
+
+    // Harvest Results
+    Task<List<HarvestResult>> GetHarvestResultsAsync(Guid pigPenId);
+    Task<HarvestResult> AddHarvestResultAsync(Guid pigPenId, HarvestCreateDto dto);
+    Task<HarvestResult> UpdateHarvestResultAsync(Guid pigPenId, Guid harvestId, HarvestUpdateDto dto);
     Task<bool> DeleteHarvestResultAsync(Guid pigPenId, Guid harvestId);
-    Task<PigPen> ForceClosePigPenAsync(Guid pigPenId);
+
+    // Formula Assignments
+    Task<List<PigPenFormulaAssignment>> GetFormulaAssignmentsAsync(Guid pigPenId);
 }
 
 public class PigPenService : IPigPenService
@@ -60,9 +69,9 @@ public class PigPenService : IPigPenService
         return createdPigPen!;
     }
 
-    public async Task<PigPen> UpdatePigPenAsync(PigPen pigPen)
+    public async Task<PigPen> UpdatePigPenAsync(Guid id, PigPenUpdateDto dto)
     {
-        var response = await _httpClient.PutAsJsonAsync($"api/pigpens/{pigPen.Id}", pigPen);
+        var response = await _httpClient.PutAsJsonAsync($"api/pigpens/{id}", dto);
         response.EnsureSuccessStatusCode();
         var updatedPigPen = await response.Content.ReadFromJsonAsync<PigPen>();
         return updatedPigPen!;
@@ -114,9 +123,9 @@ public class PigPenService : IPigPenService
         return createdDeposit!;
     }
 
-    public async Task<Deposit> UpdateDepositAsync(Deposit deposit)
+    public async Task<Deposit> UpdateDepositAsync(Guid pigPenId, Guid depositId, DepositUpdateDto dto)
     {
-        var response = await _httpClient.PutAsJsonAsync($"api/pigpens/{deposit.PigPenId}/deposits/{deposit.Id}", deposit);
+        var response = await _httpClient.PutAsJsonAsync($"api/pigpens/{pigPenId}/deposits/{depositId}", dto);
         response.EnsureSuccessStatusCode();
         var updatedDeposit = await response.Content.ReadFromJsonAsync<Deposit>();
         return updatedDeposit!;
@@ -136,9 +145,9 @@ public class PigPenService : IPigPenService
         return createdHarvest!;
     }
 
-    public async Task<HarvestResult> UpdateHarvestResultAsync(HarvestResult harvest)
+    public async Task<HarvestResult> UpdateHarvestResultAsync(Guid pigPenId, Guid harvestId, HarvestUpdateDto dto)
     {
-        var response = await _httpClient.PutAsJsonAsync($"api/pigpens/{harvest.PigPenId}/harvests/{harvest.Id}", harvest);
+        var response = await _httpClient.PutAsJsonAsync($"api/pigpens/{pigPenId}/harvests/{harvestId}", dto);
         response.EnsureSuccessStatusCode();
         var updatedHarvest = await response.Content.ReadFromJsonAsync<HarvestResult>();
         return updatedHarvest!;
@@ -150,9 +159,9 @@ public class PigPenService : IPigPenService
         return response.IsSuccessStatusCode;
     }
 
-    public async Task<PigPen> ForceClosePigPenAsync(Guid pigPenId)
+    public async Task<PigPen> ForceClosePigPenAsync(PigPenForceCloseRequest request)
     {
-        var response = await _httpClient.PostAsync($"api/pigpens/{pigPenId}/force-close", null);
+        var response = await _httpClient.PostAsJsonAsync($"api/pigpens/{request.PigPenId}/force-close", request);
         response.EnsureSuccessStatusCode();
         var closedPigPen = await response.Content.ReadFromJsonAsync<PigPen>();
         return closedPigPen!;
@@ -164,8 +173,3 @@ public class PigPenService : IPigPenService
         return assignments ?? new List<PigPenFormulaAssignment>();
     }
 }
-
-// DTOs that should be moved to shared project later
-public record PigPenCreateDto(Guid CustomerId, string PenCode, int PigQty, DateTime RegisterDate, DateTime? ActHarvestDate, DateTime? EstimatedHarvestDate, PigPenType Type, string? SelectedBrand, decimal DepositPerPig = 1500m, string? Note = null);
-public record DepositCreateDto(decimal Amount, DateTime Date, string? Remark);
-public record HarvestCreateDto(DateTime HarvestDate, int PigCount, decimal AvgWeight, decimal TotalWeight, decimal SalePricePerKg, decimal Revenue);
