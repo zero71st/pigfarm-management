@@ -18,25 +18,25 @@ namespace PigFarmManagement.Server.Services
         public List<string> Errors { get; set; } = new List<string>();
     }
 
-    public interface IPosposImporter
+    public interface IPosposCustomerImportService
     {
-        Task<PosposImportSummary> RunImportAsync(bool persistMapping = false);
-        Task<PosposImportSummary> RunImportSelectedAsync(IEnumerable<string> posposIds, bool persistMapping = false);
-        PosposImportSummary? LastSummary { get; }
+        Task<PosposImportSummary> ImportAllCustomersAsync(bool persistMapping = false);
+        Task<PosposImportSummary> ImportSelectedCustomersAsync(IEnumerable<string> posposIds, bool persistMapping = false);
+        PosposImportSummary? LastImportSummary { get; }
     }
 
-    public class PosposImporter : IPosposImporter
+    public class PosposCustomerImportService : IPosposCustomerImportService
     {
         private readonly IPosposMemberClient _client;
         private readonly IMappingStore _mappingStore;
         private readonly Infrastructure.Data.Repositories.ICustomerRepository _customerRepository;
-        private readonly ILogger<PosposImporter> _logger;
+        private readonly ILogger<PosposCustomerImportService> _logger;
 
         // in-memory transient store removed; persistence is handled via repository
         private IDictionary<string, string> _mapping;
-        public PosposImportSummary? LastSummary { get; private set; }
+        public PosposImportSummary? LastImportSummary { get; private set; }
 
-        public PosposImporter(IPosposMemberClient client, IMappingStore mappingStore, Infrastructure.Data.Repositories.ICustomerRepository customerRepository, ILogger<PosposImporter> logger)
+        public PosposCustomerImportService(IPosposMemberClient client, IMappingStore mappingStore, Infrastructure.Data.Repositories.ICustomerRepository customerRepository, ILogger<PosposCustomerImportService> logger)
         {
             _client = client;
             _mappingStore = mappingStore;
@@ -45,7 +45,7 @@ namespace PigFarmManagement.Server.Services
             _mapping = _mappingStore.Load();
         }
 
-        public async Task<PosposImportSummary> RunImportAsync(bool persistMapping = false)
+        public async Task<PosposImportSummary> ImportAllCustomersAsync(bool persistMapping = false)
         {
             var summary = new PosposImportSummary();
             try
@@ -119,12 +119,12 @@ namespace PigFarmManagement.Server.Services
             }
 
             summary.Timestamp = DateTime.UtcNow;
-            LastSummary = summary;
+            LastImportSummary = summary;
             _logger.LogInformation("Import completed. created={Created} updated={Updated} skipped={Skipped} errors={ErrorsCount}", summary.Created, summary.Updated, summary.Skipped, summary.Errors.Count);
             return summary;
         }
 
-        public async Task<PosposImportSummary> RunImportSelectedAsync(IEnumerable<string> posposIds, bool persistMapping = false)
+        public async Task<PosposImportSummary> ImportSelectedCustomersAsync(IEnumerable<string> posposIds, bool persistMapping = false)
         {
             var summary = new PosposImportSummary();
             try
@@ -194,7 +194,7 @@ namespace PigFarmManagement.Server.Services
             }
 
             summary.Timestamp = DateTime.UtcNow;
-            LastSummary = summary;
+            LastImportSummary = summary;
             _logger.LogInformation("Selected import completed. created={Created} updated={Updated} skipped={Skipped} errors={ErrorsCount}", summary.Created, summary.Updated, summary.Skipped, summary.Errors.Count);
             return summary;
         }
