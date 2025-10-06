@@ -1,6 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using PigFarmManagement.Server.Services.ExternalServices;
-using PigFarmManagement.Server.Features.FeedFormulas;
 using PigFarmManagement.Shared.Models;
 
 namespace PigFarmManagement.Server.Features.Products;
@@ -15,85 +13,98 @@ public static class ProductEndpoints
         group.MapGet("/search", SearchProducts)
             .WithName("SearchProducts")
             .WithSummary("Search products by code or name")
-            .Produces<IEnumerable<PosposProductDto>>()
+            .Produces<IEnumerable<ProductDto>>()
             .Produces(400);
 
         group.MapPost("/import", ImportProducts)
             .WithName("ImportProducts")
             .WithSummary("Import selected products (upsert duplicates)")
-            .Produces<PigFarmManagement.Shared.Models.ImportResult>()
+            .Produces<ProductImportResultDto>()
+            .Produces(400);
+
+        group.MapGet("/", GetAllProducts)
+            .WithName("GetAllProducts")
+            .WithSummary("Get all available products")
+            .Produces<IEnumerable<ProductDto>>()
+            .Produces(400);
+
+        group.MapGet("/{code}", GetProductByCode)
+            .WithName("GetProductByCode")
+            .WithSummary("Get product by code")
+            .Produces<ProductDto>()
+            .Produces(404)
             .Produces(400);
     }
 
     private static async Task<IResult> SearchProducts(
         [FromQuery] string q,
-        [FromServices] IPosposProductClient posposClient,
-        [FromServices] ILoggerFactory loggerFactory)
+        [FromServices] IProductService productService)
     {
-        var logger = loggerFactory.CreateLogger("ProductEndpoints");
-        
-        // Validate query parameter
-        if (string.IsNullOrWhiteSpace(q))
-        {
-            logger.LogWarning("Product search attempted with empty query");
-            return Results.BadRequest("Search query 'q' cannot be empty");
-        }
-
-        logger.LogInformation("Searching products with query: {Query}", q);
-
         try
         {
-            // Fetch all products from POSPOS
-            var allProducts = await posposClient.GetAllProductsAsync();
-            
-            // Search for partial matches in both code and name
-            var results = allProducts
-                .Where(p => 
-                    (p.Code?.Contains(q, StringComparison.OrdinalIgnoreCase) == true) ||
-                    (p.Name?.Contains(q, StringComparison.OrdinalIgnoreCase) == true))
-                .ToList();
-                
-            logger.LogInformation("Search for '{Query}' returned {Count} results", q, results.Count);
-
+            var searchDto = new ProductSearchDto { Query = q };
+            var results = await productService.SearchProductsAsync(searchDto);
             return Results.Ok(results);
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(ex.Message);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error searching products with query: {Query}", q);
             return Results.Problem($"Error searching products: {ex.Message}");
         }
     }
 
     private static async Task<IResult> ImportProducts(
-        [FromBody] ImportRequest request,
-        [FromServices] IFeedFormulaService feedFormulaService,
-        [FromServices] ILoggerFactory loggerFactory)
+        [FromBody] ProductImportDto importDto,
+        [FromServices] IProductService productService)
     {
-        var logger = loggerFactory.CreateLogger("ProductEndpoints");
-        
-        // Validate request
-        if (request.ProductIds == null || !request.ProductIds.Any())
-        {
-            logger.LogWarning("Product import attempted with empty ProductIds");
-            return Results.BadRequest("ProductIds cannot be empty");
-        }
-
-        logger.LogInformation("Starting import of {Count} products", request.ProductIds.Count);
-
         try
         {
-            var result = await feedFormulaService.ImportProductsByIdsAsync(request);
-            
-            logger.LogInformation(
-                "Product import completed: {Created} created, {Updated} updated, {Failed} failed", 
-                result.Summary.Created, result.Summary.Updated, result.Summary.Failed);
-
+            var result = await productService.ImportProductsAsync(importDto);
             return Results.Ok(result);
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(ex.Message);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error importing {Count} products", request.ProductIds.Count);
             return Results.Problem($"Error importing products: {ex.Message}");
+        }
+    }
+
+    private static async Task<IResult> GetAllProducts(
+        [FromServices] IProductService productService)
+    {
+        try
+        {
+            var products = await productService.GetAllProductsAsync();
+            return Results.Ok(products);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Error retrieving products: {ex.Message}");
+        }
+    }
+
+    private static async Task<IResult> GetProductByCode(
+        string code,
+        [FromServices] IProductService productService)
+    {
+        try
+        {
+            var product = await productService.GetProductByCodeAsync(code);
+            return product == null ? Results.NotFound($"Product with code '{code}' not found") : Results.Ok(product);
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Error retrieving product: {ex.Message}");
         }
     }
 }
