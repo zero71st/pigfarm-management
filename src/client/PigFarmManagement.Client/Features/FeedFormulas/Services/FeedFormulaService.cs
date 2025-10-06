@@ -3,45 +3,6 @@ using PigFarmManagement.Shared.Models;
 
 namespace PigFarmManagement.Client.Features.FeedFormulas.Services;
 
-// DTOs for client-side operations
-public record FeedFormulaCreateDto(string Code, string Name, string CategoryName, string Brand, decimal ConsumeRate, decimal Cost, string UnitName);
-public record FeedFormulaUpdateDto(string Code, string Name, string CategoryName, string Brand, decimal ConsumeRate, decimal Cost, string UnitName);
-
-// POSPOS Import DTO
-public class ImportResultDto
-{
-    public int SuccessCount { get; set; }
-    public int ErrorCount { get; set; }
-    public int SkippedCount { get; set; }
-    public List<string> Errors { get; set; } = new();
-    public List<string> ImportedCodes { get; set; } = new();
-}
-
-public class FeedFormulaDto
-{
-    public Guid Id { get; set; }
-    
-    // New POSPOS fields
-    public string? Code { get; set; }
-    public string? Name { get; set; }
-    public string? CategoryName { get; set; }
-    public string? Brand { get; set; }
-    public decimal ConsumeRate { get; set; }
-    public decimal Cost { get; set; }
-    public string? UnitName { get; set; }
-    
-    // Legacy properties for backwards compatibility
-    public string ProductCode => Code ?? string.Empty;
-    public string ProductName => Name ?? string.Empty;
-    public decimal BagPerPig => ConsumeRate;
-    
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
-    public string DisplayName { get; set; } = string.Empty;
-    public string ConsumptionRate { get; set; } = string.Empty;
-    public string BrandDisplayName { get; set; } = string.Empty;
-}
-
 public interface IFeedFormulaService
 {
     Task<IEnumerable<FeedFormulaDto>> GetAllFeedFormulasAsync();

@@ -7,18 +7,6 @@ using Microsoft.Extensions.Logging;
 
 namespace PigFarmManagement.Server.Features.FeedFormulas;
 
-// DTOs for FeedFormula CRUD operations
-public record FeedFormulaCreateDto(string Code, string Name, string CategoryName, string Brand, decimal ConsumeRate, decimal Cost, string UnitName);
-public record FeedFormulaUpdateDto(string Code, string Name, string CategoryName, string Brand, decimal ConsumeRate, decimal Cost, string UnitName);
-
-// DTO for import results
-public record ImportResult(
-    int SuccessCount, 
-    int ErrorCount, 
-    int SkippedCount, 
-    List<string> Errors,
-    List<string> ImportedCodes);
-
 public interface IFeedFormulaService
 {
     Task<IEnumerable<FeedFormula>> GetAllFeedFormulasAsync();
@@ -27,9 +15,9 @@ public interface IFeedFormulaService
     Task<FeedFormula> UpdateFeedFormulaAsync(Guid id, FeedFormulaUpdateDto dto);
     Task<bool> DeleteFeedFormulaAsync(Guid id);
     Task<bool> ExistsAsync(string code);
-    Task<ImportResult> ImportProductsFromPosposAsync();
+    Task<ImportResultDto> ImportProductsFromPosposAsync();
     Task<IEnumerable<PosposProductDto>> GetPosposProductsAsync();
-    Task<ImportResult> ImportSelectedProductsFromPosposAsync(IEnumerable<string> productCodes);
+    Task<ImportResultDto> ImportSelectedProductsFromPosposAsync(IEnumerable<string> productCodes);
     Task<PigFarmManagement.Shared.Models.ImportResult> ImportProductsByIdsAsync(ImportRequest request);
 }
 
@@ -122,7 +110,7 @@ public class FeedFormulaService : IFeedFormulaService
         return await _context.FeedFormulas
             .AnyAsync(f => f.Code == code);
     }
-    public async Task<ImportResult> ImportProductsFromPosposAsync()
+    public async Task<ImportResultDto> ImportProductsFromPosposAsync()
     {
         _logger.LogInformation("Starting POSPOS product import");
 
@@ -141,7 +129,14 @@ public class FeedFormulaService : IFeedFormulaService
             if (posposProducts.Count == 0)
             {
                 _logger.LogWarning("No products returned from POSPOS API");
-                return new ImportResult(0, 0, 0, new List<string> { "No products returned from POSPOS API" }, new List<string>());
+                return new ImportResultDto 
+                { 
+                    SuccessCount = 0, 
+                    ErrorCount = 0, 
+                    SkippedCount = 0, 
+                    Errors = new List<string> { "No products returned from POSPOS API" }, 
+                    ImportedCodes = new List<string>() 
+                };
             }
 
             // Get existing products to check for duplicates
@@ -224,13 +219,27 @@ public class FeedFormulaService : IFeedFormulaService
                     successCount, skippedCount, errorCount);
             }
 
-            return new ImportResult(successCount, errorCount, skippedCount, errors, importedCodes);
+            return new ImportResultDto
+            {
+                SuccessCount = successCount,
+                ErrorCount = errorCount,
+                SkippedCount = skippedCount,
+                Errors = errors,
+                ImportedCodes = importedCodes
+            };
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Fatal error during POSPOS product import");
             errors.Add($"Fatal error: {ex.Message}");
-            return new ImportResult(successCount, errorCount + 1, skippedCount, errors, importedCodes);
+            return new ImportResultDto
+            {
+                SuccessCount = successCount,
+                ErrorCount = errorCount + 1,
+                SkippedCount = skippedCount,
+                Errors = errors,
+                ImportedCodes = importedCodes
+            };
         }
     }
 
@@ -261,7 +270,7 @@ public class FeedFormulaService : IFeedFormulaService
         }
     }
 
-    public async Task<ImportResult> ImportSelectedProductsFromPosposAsync(IEnumerable<string> productCodes)
+    public async Task<ImportResultDto> ImportSelectedProductsFromPosposAsync(IEnumerable<string> productCodes)
     {
         _logger.LogInformation("Starting selective POSPOS product import for {Count} products", productCodes.Count());
 
@@ -286,7 +295,14 @@ public class FeedFormulaService : IFeedFormulaService
             if (selectedProducts.Count == 0)
             {
                 _logger.LogWarning("No matching products found for the selected codes");
-                return new ImportResult(0, 0, 0, new List<string> { "No matching products found for the selected codes" }, new List<string>());
+                return new ImportResultDto 
+                { 
+                    SuccessCount = 0, 
+                    ErrorCount = 0, 
+                    SkippedCount = 0, 
+                    Errors = new List<string> { "No matching products found for the selected codes" }, 
+                    ImportedCodes = new List<string>() 
+                };
             }
 
             // Get existing products to check for duplicates
@@ -369,13 +385,27 @@ public class FeedFormulaService : IFeedFormulaService
                     successCount, skippedCount, errorCount);
             }
 
-            return new ImportResult(successCount, errorCount, skippedCount, errors, importedCodes);
+            return new ImportResultDto
+            {
+                SuccessCount = successCount,
+                ErrorCount = errorCount,
+                SkippedCount = skippedCount,
+                Errors = errors,
+                ImportedCodes = importedCodes
+            };
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Fatal error during selective POSPOS product import");
             errors.Add($"Fatal error: {ex.Message}");
-            return new ImportResult(successCount, errorCount + 1, skippedCount, errors, importedCodes);
+            return new ImportResultDto
+            {
+                SuccessCount = successCount,
+                ErrorCount = errorCount + 1,
+                SkippedCount = skippedCount,
+                Errors = errors,
+                ImportedCodes = importedCodes
+            };
         }
     }
 

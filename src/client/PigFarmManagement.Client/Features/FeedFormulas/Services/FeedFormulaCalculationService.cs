@@ -1,38 +1,7 @@
 using System.Text.Json;
+using PigFarmManagement.Shared.Models;
 
 namespace PigFarmManagement.Client.Features.FeedFormulas.Services;
-
-// Request and DTO for client
-public record FeedCalculationRequest(Guid FeedFormulaId, int PigCount, decimal? BagPrice = null);
-
-public class FeedFormulaWithCalculationDto
-{
-    public Guid Id { get; set; }
-    public string ProductCode { get; set; } = string.Empty;
-    public string ProductName { get; set; } = string.Empty;
-    public string Brand { get; set; } = string.Empty;
-    public decimal BagPerPig { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
-    public string DisplayName { get; set; } = string.Empty;
-    public string ConsumptionRate { get; set; } = string.Empty;
-    public string BrandDisplayName { get; set; } = string.Empty;
-    public decimal TotalBagsRequired { get; set; }
-    public int PigCount { get; set; }
-}
-
-public class FeedCalculationDto
-{
-    public Guid FeedFormulaId { get; set; }
-    public string ProductName { get; set; } = string.Empty;
-    public string Brand { get; set; } = string.Empty;
-    public int PigCount { get; set; }
-    public decimal BagPerPig { get; set; }
-    public decimal TotalBagsRequired { get; set; }
-    public decimal? BagPrice { get; set; }
-    public decimal? TotalCost { get; set; }
-    public DateTime CalculationDate { get; set; }
-}
 
 public interface IFeedFormulaCalculationService
 {
