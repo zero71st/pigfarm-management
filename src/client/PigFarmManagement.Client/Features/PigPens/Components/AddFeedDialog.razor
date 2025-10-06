@@ -84,7 +84,7 @@
     {
         try
         {
-            await FeedService.AddFeedToPigPenAsync(PigPenId, new PigFarmManagement.Client.Features.Feeds.Services.FeedCreateDto(
+            await FeedService.AddFeedToPigPenAsync(PigPenId, new PigFarmManagement.Shared.Models.FeedCreateDto(
                 feedType,
                 quantityKg,
                 pricePerKg,

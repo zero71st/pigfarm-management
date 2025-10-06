@@ -9,10 +9,15 @@ public static class FeedEndpoints
         var group = builder.MapGroup("/api/pigpens").WithTags("Feeds");
 
         group.MapPost("/{pigPenId:guid}/feeds", AddFeedToPigPen)
-            .WithName("AddFeedToPigPen");
+            .WithName("AddFeedToPigPen")
+            .WithSummary("Add a new feed item to a pig pen")
+            .Accepts<FeedCreateDto>("application/json")
+            .Produces<FeedItem>();
 
         group.MapDelete("/{pigPenId:guid}/feeds/{feedItemId:guid}", DeleteFeed)
-            .WithName("DeleteFeed");
+            .WithName("DeleteFeed")
+            .WithSummary("Delete a feed item from a pig pen")
+            .Produces(204);
 
         return builder;
     }
@@ -38,12 +43,16 @@ public static class FeedEndpoints
     {
         try
         {
-            await feedService.DeleteFeedAsync(feedItemId);
-            return Results.Ok();
+            var deleted = await feedService.DeleteFeedAsync(feedItemId);
+            if (!deleted)
+            {
+                return Results.NotFound($"Feed item with ID {feedItemId} not found");
+            }
+            return Results.NoContent();
         }
         catch (InvalidOperationException ex)
         {
-            return Results.BadRequest(ex.Message);
+            return Results.NotFound(ex.Message);
         }
         catch (Exception ex)
         {

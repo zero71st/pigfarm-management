@@ -3,8 +3,6 @@ using PigFarmManagement.Server.Features.PigPens;
 
 namespace PigFarmManagement.Server.Features.Feeds;
 
-public record FeedCreateDto(string FeedType, decimal QuantityKg, decimal PricePerKg, DateTime Date);
-
 public interface IFeedService
 {
     Task<List<FeedItem>> GetFeedsByPigPenIdAsync(Guid pigPenId);

@@ -15,15 +15,21 @@ public static class FeedImportEndpoints
 
         group.MapPost("/pospos", ImportPosPosFeedData)
             .WithName("ImportPosPosFeedData")
-            .WithSummary("Import feed data from POSPOS transactions");
+            .WithSummary("Import feed data from POSPOS transactions")
+            .Accepts<List<PosPosFeedTransaction>>("application/json")
+            .Produces<FeedImportResultDto>();
 
         group.MapPost("/pospos/json", ImportPosPosFeedFromJson)
             .WithName("ImportPosPosFeedFromJson")
-            .WithSummary("Import feed data from POSPOS JSON string");
+            .WithSummary("Import feed data from POSPOS JSON string")
+            .Accepts<FeedImportJsonRequest>("application/json")
+            .Produces<FeedImportResultDto>();
 
         group.MapPost("/pospos/pigpen/{pigPenId:guid}", ImportPosPosFeedForPigPen)
             .WithName("ImportPosPosFeedForPigPen")
-            .WithSummary("Import POSPOS feed data for a specific pig pen");
+            .WithSummary("Import POSPOS feed data for a specific pig pen")
+            .Accepts<List<PosPosFeedTransaction>>("application/json")
+            .Produces<FeedImportResultDto>();
 
         group.MapPost("/demo/pigpen/{pigPenId:guid}", CreateDemoFeedsForPigPen)
             .WithName("CreateDemoFeedsForPigPen")
@@ -52,12 +58,16 @@ public static class FeedImportEndpoints
 
         group.MapPost("/pospos/daterange/import", ImportPosPosFeedByDateRange)
             .WithName("ImportPosPosFeedByDateRange")
-            .WithSummary("Import POSPOS feed data by date range");
+            .WithSummary("Import POSPOS feed data by date range")
+            .Accepts<FeedImportDateRangeRequest>("application/json")
+            .Produces<FeedImportResultDto>();
 
         // Single-call endpoint: fetch from POSPOS by date range and import into the system
         group.MapPost("/pospos/fetch-and-import", FetchAndImportPosPosByDateRange)
             .WithName("FetchAndImportPosPosByDateRange")
-            .WithSummary("Fetch POSPOS transactions from POSPOS by date range and import them as feeds");
+            .WithSummary("Fetch POSPOS transactions from POSPOS by date range and import them as feeds")
+            .Accepts<FeedImportDateRangeRequest>("application/json")
+            .Produces<FeedImportResultDto>();
     }
 
     private static async Task<IResult> ImportPosPosFeedData(
@@ -76,7 +86,7 @@ public static class FeedImportEndpoints
     }
 
     private static async Task<IResult> ImportPosPosFeedFromJson(
-        [FromBody] ImportJsonRequest request,
+        [FromBody] FeedImportJsonRequest request,
         IFeedImportService feedImportService)
     {
         try
@@ -188,7 +198,7 @@ public static class FeedImportEndpoints
     }
 
     private static async Task<IResult> ImportPosPosFeedByDateRange(
-        [FromBody] DateRangeImportRequest request,
+        [FromBody] FeedImportDateRangeRequest request,
         IFeedImportService feedImportService)
     {
         try
@@ -232,7 +242,7 @@ public static class FeedImportEndpoints
     }
 
     private static async Task<IResult> FetchAndImportPosPosByDateRange(
-        [FromBody] DateRangeImportRequest request,
+        [FromBody] FeedImportDateRangeRequest request,
         IFeedImportService feedImportService,
         IPosposTransactionClient posposFeedClient)
     {
@@ -261,6 +271,3 @@ public static class FeedImportEndpoints
         }
     }
 }
-
-public record ImportJsonRequest(string JsonContent);
-public record DateRangeImportRequest(DateTime FromDate, DateTime ToDate);
