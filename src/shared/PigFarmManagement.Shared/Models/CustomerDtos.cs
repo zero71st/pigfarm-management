@@ -1,4 +1,4 @@
-using PigFarmManagement.Shared.Domain;
+using PigFarmManagement.Shared.Models;
 
 namespace PigFarmManagement.Shared.Models;
 

@@ -13,8 +13,8 @@ public enum CustomerStatus
 
 public enum PigPenType
 {
-    Cash,
-    Project
+    Project,
+    Cash
 }
 
 public enum DepositCompletionStatus

@@ -1,3 +1,5 @@
+using PigFarmManagement.Shared.Models;
+
 namespace PigFarmManagement.Shared.Models;
 
 /// <summary>
