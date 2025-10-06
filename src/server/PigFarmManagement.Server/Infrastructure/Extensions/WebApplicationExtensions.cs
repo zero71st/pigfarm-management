@@ -14,6 +14,7 @@ public static class WebApplicationExtensions
     {
         // Map all feature endpoints
         app.MapCustomerEndpoints();
+        app.MapCustomerImportEndpoints();
         app.MapPigPenEndpoints();
         app.MapFeedEndpoints();
         app.MapFeedFormulaEndpoints();

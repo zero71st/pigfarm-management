@@ -97,7 +97,7 @@ app.UseDefaultFiles();
 app.UseStaticFiles();
 app.UseBlazorFrameworkFiles();
 
-// Map attribute-routed controllers (ImportPosMemberController, etc.)
+// Map attribute-routed controllers (if any remain)
 app.MapControllers();
 
 // Map all feature endpoints
