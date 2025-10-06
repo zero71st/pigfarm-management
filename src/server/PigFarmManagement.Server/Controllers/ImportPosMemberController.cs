@@ -10,15 +10,15 @@ namespace PigFarmManagement.Server.Controllers
     [Route("import")]
     public class ImportPosMemberController : ControllerBase
     {
-        private readonly IPosposCustomerImportService _importer;
+        private readonly IPosposCustomerImportService _customerImportService;
         private readonly IPosposMemberClient _posposClient;
         private readonly Microsoft.Extensions.Options.IOptions<PigFarmManagement.Server.Infrastructure.Settings.PosposOptions> _posposOptions;
         private readonly System.Net.Http.IHttpClientFactory _httpClientFactory;
         private readonly Features.Customers.ICustomerService _customerService;
 
-        public ImportPosMemberController(IPosposCustomerImportService importer, IPosposMemberClient posposClient, Microsoft.Extensions.Options.IOptions<PigFarmManagement.Server.Infrastructure.Settings.PosposOptions> posposOptions, System.Net.Http.IHttpClientFactory httpClientFactory, Features.Customers.ICustomerService customerService)
+        public ImportPosMemberController(IPosposCustomerImportService customerImportService, IPosposMemberClient posposClient, Microsoft.Extensions.Options.IOptions<PigFarmManagement.Server.Infrastructure.Settings.PosposOptions> posposOptions, System.Net.Http.IHttpClientFactory httpClientFactory, Features.Customers.ICustomerService customerService)
         {
-            _importer = importer;
+            _customerImportService = customerImportService;
             _posposClient = posposClient;
             _posposOptions = posposOptions;
             _httpClientFactory = httpClientFactory;
@@ -32,7 +32,7 @@ namespace PigFarmManagement.Server.Controllers
         [HttpPost("customers")]
         public async Task<IActionResult> ImportCustomers([FromQuery] bool persist = false)
         {
-            var summary = await _importer.ImportAllCustomersAsync(persist);
+            var summary = await _customerImportService.ImportAllCustomersAsync(persist);
             return Ok(summary);
         }
 
@@ -201,7 +201,7 @@ namespace PigFarmManagement.Server.Controllers
             if (ids == null)
                 return BadRequest(new { message = "ids required" });
 
-            var summary = await _importer.ImportSelectedCustomersAsync(ids, persist);
+            var summary = await _customerImportService.ImportSelectedCustomersAsync(ids, persist);
             return Ok(summary);
         }
 
@@ -267,7 +267,7 @@ namespace PigFarmManagement.Server.Controllers
         [HttpGet("customers/summary")]
         public IActionResult GetSummary()
         {
-            var summary = _importer.LastImportSummary;
+            var summary = _customerImportService.LastImportSummary;
             if (summary == null)
                 return NotFound(new { message = "No import has been run yet." });
             return Ok(summary);
@@ -283,7 +283,7 @@ namespace PigFarmManagement.Server.Controllers
         {
             try
             {
-                var summary = await _importer.ImportAllCustomersAsync(persist);
+                var summary = await _customerImportService.ImportAllCustomersAsync(persist);
                 return Ok(new 
                 { 
                     success = true,

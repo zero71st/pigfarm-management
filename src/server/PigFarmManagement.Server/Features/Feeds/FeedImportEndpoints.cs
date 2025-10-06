@@ -56,6 +56,13 @@ public static class FeedImportEndpoints
             .WithName("GetRawPosPosByCustomer")
             .WithSummary("Fetch raw POSPOS transactions for a customer (no import). Optional query params: from, to (ISO8601)");
 
+        // Debug: raw fetch from POSPOS with pagination (no import)
+        group.MapGet("/pospos/raw", GetRawPosposTransactions)
+            .WithName("GetRawPosposTransactions")
+            .WithSummary("Fetch raw POSPOS transactions (no import). Useful for debugging or mapping before importing.")
+            .Produces(200)
+            .Produces(400);
+
         group.MapPost("/pospos/daterange/import", ImportPosPosFeedByDateRange)
             .WithName("ImportPosPosFeedByDateRange")
             .WithSummary("Import POSPOS feed data by date range")
@@ -268,6 +275,62 @@ public static class FeedImportEndpoints
         catch (Exception ex)
         {
             return Results.Problem($"Fetch and import failed: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Fetch raw POSPOS transactions with pagination (no import). 
+    /// Useful for debugging or mapping before importing.
+    /// </summary>
+    private static async Task<IResult> GetRawPosposTransactions(
+        IPosposTransactionClient posposClient,
+        [FromQuery] string? start = null,
+        [FromQuery] string? end = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int limit = 200)
+    {
+        try
+        {
+            // Validate parameters
+            if (page < 1) page = 1;
+            if (limit < 1 || limit > 1000) limit = 200;
+
+            // If date range is provided, use the date range method
+            if (!string.IsNullOrWhiteSpace(start) && !string.IsNullOrWhiteSpace(end))
+            {
+                if (!DateTime.TryParse(start, out var fromDate) || !DateTime.TryParse(end, out var toDate))
+                {
+                    return Results.BadRequest("Invalid date format. Use ISO 8601 format (YYYY-MM-DD).");
+                }
+
+                var transactions = await posposClient.GetTransactionsByDateRangeAsync(fromDate, toDate, limit);
+                
+                // Apply pagination to the results since the client returns all results
+                var pagedTransactions = transactions
+                    .Skip((page - 1) * limit)
+                    .Take(limit)
+                    .ToList();
+
+                return Results.Ok(new { Status = 200, Data = pagedTransactions });
+            }
+            
+            // For non-date-range queries, we'll need to get all transactions and paginate
+            // This is a simplified approach - in production you might want to cache results
+            var allTransactions = await posposClient.GetTransactionsByDateRangeAsync(
+                DateTime.Now.AddDays(-30), // Default to last 30 days
+                DateTime.Now, 
+                limit * 10); // Get more results to allow for pagination
+
+            var paginatedResults = allTransactions
+                .Skip((page - 1) * limit)
+                .Take(limit)
+                .ToList();
+
+            return Results.Ok(new { Status = 200, Data = paginatedResults });
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Failed to fetch raw POSPOS transactions: {ex.Message}");
         }
     }
 }
