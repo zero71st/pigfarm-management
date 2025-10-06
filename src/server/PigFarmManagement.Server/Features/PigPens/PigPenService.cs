@@ -4,8 +4,6 @@ using System.Linq;
 
 namespace PigFarmManagement.Server.Features.PigPens;
 
-public record PigPenCreateDto(Guid CustomerId, string PenCode, int PigQty, DateTime RegisterDate, DateTime? ActHarvestDate, DateTime? EstimatedHarvestDate, PigPenType Type, string? SelectedBrand, decimal DepositPerPig = 1500m, string? Note = null);
-
 public interface IPigPenService
 {
     Task<List<PigPen>> GetAllPigPensAsync();

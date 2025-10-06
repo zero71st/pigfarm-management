@@ -3,9 +3,6 @@ using PigFarmManagement.Server.Infrastructure.Data.Repositories;
 
 namespace PigFarmManagement.Server.Features.PigPens;
 
-public record DepositCreateDto(decimal Amount, DateTime Date, string? Remark);
-public record HarvestCreateDto(DateTime HarvestDate, int PigCount, decimal AvgWeight, decimal TotalWeight, decimal SalePricePerKg, decimal Revenue);
-
 public interface IPigPenDetailService
 {
     Task<PigPenSummary?> GetPigPenSummaryAsync(Guid pigPenId);
@@ -13,15 +10,15 @@ public interface IPigPenDetailService
     Task<List<Deposit>> GetPigPenDepositsAsync(Guid pigPenId);
     Task<List<HarvestResult>> GetPigPenHarvestsAsync(Guid pigPenId);
     
-    // Deposit CRUD
+    // Deposit CRUD - Standardized signatures
     Task<Deposit> CreateDepositAsync(Guid pigPenId, DepositCreateDto dto);
-    Task<Deposit> UpdateDepositAsync(Deposit deposit);
-    Task DeleteDepositAsync(Guid depositId);
+    Task<Deposit> UpdateDepositAsync(Guid pigPenId, Guid depositId, DepositUpdateDto dto);
+    Task DeleteDepositAsync(Guid pigPenId, Guid depositId);
     
-    // Harvest CRUD
+    // Harvest CRUD - Standardized signatures
     Task<HarvestResult> CreateHarvestAsync(Guid pigPenId, HarvestCreateDto dto);
-    Task<HarvestResult> UpdateHarvestAsync(HarvestResult harvest);
-    Task DeleteHarvestAsync(Guid harvestId);
+    Task<HarvestResult> UpdateHarvestAsync(Guid pigPenId, Guid harvestId, HarvestUpdateDto dto);
+    Task DeleteHarvestAsync(Guid pigPenId, Guid harvestId);
 }
 
 public class PigPenDetailService : IPigPenDetailService
@@ -128,23 +125,40 @@ public class PigPenDetailService : IPigPenDetailService
         return await _depositRepository.CreateAsync(deposit);
     }
 
-    public async Task<Deposit> UpdateDepositAsync(Deposit deposit)
+    public async Task<Deposit> UpdateDepositAsync(Guid pigPenId, Guid depositId, DepositUpdateDto dto)
     {
-        var existingDeposit = await _depositRepository.GetByIdAsync(deposit.Id);
+        var existingDeposit = await _depositRepository.GetByIdAsync(depositId);
         if (existingDeposit == null)
         {
             throw new InvalidOperationException("Deposit not found");
         }
 
-        return await _depositRepository.UpdateAsync(deposit);
+        if (existingDeposit.PigPenId != pigPenId)
+        {
+            throw new InvalidOperationException("Deposit does not belong to the specified pig pen");
+        }
+
+        var updatedDeposit = existingDeposit with
+        {
+            Amount = dto.Amount,
+            Date = dto.Date,
+            Remark = dto.Remark
+        };
+
+        return await _depositRepository.UpdateAsync(updatedDeposit);
     }
 
-    public async Task DeleteDepositAsync(Guid depositId)
+    public async Task DeleteDepositAsync(Guid pigPenId, Guid depositId)
     {
         var deposit = await _depositRepository.GetByIdAsync(depositId);
         if (deposit == null)
         {
             throw new InvalidOperationException("Deposit not found");
+        }
+
+        if (deposit.PigPenId != pigPenId)
+        {
+            throw new InvalidOperationException("Deposit does not belong to the specified pig pen");
         }
 
         await _depositRepository.DeleteAsync(depositId);
@@ -173,23 +187,43 @@ public class PigPenDetailService : IPigPenDetailService
         return await _harvestRepository.CreateAsync(harvest);
     }
 
-    public async Task<HarvestResult> UpdateHarvestAsync(HarvestResult harvest)
+    public async Task<HarvestResult> UpdateHarvestAsync(Guid pigPenId, Guid harvestId, HarvestUpdateDto dto)
     {
-        var existingHarvest = await _harvestRepository.GetByIdAsync(harvest.Id);
+        var existingHarvest = await _harvestRepository.GetByIdAsync(harvestId);
         if (existingHarvest == null)
         {
             throw new InvalidOperationException("Harvest not found");
         }
 
-        return await _harvestRepository.UpdateAsync(harvest);
+        if (existingHarvest.PigPenId != pigPenId)
+        {
+            throw new InvalidOperationException("Harvest does not belong to the specified pig pen");
+        }
+
+        var updatedHarvest = existingHarvest with
+        {
+            HarvestDate = dto.HarvestDate,
+            PigCount = dto.PigCount,
+            AvgWeight = dto.AvgWeight,
+            TotalWeight = dto.TotalWeight,
+            SalePricePerKg = dto.SalePricePerKg,
+            Revenue = dto.Revenue
+        };
+
+        return await _harvestRepository.UpdateAsync(updatedHarvest);
     }
 
-    public async Task DeleteHarvestAsync(Guid harvestId)
+    public async Task DeleteHarvestAsync(Guid pigPenId, Guid harvestId)
     {
         var harvest = await _harvestRepository.GetByIdAsync(harvestId);
         if (harvest == null)
         {
             throw new InvalidOperationException("Harvest not found");
+        }
+
+        if (harvest.PigPenId != pigPenId)
+        {
+            throw new InvalidOperationException("Harvest does not belong to the specified pig pen");
         }
 
         await _harvestRepository.DeleteAsync(harvestId);

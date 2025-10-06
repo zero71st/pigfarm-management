@@ -223,16 +223,11 @@ public static class PigPenEndpoints
         }
     }
 
-    private static async Task<IResult> UpdateDeposit(Guid id, Guid depositId, Deposit deposit, IPigPenDetailService pigPenDetailService)
+    private static async Task<IResult> UpdateDeposit(Guid id, Guid depositId, DepositUpdateDto dto, IPigPenDetailService pigPenDetailService)
     {
         try
         {
-            if (depositId != deposit.Id)
-            {
-                return Results.BadRequest("Deposit ID mismatch");
-            }
-
-            var updatedDeposit = await pigPenDetailService.UpdateDepositAsync(deposit);
+            var updatedDeposit = await pigPenDetailService.UpdateDepositAsync(id, depositId, dto);
             return Results.Ok(updatedDeposit);
         }
         catch (InvalidOperationException ex)
@@ -249,7 +244,7 @@ public static class PigPenEndpoints
     {
         try
         {
-            await pigPenDetailService.DeleteDepositAsync(depositId);
+            await pigPenDetailService.DeleteDepositAsync(id, depositId);
             return Results.Ok();
         }
         catch (InvalidOperationException ex)
@@ -280,16 +275,11 @@ public static class PigPenEndpoints
         }
     }
 
-    private static async Task<IResult> UpdateHarvest(Guid id, Guid harvestId, HarvestResult harvest, IPigPenDetailService pigPenDetailService)
+    private static async Task<IResult> UpdateHarvest(Guid id, Guid harvestId, HarvestUpdateDto dto, IPigPenDetailService pigPenDetailService)
     {
         try
         {
-            if (harvestId != harvest.Id)
-            {
-                return Results.BadRequest("Harvest ID mismatch");
-            }
-
-            var updatedHarvest = await pigPenDetailService.UpdateHarvestAsync(harvest);
+            var updatedHarvest = await pigPenDetailService.UpdateHarvestAsync(id, harvestId, dto);
             return Results.Ok(updatedHarvest);
         }
         catch (InvalidOperationException ex)
@@ -306,7 +296,7 @@ public static class PigPenEndpoints
     {
         try
         {
-            await pigPenDetailService.DeleteHarvestAsync(harvestId);
+            await pigPenDetailService.DeleteHarvestAsync(id, harvestId);
             return Results.Ok();
         }
         catch (InvalidOperationException ex)
