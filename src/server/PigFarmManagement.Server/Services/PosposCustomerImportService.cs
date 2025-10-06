@@ -153,14 +153,14 @@ namespace PigFarmManagement.Server.Services
                             catch (Exception ex)
                             {
                                 _logger.LogWarning(ex, "Update failed for mapped customer id {Id}, will try create", internalId);
-                                var created = await _customerRepository.CreateAsync(mapped);
+                                var created = await _customerRepository.CreateAsync(mapped.ToCreateDto());
                                 _mapping[m.Id] = created.Id.ToString();
                                 summary.Created++;
                             }
                         }
                         else
                         {
-                            var created = await _customerRepository.CreateAsync(mapped);
+                            var created = await _customerRepository.CreateAsync(mapped.ToCreateDto());
                             _mapping[m.Id] = created.Id.ToString();
                             summary.Created++;
                         }
@@ -277,7 +277,7 @@ namespace PigFarmManagement.Server.Services
                 Longitude = existingCustomer.Longitude
             };
 
-            await _customerRepository.UpdateAsync(customerWithPreservedLocation);
+            await _customerRepository.UpdateAsync(customerWithPreservedLocation.Id, customerWithPreservedLocation.ToUpdateDto());
         }
     }
 }

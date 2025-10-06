@@ -28,9 +28,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<Features.Feeds.IFeedRepository, Features.Feeds.FeedRepository>();
 
         // Services
-        services.AddScoped<ICustomerService, CustomerService>();
-        services.AddScoped<ICustomerLocationService, CustomerLocationService>();
-        services.AddScoped<ICustomerDeletionService, CustomerDeletionService>();
+    services.AddScoped<Features.Customers.ICustomerService, Features.Customers.CustomerService>();
+    services.AddScoped<Features.Customers.ICustomerLocationService, Features.Customers.CustomerLocationService>();
+    services.AddScoped<Features.Customers.ICustomerDeletionService, Features.Customers.CustomerDeletionService>();
         services.AddScoped<IPigPenService, PigPenService>();
         services.AddScoped<IPigPenDetailService, PigPenDetailService>();
         services.AddScoped<IFeedService, FeedService>();

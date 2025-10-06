@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using PigFarmManagement.Server.Services;
+using PigFarmManagement.Shared.Models;
 using PigFarmManagement.Server.Services.ExternalServices;
 
 namespace PigFarmManagement.Server.Controllers
@@ -233,7 +234,7 @@ namespace PigFarmManagement.Server.Controllers
                         if (!string.Equals(cust.Code, posCode, StringComparison.Ordinal))
                         {
                             var updatedCustomer = cust with { Code = posCode };
-                            await _customerService.UpdateCustomerAsync(updatedCustomer);
+                            await _customerService.UpdateCustomerAsync(updatedCustomer.Id, updatedCustomer.ToUpdateDto());
                             updated++;
                             audit.Add(new { CustomerId = cust.Id, Before = cust.Code, After = posCode, MatchedBy = "ExternalId" });
                         }
@@ -245,7 +246,7 @@ namespace PigFarmManagement.Server.Controllers
                         if (string.IsNullOrWhiteSpace(cust.ExternalId) || !string.Equals(cust.ExternalId, foundPosId, StringComparison.Ordinal))
                         {
                             var updatedCustomer = cust with { ExternalId = foundPosId };
-                            await _customerService.UpdateCustomerAsync(updatedCustomer);
+                            await _customerService.UpdateCustomerAsync(updatedCustomer.Id, updatedCustomer.ToUpdateDto());
                             updated++;
                             audit.Add(new { CustomerId = cust.Id, Before = cust.ExternalId, After = foundPosId, MatchedBy = "Code" });
                         }

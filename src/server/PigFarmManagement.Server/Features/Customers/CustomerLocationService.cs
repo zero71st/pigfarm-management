@@ -1,7 +1,7 @@
 using PigFarmManagement.Shared.Models;
 using PigFarmManagement.Server.Infrastructure.Data.Repositories;
 
-namespace PigFarmManagement.Server.Services;
+namespace PigFarmManagement.Server.Features.Customers;
 
 /// <summary>
 /// Service for managing customer location data and Google Maps integration

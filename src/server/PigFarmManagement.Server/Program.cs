@@ -36,6 +36,9 @@ builder.Services.AddHttpClient<IPosposProductClient, PosposProductClient>();
 // PosposImporter depends on scoped services (ICustomerRepository). Register as scoped to avoid
 // injecting scoped services into a singleton which causes runtime DI errors.
 builder.Services.AddScoped<PigFarmManagement.Server.Services.IPosposCustomerImportService, PigFarmManagement.Server.Services.PosposCustomerImportService>();
+// Customer feature services (moved into Features.Customers)
+builder.Services.AddScoped<PigFarmManagement.Server.Features.Customers.ICustomerDeletionService, PigFarmManagement.Server.Features.Customers.CustomerDeletionService>();
+builder.Services.AddScoped<PigFarmManagement.Server.Features.Customers.ICustomerLocationService, PigFarmManagement.Server.Features.Customers.CustomerLocationService>();
 
 // CORS configuration for production
 builder.Services.AddCors(options =>
