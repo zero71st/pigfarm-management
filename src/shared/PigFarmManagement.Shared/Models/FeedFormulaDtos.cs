@@ -119,3 +119,53 @@ public class ImportResultDto
     public List<string> Errors { get; set; } = new();
     public List<string> ImportedCodes { get; set; } = new();
 }
+
+/// <summary>
+/// DTO for validating the unified formula assignment system
+/// </summary>
+public class FormulaSystemValidationDto
+{
+    public bool IsValid { get; set; }
+    public string? ErrorMessage { get; set; }
+    public int TotalPigPens { get; set; }
+    public int PigPensWithAssignments { get; set; }
+    public int LockedPigPens { get; set; }
+    public int LockedPigPensWithLockedAssignments { get; set; }
+    public int ActivePigPens { get; set; }
+    public int ActivePigPensWithActiveAssignments { get; set; }
+    public List<string>? ValidationMessages { get; set; }
+    public DateTime ValidationTimestamp { get; set; }
+}
+
+/// <summary>
+/// DTO returned after attempting repairs on the unified formula assignment system
+/// </summary>
+public class FormulaSystemRepairDto
+{
+    public bool Success { get; set; }
+    public string? ErrorMessage { get; set; }
+    public int RepairsPerformed { get; set; }
+    public DateTime RepairTimestamp { get; set; }
+}
+
+/// <summary>
+/// DTO exposing statistics about the unified formula assignment system
+/// </summary>
+public class FormulaSystemStatsDto
+{
+    public int TotalPigPens { get; set; }
+    public int ActivePigPens { get; set; }
+    public int ClosedPigPens { get; set; }
+    public int TotalAssignments { get; set; }
+    public int ActiveAssignments { get; set; }
+    public int LockedAssignments { get; set; }
+    public DateTime LastUpdated { get; set; }
+}
+
+/// <summary>
+/// Request body for importing selected POSPOS products by code
+/// </summary>
+public class ImportSelectedProductsRequestDto
+{
+    public List<string> ProductCodes { get; set; } = new();
+}

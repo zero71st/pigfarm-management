@@ -69,19 +69,19 @@ public static class FeedFormulaEndpoints
         group.MapPost("/maintenance/validate", ValidateFormulaSystem)
             .WithName("ValidateFormulaSystem")
             .WithSummary("Validate the unified formula assignment system")
-            .Produces<FormulaSystemValidationResponse>()
+            .Produces<PigFarmManagement.Shared.Models.FormulaSystemValidationDto>()
             .Produces(500);
 
         group.MapPost("/maintenance/repair", RepairFormulaSystem)
             .WithName("RepairFormulaSystem")
             .WithSummary("Repair any issues in the unified formula assignment system")
-            .Produces<FormulaSystemRepairResponse>()
+            .Produces<PigFarmManagement.Shared.Models.FormulaSystemRepairDto>()
             .Produces(500);
 
         group.MapGet("/maintenance/stats", GetFormulaSystemStats)
             .WithName("GetFormulaSystemStats")
             .WithSummary("Get statistics about the formula assignment system")
-            .Produces<FormulaSystemStatsResponse>();
+            .Produces<PigFarmManagement.Shared.Models.FormulaSystemStatsDto>();
     }
 
     private static async Task<IResult> GetAllFeedFormulas(IFeedFormulaService feedFormulaService)
@@ -263,22 +263,11 @@ public static class FeedFormulaEndpoints
         try
         {
             var result = await feedFormulaService.ImportProductsFromPosposAsync();
-            
-            var response = new ImportResultDto
-            {
-                SuccessCount = result.SuccessCount,
-                ErrorCount = result.ErrorCount,
-                SkippedCount = result.SkippedCount,
-                Errors = result.Errors,
-                ImportedCodes = result.ImportedCodes
-            };
-
+            // Service already returns ImportResultDto, return it directly and preserve status semantics
             if (result.ErrorCount > 0 && result.SuccessCount == 0)
-            {
-                return Results.BadRequest(response);
-            }
+                return Results.BadRequest(result);
 
-            return Results.Ok(response);
+            return Results.Ok(result);
         }
         catch (Exception ex)
         {
@@ -301,7 +290,7 @@ public static class FeedFormulaEndpoints
 
     private static async Task<IResult> ImportSelectedProductsFromPospos(
         IFeedFormulaService feedFormulaService,
-        ImportSelectedProductsRequest request)
+        ImportSelectedProductsRequestDto request)
     {
         try
         {
@@ -309,24 +298,12 @@ public static class FeedFormulaEndpoints
             {
                 return Results.BadRequest("No product codes provided for import");
             }
-
             var result = await feedFormulaService.ImportSelectedProductsFromPosposAsync(request.ProductCodes);
-            
-            var response = new ImportResultDto
-            {
-                SuccessCount = result.SuccessCount,
-                ErrorCount = result.ErrorCount,
-                SkippedCount = result.SkippedCount,
-                Errors = result.Errors,
-                ImportedCodes = result.ImportedCodes
-            };
 
             if (result.ErrorCount > 0 && result.SuccessCount == 0)
-            {
-                return Results.BadRequest(response);
-            }
+                return Results.BadRequest(result);
 
-            return Results.Ok(response);
+            return Results.Ok(result);
         }
         catch (Exception ex)
         {
@@ -334,25 +311,12 @@ public static class FeedFormulaEndpoints
         }
     }
 
-    private static async Task<IResult> ValidateFormulaSystem(FormulaMigrationService migrationService)
+    private static async Task<IResult> ValidateFormulaSystem(IFeedFormulaService feedFormulaService)
     {
         try
         {
-            var result = await migrationService.ValidateUnifiedSystemAsync();
-            var response = new FormulaSystemValidationResponse
-            {
-                IsValid = result.IsValid,
-                ErrorMessage = result.ErrorMessage,
-                TotalPigPens = result.TotalPigPens,
-                PigPensWithAssignments = result.PigPensWithAssignments,
-                LockedPigPens = result.LockedPigPens,
-                LockedPigPensWithLockedAssignments = result.LockedPigPensWithLockedAssignments,
-                ActivePigPens = result.ActivePigPens,
-                ActivePigPensWithActiveAssignments = result.ActivePigPensWithActiveAssignments,
-                ValidationMessages = result.ValidationMessages,
-                ValidationTimestamp = DateTime.UtcNow
-            };
-            return Results.Ok(response);
+            var result = await feedFormulaService.ValidateFormulaSystemAsync();
+            return Results.Ok(result);
         }
         catch (Exception ex)
         {
@@ -360,19 +324,12 @@ public static class FeedFormulaEndpoints
         }
     }
 
-    private static async Task<IResult> RepairFormulaSystem(FormulaMigrationService migrationService)
+    private static async Task<IResult> RepairFormulaSystem(IFeedFormulaService feedFormulaService)
     {
         try
         {
-            var result = await migrationService.RepairSystemAsync();
-            var response = new FormulaSystemRepairResponse
-            {
-                Success = result.Success,
-                ErrorMessage = result.ErrorMessage,
-                RepairsPerformed = result.RepairsPerformed,
-                RepairTimestamp = DateTime.UtcNow
-            };
-            return Results.Ok(response);
+            var result = await feedFormulaService.RepairFormulaSystemAsync();
+            return Results.Ok(result);
         }
         catch (Exception ex)
         {
@@ -380,22 +337,12 @@ public static class FeedFormulaEndpoints
         }
     }
 
-    private static async Task<IResult> GetFormulaSystemStats(FormulaMigrationService migrationService)
+    private static async Task<IResult> GetFormulaSystemStats(IFeedFormulaService feedFormulaService)
     {
         try
         {
-            var stats = await migrationService.GetSystemStatisticsAsync();
-            var response = new FormulaSystemStatsResponse
-            {
-                TotalPigPens = stats.TotalPigPens,
-                ActivePigPens = stats.ActivePigPens,
-                ClosedPigPens = stats.LockedPigPens, // Assuming locked = closed
-                TotalAssignments = stats.TotalFormulaAssignments,
-                ActiveAssignments = stats.ActiveAssignments,
-                LockedAssignments = stats.LockedAssignments,
-                LastUpdated = DateTime.UtcNow
-            };
-            return Results.Ok(response);
+            var stats = await feedFormulaService.GetFormulaSystemStatsAsync();
+            return Results.Ok(stats);
         }
         catch (Exception ex)
         {
@@ -403,42 +350,4 @@ public static class FeedFormulaEndpoints
         }
     }
 }
-
-// Request DTOs that remain in endpoints (system-specific, not reusable)
-public class FormulaSystemValidationResponse
-{
-    public bool IsValid { get; set; }
-    public string? ErrorMessage { get; set; }
-    public int TotalPigPens { get; set; }
-    public int PigPensWithAssignments { get; set; }
-    public int LockedPigPens { get; set; }
-    public int LockedPigPensWithLockedAssignments { get; set; }
-    public int ActivePigPens { get; set; }
-    public int ActivePigPensWithActiveAssignments { get; set; }
-    public List<string>? ValidationMessages { get; set; }
-    public DateTime ValidationTimestamp { get; set; }
-}
-
-public class FormulaSystemRepairResponse
-{
-    public bool Success { get; set; }
-    public string? ErrorMessage { get; set; }
-    public int RepairsPerformed { get; set; }
-    public DateTime RepairTimestamp { get; set; }
-}
-
-public class FormulaSystemStatsResponse
-{
-    public int TotalPigPens { get; set; }
-    public int ActivePigPens { get; set; }
-    public int ClosedPigPens { get; set; }
-    public int TotalAssignments { get; set; }
-    public int ActiveAssignments { get; set; }
-    public int LockedAssignments { get; set; }
-    public DateTime LastUpdated { get; set; }
-}
-
-public class ImportSelectedProductsRequest
-{
-    public List<string> ProductCodes { get; set; } = new();
-}
+// Note: formula system DTOs and import request DTO moved to shared models (FeedFormulaDtos.cs)

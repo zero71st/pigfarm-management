@@ -4,6 +4,7 @@ using PigFarmManagement.Server.Infrastructure.Data.Entities;
 using PigFarmManagement.Server.Services.ExternalServices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using PigFarmManagement.Server.Services;
 
 namespace PigFarmManagement.Server.Features.FeedFormulas;
 
@@ -19,6 +20,10 @@ public interface IFeedFormulaService
     Task<IEnumerable<PosposProductDto>> GetPosposProductsAsync();
     Task<ImportResultDto> ImportSelectedProductsFromPosposAsync(IEnumerable<string> productCodes);
     Task<PigFarmManagement.Shared.Models.ImportResult> ImportProductsByIdsAsync(ImportRequest request);
+    // New DTO-returning methods for formula system operations
+    Task<PigFarmManagement.Shared.Models.FormulaSystemValidationDto> ValidateFormulaSystemAsync();
+    Task<PigFarmManagement.Shared.Models.FormulaSystemRepairDto> RepairFormulaSystemAsync();
+    Task<PigFarmManagement.Shared.Models.FormulaSystemStatsDto> GetFormulaSystemStatsAsync();
 }
 
 public class FeedFormulaService : IFeedFormulaService
@@ -26,16 +31,21 @@ public class FeedFormulaService : IFeedFormulaService
     private readonly PigFarmDbContext _context;
     private readonly IPosposProductClient _posposProductClient;
     private readonly ILogger<FeedFormulaService> _logger;
+    private readonly IServiceProvider _serviceProvider;
 
     public FeedFormulaService(
-        PigFarmDbContext context, 
+        PigFarmDbContext context,
         IPosposProductClient posposProductClient,
-        ILogger<FeedFormulaService> logger)
+        ILogger<FeedFormulaService> logger,
+        IServiceProvider serviceProvider)
     {
         _context = context;
         _posposProductClient = posposProductClient;
         _logger = logger;
+        _serviceProvider = serviceProvider;
     }
+
+    // removed old overload that accepted FormulaMigrationService to avoid circular DI
 
     public async Task<IEnumerable<FeedFormula>> GetAllFeedFormulasAsync()
     {
@@ -575,6 +585,63 @@ public class FeedFormulaService : IFeedFormulaService
                 }).ToList()
             };
         }
+    }
+
+    public async Task<PigFarmManagement.Shared.Models.FormulaSystemValidationDto> ValidateFormulaSystemAsync()
+    {
+        var migrationService = _serviceProvider.GetService<FormulaMigrationService>();
+        if (migrationService == null)
+            throw new InvalidOperationException("FormulaMigrationService is not available");
+
+    var result = await migrationService.ValidateUnifiedSystemAsync();
+        return new PigFarmManagement.Shared.Models.FormulaSystemValidationDto
+        {
+            IsValid = result.IsValid,
+            ErrorMessage = result.ErrorMessage,
+            TotalPigPens = result.TotalPigPens,
+            PigPensWithAssignments = result.PigPensWithAssignments,
+            LockedPigPens = result.LockedPigPens,
+            LockedPigPensWithLockedAssignments = result.LockedPigPensWithLockedAssignments,
+            ActivePigPens = result.ActivePigPens,
+            ActivePigPensWithActiveAssignments = result.ActivePigPensWithActiveAssignments,
+            ValidationMessages = result.ValidationMessages,
+            ValidationTimestamp = DateTime.UtcNow
+        };
+    }
+
+    public async Task<PigFarmManagement.Shared.Models.FormulaSystemRepairDto> RepairFormulaSystemAsync()
+    {
+        var migrationService = _serviceProvider.GetService<FormulaMigrationService>();
+        if (migrationService == null)
+            throw new InvalidOperationException("FormulaMigrationService is not available");
+
+    var result = await migrationService.RepairSystemAsync();
+        return new PigFarmManagement.Shared.Models.FormulaSystemRepairDto
+        {
+            Success = result.Success,
+            ErrorMessage = result.ErrorMessage,
+            RepairsPerformed = result.RepairsPerformed,
+            RepairTimestamp = DateTime.UtcNow
+        };
+    }
+
+    public async Task<PigFarmManagement.Shared.Models.FormulaSystemStatsDto> GetFormulaSystemStatsAsync()
+    {
+        var migrationService = _serviceProvider.GetService<FormulaMigrationService>();
+        if (migrationService == null)
+            throw new InvalidOperationException("FormulaMigrationService is not available");
+
+    var stats = await migrationService.GetSystemStatisticsAsync();
+        return new PigFarmManagement.Shared.Models.FormulaSystemStatsDto
+        {
+            TotalPigPens = stats.TotalPigPens,
+            ActivePigPens = stats.ActivePigPens,
+            ClosedPigPens = stats.LockedPigPens,
+            TotalAssignments = stats.TotalFormulaAssignments,
+            ActiveAssignments = stats.ActiveAssignments,
+            LockedAssignments = stats.LockedAssignments,
+            LastUpdated = DateTime.UtcNow
+        };
     }
 
     /// <summary>
