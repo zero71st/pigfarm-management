@@ -11,7 +11,6 @@ public class FeedImportService : IFeedImportService
 {
     private readonly IPigPenRepository _pigPenRepository;
     private readonly ICustomerRepository _customerRepository;
-    private readonly IFeedRepository _feedRepository;
     private readonly Infrastructure.Data.Repositories.IFeedRepository _efFeedRepository;
     private readonly IPosposTransactionClient _posposTrasactionClient;
     private readonly PigFarmManagement.Server.Features.FeedFormulas.IFeedFormulaService _feedFormulaService;
@@ -24,7 +23,6 @@ public class FeedImportService : IFeedImportService
     public FeedImportService(
         IPigPenRepository pigPenRepository,
         ICustomerRepository customerRepository,
-        IFeedRepository feedRepository,
         Infrastructure.Data.Repositories.IFeedRepository efFeedRepository,
         IPosposTransactionClient posposTransactionClient,
         PigFarmManagement.Server.Features.FeedFormulas.IFeedFormulaService feedFormulaService,
@@ -32,7 +30,6 @@ public class FeedImportService : IFeedImportService
     {
         _pigPenRepository = pigPenRepository;
         _customerRepository = customerRepository;
-        _feedRepository = feedRepository;
         _efFeedRepository = efFeedRepository;
         _posposTrasactionClient = posposTransactionClient;
         _feedFormulaService = feedFormulaService;
@@ -229,7 +226,7 @@ public class FeedImportService : IFeedImportService
         {
             try
             {
-                await _feedRepository.CreateAsync(feed);
+                await _efFeedRepository.CreateAsync(feed);
                 result.SuccessfulImports++;
             }
             catch (Exception ex)

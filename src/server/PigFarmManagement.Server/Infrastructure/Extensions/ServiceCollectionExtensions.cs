@@ -1,5 +1,4 @@
 using PigFarmManagement.Server.Infrastructure.Data.Repositories;
-using PigFarmManagement.Server.Features.Customers;
 using PigFarmManagement.Server.Features.PigPens;
 using PigFarmManagement.Server.Features.Feeds;
 using PigFarmManagement.Server.Features.FeedFormulas;
@@ -23,14 +22,10 @@ public static class ServiceCollectionExtensions
         services.AddScoped<Infrastructure.Data.Repositories.IHarvestRepository, Infrastructure.Data.Repositories.HarvestRepository>();
         services.AddScoped<Infrastructure.Data.Repositories.IFeedFormulaRepository, Infrastructure.Data.Repositories.FeedFormulaRepository>();
 
-        // Legacy Feature Repositories (for backward compatibility)
-        services.AddScoped<Features.Customers.ICustomerRepository, Features.Customers.CustomerRepository>();
-        services.AddScoped<Features.Feeds.IFeedRepository, Features.Feeds.FeedRepository>();
-
         // Services
-    services.AddScoped<Features.Customers.ICustomerService, Features.Customers.CustomerService>();
-    services.AddScoped<Features.Customers.ICustomerLocationService, Features.Customers.CustomerLocationService>();
-    services.AddScoped<Features.Customers.ICustomerDeletionService, Features.Customers.CustomerDeletionService>();
+        services.AddScoped<Features.Customers.ICustomerService, Features.Customers.CustomerService>();
+        services.AddScoped<Features.Customers.ICustomerLocationService, Features.Customers.CustomerLocationService>();
+        services.AddScoped<Features.Customers.ICustomerDeletionService, Features.Customers.CustomerDeletionService>();
         services.AddScoped<IPigPenService, PigPenService>();
         services.AddScoped<IPigPenDetailService, PigPenDetailService>();
         services.AddScoped<IFeedService, FeedService>();
@@ -41,8 +36,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<Features.Products.IProductService, Features.Products.ProductService>();
         services.AddScoped<FormulaMigrationService, FormulaMigrationService>();
 
-    // POSPOS feed client (used to fetch transactions)
-    services.AddHttpClient<IPosposTransactionClient, PosposTransactionClient>();
+        // POSPOS feed client (used to fetch transactions)
+        services.AddHttpClient<IPosposTransactionClient, PosposTransactionClient>();
 
         return services;
     }

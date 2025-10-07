@@ -1,5 +1,6 @@
 using PigFarmManagement.Shared.Models;
 using PigFarmManagement.Server.Features.PigPens;
+using PigFarmManagement.Server.Infrastructure.Data.Repositories;
 
 namespace PigFarmManagement.Server.Features.Feeds;
 
@@ -23,7 +24,8 @@ public class FeedService : IFeedService
 
     public async Task<List<FeedItem>> GetFeedsByPigPenIdAsync(Guid pigPenId)
     {
-        return await _feedRepository.GetByPigPenIdAsync(pigPenId);
+        var feeds = await _feedRepository.GetByPigPenIdAsync(pigPenId);
+        return feeds.Select(ConvertToFeedItem).ToList();
     }
 
     public async Task<FeedItem> AddFeedToPigPenAsync(Guid pigPenId, FeedCreateDto dto)
@@ -59,17 +61,83 @@ public class FeedService : IFeedService
             Pos_TotalPriceIncludeDiscount = null
         };
 
-        return await _feedRepository.CreateAsync(feedItem);
+        var createdFeed = await _feedRepository.CreateAsync(ConvertToFeed(feedItem));
+        return ConvertToFeedItem(createdFeed);
     }
 
     public async Task<bool> DeleteFeedAsync(Guid id)
     {
-        var feedItem = await _feedRepository.GetByIdAsync(id);
-        if (feedItem == null)
+        var feed = await _feedRepository.GetByIdAsync(id);
+        if (feed == null)
         {
             throw new InvalidOperationException("Feed item not found");
         }
 
-        return await _feedRepository.DeleteAsync(id);
+        try
+        {
+            await _feedRepository.DeleteAsync(id);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static FeedItem ConvertToFeedItem(Feed feed)
+    {
+        return new FeedItem(
+            feed.Id,
+            feed.PigPenId,
+            feed.ProductName, // FeedType from ProductName
+            feed.ProductCode, // ProductCode
+            feed.ProductName, // ProductName
+            feed.TransactionCode, // TransactionCode
+            feed.InvoiceReferenceCode, // InvoiceReferenceCode
+            feed.Quantity,    // Quantity represents number of bags
+            feed.UnitPrice,   // UnitPrice represents price per bag
+            feed.TotalPriceIncludeDiscount,  // Cost from TotalPriceIncludeDiscount
+            feed.FeedDate     // Date from FeedDate
+        )
+        {
+            ExternalReference = feed.ExternalReference,
+            ExternalProductCode = feed.ExternalProductCode,
+            ExternalProductName = feed.ExternalProductName,
+            InvoiceReferenceCode = feed.InvoiceReferenceCode,
+            UnmappedProduct = feed.UnmappedProduct,
+            Notes = feed.Notes,
+            CreatedAt = feed.CreatedAt,
+            UpdatedAt = feed.UpdatedAt,
+            FeedCost = feed.Cost,
+            CostDiscountPrice = feed.CostDiscountPrice,
+            PriceIncludeDiscount = feed.PriceIncludeDiscount,
+            Sys_TotalPriceIncludeDiscount = feed.Sys_TotalPriceIncludeDiscount,
+            Pos_TotalPriceIncludeDiscount = feed.Pos_TotalPriceIncludeDiscount
+        };
+    }
+
+    private static Feed ConvertToFeed(FeedItem feedItem)
+    {
+        return new Feed
+        {
+            Id = feedItem.Id,
+            PigPenId = feedItem.PigPenId,
+            ProductType = feedItem.FeedType,
+            ProductCode = feedItem.ProductCode, // Add ProductCode mapping
+            ProductName = feedItem.ProductName, // Add ProductName mapping
+            TransactionCode = feedItem.TransactionCode, // Add TransactionCode mapping
+            Quantity = (int)feedItem.Quantity, // Quantity stored as bags (int)
+            UnitPrice = feedItem.PricePerBag,
+            TotalPriceIncludeDiscount = feedItem.Cost,
+            FeedDate = feedItem.Date,
+            ExternalReference = feedItem.ExternalReference,
+            ExternalProductCode = feedItem.ExternalProductCode,
+            ExternalProductName = feedItem.ExternalProductName,
+            InvoiceReferenceCode = feedItem.InvoiceReferenceCode,
+            UnmappedProduct = feedItem.UnmappedProduct,
+            Notes = feedItem.Notes,
+            CreatedAt = feedItem.CreatedAt,
+            UpdatedAt = feedItem.UpdatedAt
+        };
     }
 }
