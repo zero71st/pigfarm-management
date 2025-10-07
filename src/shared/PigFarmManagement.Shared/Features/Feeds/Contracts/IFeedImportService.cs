@@ -1,6 +1,6 @@
 using PigFarmManagement.Shared.Models;
 
-namespace PigFarmManagement.Shared.Contracts;
+namespace PigFarmManagement.Shared.Features.Feeds.Contracts;
 
 /// <summary>
 /// Service contracts for feed import functionality

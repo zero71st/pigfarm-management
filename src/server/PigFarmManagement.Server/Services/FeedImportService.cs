@@ -1,7 +1,7 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using PigFarmManagement.Shared.Models;
-using PigFarmManagement.Shared.Contracts;
+using PigFarmManagement.Shared.Features.Feeds.Contracts;
 using PigFarmManagement.Server.Infrastructure.Data.Repositories;
 using PigFarmManagement.Server.Services.ExternalServices;
 

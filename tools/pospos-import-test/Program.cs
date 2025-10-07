@@ -4,7 +4,7 @@ using Microsoft.Extensions.Hosting;
 using PigFarmManagement.Server.Infrastructure.Extensions;
 using PigFarmManagement.Server.Infrastructure.Data.Repositories;
 using PigFarmManagement.Shared.Models;
-using PigFarmManagement.Shared.Contracts;
+using PigFarmManagement.Shared.Features.Feeds.Contracts;
 
 internal class Program
 {

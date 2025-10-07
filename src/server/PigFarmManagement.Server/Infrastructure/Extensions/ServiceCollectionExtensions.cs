@@ -6,7 +6,7 @@ using PigFarmManagement.Server.Features.FeedProgress;
 using PigFarmManagement.Server.Features.Dashboard;
 using PigFarmManagement.Server.Services;
 using PigFarmManagement.Server.Services.ExternalServices;
-using PigFarmManagement.Shared.Contracts;
+using PigFarmManagement.Shared.Features.Feeds.Contracts;
 
 namespace PigFarmManagement.Server.Infrastructure.Extensions;
 
