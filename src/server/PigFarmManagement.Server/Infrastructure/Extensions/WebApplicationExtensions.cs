@@ -22,7 +22,7 @@ public static class WebApplicationExtensions
         app.MapFeedImportEndpoints();
         app.MapFeedProgressEndpoints();
         app.MapDashboardEndpoints();
-        app.MapProductEndpoints();
+        app.MapProductImportEndpoints();
 
         return app;
     }

@@ -33,7 +33,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IFeedImportService, Features.Feeds.FeedImportService>();
         services.AddScoped<IFeedProgressService, FeedProgressService>();
         services.AddScoped<IDashboardService, DashboardService>();
-        services.AddScoped<Features.Products.IProductService, Features.Products.ProductService>();
+        services.AddScoped<Features.Products.IProductImportService, Features.Products.ProductImportService>();
         services.AddScoped<Features.FeedFormulas.FormulaMigrationService, Features.FeedFormulas.FormulaMigrationService>();
 
         // POSPOS feed client (used to fetch transactions)
