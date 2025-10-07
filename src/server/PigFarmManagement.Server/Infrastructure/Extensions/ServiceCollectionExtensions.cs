@@ -25,7 +25,6 @@ public static class ServiceCollectionExtensions
 
         // Legacy Feature Repositories (for backward compatibility)
         services.AddScoped<Features.Customers.ICustomerRepository, Features.Customers.CustomerRepository>();
-        services.AddScoped<Features.PigPens.IPigPenRepository, Features.PigPens.PigPenRepository>();
         services.AddScoped<Features.Feeds.IFeedRepository, Features.Feeds.FeedRepository>();
 
         // Services
