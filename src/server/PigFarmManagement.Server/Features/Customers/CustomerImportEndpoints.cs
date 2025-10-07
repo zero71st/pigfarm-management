@@ -71,7 +71,7 @@ public static class CustomerImportEndpoints
     /// Import all customers from POSPOS
     /// </summary>
     private static async Task<IResult> ImportAllCustomers(
-        IPosposCustomerImportService customerImportService,
+        ICustomerImportService customerImportService,
         [FromQuery] bool persist = false)
     {
         try
@@ -89,7 +89,7 @@ public static class CustomerImportEndpoints
     /// Import selected customers by IDs
     /// </summary>
     private static async Task<IResult> ImportSelectedCustomers(
-        IPosposCustomerImportService customerImportService,
+        ICustomerImportService customerImportService,
         [FromBody] IEnumerable<string> ids,
         [FromQuery] bool persist = false)
     {
@@ -113,7 +113,7 @@ public static class CustomerImportEndpoints
     /// Manual POS sync with location preservation
     /// </summary>
     private static async Task<IResult> ManualPosSync(
-        IPosposCustomerImportService customerImportService,
+        ICustomerImportService customerImportService,
         [FromQuery] bool persist = true)
     {
         try
@@ -178,7 +178,7 @@ public static class CustomerImportEndpoints
     /// Get last import summary
     /// </summary>
     private static IResult GetImportSummary(
-        IPosposCustomerImportService customerImportService)
+        ICustomerImportService customerImportService)
     {
         try
         {

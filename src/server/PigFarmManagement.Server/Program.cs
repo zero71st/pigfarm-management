@@ -33,9 +33,9 @@ builder.Services.AddApplicationServices();
 builder.Services.AddSingleton<PigFarmManagement.Server.Services.IMappingStore, PigFarmManagement.Server.Services.FileMappingStore>();
 builder.Services.AddHttpClient<IPosposMemberClient, PosposMemberClient>();
 builder.Services.AddHttpClient<IPosposProductClient, PosposProductClient>();
-// PosposImporter depends on scoped services (ICustomerRepository). Register as scoped to avoid
+// Customer import service depends on scoped services (ICustomerRepository). Register as scoped to avoid
 // injecting scoped services into a singleton which causes runtime DI errors.
-builder.Services.AddScoped<PigFarmManagement.Server.Features.Customers.IPosposCustomerImportService, PigFarmManagement.Server.Features.Customers.PosposCustomerImportService>();
+builder.Services.AddScoped<PigFarmManagement.Server.Features.Customers.ICustomerImportService, PigFarmManagement.Server.Features.Customers.CustomerImportService>();
 // Customer feature services (moved into Features.Customers)
 builder.Services.AddScoped<PigFarmManagement.Server.Features.Customers.ICustomerDeletionService, PigFarmManagement.Server.Features.Customers.CustomerDeletionService>();
 builder.Services.AddScoped<PigFarmManagement.Server.Features.Customers.ICustomerLocationService, PigFarmManagement.Server.Features.Customers.CustomerLocationService>();
