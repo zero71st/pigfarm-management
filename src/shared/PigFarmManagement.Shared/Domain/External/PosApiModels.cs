@@ -9,7 +9,7 @@ namespace PigFarmManagement.Shared.Models;
 /// Responsibility: Define data contracts for external POSPOS API communication
 /// </summary>
 
-public class PosPosFeedTransaction
+public class PosPosTransaction
 {
     [JsonPropertyName("_id")]
     public string Id { get; set; } = "";
@@ -18,7 +18,7 @@ public class PosPosFeedTransaction
     public string Code { get; set; } = "";
     
     [JsonPropertyName("order_list")]
-    public List<PosPosFeedItem> OrderList { get; set; } = new();
+    public List<PosPosOrderItem> OrderList { get; set; } = new();
     
     [JsonPropertyName("timestamp")]
     public DateTime Timestamp { get; set; }
@@ -59,7 +59,7 @@ public class PosPosFeedTransaction
     public string CustomerCode => !string.IsNullOrWhiteSpace(BuyerDetail?.Code) ? BuyerDetail.Code : (BuyerDetail?.KeyCardId ?? string.Empty);
 }
 
-public class PosPosFeedItem
+public class PosPosOrderItem
 {
     [JsonPropertyName("stock")]
     [JsonConverter(typeof(TolerantDecimalConverter))]

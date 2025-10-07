@@ -89,10 +89,10 @@
                 <MudText Typo="Typo.h6" Class="mb-3">Available POSPOS Invoices for Customer Code: @_customerCode</MudText>
                 
                 <MudTable Items="_availableTransactions" Hover="true" Striped="true" MultiSelection="true" 
-                         @bind-SelectedItems="_selectedTransactions" T="PosPosFeedTransaction">
+                         @bind-SelectedItems="_selectedTransactions" T="PosPosTransaction">
                     <HeaderContent>
-                        <MudTh><MudTableSortLabel SortBy="new Func<PosPosFeedTransaction, object>(x => x.InvoiceReference.Code)">Invoice Code</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<PosPosFeedTransaction, object>(x => x.Timestamp)">Date</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<PosPosTransaction, object>(x => x.InvoiceReference.Code)">Invoice Code</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<PosPosTransaction, object>(x => x.Timestamp)">Date</MudTableSortLabel></MudTh>
                         <MudTh>Customer</MudTh>
                         <MudTh>Items</MudTh>
                         <MudTh>Total Amount</MudTh>
@@ -229,9 +229,9 @@
     private bool _isLoading = true;
     private bool _isImporting;
     private string _customerCode = "";
-    private List<PosPosFeedTransaction> _availableTransactions = new();
-    private HashSet<PosPosFeedTransaction> _selectedTransactions = new();
-    private List<PosPosFeedTransaction> _selectedTransactionDetails = new();
+    private List<PosPosTransaction> _availableTransactions = new();
+    private HashSet<PosPosTransaction> _selectedTransactions = new();
+    private List<PosPosTransaction> _selectedTransactionDetails = new();
     private FeedImportResult? _importResult;
     private DateTime? _fromDate; // Default to  1 week ago
     private DateTime? _toDate; // Default to today
@@ -254,7 +254,7 @@
         
         try
         {
-            List<PosPosFeedTransaction> allTransactions;
+            List<PosPosTransaction> allTransactions;
             
             // Use customer and date range filtering to get only transactions for this customer
             if (_fromDate.HasValue && _toDate.HasValue)
@@ -333,7 +333,7 @@
         Snackbar.Add("Date filter cleared", Severity.Info);
     }
 
-    private void ShowTransactionDetails(PosPosFeedTransaction transaction)
+    private void ShowTransactionDetails(PosPosTransaction transaction)
     {
         var items = string.Join(", ", transaction.OrderList.Select(i => $"{i.Name} (Qty: {i.Stock})"));
         Snackbar.Add($"Invoice {transaction.Code}: {items}", Severity.Info, configure: config =>

@@ -38,9 +38,9 @@ namespace PigFarmManagement.Server.Services.ExternalServices
 
 		private string GetBase() => !string.IsNullOrWhiteSpace(_opts.TransactionsApiBase) ? _opts.TransactionsApiBase : _opts.ProductApiBase;
 
-		public async Task<List<PosPosFeedTransaction>> GetTransactionsByDateRangeAsync(DateTime from, DateTime to, int pageSize = 300)
+		public async Task<List<PosPosTransaction>> GetTransactionsByDateRangeAsync(DateTime from, DateTime to, int pageSize = 300)
 		{
-			var results = new List<PosPosFeedTransaction>();
+			var results = new List<PosPosTransaction>();
 			var page = 1;
 			while (true)
 			{
@@ -97,7 +97,7 @@ namespace PigFarmManagement.Server.Services.ExternalServices
 				}
 				try
 				{
-					List<PosPosFeedTransaction>? pageItems = null;
+					List<PosPosTransaction>? pageItems = null;
 					var trimmed = body.TrimStart();
 					var jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 
@@ -106,14 +106,14 @@ namespace PigFarmManagement.Server.Services.ExternalServices
 					{
 						if (trimmed.StartsWith("["))
 						{
-							pageItems = JsonSerializer.Deserialize<List<PosPosFeedTransaction>>(body, jsonOptions);
+							pageItems = JsonSerializer.Deserialize<List<PosPosTransaction>>(body, jsonOptions);
 						}
 						else
 						{
 							using var doc = JsonDocument.Parse(body);
 							if (doc.RootElement.ValueKind == JsonValueKind.Object && doc.RootElement.TryGetProperty("data", out var data))
 							{
-								pageItems = JsonSerializer.Deserialize<List<PosPosFeedTransaction>>(data.GetRawText(), jsonOptions);
+								pageItems = JsonSerializer.Deserialize<List<PosPosTransaction>>(data.GetRawText(), jsonOptions);
 							}
 							else
 							{
@@ -121,7 +121,7 @@ namespace PigFarmManagement.Server.Services.ExternalServices
 								{
 									if (p.Value.ValueKind == JsonValueKind.Array)
 									{
-										try { pageItems = JsonSerializer.Deserialize<List<PosPosFeedTransaction>>(p.Value.GetRawText(), jsonOptions); break; } catch { }
+										try { pageItems = JsonSerializer.Deserialize<List<PosPosTransaction>>(p.Value.GetRawText(), jsonOptions); break; } catch { }
 									}
 								}
 							}
@@ -158,10 +158,10 @@ namespace PigFarmManagement.Server.Services.ExternalServices
 
 							if (arrayEl.ValueKind == JsonValueKind.Array)
 							{
-								pageItems = new List<PosPosFeedTransaction>();
+								pageItems = new List<PosPosTransaction>();
 								foreach (var txEl in arrayEl.EnumerateArray())
 								{
-									var tx = new PosPosFeedTransaction();
+									var tx = new PosPosTransaction();
 									if (txEl.TryGetProperty("_id", out var idEl) && idEl.ValueKind == JsonValueKind.String) tx.Id = idEl.GetString() ?? "";
 									if (txEl.TryGetProperty("code", out var codeEl) && codeEl.ValueKind == JsonValueKind.String) tx.Code = codeEl.GetString() ?? "";
 									if (txEl.TryGetProperty("timestamp", out var tsEl))
@@ -208,10 +208,10 @@ namespace PigFarmManagement.Server.Services.ExternalServices
 									// Order list
 									if (txEl.TryGetProperty("order_list", out var ol) && ol.ValueKind == JsonValueKind.Array)
 									{
-										var items = new List<PosPosFeedItem>();
+										var items = new List<PosPosOrderItem>();
 										foreach (var itemEl in ol.EnumerateArray())
 										{
-											var it = new PosPosFeedItem();
+											var it = new PosPosOrderItem();
 											if (itemEl.TryGetProperty("name", out var n) && n.ValueKind == JsonValueKind.String) it.Name = n.GetString() ?? "";
 											if (itemEl.TryGetProperty("code", out var c) && c.ValueKind == JsonValueKind.String) it.Code = c.GetString() ?? "";
 

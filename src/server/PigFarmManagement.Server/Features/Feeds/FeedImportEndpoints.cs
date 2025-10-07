@@ -14,7 +14,7 @@ public static class FeedImportEndpoints
         group.MapPost("/pospos", ImportPosPosFeedData)
             .WithName("ImportPosPosFeedData")
             .WithSummary("Import feed data from POSPOS transactions")
-            .Accepts<List<PosPosFeedTransaction>>("application/json")
+            .Accepts<List<PosPosTransaction>>("application/json")
             .Produces<FeedImportResultDto>();
 
         group.MapPost("/pospos/json", ImportPosPosFeedFromJson)
@@ -26,7 +26,7 @@ public static class FeedImportEndpoints
         group.MapPost("/pospos/pigpen/{pigPenId:guid}", ImportPosPosFeedForPigPen)
             .WithName("ImportPosPosFeedForPigPen")
             .WithSummary("Import POSPOS feed data for a specific pig pen")
-            .Accepts<List<PosPosFeedTransaction>>("application/json")
+            .Accepts<List<PosPosTransaction>>("application/json")
             .Produces<FeedImportResultDto>();
 
         group.MapGet("/pospos/customer/{customerCode}", GetPosPosFeedByCustomer)
@@ -72,7 +72,7 @@ public static class FeedImportEndpoints
     }
 
     private static async Task<IResult> ImportPosPosFeedData(
-        [FromBody] List<PosPosFeedTransaction> transactions,
+        [FromBody] List<PosPosTransaction> transactions,
         IFeedImportService feedImportService)
     {
         try
@@ -92,7 +92,7 @@ public static class FeedImportEndpoints
     {
         try
         {
-            var result = await feedImportService.ImportFromJsonAsync(request.JsonContent);
+            var result = await feedImportService.ImportPosPosFeedFromJsonAsync(request.JsonContent);
             return Results.Ok(result);
         }
         catch (Exception ex)
@@ -105,7 +105,7 @@ public static class FeedImportEndpoints
 
     private static async Task<IResult> ImportPosPosFeedForPigPen(
         Guid pigPenId,
-        [FromBody] List<PosPosFeedTransaction> transactions,
+        [FromBody] List<PosPosTransaction> transactions,
         IFeedImportService feedImportService)
     {
         try
@@ -125,7 +125,7 @@ public static class FeedImportEndpoints
     {
         try
         {
-            var transactions = await feedImportService.GetPosPosFeedByCustomerCodeAsync(customerCode);
+            var transactions = await feedImportService.GetPosPosTransactionByCustomerCodeAsync(customerCode);
             return Results.Ok(transactions);
         }
         catch (Exception ex)
@@ -141,7 +141,7 @@ public static class FeedImportEndpoints
     {
         try
         {
-            var transactions = await feedImportService.GetPosPosFeedByDateRangeAsync(fromDate, toDate);
+            var transactions = await feedImportService.GetPosPosTransactionByDateRangeAsync(fromDate, toDate);
             return Results.Ok(transactions);
         }
         catch (Exception ex)
@@ -158,7 +158,7 @@ public static class FeedImportEndpoints
     {
         try
         {
-            var transactions = await feedImportService.GetPosPosFeedByCustomerAndDateRangeAsync(customerCode, fromDate, toDate);
+            var transactions = await feedImportService.GetPosPosTransactionByCustomerAndDateRangeAsync(customerCode, fromDate, toDate);
             return Results.Ok(transactions);
         }
         catch (Exception ex)
@@ -174,7 +174,7 @@ public static class FeedImportEndpoints
     {
         try
         {
-            var transactions = await feedImportService.GetAllPosPosFeedByDateRangeAsync(fromDate, toDate);
+            var transactions = await feedImportService.GetAllPosPosTransactionByDateRangeAsync(fromDate, toDate);
             return Results.Ok(transactions);
         }
         catch (Exception ex)

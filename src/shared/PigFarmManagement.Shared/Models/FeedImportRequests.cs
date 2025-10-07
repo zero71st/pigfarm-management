@@ -15,7 +15,7 @@ public record FeedImportDateRangeRequest(DateTime FromDate, DateTime ToDate);
 /// <summary>
 /// Request for importing feed data for a specific pig pen
 /// </summary>
-public record FeedImportForPigPenRequest(Guid PigPenId, List<PosPosFeedTransaction> Transactions);
+public record FeedImportForPigPenRequest(Guid PigPenId, List<PosPosTransaction> Transactions);
 
 /// <summary>
 /// Request for getting feed data by customer and date range

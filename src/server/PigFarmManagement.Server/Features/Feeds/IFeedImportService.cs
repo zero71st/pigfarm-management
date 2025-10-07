@@ -12,39 +12,39 @@ public interface IFeedImportService
     /// <summary>
     /// Import feed data from POSPOS transactions
     /// </summary>
-    Task<FeedImportResult> ImportPosPosFeedDataAsync(List<PosPosFeedTransaction> transactions);
+    Task<FeedImportResult> ImportPosPosFeedDataAsync(List<PosPosTransaction> transactions);
     
     /// <summary>
     /// Import feed data from JSON content
     /// </summary>
-    Task<FeedImportResult> ImportFromJsonAsync(string jsonContent);
+    Task<FeedImportResult> ImportPosPosFeedFromJsonAsync(string jsonContent);
     
     // Note: mock-specific methods were removed. Use live POSPOS flows or ImportFromJsonAsync for testing.
     
     /// <summary>
     /// Import POSPOS feed data for a specific pig pen
     /// </summary>
-    Task<FeedImportResult> ImportPosPosFeedForPigPenAsync(Guid pigPenId, List<PosPosFeedTransaction> transactions);
+    Task<FeedImportResult> ImportPosPosFeedForPigPenAsync(Guid pigPenId, List<PosPosTransaction> transactions);
     
     /// <summary>
     /// Get POSPOS feed data by customer code
     /// </summary>
-    Task<List<PosPosFeedTransaction>> GetPosPosFeedByCustomerCodeAsync(string customerCode);
+    Task<List<PosPosTransaction>> GetPosPosTransactionByCustomerCodeAsync(string customerCode);
     
     /// <summary>
     /// Get POSPOS feed data by date range
     /// </summary>
-    Task<List<PosPosFeedTransaction>> GetPosPosFeedByDateRangeAsync(DateTime fromDate, DateTime toDate);
+    Task<List<PosPosTransaction>> GetPosPosTransactionByDateRangeAsync(DateTime fromDate, DateTime toDate);
     
     /// <summary>
     /// Get POSPOS feed data by customer code and date range
     /// </summary>
-    Task<List<PosPosFeedTransaction>> GetPosPosFeedByCustomerAndDateRangeAsync(string customerCode, DateTime fromDate, DateTime toDate);
+    Task<List<PosPosTransaction>> GetPosPosTransactionByCustomerAndDateRangeAsync(string customerCode, DateTime fromDate, DateTime toDate);
     
     /// <summary>
     /// Get all POSPOS feed data by date range (without customer filtering)
     /// </summary>
-    Task<List<PosPosFeedTransaction>> GetAllPosPosFeedByDateRangeAsync(DateTime fromDate, DateTime toDate);
+    Task<List<PosPosTransaction>> GetAllPosPosTransactionByDateRangeAsync(DateTime fromDate, DateTime toDate);
     
     /// <summary>
     /// Import POSPOS feed data by date range

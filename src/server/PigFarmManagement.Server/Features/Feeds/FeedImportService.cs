@@ -36,7 +36,7 @@ public class FeedImportService : IFeedImportService
 
     }
 
-    public async Task<FeedImportResult> ImportPosPosFeedDataAsync(List<PosPosFeedTransaction> transactions)
+    public async Task<FeedImportResult> ImportPosPosFeedDataAsync(List<PosPosTransaction> transactions)
     {
         _logger.LogInformation("Starting POSPOS feed import with {TransactionCount} transactions", transactions.Count);
         
@@ -78,11 +78,11 @@ public class FeedImportService : IFeedImportService
         return result;
     }
 
-    public async Task<FeedImportResult> ImportFromJsonAsync(string jsonContent)
+    public async Task<FeedImportResult> ImportPosPosFeedFromJsonAsync(string jsonContent)
     {
         try
         {
-            var transactions = JsonSerializer.Deserialize<List<PosPosFeedTransaction>>(jsonContent,
+            var transactions = JsonSerializer.Deserialize<List<PosPosTransaction>>(jsonContent,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
             if (transactions == null)
@@ -106,7 +106,7 @@ public class FeedImportService : IFeedImportService
         }
     }
 
-    public async Task<FeedImportResult> ImportPosPosFeedForPigPenAsync(Guid pigPenId, List<PosPosFeedTransaction> transactions)
+    public async Task<FeedImportResult> ImportPosPosFeedForPigPenAsync(Guid pigPenId, List<PosPosTransaction> transactions)
     {
         var result = new FeedImportResult
         {
@@ -141,7 +141,7 @@ public class FeedImportService : IFeedImportService
 
     // Mock endpoints removed. Use ImportFromJsonAsync or the POSPOS date-range endpoints for testing.
 
-    public async Task<List<PosPosFeedTransaction>> GetPosPosFeedByCustomerCodeAsync(string customerCode)
+    public async Task<List<PosPosTransaction>> GetPosPosTransactionByCustomerCodeAsync(string customerCode)
     {
         // Default to last 30 days for customer-only queries
         var to = DateTime.UtcNow;
@@ -155,12 +155,12 @@ public class FeedImportService : IFeedImportService
             .ToList();
     }
 
-    public async Task<List<PosPosFeedTransaction>> GetPosPosFeedByDateRangeAsync(DateTime fromDate, DateTime toDate)
+    public async Task<List<PosPosTransaction>> GetPosPosTransactionByDateRangeAsync(DateTime fromDate, DateTime toDate)
     {
         return await _posposTrasactionClient.GetTransactionsByDateRangeAsync(fromDate, toDate);
     }
 
-    public async Task<List<PosPosFeedTransaction>> GetPosPosFeedByCustomerAndDateRangeAsync(string customerCode, DateTime fromDate, DateTime toDate)
+    public async Task<List<PosPosTransaction>> GetPosPosTransactionByCustomerAndDateRangeAsync(string customerCode, DateTime fromDate, DateTime toDate)
     {
         var transactions = await _posposTrasactionClient.GetTransactionsByDateRangeAsync(fromDate, toDate);
         return transactions
@@ -171,20 +171,20 @@ public class FeedImportService : IFeedImportService
             .ToList();
     }
 
-    public async Task<List<PosPosFeedTransaction>> GetAllPosPosFeedByDateRangeAsync(DateTime fromDate, DateTime toDate)
+    public async Task<List<PosPosTransaction>> GetAllPosPosTransactionByDateRangeAsync(DateTime fromDate, DateTime toDate)
     {
         return await _posposTrasactionClient.GetTransactionsByDateRangeAsync(fromDate, toDate);
     }
 
     public async Task<FeedImportResult> ImportPosPosFeedByDateRangeAsync(DateTime fromDate, DateTime toDate)
     {
-        var transactions = await GetPosPosFeedByDateRangeAsync(fromDate, toDate);
+        var transactions = await GetPosPosTransactionByDateRangeAsync(fromDate, toDate);
         return await ImportPosPosFeedDataAsync(transactions);
     }
 
 
     // Legacy initialization for mock data - kept only as a historical placeholder.
-    private async Task ProcessTransactionAsync(PosPosFeedTransaction transaction, FeedImportResult result)
+    private async Task ProcessTransactionAsync(PosPosTransaction transaction, FeedImportResult result)
     {
         // Find or create customer based on buyer detail
         var customer = FindOrCreateCustomer(transaction.BuyerDetail);
@@ -201,7 +201,7 @@ public class FeedImportService : IFeedImportService
         await ProcessTransactionForPigPenAsync(transaction, pigPen, result);
     }
 
-    private async Task ProcessTransactionForPigPenAsync(PosPosFeedTransaction transaction, PigPen pigPen, FeedImportResult result)
+    private async Task ProcessTransactionForPigPenAsync(PosPosTransaction transaction, PigPen pigPen, FeedImportResult result)
     {
         _logger.LogDebug("Processing transaction {TransactionCode} for pig pen {PigPenId}", transaction.Code, pigPen.Id);
         
