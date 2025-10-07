@@ -1,7 +1,6 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using PigFarmManagement.Shared.Models;
-using PigFarmManagement.Shared.Features.Feeds.Contracts;
 using PigFarmManagement.Server.Services.ExternalServices;
 
 namespace PigFarmManagement.Server.Features.Feeds;
@@ -29,10 +28,6 @@ public static class FeedImportEndpoints
             .WithSummary("Import POSPOS feed data for a specific pig pen")
             .Accepts<List<PosPosFeedTransaction>>("application/json")
             .Produces<FeedImportResultDto>();
-
-        group.MapPost("/demo/pigpen/{pigPenId:guid}", CreateDemoFeedsForPigPen)
-            .WithName("CreateDemoFeedsForPigPen")
-            .WithSummary("Create demo feed records with complete product information for testing");
 
         group.MapGet("/pospos/customer/{customerCode}", GetPosPosFeedByCustomer)
             .WithName("GetPosPosFeedByCustomer")
@@ -121,21 +116,6 @@ public static class FeedImportEndpoints
         catch (Exception ex)
         {
             return Results.Problem($"Import failed: {ex.Message}");
-        }
-    }
-
-    private static async Task<IResult> CreateDemoFeedsForPigPen(
-        Guid pigPenId,
-        IFeedImportService feedImportService)
-    {
-        try
-        {
-            var result = await feedImportService.CreateDemoFeedsWithProductInfoAsync(pigPenId);
-            return Results.Ok(result);
-        }
-        catch (Exception ex)
-        {
-            return Results.Problem($"Demo feed creation failed: {ex.Message}");
         }
     }
 

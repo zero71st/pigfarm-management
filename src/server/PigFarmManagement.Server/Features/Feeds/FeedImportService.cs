@@ -1,7 +1,6 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using PigFarmManagement.Shared.Models;
-using PigFarmManagement.Shared.Features.Feeds.Contracts;
 using PigFarmManagement.Server.Infrastructure.Data.Repositories;
 using PigFarmManagement.Server.Services.ExternalServices;
 
@@ -35,7 +34,6 @@ public class FeedImportService : IFeedImportService
         _feedFormulaService = feedFormulaService;
         _logger = logger;
 
-        InitializeData(); // Still needed for mock data
     }
 
     public async Task<FeedImportResult> ImportPosPosFeedDataAsync(List<PosPosFeedTransaction> transactions)
@@ -184,66 +182,7 @@ public class FeedImportService : IFeedImportService
         return await ImportPosPosFeedDataAsync(transactions);
     }
 
-    public async Task<FeedImportResult> CreateDemoFeedsWithProductInfoAsync(Guid pigPenId)
-    {
-        var pigPen = await _pigPenRepository.GetByIdAsync(pigPenId);
-        if (pigPen == null)
-        {
-            return new FeedImportResult
-            {
-                FailedImports = 1,
-                Errors = new() { $"Pig pen with ID {pigPenId} not found" }
-            };
-        }
 
-        var demoFeeds = new List<Feed>
-        {
-            new Feed
-            {
-                Id = Guid.NewGuid(),
-                PigPenId = pigPenId,
-                ProductType = "อาหารสัตว์",
-                ProductCode = "PK64000161",
-                ProductName = "เจ็ท 120 หมู 40-60 กก.",
-                TransactionCode = $"DEMO-{DateTime.Now:yyyyMMdd}-001",
-                Quantity = 50,
-                UnitPrice = 580,
-                TotalPriceIncludeDiscount = 29000,
-                FeedDate = DateTime.UtcNow.AddDays(-1),
-                ExternalReference = "DEMO-FEED-001",
-                Notes = "Demo feed for testing",
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            }
-        };
-
-        var result = new FeedImportResult
-        {
-            TotalFeedItems = demoFeeds.Count
-        };
-
-        foreach (var feed in demoFeeds)
-        {
-            try
-            {
-                await _efFeedRepository.CreateAsync(feed);
-                result.SuccessfulImports++;
-            }
-            catch (Exception ex)
-            {
-                result.FailedImports++;
-                result.Errors.Add($"Failed to create demo feed: {ex.Message}");
-            }
-        }
-
-        return result;
-    }
-
-    private void InitializeData()
-    {
-        // Legacy initialization for mock data - keeping for compatibility
-        // This will be removed once all data comes from repositories
-    }
     // Legacy initialization for mock data - kept only as a historical placeholder.
     private async Task ProcessTransactionAsync(PosPosFeedTransaction transaction, FeedImportResult result)
     {

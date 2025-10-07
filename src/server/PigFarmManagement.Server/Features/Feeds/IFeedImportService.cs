@@ -1,6 +1,6 @@
 using PigFarmManagement.Shared.Models;
 
-namespace PigFarmManagement.Shared.Features.Feeds.Contracts;
+namespace PigFarmManagement.Server.Features.Feeds;
 
 /// <summary>
 /// Service contracts for feed import functionality
@@ -54,5 +54,4 @@ public interface IFeedImportService
     /// <summary>
     /// Create demo feeds with complete product information for testing
     /// </summary>
-    Task<FeedImportResult> CreateDemoFeedsWithProductInfoAsync(Guid pigPenId);
 }

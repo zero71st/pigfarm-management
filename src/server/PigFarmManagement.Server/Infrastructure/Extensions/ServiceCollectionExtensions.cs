@@ -6,7 +6,6 @@ using PigFarmManagement.Server.Features.FeedProgress;
 using PigFarmManagement.Server.Features.Dashboard;
 using PigFarmManagement.Server.Services;
 using PigFarmManagement.Server.Services.ExternalServices;
-using PigFarmManagement.Shared.Features.Feeds.Contracts;
 
 namespace PigFarmManagement.Server.Infrastructure.Extensions;
 
@@ -30,7 +29,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPigPenDetailService, PigPenDetailService>();
         services.AddScoped<IFeedService, FeedService>();
         services.AddScoped<IFeedFormulaService, FeedFormulaService>();
-        services.AddScoped<IFeedImportService, Features.Feeds.FeedImportService>();
+        services.AddScoped<Features.Feeds.IFeedImportService, Features.Feeds.FeedImportService>();
         services.AddScoped<IFeedProgressService, FeedProgressService>();
         services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<Features.Products.IProductImportService, Features.Products.ProductImportService>();
