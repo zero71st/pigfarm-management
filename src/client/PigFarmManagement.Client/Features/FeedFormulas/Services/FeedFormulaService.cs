@@ -11,11 +11,9 @@ public interface IFeedFormulaService
     Task<FeedFormulaDto> UpdateFeedFormulaAsync(Guid id, FeedFormulaUpdateDto feedFormula);
     Task<bool> DeleteFeedFormulaAsync(Guid id);
     Task<bool> ExistsAsync(string productCode);
-    Task<ImportResultDto> ImportFromPosposAsync();
-    Task<IEnumerable<PosposProductDto>> GetPosposProductsAsync();
+
     Task<ImportResultDto> ImportSelectedFromPosposAsync(List<string> productCodes);
     Task<List<PosposProductDto>> SearchPosposProductsAsync(string q);
-    Task<PigFarmManagement.Shared.Models.ImportResult> ImportSelectedFromPosposAsync(List<Guid> productIds);
 }
 
 public class FeedFormulaService : IFeedFormulaService
@@ -96,24 +94,6 @@ public class FeedFormulaService : IFeedFormulaService
         return JsonSerializer.Deserialize<bool>(json, _jsonOptions);
     }
 
-    public async Task<ImportResultDto> ImportFromPosposAsync()
-    {
-        var response = await _httpClient.PostAsync("api/feed-formulas/import", null);
-        response.EnsureSuccessStatusCode();
-        
-        var json = await response.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<ImportResultDto>(json, _jsonOptions)!;
-    }
-
-    public async Task<IEnumerable<PosposProductDto>> GetPosposProductsAsync()
-    {
-        var response = await _httpClient.GetAsync("api/feed-formulas/pospos-products");
-        response.EnsureSuccessStatusCode();
-        
-        var json = await response.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<IEnumerable<PosposProductDto>>(json, _jsonOptions) ?? [];
-    }
-
     public async Task<ImportResultDto> ImportSelectedFromPosposAsync(List<string> productCodes)
     {
         var request = new { ProductCodes = productCodes };
@@ -137,16 +117,5 @@ public class FeedFormulaService : IFeedFormulaService
         return products.ToList();
     }
 
-    public async Task<PigFarmManagement.Shared.Models.ImportResult> ImportSelectedFromPosposAsync(List<Guid> productIds)
-    {
-        var request = new ImportRequest { ProductIds = productIds };
-        var json = JsonSerializer.Serialize(request, _jsonOptions);
-        var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-        
-        var response = await _httpClient.PostAsync("api/products/import", content);
-        response.EnsureSuccessStatusCode();
-        
-        var responseJson = await response.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<PigFarmManagement.Shared.Models.ImportResult>(responseJson, _jsonOptions)!;
-    }
+
 }
