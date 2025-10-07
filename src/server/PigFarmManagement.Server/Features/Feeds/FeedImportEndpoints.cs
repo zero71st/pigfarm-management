@@ -2,7 +2,6 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using PigFarmManagement.Shared.Models;
 using PigFarmManagement.Shared.Features.Feeds.Contracts;
-using PigFarmManagement.Server.Services;
 using PigFarmManagement.Server.Services.ExternalServices;
 
 namespace PigFarmManagement.Server.Features.Feeds;

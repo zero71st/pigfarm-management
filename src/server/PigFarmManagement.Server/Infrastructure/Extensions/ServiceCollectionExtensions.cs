@@ -30,7 +30,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPigPenDetailService, PigPenDetailService>();
         services.AddScoped<IFeedService, FeedService>();
         services.AddScoped<IFeedFormulaService, FeedFormulaService>();
-        services.AddScoped<IFeedImportService, FeedImportService>();
+        services.AddScoped<IFeedImportService, Features.Feeds.FeedImportService>();
         services.AddScoped<IFeedProgressService, FeedProgressService>();
         services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<Features.Products.IProductService, Features.Products.ProductService>();

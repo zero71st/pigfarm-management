@@ -6,8 +6,9 @@ using PigFarmManagement.Server.Models;
 using PigFarmManagement.Shared.Models;
 using Microsoft.Extensions.Logging;
 using PigFarmManagement.Server.Services.ExternalServices;
+using PigFarmManagement.Server.Services;
 
-namespace PigFarmManagement.Server.Services
+namespace PigFarmManagement.Server.Features.Customers
 {
     public class PosposImportSummary
     {

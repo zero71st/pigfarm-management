@@ -5,7 +5,7 @@ using PigFarmManagement.Shared.Features.Feeds.Contracts;
 using PigFarmManagement.Server.Infrastructure.Data.Repositories;
 using PigFarmManagement.Server.Services.ExternalServices;
 
-namespace PigFarmManagement.Server.Services;
+namespace PigFarmManagement.Server.Features.Feeds;
 
 public class FeedImportService : IFeedImportService
 {

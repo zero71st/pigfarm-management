@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using PigFarmManagement.Shared.Models;
-using PigFarmManagement.Server.Services;
 using PigFarmManagement.Server.Services.ExternalServices;
 
 namespace PigFarmManagement.Server.Features.Customers;
