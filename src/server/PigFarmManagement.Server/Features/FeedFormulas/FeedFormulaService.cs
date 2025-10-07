@@ -1,6 +1,7 @@
 using PigFarmManagement.Shared.Models;
 using PigFarmManagement.Server.Infrastructure.Data;
 using PigFarmManagement.Server.Infrastructure.Data.Entities;
+using PigFarmManagement.Server.Infrastructure.Data.Repositories;
 using PigFarmManagement.Server.Services.ExternalServices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -28,18 +29,18 @@ public interface IFeedFormulaService
 
 public class FeedFormulaService : IFeedFormulaService
 {
-    private readonly PigFarmDbContext _context;
+    private readonly IFeedFormulaRepository _repository;
     private readonly IPosposProductClient _posposProductClient;
     private readonly ILogger<FeedFormulaService> _logger;
     private readonly IServiceProvider _serviceProvider;
 
     public FeedFormulaService(
-        PigFarmDbContext context,
+        IFeedFormulaRepository repository,
         IPosposProductClient posposProductClient,
         ILogger<FeedFormulaService> logger,
         IServiceProvider serviceProvider)
     {
-        _context = context;
+        _repository = repository;
         _posposProductClient = posposProductClient;
         _logger = logger;
         _serviceProvider = serviceProvider;
@@ -49,76 +50,33 @@ public class FeedFormulaService : IFeedFormulaService
 
     public async Task<IEnumerable<FeedFormula>> GetAllFeedFormulasAsync()
     {
-        var entities = await _context.FeedFormulas
-            .OrderBy(f => f.Name)
-            .ToListAsync();
-        
-        return entities.Select(e => e.ToModel());
+        return await _repository.GetAllAsync();
     }
 
     public async Task<FeedFormula?> GetFeedFormulaByIdAsync(Guid id)
     {
-        var entity = await _context.FeedFormulas.FindAsync(id);
-        return entity?.ToModel();
+        return await _repository.GetByIdAsync(id);
     }
 
     public async Task<FeedFormula> CreateFeedFormulaAsync(FeedFormulaCreateDto dto)
     {
-        var now = DateTime.UtcNow;
-        var entity = new FeedFormulaEntity
-        {
-            Id = Guid.NewGuid(),
-            Code = dto.Code,
-            Name = dto.Name,
-            CategoryName = dto.CategoryName,
-            Brand = dto.Brand,
-            ConsumeRate = dto.ConsumeRate,
-            Cost = dto.Cost,
-            UnitName = dto.UnitName,
-            CreatedAt = now,
-            UpdatedAt = now
-        };
-
-        _context.FeedFormulas.Add(entity);
-        await _context.SaveChangesAsync();
-
-        return entity.ToModel();
+        return await _repository.CreateAsync(dto);
     }
 
     public async Task<FeedFormula> UpdateFeedFormulaAsync(Guid id, FeedFormulaUpdateDto dto)
     {
-        var entity = await _context.FeedFormulas.FindAsync(id);
-        if (entity == null)
-            throw new InvalidOperationException($"Feed formula with ID {id} not found");
-
-        entity.Code = dto.Code;
-        entity.Name = dto.Name;
-        entity.CategoryName = dto.CategoryName;
-        entity.Brand = dto.Brand;
-        entity.ConsumeRate = dto.ConsumeRate;
-        entity.Cost = dto.Cost;
-        entity.UnitName = dto.UnitName;
-        entity.UpdatedAt = DateTime.UtcNow;
-
-        await _context.SaveChangesAsync();
-        return entity.ToModel();
+        return await _repository.UpdateAsync(id, dto);
     }
 
     public async Task<bool> DeleteFeedFormulaAsync(Guid id)
     {
-        var entity = await _context.FeedFormulas.FindAsync(id);
-        if (entity == null)
-            return false;
-
-        _context.FeedFormulas.Remove(entity);
-        await _context.SaveChangesAsync();
-        return true;
+        return await _repository.DeleteAsync(id);
     }
 
     public async Task<bool> ExistsAsync(string code)
     {
-        return await _context.FeedFormulas
-            .AnyAsync(f => f.Code == code);
+        var formula = await _repository.GetByCodeAsync(code);
+        return formula != null;
     }
     public async Task<ImportResultDto> ImportProductsFromPosposAsync()
     {
@@ -150,10 +108,11 @@ public class FeedFormulaService : IFeedFormulaService
             }
 
             // Get existing products to check for duplicates
-            var existingCodes = await _context.FeedFormulas
-                .Where(f => f.Code != null)
+            var existingFormulas = await _repository.GetAllAsync();
+            var existingCodes = existingFormulas
+                .Where(f => !string.IsNullOrWhiteSpace(f.Code))
                 .Select(f => f.Code!)
-                .ToListAsync();
+                .ToList();
 
             var existingCodesSet = new HashSet<string>(existingCodes, StringComparer.OrdinalIgnoreCase);
 
@@ -188,23 +147,17 @@ public class FeedFormulaService : IFeedFormulaService
 
                     // Transform POSPOS product to FeedFormula entity
                     var now = DateTime.UtcNow;
-                    var entity = new FeedFormulaEntity
-                    {
-                        Id = Guid.NewGuid(),
-                        ExternalId = externalId,
-                        Code = product.Code,
-                        Name = product.Name,
-                        Cost = product.Cost,
-                        CategoryName = product.Category?.Name,
-                        Brand = null, // User will set this manually later
-                        UnitName = product.Unit?.Name,
-                        LastUpdate = product.LastUpdate,
-                        ConsumeRate = null, // User input field, not from POSPOS
-                        CreatedAt = now,
-                        UpdatedAt = now
-                    };
+                    // Create DTO using existing mapping method
+                    var dto = MapPosposProductToFeedFormula(product);
 
-                    _context.FeedFormulas.Add(entity);
+                    if (externalId.HasValue)
+                    {
+                        await _repository.UpsertByExternalIdAsync(externalId.Value, dto);
+                    }
+                    else
+                    {
+                        await _repository.CreateAsync(dto);
+                    }
                     existingCodesSet.Add(product.Code); // Add to set to avoid duplicates in same batch
                     importedCodes.Add(product.Code);
                     successCount++;
@@ -220,10 +173,9 @@ public class FeedFormulaService : IFeedFormulaService
                 }
             }
 
-            // Save all changes in a single transaction
+            // Repository handles saving, no need for manual SaveChanges
             if (successCount > 0)
             {
-                await _context.SaveChangesAsync();
                 _logger.LogInformation(
                     "POSPOS import completed: {Success} imported, {Skipped} skipped, {Errors} errors", 
                     successCount, skippedCount, errorCount);
@@ -316,10 +268,11 @@ public class FeedFormulaService : IFeedFormulaService
             }
 
             // Get existing products to check for duplicates
-            var existingCodes = await _context.FeedFormulas
-                .Where(f => f.Code != null)
+            var existingFormulas = await _repository.GetAllAsync();
+            var existingCodes = existingFormulas
+                .Where(f => !string.IsNullOrWhiteSpace(f.Code))
                 .Select(f => f.Code!)
-                .ToListAsync();
+                .ToList();
 
             var existingCodesSet = new HashSet<string>(existingCodes, StringComparer.OrdinalIgnoreCase);
 
@@ -352,25 +305,17 @@ public class FeedFormulaService : IFeedFormulaService
                         externalId = GenerateGuidFromObjectId(product.Id);
                     }
 
-                    // Transform POSPOS product to FeedFormula entity
-                    var now = DateTime.UtcNow;
-                    var entity = new FeedFormulaEntity
-                    {
-                        Id = Guid.NewGuid(),
-                        ExternalId = externalId,
-                        Code = product.Code,
-                        Name = product.Name,
-                        Cost = product.Cost,
-                        CategoryName = product.Category?.Name,
-                        Brand = null, // User will set this manually later
-                        UnitName = product.Unit?.Name,
-                        LastUpdate = product.LastUpdate,
-                        ConsumeRate = null, // User input field, not from POSPOS
-                        CreatedAt = now,
-                        UpdatedAt = now
-                    };
+                    // Transform POSPOS product using existing mapping method
+                    var dto = MapPosposProductToFeedFormula(product);
 
-                    _context.FeedFormulas.Add(entity);
+                    if (externalId.HasValue)
+                    {
+                        await _repository.UpsertByExternalIdAsync(externalId.Value, dto);
+                    }
+                    else
+                    {
+                        await _repository.CreateAsync(dto);
+                    }
                     existingCodesSet.Add(product.Code); // Add to set to avoid duplicates in same batch
                     importedCodes.Add(product.Code);
                     successCount++;
@@ -386,10 +331,9 @@ public class FeedFormulaService : IFeedFormulaService
                 }
             }
 
-            // Save all changes in a single transaction
+            // Repository handles saving, no need for manual SaveChanges
             if (successCount > 0)
             {
-                await _context.SaveChangesAsync();
                 _logger.LogInformation(
                     "Selective POSPOS import completed: {Success} imported, {Skipped} skipped, {Errors} errors", 
                     successCount, skippedCount, errorCount);
@@ -449,10 +393,7 @@ public class FeedFormulaService : IFeedFormulaService
             }
 
             // Get existing FeedFormula records to check for updates
-            var existingFormulas = await _context.FeedFormulas
-                .Where(f => f.ExternalId.HasValue)
-                .ToListAsync();
-            
+            var existingFormulas = await _repository.GetAllAsync();
             var existingFormulaMap = existingFormulas
                 .Where(f => f.ExternalId.HasValue)
                 .ToDictionary(f => f.ExternalId!.Value, f => f);
@@ -487,20 +428,13 @@ public class FeedFormulaService : IFeedFormulaService
                         continue;
                     }
 
-                    // Check if this product already exists
-                    if (existingFormulaMap.TryGetValue(productId, out var existingFormula))
+                    // Use repository UpsertByExternalId for both update and create
+                    var mappedDto = MapPosposProductToFeedFormula(posposProduct);
+                    var result = await _repository.UpsertByExternalIdAsync(productId, mappedDto);
+                    
+                    // Check if this was an update or create based on existing formula
+                    if (existingFormulaMap.ContainsKey(productId))
                     {
-                        // Update existing record
-                        var mappedDto = MapPosposProductToFeedFormula(posposProduct);
-                        
-                        existingFormula.Code = mappedDto.Code;
-                        existingFormula.Name = mappedDto.Name;
-                        existingFormula.Cost = mappedDto.Cost;
-                        existingFormula.CategoryName = mappedDto.CategoryName;
-                        existingFormula.UnitName = mappedDto.UnitName;
-                        existingFormula.LastUpdate = posposProduct.LastUpdate;
-                        existingFormula.UpdatedAt = DateTime.UtcNow;
-
                         updated++;
                         items.Add(new ImportItemResult
                         {
@@ -511,27 +445,6 @@ public class FeedFormulaService : IFeedFormulaService
                     }
                     else
                     {
-                        // Create new record
-                        var mappedDto = MapPosposProductToFeedFormula(posposProduct);
-                        var now = DateTime.UtcNow;
-                        
-                        var entity = new FeedFormulaEntity
-                        {
-                            Id = Guid.NewGuid(),
-                            ExternalId = productId,
-                            Code = mappedDto.Code,
-                            Name = mappedDto.Name,
-                            Cost = mappedDto.Cost,
-                            CategoryName = mappedDto.CategoryName,
-                            Brand = mappedDto.Brand,
-                            UnitName = mappedDto.UnitName,
-                            ConsumeRate = mappedDto.ConsumeRate,
-                            LastUpdate = posposProduct.LastUpdate,
-                            CreatedAt = now,
-                            UpdatedAt = now
-                        };
-
-                        _context.FeedFormulas.Add(entity);
                         created++;
                         items.Add(new ImportItemResult
                         {
@@ -554,10 +467,9 @@ public class FeedFormulaService : IFeedFormulaService
                 }
             }
 
-            // Save all changes in a single transaction
+            // Repository handles saving, no need for manual SaveChanges
             if (created > 0 || updated > 0)
             {
-                await _context.SaveChangesAsync();
                 _logger.LogInformation(
                     "Product import completed: {Created} created, {Updated} updated, {Failed} failed", 
                     created, updated, failed);

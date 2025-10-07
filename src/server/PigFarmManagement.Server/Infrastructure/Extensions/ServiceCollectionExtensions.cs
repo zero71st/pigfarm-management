@@ -21,6 +21,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<Infrastructure.Data.Repositories.IFeedRepository, Infrastructure.Data.Repositories.FeedRepository>();
         services.AddScoped<Infrastructure.Data.Repositories.IDepositRepository, Infrastructure.Data.Repositories.DepositRepository>();
         services.AddScoped<Infrastructure.Data.Repositories.IHarvestRepository, Infrastructure.Data.Repositories.HarvestRepository>();
+        services.AddScoped<Infrastructure.Data.Repositories.IFeedFormulaRepository, Infrastructure.Data.Repositories.FeedFormulaRepository>();
 
         // Legacy Feature Repositories (for backward compatibility)
         services.AddScoped<Features.Customers.ICustomerRepository, Features.Customers.CustomerRepository>();

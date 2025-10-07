@@ -16,12 +16,6 @@ public static class ProductEndpoints
             .Produces<IEnumerable<ProductDto>>()
             .Produces(400);
 
-        group.MapPost("/import", ImportProducts)
-            .WithName("ImportProducts")
-            .WithSummary("Import selected products (upsert duplicates)")
-            .Produces<ProductImportResultDto>()
-            .Produces(400);
-
         group.MapGet("/", GetAllProducts)
             .WithName("GetAllProducts")
             .WithSummary("Get all available products")
@@ -53,25 +47,6 @@ public static class ProductEndpoints
         catch (Exception ex)
         {
             return Results.Problem($"Error searching products: {ex.Message}");
-        }
-    }
-
-    private static async Task<IResult> ImportProducts(
-        [FromBody] ProductImportDto importDto,
-        [FromServices] IProductService productService)
-    {
-        try
-        {
-            var result = await productService.ImportProductsAsync(importDto);
-            return Results.Ok(result);
-        }
-        catch (ArgumentException ex)
-        {
-            return Results.BadRequest(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            return Results.Problem($"Error importing products: {ex.Message}");
         }
     }
 

@@ -57,3 +57,18 @@ public interface IHarvestRepository
     Task<HarvestResult> UpdateAsync(HarvestResult harvest);
     Task DeleteAsync(Guid id);
 }
+
+public interface IFeedFormulaRepository
+{
+    Task<IEnumerable<FeedFormula>> GetAllAsync();
+    Task<FeedFormula?> GetByIdAsync(Guid id);
+    Task<FeedFormula?> GetByCodeAsync(string code);
+    Task<FeedFormula> CreateAsync(FeedFormulaCreateDto dto);
+    Task<FeedFormula> UpdateAsync(Guid id, FeedFormulaUpdateDto dto);
+    Task<bool> DeleteAsync(Guid id);
+    Task<bool> ExistsAsync(string code);
+    Task<IEnumerable<FeedFormula>> CreateManyAsync(IEnumerable<FeedFormulaCreateDto> dtos);
+    Task<IEnumerable<FeedFormula>> GetByCodesAsync(IEnumerable<string> codes);
+    Task<IEnumerable<FeedFormula>> GetByExternalIdsAsync(IEnumerable<Guid> externalIds);
+    Task<FeedFormula> UpsertByExternalIdAsync(Guid externalId, FeedFormulaCreateDto dto);
+}

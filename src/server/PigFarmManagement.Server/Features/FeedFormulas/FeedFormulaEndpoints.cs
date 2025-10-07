@@ -48,18 +48,6 @@ public static class FeedFormulaEndpoints
             .WithSummary("Check if feed formula exists by product code")
             .Produces<bool>();
 
-        group.MapPost("/import", ImportProductsFromPospos)
-            .WithName("ImportProductsFromPospos")
-            .WithSummary("Import feed formula products from POSPOS API")
-            .Produces<ImportResultDto>()
-            .Produces(400);
-
-        group.MapGet("/pospos-products", GetPosposProducts)
-            .WithName("GetPosposProducts")
-            .WithSummary("Get all available products from POSPOS API without importing")
-            .Produces<IEnumerable<PosposProductDto>>()
-            .Produces(400);
-
         group.MapPost("/import-selected", ImportSelectedProductsFromPospos)
             .WithName("ImportSelectedProductsFromPospos")
             .WithSummary("Import selected feed formula products from POSPOS API")
