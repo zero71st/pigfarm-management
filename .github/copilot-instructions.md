@@ -14,12 +14,14 @@ Auto-generated from all feature plans. Last updated: 2025-10-08
 src/
 ├── client/PigFarmManagement.Client/     # Blazor WebAssembly Frontend
 │   ├── Features/                        # Feature-based architecture
+│   │   ├── Authentication/              # API-key auth system (Feature 009)
 │   │   ├── Customers/                   # Enhanced customer management
 │   │   ├── PigPens/                     # Pig pen management
 │   │   └── Dashboard/                   # Main dashboard
 │   └── Services/                        # Client-side services
 ├── server/PigFarmManagement.Server/     # .NET 8 Web API Backend
 │   ├── Features/                        # Feature-based architecture
+│   │   ├── Authentication/              # API-key auth + user management
 │   │   ├── Customers/                   # Customer CRUD + location + POS sync
 │   │   ├── PigPens/                     # Pig pen management
 │   │   └── Feeds/                       # Feed import and management
@@ -27,6 +29,7 @@ src/
 └── shared/PigFarmManagement.Shared/     # Common DTOs and models
     ├── DTOs/                            # Data Transfer Objects
     ├── Domain/                          # Domain Models
+    │   ├── Authentication/              # UserEntity, ApiKeyEntity
     │   └── External/                    # External API Models (POSPOS)
     └── Contracts/                       # Service Interfaces
 ```
@@ -54,6 +57,7 @@ dotnet test
 - Repository Pattern: Use batch querying for performance optimization with GetByExternalIdsAsync patterns
 
 ## Recent Changes
+- 009-api-key-authentication: In development - API-key authentication system with admin-managed users, role-based authorization (Admin/Manager/Worker/Viewer), BCrypt password hashing, audit logging, and secure API key lifecycle management
 - 008-update-manage-customer: Completed enhanced customer management with Google Maps integration, soft deletion, location tracking, POS synchronization, and dual view modes (card/table)
 - Enhanced database schema with location fields and soft deletion support
 - Implemented comprehensive customer filtering and search functionality
@@ -67,6 +71,16 @@ dotnet test
   - Enhanced repository pattern with GetByExternalIdsAsync for performance optimization
 
 ## Key Features Implemented
+### API-Key Authentication System (Feature 009) - In Development
+- Admin-managed user system with role-based authorization (Admin/Manager/Worker/Viewer)
+- Secure API key lifecycle management with X-Api-Key header authentication
+- BCrypt password hashing with configurable work factor for security
+- SHA-256 API key hashing with salting for secure storage
+- Comprehensive audit logging for security monitoring and compliance
+- Role hierarchy enforcement with proper permission inheritance
+- Automatic admin seeding for initial system setup
+- Rate limiting and security headers for production deployment
+
 ### Enhanced Customer Management (Feature 008)
 - Complete CRUD operations with soft deletion and audit trail
 - Google Maps integration for customer location tracking
