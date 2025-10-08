@@ -18,6 +18,10 @@ public class PigFarmDbContext : DbContext
     public DbSet<FeedFormulaEntity> FeedFormulas { get; set; }
     public DbSet<PigPenFormulaAssignmentEntity> PigPenFormulaAssignments { get; set; }
 
+    // Authentication entities
+    public DbSet<UserEntity> Users { get; set; }
+    public DbSet<ApiKeyEntity> ApiKeys { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -134,6 +138,39 @@ public class PigFarmDbContext : DbContext
             entity.Property(e => e.UnitName).HasMaxLength(50);
             entity.Property(e => e.Cost).HasColumnType("decimal(18,2)");
             entity.Property(e => e.ConsumeRate).HasColumnType("decimal(18,2)");
+        });
+
+        // Authentication entity configurations
+        modelBuilder.Entity<UserEntity>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.Username).IsUnique();
+            entity.HasIndex(e => e.Email).IsUnique();
+            entity.Property(e => e.Username).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Email).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.PasswordHash).IsRequired();
+            entity.Property(e => e.RolesCsv).HasMaxLength(255);
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.ModifiedBy).HasMaxLength(50);
+            entity.Property(e => e.DeletedBy).HasMaxLength(50);
+        });
+
+        modelBuilder.Entity<ApiKeyEntity>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.HashedKey).IsUnique();
+            entity.HasIndex(e => e.UserId);
+            entity.Property(e => e.HashedKey).IsRequired();
+            entity.Property(e => e.Label).HasMaxLength(100);
+            entity.Property(e => e.RolesCsv).HasMaxLength(255);
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.RevokedBy).HasMaxLength(50);
+
+            // Foreign key relationship
+            entity.HasOne(e => e.User)
+                  .WithMany(u => u.ApiKeys)
+                  .HasForeignKey(e => e.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
 
     // Seed Data

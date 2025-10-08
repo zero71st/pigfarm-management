@@ -37,7 +37,7 @@
 
 ## Core Implementation Tasks
 
-### T001: Setup Project Dependencies [P]
+### [X] T001: Setup Project Dependencies [P]
 **Description**: Add required NuGet packages for authentication implementation
 **Files**: 
 - `src/server/PigFarmManagement.Server/PigFarmManagement.Server.csproj`
@@ -48,7 +48,7 @@
 - Client: System.Net.Http extensions for authentication
 - Shared: System.ComponentModel.DataAnnotations
 
-### T002: Create UserEntity Model [P]
+### [X] T002: Create UserEntity Model [P]
 **Description**: Implement UserEntity with authentication fields and audit properties
 **Files**: `src/shared/PigFarmManagement.Shared/Domain/Authentication/UserEntity.cs`
 **Dependencies**: T001
@@ -59,7 +59,7 @@
 - Soft delete: IsDeleted, DeletedAt, DeletedBy
 - Role helper methods: HasRole(), IsInRole(), GetRoles()
 
-### T003: Create ApiKeyEntity Model [P]
+### [X] T003: Create ApiKeyEntity Model [P]
 **Description**: Implement ApiKeyEntity with lifecycle management and security features
 **Files**: `src/shared/PigFarmManagement.Shared/Domain/Authentication/ApiKeyEntity.cs`
 **Dependencies**: T001
@@ -70,7 +70,7 @@
 - Audit fields: CreatedAt, CreatedBy, RevokedAt, RevokedBy
 - Validation methods: IsExpired(), IsValid(), CanBeUsed()
 
-### T004: Create Authentication DTOs [P]
+### [X] T004: Create Authentication DTOs [P]
 **Description**: Implement data transfer objects for authentication API contracts
 **Files**: `src/shared/PigFarmManagement.Shared/Contracts/Authentication/`
 **Dependencies**: T001
@@ -80,7 +80,7 @@
 - Validation attributes and proper documentation
 - Error response DTOs for authentication failures
 
-### T005: Update DbContext Configuration
+### [X] T005: Update DbContext Configuration
 **Description**: Add authentication entities to PigFarmDbContext and configure relationships
 **Files**: `src/server/PigFarmManagement.Server/Infrastructure/Data/PigFarmDbContext.cs`
 **Dependencies**: T002, T003
@@ -90,7 +90,7 @@
 - Add indexes for performance (Username, Email, KeyHash)
 - Configure cascade delete and constraints
 
-### T006: Create Entity Framework Migration
+### [X] T006: Create Entity Framework Migration
 **Description**: Generate and review EF Core migration for authentication tables
 **Files**: `src/server/PigFarmManagement.Server/Migrations/`
 **Dependencies**: T005
@@ -100,7 +100,7 @@
 - Ensure proper indexes and constraints
 - Test migration on clean database
 
-### T007: Implement Password Utilities [P]
+### [X] T007: Implement Password Utilities [P]
 **Description**: Create secure password hashing utilities using BCrypt
 **Files**: `src/server/PigFarmManagement.Server/Features/Authentication/Helpers/PasswordUtil.cs`
 **Dependencies**: T001
@@ -110,7 +110,7 @@
 - GenerateTemporaryPassword() for admin user creation
 - Security configuration from appsettings
 
-### T008: Implement API Key Utilities [P]
+### [X] T008: Implement API Key Utilities [P]
 **Description**: Create API key generation and hashing utilities
 **Files**: `src/server/PigFarmManagement.Server/Features/Authentication/Helpers/ApiKeyHash.cs`
 **Dependencies**: T001
@@ -120,7 +120,7 @@
 - ValidateApiKey() for middleware validation
 - Key format and length configuration
 
-### T009: Create Authentication Repository Interface
+### [X] T009: Create Authentication Repository Interface
 **Description**: Define IAuthRepository interface for authentication data access
 **Files**: `src/server/PigFarmManagement.Server/Infrastructure/Repositories/IAuthRepository.cs`
 **Dependencies**: T002, T003, T004
@@ -130,7 +130,7 @@
 - Authentication: ValidateCredentials, UpdateLastLogin
 - Async methods with proper return types
 
-### T010: Implement Authentication Repository
+### [X] T010: Implement Authentication Repository
 **Description**: Implement AuthRepository with Entity Framework operations
 **Files**: `src/server/PigFarmManagement.Server/Infrastructure/Repositories/AuthRepository.cs`
 **Dependencies**: T005, T009
