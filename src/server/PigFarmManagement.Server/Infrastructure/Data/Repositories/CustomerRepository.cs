@@ -56,6 +56,18 @@ public class CustomerRepository : ICustomerRepository
         return entity?.ToModel();
     }
 
+    public async Task<IEnumerable<Customer>> GetByExternalIdsAsync(IEnumerable<string> externalIds)
+    {
+        var ids = externalIds.Where(id => !string.IsNullOrWhiteSpace(id)).ToList();
+        if (!ids.Any())
+            return Enumerable.Empty<Customer>();
+
+        var entities = await _context.Customers
+            .Where(c => c.ExternalId != null && ids.Contains(c.ExternalId) && !c.IsDeleted)
+            .ToListAsync();
+        return entities.Select(e => e.ToModel());
+    }
+
     public async Task<Customer> CreateAsync(CustomerCreateDto dto)
     {
         var customer = new Customer(

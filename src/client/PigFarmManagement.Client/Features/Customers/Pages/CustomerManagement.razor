@@ -73,13 +73,11 @@
                                    Disabled="_importRunning"
                                    Size="Size.Medium" />
                 </MudTooltip>
-
-                <MudSwitch @bind-Value="_persistMapping" Color="Color.Primary" />
-
+@* 
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
                     OnClick="OpenAddCustomerDialog">
                     Add
-                </MudButton>
+                </MudButton> *@
             </MudStack>
         </MudItem>
     </MudGrid>
@@ -356,7 +354,7 @@
             _posSyncRunning = true;
             StateHasChanged();
 
-            var response = await Http.PostAsync("import/customers/sync?persist=true", null);
+            var response = await Http.PostAsync("import/customers/sync", null);
             
             if (response.IsSuccessStatusCode)
             {
@@ -389,15 +387,12 @@
 
 @code {
     // Import UI state
-    private bool _persistMapping = false;
     private bool _importRunning = false;
 
     private async Task StartImport()
     {
         var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
-        var parameters = new DialogParameters { ["PersistMapping"] = _persistMapping };
-        var dialog = await DialogService.ShowAsync<Components.ImportCandidatesDialog>("Import from POSPOS", parameters,
-        options);
+        var dialog = await DialogService.ShowAsync<Components.ImportCandidatesDialog>("Import from POSPOS", new DialogParameters(), options);
         var result = await dialog.Result;
         if (!result.Canceled)
         {

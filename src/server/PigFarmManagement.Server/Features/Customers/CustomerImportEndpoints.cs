@@ -71,12 +71,11 @@ public static class CustomerImportEndpoints
     /// Import all customers from POSPOS
     /// </summary>
     private static async Task<IResult> ImportAllCustomers(
-        ICustomerImportService customerImportService,
-        [FromQuery] bool persist = false)
+        ICustomerImportService customerImportService)
     {
         try
         {
-            var summary = await customerImportService.ImportAllCustomersAsync(persist);
+            var summary = await customerImportService.ImportAllCustomersAsync();
             return Results.Ok(summary);
         }
         catch (Exception ex)
@@ -90,8 +89,7 @@ public static class CustomerImportEndpoints
     /// </summary>
     private static async Task<IResult> ImportSelectedCustomers(
         ICustomerImportService customerImportService,
-        [FromBody] IEnumerable<string> ids,
-        [FromQuery] bool persist = false)
+        [FromBody] IEnumerable<string> ids)
     {
         try
         {
@@ -100,7 +98,7 @@ public static class CustomerImportEndpoints
                 return Results.BadRequest(new { message = "ids required" });
             }
 
-            var summary = await customerImportService.ImportSelectedCustomersAsync(ids, persist);
+            var summary = await customerImportService.ImportSelectedCustomersAsync(ids);
             return Results.Ok(summary);
         }
         catch (Exception ex)
@@ -113,12 +111,11 @@ public static class CustomerImportEndpoints
     /// Manual POS sync with location preservation
     /// </summary>
     private static async Task<IResult> ManualPosSync(
-        ICustomerImportService customerImportService,
-        [FromQuery] bool persist = true)
+        ICustomerImportService customerImportService)
     {
         try
         {
-            var summary = await customerImportService.ImportAllCustomersAsync(persist);
+            var summary = await customerImportService.ImportAllCustomersAsync();
             return Results.Ok(new 
             { 
                 success = true,

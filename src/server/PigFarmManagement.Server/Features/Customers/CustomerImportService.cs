@@ -6,7 +6,6 @@ using PigFarmManagement.Shared.Domain.External;
 using PigFarmManagement.Shared.Models;
 using Microsoft.Extensions.Logging;
 using PigFarmManagement.Server.Services.ExternalServices;
-using PigFarmManagement.Server.Services;
 
 namespace PigFarmManagement.Server.Features.Customers
 {
@@ -21,37 +20,40 @@ namespace PigFarmManagement.Server.Features.Customers
 
     public interface ICustomerImportService
     {
-        Task<CustomerImportSummary> ImportAllCustomersAsync(bool persistMapping = false);
-        Task<CustomerImportSummary> ImportSelectedCustomersAsync(IEnumerable<string> posposIds, bool persistMapping = false);
+        Task<CustomerImportSummary> ImportAllCustomersAsync();
+        Task<CustomerImportSummary> ImportSelectedCustomersAsync(IEnumerable<string> posposIds);
         CustomerImportSummary? LastImportSummary { get; }
     }
 
     public class CustomerImportService : ICustomerImportService
     {
         private readonly IPosposMemberClient _client;
-        private readonly IMappingStore _mappingStore;
         private readonly Infrastructure.Data.Repositories.ICustomerRepository _customerRepository;
         private readonly ILogger<CustomerImportService> _logger;
 
-        // in-memory transient store removed; persistence is handled via repository
-        private IDictionary<string, string> _mapping;
         public CustomerImportSummary? LastImportSummary { get; private set; }
 
-        public CustomerImportService(IPosposMemberClient client, IMappingStore mappingStore, Infrastructure.Data.Repositories.ICustomerRepository customerRepository, ILogger<CustomerImportService> logger)
+        public CustomerImportService(IPosposMemberClient client, Infrastructure.Data.Repositories.ICustomerRepository customerRepository, ILogger<CustomerImportService> logger)
         {
             _client = client;
-            _mappingStore = mappingStore;
             _customerRepository = customerRepository;
             _logger = logger;
-            _mapping = _mappingStore.Load();
         }
 
-        public async Task<CustomerImportSummary> ImportAllCustomersAsync(bool persistMapping = false)
+        public async Task<CustomerImportSummary> ImportAllCustomersAsync()
         {
             var summary = new CustomerImportSummary();
             try
             {
                 var members = await _client.GetMembersAsync();
+                var memberIds = members.Where(m => !string.IsNullOrEmpty(m.Id)).Select(m => m.Id!).ToList();
+                
+                // Batch fetch existing customers by external id
+                var existingCustomers = (await _customerRepository.GetByExternalIdsAsync(memberIds)).ToList();
+                var existingMap = existingCustomers
+                    .Where(c => !string.IsNullOrWhiteSpace(c.ExternalId))
+                    .ToDictionary(c => c.ExternalId!, c => c.Id);
+
                 foreach (var m in members)
                 {
                     try
@@ -65,12 +67,12 @@ namespace PigFarmManagement.Server.Features.Customers
                         // Map Pospos member to internal Customer model
                         PigFarmManagement.Shared.Models.Customer mapped = MapPosposToCustomer(m);
 
-                        if (_mapping.TryGetValue(m.Id, out var internalId))
+                        if (existingMap.TryGetValue(m.Id, out var internalId))
                         {
-                            // existing mapping -> update via repository, preserving location data
+                            // existing customer -> update via repository, preserving location data
                             try
                             {
-                                var withId = mapped with { Id = Guid.Parse(internalId) };
+                                var withId = mapped with { Id = internalId };
                                 await UpdateCustomerPreservingLocationAsync(withId);
                                 summary.Updated++;
                             }
@@ -79,7 +81,7 @@ namespace PigFarmManagement.Server.Features.Customers
                                 // If update fails because not found, create instead
                                 _logger.LogWarning(ex, "Update failed for mapped customer id {Id}, will try create", internalId);
                                 var created = await _customerRepository.CreateAsync(mapped.ToCreateDto());
-                                _mapping[m.Id] = created.Id.ToString();
+                                existingMap[m.Id] = created.Id; // keep in-memory map for this run
                                 summary.Created++;
                             }
                         }
@@ -87,7 +89,7 @@ namespace PigFarmManagement.Server.Features.Customers
                         {
                             // create new via repository
                             var created = await _customerRepository.CreateAsync(mapped.ToCreateDto());
-                            _mapping[m.Id] = created.Id.ToString();
+                            existingMap[m.Id] = created.Id; // keep in-memory map for this run
                             summary.Created++;
                         }
                     }
@@ -97,19 +99,6 @@ namespace PigFarmManagement.Server.Features.Customers
                         var err = $"Member id={m?.Id ?? "(null)"} name={memberDisplay}: {ex.Message}";
                         summary.Errors.Add(err);
                         _logger.LogError(ex, "Error importing member {MemberId}", m?.Id);
-                    }
-                }
-
-                if (persistMapping)
-                {
-                    try
-                    {
-                        _mappingStore.Save(_mapping);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Failed to persist mapping");
-                        summary.Errors.Add($"Failed to persist mapping: {ex.Message}");
                     }
                 }
             }
@@ -125,17 +114,30 @@ namespace PigFarmManagement.Server.Features.Customers
             return summary;
         }
 
-        public async Task<CustomerImportSummary> ImportSelectedCustomersAsync(IEnumerable<string> posposIds, bool persistMapping = false)
+        public async Task<CustomerImportSummary> ImportSelectedCustomersAsync(IEnumerable<string> posposIds)
         {
             var summary = new CustomerImportSummary();
             try
             {
-                var members = await _client.GetMembersByIdsAsync(posposIds);
+                var ids = posposIds?.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct().ToList() ?? new List<string>();
+                if (!ids.Any())
+                {
+                    _logger.LogWarning("No valid POSPOS IDs provided for import");
+                    return summary;
+                }
+
+                // Batch fetch existing customers by external id
+                var existingCustomers = (await _customerRepository.GetByExternalIdsAsync(ids)).ToList();
+                var existingMap = existingCustomers
+                    .Where(c => !string.IsNullOrWhiteSpace(c.ExternalId))
+                    .ToDictionary(c => c.ExternalId!, c => c.Id);
+
+                var members = await _client.GetMembersByIdsAsync(ids);
                 foreach (var m in members)
                 {
                     try
                     {
-                            if (string.IsNullOrEmpty(m.Id))
+                        if (string.IsNullOrEmpty(m.Id))
                         {
                             summary.Skipped++;
                             continue;
@@ -143,11 +145,11 @@ namespace PigFarmManagement.Server.Features.Customers
 
                         PigFarmManagement.Shared.Models.Customer mapped = MapPosposToCustomer(m);
 
-                        if (_mapping.TryGetValue(m.Id, out var internalId))
+                        if (existingMap.TryGetValue(m.Id, out var internalId))
                         {
                             try
                             {
-                                var withId = mapped with { Id = Guid.Parse(internalId) };
+                                var withId = mapped with { Id = internalId };
                                 await UpdateCustomerPreservingLocationAsync(withId);
                                 summary.Updated++;
                             }
@@ -155,14 +157,14 @@ namespace PigFarmManagement.Server.Features.Customers
                             {
                                 _logger.LogWarning(ex, "Update failed for mapped customer id {Id}, will try create", internalId);
                                 var created = await _customerRepository.CreateAsync(mapped.ToCreateDto());
-                                _mapping[m.Id] = created.Id.ToString();
+                                existingMap[m.Id] = created.Id; // keep in-memory map for this run
                                 summary.Created++;
                             }
                         }
                         else
                         {
                             var created = await _customerRepository.CreateAsync(mapped.ToCreateDto());
-                            _mapping[m.Id] = created.Id.ToString();
+                            existingMap[m.Id] = created.Id; // keep in-memory map for this run
                             summary.Created++;
                         }
                     }
@@ -172,19 +174,6 @@ namespace PigFarmManagement.Server.Features.Customers
                         var err = $"Member id={m?.Id ?? "(null)"} name={memberDisplay}: {ex.Message}";
                         summary.Errors.Add(err);
                         _logger.LogError(ex, "Error importing member {MemberId}", m?.Id);
-                    }
-                }
-
-                if (persistMapping)
-                {
-                    try
-                    {
-                        _mappingStore.Save(_mapping);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Failed to persist mapping");
-                        summary.Errors.Add($"Failed to persist mapping: {ex.Message}");
                     }
                 }
             }
