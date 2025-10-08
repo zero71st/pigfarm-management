@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using PigFarmManagement.Server.Infrastructure.Data;
 using PigFarmManagement.Server.Infrastructure.Extensions;
 using PigFarmManagement.Server.Services.ExternalServices;
+using PigFarmManagement.Server.Features.Authentication;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +30,14 @@ builder.Services.AddDbContext<PigFarmDbContext>(options =>
 
 // Add application services
 builder.Services.AddApplicationServices();
+
+// Security headers configuration
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 // Pospos services
 builder.Services.AddSingleton<PigFarmManagement.Server.Services.IMappingStore, PigFarmManagement.Server.Services.FileMappingStore>();
@@ -87,7 +97,24 @@ else
 {
     // Production settings
     app.UseHttpsRedirection();
+    
+    // Security headers for production
+    app.Use(async (context, next) =>
+    {
+        context.Response.Headers["X-Frame-Options"] = "DENY";
+        context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+        context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+        context.Response.Headers["X-Permitted-Cross-Domain-Policies"] = "none";
+        context.Response.Headers["Cross-Origin-Embedder-Policy"] = "require-corp";
+        context.Response.Headers["Cross-Origin-Opener-Policy"] = "same-origin";
+        context.Response.Headers["Cross-Origin-Resource-Policy"] = "cross-origin";
+        
+        await next.Invoke();
+    });
 }
+
+// Add forwarded headers support for reverse proxies
+app.UseForwardedHeaders();
 
 // Add health check endpoint for Railway
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));

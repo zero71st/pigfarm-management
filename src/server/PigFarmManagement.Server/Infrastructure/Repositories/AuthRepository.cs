@@ -37,7 +37,7 @@ public class AuthRepository : IAuthRepository
 
     public async Task<IEnumerable<UserEntity>> GetAllUsersAsync(bool includeInactive = false)
     {
-        var query = _context.Users.Include(u => u.ApiKeys);
+        var query = _context.Users.Include(u => u.ApiKeys).AsQueryable();
 
         if (!includeInactive)
         {

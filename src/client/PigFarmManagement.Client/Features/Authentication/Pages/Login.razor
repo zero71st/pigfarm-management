@@ -1,0 +1,175 @@
+@page "/login"
+@using MudBlazor
+@using PigFarmManagement.Client.Features.Authentication.Services
+@using PigFarmManagement.Shared.Contracts.Authentication
+@inject AuthenticationStateService AuthService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>Login - PigFarm Management</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="my-16">
+    <MudPaper Class="pa-8" Elevation="4">
+        <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-8">
+            PigFarm Management
+        </MudText>
+        
+        <MudText Typo="Typo.h6" Align="Align.Center" Class="mb-6">
+            Sign In
+        </MudText>
+
+        <EditForm Model="@loginModel" OnValidSubmit="HandleLogin">
+            <DataAnnotationsValidator />
+            
+            <MudStack Spacing="4">
+                <MudTextField 
+                    @bind-Value="loginModel.Username"
+                    Label="Username"
+                    Variant="Variant.Outlined"
+                    Required="true"
+                    For="@(() => loginModel.Username)"
+                    Disabled="@isLoading" />
+
+                <MudTextField 
+                    @bind-Value="loginModel.Password"
+                    Label="Password"
+                    Variant="Variant.Outlined"
+                    InputType="InputType.Password"
+                    Required="true"
+                    For="@(() => loginModel.Password)"
+                    Disabled="@isLoading" />
+
+                <MudTextField 
+                    @bind-Value="loginModel.KeyLabel"
+                    Label="API Key Label (Optional)"
+                    Variant="Variant.Outlined"
+                    For="@(() => loginModel.KeyLabel)"
+                    Disabled="@isLoading"
+                    HelperText="Give this login session a descriptive name" />
+
+                <MudNumericField 
+                    @bind-Value="loginModel.ExpirationDays"
+                    Label="API Key Expiration (Days)"
+                    Variant="Variant.Outlined"
+                    Min="1"
+                    Max="365"
+                    For="@(() => loginModel.ExpirationDays)"
+                    Disabled="@isLoading"
+                    HelperText="How long should this session remain valid?" />
+
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <MudAlert Severity="Severity.Error" Class="mt-4">
+                        @errorMessage
+                    </MudAlert>
+                }
+
+                <MudButton 
+                    ButtonType="ButtonType.Submit"
+                    Variant="Variant.Filled"
+                    Color="Color.Primary"
+                    Size="Size.Large"
+                    FullWidth="true"
+                    Disabled="@isLoading"
+                    Class="mt-6">
+                    @if (isLoading)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                        <text>Signing In...</text>
+                    }
+                    else
+                    {
+                        <text>Sign In</text>
+                    }
+                </MudButton>
+            </MudStack>
+        </EditForm>
+
+        <MudDivider Class="my-6" />
+        
+        <MudText Typo="Typo.body2" Align="Align.Center" Class="text-muted">
+            Default Admin: admin / Admin123!
+        </MudText>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private LoginModel loginModel = new();
+    private bool isLoading = false;
+    private string? errorMessage;
+
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? ReturnUrl { get; set; }
+
+    protected override void OnInitialized()
+    {
+        // If user is already authenticated, redirect them
+        if (AuthService.IsAuthenticated)
+        {
+            NavigateAfterLogin();
+        }
+    }
+
+    private async Task HandleLogin()
+    {
+        if (isLoading) return;
+
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var success = await AuthService.LoginAsync(
+                loginModel.Username,
+                loginModel.Password,
+                loginModel.KeyLabel,
+                loginModel.ExpirationDays ?? 30);
+
+            if (success)
+            {
+                Snackbar.Add("Login successful!", Severity.Success);
+                NavigateAfterLogin();
+            }
+            else
+            {
+                errorMessage = "Invalid username or password. Please try again.";
+                Snackbar.Add("Login failed", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "An error occurred during login. Please try again.";
+            Snackbar.Add("Login error", Severity.Error);
+            // Log the exception (if logging is configured)
+            Console.WriteLine($"Login error: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void NavigateAfterLogin()
+    {
+        var returnUrl = ReturnUrl ?? "/";
+        Navigation.NavigateTo(returnUrl, forceLoad: true);
+    }
+
+    public class LoginModel
+    {
+        [Required]
+        [StringLength(50, MinimumLength = 3)]
+        public string Username { get; set; } = "";
+
+        [Required]
+        [StringLength(100, MinimumLength = 6)]
+        public string Password { get; set; } = "";
+
+        [StringLength(100)]
+        public string? KeyLabel { get; set; } = "Web Client";
+
+        [Range(1, 365)]
+        public int? ExpirationDays { get; set; } = 30;
+    }
+}

@@ -1,0 +1,80 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@using PigFarmManagement.Client.Features.Authentication.Services
+@using PigFarmManagement.Shared.Contracts.Authentication
+@using System.Linq
+@inject AuthenticationStateService AuthService
+@inject NavigationManager Navigation
+@implements IDisposable
+
+<AuthorizeView>
+    <Authorized>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.Person" />
+            <MudText Typo="Typo.body2">@AuthService.CurrentUser?.Username</MudText>
+            @if (AuthService.CurrentUser?.Roles?.Any() == true)
+            {
+                <MudChip 
+                    Variant="Variant.Text" 
+                    Color="GetRoleColor()" 
+                    Size="Size.Small">
+                    @AuthService.CurrentUser.Roles.First()
+                </MudChip>
+            }
+            <MudIconButton 
+                Icon="@Icons.Material.Filled.Logout"
+                Title="Logout"
+                OnClick="HandleLogout"
+                Size="Size.Small" />
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <MudButton 
+            Variant="Variant.Filled"
+            Color="Color.Primary"
+            StartIcon="@Icons.Material.Filled.Login"
+            OnClick="NavigateToLogin">
+            Login
+        </MudButton>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    protected override void OnInitialized()
+    {
+        AuthService.AuthenticationStateChanged += OnAuthenticationStateChanged;
+    }
+
+    private async void OnAuthenticationStateChanged()
+    {
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void NavigateToLogin()
+    {
+        Navigation.NavigateTo("/login");
+    }
+
+    private async Task HandleLogout()
+    {
+        await AuthService.LogoutAsync();
+        Navigation.NavigateTo("/login", forceLoad: true);
+    }
+
+    private Color GetRoleColor()
+    {
+        var primaryRole = AuthService.CurrentUser?.Roles?.FirstOrDefault()?.ToLower();
+        return primaryRole switch
+        {
+            "admin" => Color.Error,
+            "manager" => Color.Warning,
+            "worker" => Color.Info,
+            "viewer" => Color.Default,
+            _ => Color.Default
+        };
+    }
+
+    public void Dispose()
+    {
+        AuthService.AuthenticationStateChanged -= OnAuthenticationStateChanged;
+    }
+}
