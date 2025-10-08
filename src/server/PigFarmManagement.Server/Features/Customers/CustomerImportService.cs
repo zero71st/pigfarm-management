@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using PigFarmManagement.Server.Models;
+using PigFarmManagement.Shared.Domain.External;
 using PigFarmManagement.Shared.Models;
 using Microsoft.Extensions.Logging;
 using PigFarmManagement.Server.Services.ExternalServices;

@@ -6,7 +6,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using PigFarmManagement.Server.Infrastructure.Settings;
-using PigFarmManagement.Server.Models;
+using PigFarmManagement.Shared.Domain.External;
 
 namespace PigFarmManagement.Server.Services.ExternalServices
 {

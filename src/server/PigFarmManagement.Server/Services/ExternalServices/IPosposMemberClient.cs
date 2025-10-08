@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using PigFarmManagement.Server.Models;
+using PigFarmManagement.Shared.Domain.External;
 
 namespace PigFarmManagement.Server.Services.ExternalServices
 {
