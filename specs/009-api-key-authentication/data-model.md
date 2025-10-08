@@ -41,6 +41,8 @@ CREATE TABLE Users (
 );
 ```
 
+**C# Entity Class**: `UserEntity.cs`
+
 **Attributes:**
 - **Id**: Primary key, GUID for distributed system compatibility
 - **Username**: Unique identifier for login, 3-50 characters
@@ -68,6 +70,8 @@ CREATE INDEX IX_Users_IsActive ON Users(IsActive) WHERE IsDeleted = 0;
 ### ApiKey Entity
 
 **Purpose**: Represents authentication tokens with lifecycle management and audit trail
+
+**C# Entity Class**: `ApiKeyEntity.cs`
 
 ```sql
 -- Conceptual Schema
@@ -345,12 +349,12 @@ public class ApiKeyValidation
 
 ## Entity Framework Configuration
 
-### User Entity Configuration
+### UserEntity Configuration
 ```csharp
 // Conceptual EF configuration
-public class UserConfiguration : IEntityTypeConfiguration<User>
+public class UserEntityConfiguration : IEntityTypeConfiguration<UserEntity>
 {
-    public void Configure(EntityTypeBuilder<User> builder)
+    public void Configure(EntityTypeBuilder<UserEntity> builder)
     {
         builder.HasKey(u => u.Id);
         
@@ -385,12 +389,12 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 }
 ```
 
-### API Key Entity Configuration
+### ApiKeyEntity Configuration
 ```csharp
 // Conceptual EF configuration
-public class ApiKeyConfiguration : IEntityTypeConfiguration<ApiKey>
+public class ApiKeyEntityConfiguration : IEntityTypeConfiguration<ApiKeyEntity>
 {
-    public void Configure(EntityTypeBuilder<ApiKey> builder)
+    public void Configure(EntityTypeBuilder<ApiKeyEntity> builder)
     {
         builder.HasKey(k => k.Id);
         
