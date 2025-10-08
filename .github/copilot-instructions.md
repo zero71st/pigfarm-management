@@ -1,6 +1,6 @@
 # PigFarmManagement Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2025-10-05
+Auto-generated from all feature plans. Last updated: 2025-10-08
 
 ## Active Technologies
 - C# .NET 8 + Blazor WebAssembly, .NET Core Web API, Entity Framework Core (Primary Stack)
@@ -25,6 +25,10 @@ src/
 │   │   └── Feeds/                       # Feed import and management
 │   └── Infrastructure/                  # EF Core, migrations, services
 └── shared/PigFarmManagement.Shared/     # Common DTOs and models
+    ├── DTOs/                            # Data Transfer Objects
+    ├── Domain/                          # Domain Models
+    │   └── External/                    # External API Models (POSPOS)
+    └── Contracts/                       # Service Interfaces
 ```
 
 ## Commands
@@ -46,6 +50,8 @@ dotnet test
 - Blazor Components: Use feature-based organization with proper component isolation
 - Entity Framework: Code-first approach with proper migrations
 - API Design: RESTful endpoints with proper HTTP status codes and OpenAPI documentation
+- External Models: All external API models (POSPOS) organized in shared/Domain/External folder
+- Repository Pattern: Use batch querying for performance optimization with GetByExternalIdsAsync patterns
 
 ## Recent Changes
 - 008-update-manage-customer: Completed enhanced customer management with Google Maps integration, soft deletion, location tracking, POS synchronization, and dual view modes (card/table)
@@ -53,6 +59,12 @@ dotnet test
 - Implemented comprehensive customer filtering and search functionality
 - Added modern UI with icon-only buttons and responsive design
 - Integrated Google Maps JavaScript API for location management
+- **Code Architecture Refactoring (October 2025)**: 
+  - Moved all external API models (PosposMember, PosposProductDto, etc.) to shared/Domain/External
+  - Refactored CustomerImportService to use database-based mapping with ExternalId field
+  - Eliminated JSON file persistence in favor of efficient batch database queries
+  - Simplified API contracts by removing persistMapping parameters
+  - Enhanced repository pattern with GetByExternalIdsAsync for performance optimization
 
 ## Key Features Implemented
 ### Enhanced Customer Management (Feature 008)
@@ -72,8 +84,23 @@ dotnet test
 
 ### POSPOS Integration
 - Feed import with pricing calculations and discount processing
-- Customer data synchronization with manual triggers
+- Customer data synchronization with database-based ExternalId mapping
+- Efficient batch querying for customer import operations
+- Streamlined API contracts without complex persistence parameters
 - Comprehensive logging and error handling
+
+### External API Model Organization
+- All external API models centralized in shared/Domain/External folder
+- PosposMember.cs: POSPOS member data integration model
+- PosposProductDtos.cs: Product, Category, and Unit DTOs for feed imports
+- Consistent namespace organization: PigFarmManagement.Shared.Domain.External
+- Global using statements for seamless access across client and server
+
+### Database Optimization Patterns
+- Repository pattern with batch querying capabilities (GetByExternalIdsAsync)
+- ExternalId field as single source of truth for external system mapping
+- Elimination of dual persistence (JSON + Database) for simplified architecture
+- Enhanced performance through bulk operations and reduced database round trips
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

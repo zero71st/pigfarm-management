@@ -64,7 +64,14 @@ PigFarmManagement/
 │   │           └── app.css
 │   │
 │   ├── 🚀 server/                      # API Backend (unchanged)
-│   └── 📦 shared/                      # Domain Models (unchanged)
+│   └── 📦 shared/                      # Domain Models & Contracts
+│       └── PigFarmManagement.Shared/
+│           ├── DTOs/                   # Data Transfer Objects
+│           ├── Domain/                 # Domain Models
+│           │   └── External/           # External API Models (POSPOS)
+│           │       ├── PosposMember.cs # POSPOS member model
+│           │       └── PosposProductDtos.cs # Product DTOs
+│           └── Contracts/              # Service Interfaces
 ```
 
 ## 🏗️ **Feature-Based Architecture Benefits**
@@ -209,6 +216,59 @@ var customers = await CustomerService.GetCustomersAsync();
 2. **Reports Feature** - Create reports functionality in `Features/Reports/`
 3. **Authentication Feature** - Add user management
 4. **Core Services** - Add shared services like notification, loading, etc.
+
+## 🔗 **External API Model Organization**
+
+### **📁 Shared/Domain/External Structure**
+
+All external API models are centralized in the `shared/Domain/External/` folder for consistency and maintainability:
+
+```
+shared/PigFarmManagement.Shared/Domain/External/
+├── PosposMember.cs           # POSPOS member data model
+└── PosposProductDtos.cs      # Product, Category, Unit DTOs
+```
+
+### **🎯 External Model Benefits**
+
+| **Aspect** | **Benefit** | **Implementation** |
+|------------|-------------|-------------------|
+| **Centralization** | Single source of truth | All external models in one location |
+| **Namespace Consistency** | Clean organization | `PigFarmManagement.Shared.Domain.External` |
+| **Global Accessibility** | Easy imports | Global using statements across projects |
+| **Separation of Concerns** | Clear boundaries | External vs internal model distinction |
+
+### **💾 Database-Based Mapping Pattern**
+
+**Approach:**
+- Uses `ExternalId` field on entities as single source of truth
+- Implements batch querying with `GetByExternalIdsAsync` for performance
+- Eliminates dual persistence (JSON + Database) complexity
+
+**Benefits:**
+- ✅ **Performance**: Bulk database operations reduce round trips
+- ✅ **Consistency**: Database as authoritative source prevents conflicts
+- ✅ **Simplicity**: No file-based mapping management required
+- ✅ **Scalability**: Efficient batch processing for large datasets
+
+**Implementation Example:**
+```csharp
+// Repository pattern with batch querying
+public async Task<Dictionary<string, Customer>> GetByExternalIdsAsync(IEnumerable<string> externalIds)
+{
+    var customers = await _context.Customers
+        .Where(c => !c.IsDeleted && externalIds.Contains(c.ExternalId))
+        .ToDictionaryAsync(c => c.ExternalId);
+    return customers;
+}
+
+// Service usage without persistence parameters
+public async Task<ImportResult> ImportSelectedCustomersAsync(ImportSelectedCustomersRequest request)
+{
+    var existingCustomers = await _repository.GetByExternalIdsAsync(request.SelectedIds);
+    // Process import with existing customer lookup...
+}
+```
 
 ## 📊 **Benefits Achieved**
 

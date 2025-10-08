@@ -95,6 +95,43 @@ cd src/server/PigFarmManagement.Server
 dotnet ef database update
 ```
 
+## Architecture Improvements
+
+### External API Model Organization (October 2025)
+
+**Key Changes:**
+- **Centralized External Models**: All POSPOS API models moved to `shared/Domain/External/` folder
+- **Consistent Namespace**: `PigFarmManagement.Shared.Domain.External` for all external API integrations
+- **Global Accessibility**: Enhanced with global using statements for seamless access across projects
+
+**Project Structure:**
+```
+shared/PigFarmManagement.Shared/
+├── DTOs/                    # Internal Data Transfer Objects
+├── Domain/                  # Domain Models
+│   └── External/            # External API Models (POSPOS)
+│       ├── PosposMember.cs         # POSPOS member integration model
+│       └── PosposProductDtos.cs    # Product, Category, Unit DTOs
+└── Contracts/               # Service Interfaces
+```
+
+### Database-Based Mapping Enhancement
+
+**Previous Approach**: Dual persistence (JSON files + Database) for external ID mapping
+**New Approach**: Single source of truth using database `ExternalId` field
+
+**Benefits:**
+- ✅ **Performance**: Batch querying with `GetByExternalIdsAsync` reduces database round trips
+- ✅ **Consistency**: Database as authoritative source prevents mapping conflicts
+- ✅ **Simplicity**: Eliminated file-based mapping complexity
+- ✅ **Scalability**: Efficient bulk operations for large customer datasets
+
+**Implementation:**
+- Enhanced repository pattern with bulk querying capabilities
+- Removed `persistMapping` parameters from all import methods
+- Streamlined API contracts without complex persistence options
+- Simplified UI by removing unnecessary mapping toggles
+
 ## Configuration
 
 ### Google Maps API Setup

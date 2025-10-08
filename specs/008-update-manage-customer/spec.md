@@ -109,6 +109,25 @@ As a farm administrator, I want to manage customer information more effectively 
 
 ---
 
+## Implementation Notes (Post-Development)
+
+**Completed**: October 8, 2025
+
+### Architecture Refactoring
+- **External API Models**: Moved PosposMember and related DTOs to `shared/Domain/External/` for consistency
+- **Database Mapping**: Replaced JSON file persistence with database-based `ExternalId` field mapping
+- **Performance Optimization**: Implemented batch querying with `GetByExternalIdsAsync` for efficient customer lookup
+- **API Simplification**: Removed `persistMapping` parameters from import methods for cleaner contracts
+- **UI Cleanup**: Removed unnecessary persist toggle switches from customer management interface
+
+### Technical Improvements
+- Centralized external API models in dedicated namespace: `PigFarmManagement.Shared.Domain.External`
+- Enhanced repository pattern with bulk operations for better performance
+- Simplified customer import workflow by eliminating dual persistence complexity
+- Improved code organization following Domain-Driven Design principles
+
+---
+
 ## Execution Status
 *Updated by main() during processing*
 
