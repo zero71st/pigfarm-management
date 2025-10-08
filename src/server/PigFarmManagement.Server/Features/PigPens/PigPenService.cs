@@ -1,10 +1,9 @@
 using PigFarmManagement.Shared.Models;
 using PigFarmManagement.Server.Features.FeedFormulas;
+using PigFarmManagement.Server.Infrastructure.Data.Repositories;
 using System.Linq;
 
 namespace PigFarmManagement.Server.Features.PigPens;
-
-public record PigPenCreateDto(Guid CustomerId, string PenCode, int PigQty, DateTime RegisterDate, DateTime? ActHarvestDate, DateTime? EstimatedHarvestDate, PigPenType Type, string? SelectedBrand, decimal DepositPerPig = 1500m, string? Note = null);
 
 public interface IPigPenService
 {
@@ -157,12 +156,21 @@ public class PigPenService : IPigPenService
             throw new InvalidOperationException("Pig pen not found");
         }
 
-        return await _pigPenRepository.DeleteAsync(id);
+        try
+        {
+            await _pigPenRepository.DeleteAsync(id);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public async Task<List<PigPen>> GetPigPensByCustomerIdAsync(Guid customerId)
     {
-        return await _pigPenRepository.GetByCustomerIdAsync(customerId);
+        var pigPens = await _pigPenRepository.GetByCustomerIdAsync(customerId);
+        return pigPens.ToList();
     }
 
     public async Task<PigPen> ForceClosePigPenAsync(Guid id)

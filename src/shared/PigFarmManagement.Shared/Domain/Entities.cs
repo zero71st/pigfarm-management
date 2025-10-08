@@ -21,8 +21,18 @@ public record Customer(Guid Id, string Code, CustomerStatus Status)
     public DateTime CreatedAt { get; init; } = DateTime.Now;
     public DateTime UpdatedAt { get; init; } = DateTime.Now;
     
+    // Location properties for Google Maps integration
+    public decimal? Latitude { get; init; }  // -90 to 90
+    public decimal? Longitude { get; init; } // -180 to 180
+    
+    // Soft deletion tracking
+    public bool IsDeleted { get; init; } = false;
+    public DateTime? DeletedAt { get; init; }
+    public string? DeletedBy { get; init; }
+    
     // Business logic
-    public bool IsActive => Status == CustomerStatus.Active;
+    public bool IsActive => Status == CustomerStatus.Active && !IsDeleted;
+    public bool HasLocation => Latitude.HasValue && Longitude.HasValue;
     public string DisplayName => $"{(string.IsNullOrWhiteSpace(FirstName) && string.IsNullOrWhiteSpace(LastName) ? Code : $"{FirstName} {LastName}" )} ({Code})";
 };
 

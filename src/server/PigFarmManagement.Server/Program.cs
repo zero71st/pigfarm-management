@@ -14,6 +14,9 @@ builder.Services.AddControllers();
 // Bind POSPOS options from configuration / environment
 builder.Services.Configure<PigFarmManagement.Server.Infrastructure.Settings.PosposOptions>(builder.Configuration.GetSection("Pospos"));
 
+// Bind Google Maps options from configuration / environment
+builder.Services.Configure<PigFarmManagement.Server.Infrastructure.Settings.GoogleMapsOptions>(builder.Configuration.GetSection("GoogleMaps"));
+
 // Add Entity Framework
 builder.Services.AddDbContext<PigFarmDbContext>(options =>
 {
@@ -30,9 +33,12 @@ builder.Services.AddApplicationServices();
 builder.Services.AddSingleton<PigFarmManagement.Server.Services.IMappingStore, PigFarmManagement.Server.Services.FileMappingStore>();
 builder.Services.AddHttpClient<IPosposMemberClient, PosposMemberClient>();
 builder.Services.AddHttpClient<IPosposProductClient, PosposProductClient>();
-// PosposImporter depends on scoped services (ICustomerRepository). Register as scoped to avoid
+// Customer import service depends on scoped services (ICustomerRepository). Register as scoped to avoid
 // injecting scoped services into a singleton which causes runtime DI errors.
-builder.Services.AddScoped<PigFarmManagement.Server.Services.IPosposImporter, PigFarmManagement.Server.Services.PosposImporter>();
+builder.Services.AddScoped<PigFarmManagement.Server.Features.Customers.ICustomerImportService, PigFarmManagement.Server.Features.Customers.CustomerImportService>();
+// Customer feature services (moved into Features.Customers)
+builder.Services.AddScoped<PigFarmManagement.Server.Features.Customers.ICustomerDeletionService, PigFarmManagement.Server.Features.Customers.CustomerDeletionService>();
+builder.Services.AddScoped<PigFarmManagement.Server.Features.Customers.ICustomerLocationService, PigFarmManagement.Server.Features.Customers.CustomerLocationService>();
 
 // CORS configuration for production
 builder.Services.AddCors(options =>
@@ -68,7 +74,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<PigFarmDbContext>();
-    context.Database.EnsureCreated();
+    context.Database.Migrate();
 }
 
 // Configure the HTTP request pipeline
@@ -91,7 +97,7 @@ app.UseDefaultFiles();
 app.UseStaticFiles();
 app.UseBlazorFrameworkFiles();
 
-// Map attribute-routed controllers (ImportPosMemberController, ImportPosFeedsController etc.)
+// Map attribute-routed controllers (if any remain)
 app.MapControllers();
 
 // Map all feature endpoints

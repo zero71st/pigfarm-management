@@ -1,0 +1,154 @@
+@using Microsoft.AspNetCore.Components
+@using MudBlazor
+@using PigFarmManagement.Shared.Models
+
+<MudTable Items="@FilteredCustomers" 
+          Hover="true" 
+          Breakpoint="Breakpoint.Sm" 
+          Loading="@IsLoading"
+          LoadingProgressColor="Color.Info"
+          Filter="new Func<Customer,bool>(FilterFunc)"
+          Class="customer-table">
+    
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Customers</MudText>
+        <MudSpacer />
+        <MudTextField @bind-Value="searchString" 
+                      Placeholder="Search customers..." 
+                      Adornment="Adornment.Start" 
+                      AdornmentIcon="@Icons.Material.Filled.Search" 
+                      IconSize="Size.Medium" 
+                      Class="mt-0" />
+    </ToolBarContent>
+    
+    <HeaderContent>
+        <MudTh><MudTableSortLabel SortBy="new Func<Customer, object>(x => x.Status)">Status</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<Customer, object>(x => x.Code)">Code</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<Customer, object>(x => x.DisplayName)">Name</MudTableSortLabel></MudTh>
+        <MudTh>Phone</MudTh>
+        <MudTh>Email</MudTh>
+        <MudTh>Location</MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<Customer, object>(x => x.CreatedAt)">Created</MudTableSortLabel></MudTh>
+        <MudTh>Actions</MudTh>
+    </HeaderContent>
+    
+    <RowTemplate>
+        <MudTd DataLabel="Status">
+            <div class="d-flex align-center">
+                <MudIcon Icon="@GetCustomerIcon(context.Status)" 
+                         Color="@GetStatusColor(context.Status)" 
+                         Size="Size.Small" />
+                <MudText Typo="Typo.caption" Class="ml-2">@context.Status</MudText>
+            </div>
+        </MudTd>
+        <MudTd DataLabel="Code">@context.Code</MudTd>
+        <MudTd DataLabel="Name">@context.DisplayName</MudTd>
+        <MudTd DataLabel="Phone">@context.Phone</MudTd>
+        <MudTd DataLabel="Email">@context.Email</MudTd>
+        <MudTd DataLabel="Location">
+            <div class="d-flex align-center">
+                @if (context.HasLocation)
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.LocationOn" 
+                             Color="Color.Success" 
+                             Size="Size.Small" />
+                    <MudText Typo="Typo.caption" Class="ml-1">Set</MudText>
+                }
+                else
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.LocationOff" 
+                             Color="Color.Default" 
+                             Size="Size.Small" />
+                    <MudText Typo="Typo.caption" Class="ml-1">None</MudText>
+                }
+            </div>
+        </MudTd>
+        <MudTd DataLabel="Created">@context.CreatedAt.ToString("MM/dd/yyyy")</MudTd>
+        <MudTd DataLabel="Actions">
+            <div class="d-flex">
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" 
+                               Color="Color.Primary" 
+                               Size="Size.Small"
+                               OnClick="@(() => OnEditCustomer.InvokeAsync(context))"
+                               title="Edit customer" />
+                
+                <MudIconButton Icon="@Icons.Material.Filled.LocationOn" 
+                               Color="Color.Info" 
+                               Size="Size.Small"
+                               OnClick="@(() => OnEditLocation.InvokeAsync(context))"
+                               title="Edit location" />
+                
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                               Color="Color.Error" 
+                               Size="Size.Small"
+                               OnClick="@(() => OnDeleteCustomer.InvokeAsync(context))"
+                               title="Delete customer" />
+            </div>
+        </MudTd>
+    </RowTemplate>
+    
+    <PagerContent>
+        <MudTablePager PageSizeOptions="new int[]{10, 25, 50, 100}" />
+    </PagerContent>
+</MudTable>
+
+@code {
+    [Parameter] public List<Customer> Customers { get; set; } = new();
+    [Parameter] public bool IsLoading { get; set; } = false;
+    [Parameter] public EventCallback<Customer> OnEditCustomer { get; set; }
+    [Parameter] public EventCallback<Customer> OnEditLocation { get; set; }
+    [Parameter] public EventCallback<Customer> OnDeleteCustomer { get; set; }
+
+    private string searchString = "";
+
+    private IEnumerable<Customer> FilteredCustomers => 
+        string.IsNullOrWhiteSpace(searchString) ? Customers : 
+        Customers.Where(customer => FilterFunc(customer));
+
+    private bool FilterFunc(Customer customer)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+
+        var search = searchString.ToLowerInvariant();
+        return customer.DisplayName.ToLowerInvariant().Contains(search) ||
+               customer.Code.ToLowerInvariant().Contains(search) ||
+               (customer.Phone?.ToLowerInvariant().Contains(search) ?? false) ||
+               (customer.Email?.ToLowerInvariant().Contains(search) ?? false);
+    }
+
+    private string GetCustomerIcon(CustomerStatus status)
+    {
+        return status switch
+        {
+            CustomerStatus.Active => Icons.Material.Filled.CheckCircle,
+            CustomerStatus.Inactive => Icons.Material.Filled.Cancel,
+            _ => Icons.Material.Filled.Person
+        };
+    }
+
+    private Color GetStatusColor(CustomerStatus status)
+    {
+        return status switch
+        {
+            CustomerStatus.Active => Color.Success,
+            CustomerStatus.Inactive => Color.Error,
+            _ => Color.Default
+        };
+    }
+}
+
+<style>
+    .customer-table {
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .customer-table .mud-table-cell {
+        padding: 8px 16px;
+    }
+
+    .customer-table .mud-table-row:hover {
+        background-color: var(--mud-palette-action-hover);
+    }
+</style>

@@ -38,9 +38,9 @@ namespace PigFarmManagement.Server.Services.ExternalServices
 
 		private string GetBase() => !string.IsNullOrWhiteSpace(_opts.TransactionsApiBase) ? _opts.TransactionsApiBase : _opts.ProductApiBase;
 
-		public async Task<List<PosPosFeedTransaction>> GetTransactionsByDateRangeAsync(DateTime from, DateTime to, int pageSize = 300)
+		public async Task<List<PosPosTransaction>> GetTransactionsByDateRangeAsync(DateTime from, DateTime to, int pageSize = 300)
 		{
-			var results = new List<PosPosFeedTransaction>();
+			var results = new List<PosPosTransaction>();
 			var page = 1;
 			while (true)
 			{
@@ -97,28 +97,151 @@ namespace PigFarmManagement.Server.Services.ExternalServices
 				}
 				try
 				{
-					List<PosPosFeedTransaction>? pageItems = null;
+					List<PosPosTransaction>? pageItems = null;
 					var trimmed = body.TrimStart();
-					if (trimmed.StartsWith("["))
+					var jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+					// First try the convenient, attribute-driven deserialization
+					try
 					{
-						pageItems = JsonSerializer.Deserialize<List<PosPosFeedTransaction>>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-					}
-					else
-					{
-						using var doc = JsonDocument.Parse(body);
-						if (doc.RootElement.ValueKind == JsonValueKind.Object && doc.RootElement.TryGetProperty("data", out var data))
+						if (trimmed.StartsWith("["))
 						{
-							pageItems = JsonSerializer.Deserialize<List<PosPosFeedTransaction>>(data.GetRawText(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+							pageItems = JsonSerializer.Deserialize<List<PosPosTransaction>>(body, jsonOptions);
 						}
 						else
 						{
-							foreach (var p in doc.RootElement.EnumerateObject())
+							using var doc = JsonDocument.Parse(body);
+							if (doc.RootElement.ValueKind == JsonValueKind.Object && doc.RootElement.TryGetProperty("data", out var data))
 							{
-								if (p.Value.ValueKind == JsonValueKind.Array)
+								pageItems = JsonSerializer.Deserialize<List<PosPosTransaction>>(data.GetRawText(), jsonOptions);
+							}
+							else
+							{
+								foreach (var p in doc.RootElement.EnumerateObject())
 								{
-									try { pageItems = JsonSerializer.Deserialize<List<PosPosFeedTransaction>>(p.Value.GetRawText(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true }); break; } catch { }
+									if (p.Value.ValueKind == JsonValueKind.Array)
+									{
+										try { pageItems = JsonSerializer.Deserialize<List<PosPosTransaction>>(p.Value.GetRawText(), jsonOptions); break; } catch { }
+									}
 								}
 							}
+						}
+					}
+					catch (JsonException)
+					{
+						// fall through to manual resilient parsing below
+						pageItems = null;
+					}
+
+					// If direct deserialization failed or produced no items, attempt a tolerant manual parse
+					if (pageItems == null || pageItems.Count == 0)
+					{
+						try
+						{
+							using var doc = JsonDocument.Parse(body);
+							JsonElement arrayEl = default;
+							if (doc.RootElement.ValueKind == JsonValueKind.Array)
+							{
+								arrayEl = doc.RootElement;
+							}
+							else if (doc.RootElement.ValueKind == JsonValueKind.Object && doc.RootElement.TryGetProperty("data", out var data))
+							{
+								arrayEl = data;
+							}
+							else
+							{
+								foreach (var p in doc.RootElement.EnumerateObject())
+								{
+									if (p.Value.ValueKind == JsonValueKind.Array) { arrayEl = p.Value; break; }
+								}
+							}
+
+							if (arrayEl.ValueKind == JsonValueKind.Array)
+							{
+								pageItems = new List<PosPosTransaction>();
+								foreach (var txEl in arrayEl.EnumerateArray())
+								{
+									var tx = new PosPosTransaction();
+									if (txEl.TryGetProperty("_id", out var idEl) && idEl.ValueKind == JsonValueKind.String) tx.Id = idEl.GetString() ?? "";
+									if (txEl.TryGetProperty("code", out var codeEl) && codeEl.ValueKind == JsonValueKind.String) tx.Code = codeEl.GetString() ?? "";
+									if (txEl.TryGetProperty("timestamp", out var tsEl))
+									{
+										try
+										{
+											if (tsEl.ValueKind == JsonValueKind.Number && tsEl.TryGetInt64(out var unix))
+											{
+												// some POSPOS payloads may use unix epoch seconds
+												tx.Timestamp = DateTimeOffset.FromUnixTimeSeconds(unix).UtcDateTime;
+											}
+											else if (tsEl.ValueKind == JsonValueKind.String && DateTime.TryParse(tsEl.GetString(), out var parsed))
+											{
+												tx.Timestamp = parsed;
+											}
+										}
+										catch { }
+									}
+
+									// BuyerDetail
+									if (txEl.TryGetProperty("buyer_detail", out var buyerEl) && buyerEl.ValueKind == JsonValueKind.Object)
+									{
+										var bd = new PosPosBuyerDetail();
+										if (buyerEl.TryGetProperty("code", out var bcode) && bcode.ValueKind == JsonValueKind.String) bd.Code = bcode.GetString() ?? "";
+										if (buyerEl.TryGetProperty("firstname", out var bf) && bf.ValueKind == JsonValueKind.String) bd.FirstName = bf.GetString() ?? "";
+										if (buyerEl.TryGetProperty("lastname", out var bl) && bl.ValueKind == JsonValueKind.String) bd.LastName = bl.GetString() ?? "";
+										if (buyerEl.TryGetProperty("key_card_id", out var bk) && bk.ValueKind == JsonValueKind.String) bd.KeyCardId = bk.GetString() ?? "";
+										tx.BuyerDetail = bd;
+									}
+
+									// InvoiceReference
+									if (txEl.TryGetProperty("reference_tax_invoice_abbreviate", out var invEl) && invEl.ValueKind == JsonValueKind.Object)
+									{
+										var ir = new PosPosInvoiceReference();
+										if (invEl.TryGetProperty("code", out var ic) && ic.ValueKind == JsonValueKind.String) ir.Code = ic.GetString() ?? "";
+										tx.InvoiceReference = ir;
+									}
+
+									// Totals
+									if (txEl.TryGetProperty("sub_total", out var st) && st.ValueKind == JsonValueKind.Number && st.TryGetDecimal(out var sub)) tx.SubTotal = sub;
+									if (txEl.TryGetProperty("grand_total", out var gt) && gt.ValueKind == JsonValueKind.Number && gt.TryGetDecimal(out var grand)) tx.GrandTotal = grand;
+									if (txEl.TryGetProperty("status", out var stt) && stt.ValueKind == JsonValueKind.String) tx.Status = stt.GetString() ?? "";
+
+									// Order list
+									if (txEl.TryGetProperty("order_list", out var ol) && ol.ValueKind == JsonValueKind.Array)
+									{
+										var items = new List<PosPosOrderItem>();
+										foreach (var itemEl in ol.EnumerateArray())
+										{
+											var it = new PosPosOrderItem();
+											if (itemEl.TryGetProperty("name", out var n) && n.ValueKind == JsonValueKind.String) it.Name = n.GetString() ?? "";
+											if (itemEl.TryGetProperty("code", out var c) && c.ValueKind == JsonValueKind.String) it.Code = c.GetString() ?? "";
+
+											// numeric tolerant parsing for stock/price/total/cost
+											it.Stock = ReadDecimalTolerant(itemEl, "stock");
+											it.Price = ReadDecimalTolerant(itemEl, "price");
+											it.TotalPriceIncludeDiscount = ReadDecimalTolerant(itemEl, "total_price_include_discount");
+											it.CostDiscountPrice = ReadDecimalTolerant(itemEl, "cost_discount_price");
+
+											// note_in_order array
+											if (itemEl.TryGetProperty("note_in_order", out var notes) && notes.ValueKind == JsonValueKind.Array)
+											{
+												var list = new List<string>();
+												foreach (var ne in notes.EnumerateArray()) if (ne.ValueKind == JsonValueKind.String) list.Add(ne.GetString() ?? "");
+												it.NoteInOrder = list;
+											}
+
+											items.Add(it);
+										}
+										tx.OrderList = items;
+									}
+
+									pageItems.Add(tx);
+								}
+							}
+						}
+						catch (Exception exManual)
+						{
+							_logger?.LogError(exManual, "Manual fallback parsing of POSPOS response failed");
+							pageItems = null;
 						}
 					}
 
@@ -151,6 +274,26 @@ namespace PigFarmManagement.Server.Services.ExternalServices
 			}
 
 			return results;
+		}
+
+		/// <summary>
+		/// Read a decimal from a JsonElement property in a tolerant way: accepts number, numeric-string, or falls back to 0.
+		/// </summary>
+		private static decimal ReadDecimalTolerant(JsonElement el, string propertyName)
+		{
+			try
+			{
+				if (!el.TryGetProperty(propertyName, out var p)) return 0m;
+				if (p.ValueKind == JsonValueKind.Number && p.TryGetDecimal(out var d)) return d;
+				if (p.ValueKind == JsonValueKind.String)
+				{
+					var s = p.GetString();
+					if (decimal.TryParse(s, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var parsed)) return parsed;
+					if (!string.IsNullOrWhiteSpace(s) && decimal.TryParse(s.Trim(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out parsed)) return parsed;
+				}
+				return 0m;
+			}
+			catch { return 0m; }
 		}
 	}
 }

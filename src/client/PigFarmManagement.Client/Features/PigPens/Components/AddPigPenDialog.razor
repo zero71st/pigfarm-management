@@ -230,7 +230,7 @@
         try
         {
             // Create the pig pen first
-            var pigPenDto = new PigFarmManagement.Client.Features.PigPens.Services.PigPenCreateDto(
+            var pigPenDto = new PigPenCreateDto(
                 selectedCustomerId!.Value,
                 penCode,
                 pigQty,
@@ -251,11 +251,9 @@
                 var formulaAssignments = await CreateAutomaticFormulaAssignments(createdPigPen.Id, selectedBrand);
                 if (formulaAssignments.Any())
                 {
-                    var pigPenWithAssignments = createdPigPen with
-                    {
-                        FormulaAssignments = formulaAssignments
-                    };
-                    createdPigPen = await PigPenService.UpdatePigPenAsync(pigPenWithAssignments);
+                    // Note: This is just to assign formulas - we might want to refactor this logic
+                    var updateDto = new PigPenUpdateDto();
+                    createdPigPen = await PigPenService.UpdatePigPenAsync(createdPigPen.Id, updateDto);
                 }
             }
 

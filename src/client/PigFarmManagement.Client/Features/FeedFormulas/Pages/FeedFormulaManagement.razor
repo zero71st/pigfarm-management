@@ -138,7 +138,7 @@
             </MudGrid>
         </MudStack>
 
-        <MudDataGrid T="FeedFormulaResponse" 
+        <MudDataGrid T="FeedFormulaDto" 
                      Items="@filteredFeedFormulas" 
                      Dense="true" 
                      Hover="true" 
@@ -187,8 +187,8 @@
 </MudContainer>
 
 @code {
-    private List<FeedFormulaResponse> feedFormulas = new();
-    private List<FeedFormulaResponse> filteredFeedFormulas = new();
+    private List<FeedFormulaDto> feedFormulas = new();
+    private List<FeedFormulaDto> filteredFeedFormulas = new();
     private bool loading = true;
     
     private string? _selectedBrandFilter;
@@ -310,7 +310,7 @@
         Snackbar.Add("Feed formulas refreshed", Severity.Info);
     }
 
-    private async Task OpenEditDialog(FeedFormulaResponse feedFormula)
+    private async Task OpenEditDialog(FeedFormulaDto feedFormula)
     {
         var parameters = new DialogParameters<EditFeedFormulaDialog>
         {
@@ -331,7 +331,7 @@
         }
     }
 
-    private async Task DeleteFeedFormula(FeedFormulaResponse feedFormula)
+    private async Task DeleteFeedFormula(FeedFormulaDto feedFormula)
     {
         var confirmed = await DialogService.ShowMessageBox(
             "Delete Feed Formula",

@@ -4,6 +4,7 @@
 @inject NavigationManager Navigation
 @inject IDialogService DialogService
 @inject IPigPenService PigPenService
+@using PigFarmManagement.Shared.Models
 @using PigFarmManagement.Client.Features.FeedFormulas.Services
 @using PigFarmManagement.Client.Features.PigPens.Components
 @inject IFeedFormulaCalculationService FeedFormulaCalculationService
@@ -736,7 +737,7 @@
     private HarvestCalculationInfo? harvestCalculationInfo;
     
     // Feed formula comparison data
-    private IEnumerable<FeedFormulaWithCalculationResponse>? feedFormulaCalculations;
+    private IEnumerable<FeedFormulaWithCalculationDto>? feedFormulaCalculations;
     private List<FeedComparisonData> comparisonData = new();
     
     // Feed progress data
@@ -848,7 +849,7 @@
                         {
                             // Use active assignment data for comparison with actual consumption
                             Console.WriteLine($"Using {activeAssignments.Count} active formula assignments for feed comparison");
-                            feedFormulaCalculations = activeAssignments.Select(assignment => new FeedFormulaWithCalculationResponse
+                            feedFormulaCalculations = activeAssignments.Select(assignment => new FeedFormulaWithCalculationDto
                             {
                                 Id = assignment.OriginalFormulaId,
                                 ProductCode = assignment.ProductCode,
@@ -874,7 +875,7 @@
                             if (lockedAssignments.Any())
                             {
                                 Console.WriteLine($"Using {lockedAssignments.Count} locked formula assignments for locked pig pen");
-                                feedFormulaCalculations = lockedAssignments.Select(assignment => new FeedFormulaWithCalculationResponse
+                                feedFormulaCalculations = lockedAssignments.Select(assignment => new FeedFormulaWithCalculationDto
                                 {
                                     Id = assignment.OriginalFormulaId,
                                     ProductCode = assignment.ProductCode,
@@ -893,13 +894,13 @@
                             else
                             {
                                 Console.WriteLine("No assignments available for locked pig pen");
-                                feedFormulaCalculations = new List<FeedFormulaWithCalculationResponse>();
+                                feedFormulaCalculations = new List<FeedFormulaWithCalculationDto>();
                             }
                         }
                         else
                         {
                             Console.WriteLine("No active formula assignments found for pig pen");
-                            feedFormulaCalculations = new List<FeedFormulaWithCalculationResponse>();
+                            feedFormulaCalculations = new List<FeedFormulaWithCalculationDto>();
                         }
                         
                         Console.WriteLine($"Loaded {feedFormulaCalculations?.Count() ?? 0} feed formula assignments for comparison");
@@ -1042,7 +1043,8 @@
         {
             try
             {
-                var closedPigPen = await PigPenService.ForceClosePigPenAsync(pigPen.Id);
+                var request = new PigPenForceCloseRequest(pigPen.Id, "Force closed by user", true);
+                var closedPigPen = await PigPenService.ForceClosePigPenAsync(request);
                 
                 if (closedPigPen != null)
                 {

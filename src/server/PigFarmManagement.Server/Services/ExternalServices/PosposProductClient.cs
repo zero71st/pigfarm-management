@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using PigFarmManagement.Server.Infrastructure.Settings;
 using PigFarmManagement.Shared.Models;
+using PigFarmManagement.Shared.Domain.External;
 
 namespace PigFarmManagement.Server.Services.ExternalServices
 {
@@ -64,9 +65,9 @@ namespace PigFarmManagement.Server.Services.ExternalServices
         }
 
         /// <inheritdoc />
-        public async Task<List<PosposProductDto>> GetAllProductsAsync()
+        public async Task<List<PosposProduct>> GetAllProductsAsync()
         {
-            var results = new List<PosposProductDto>();
+            var results = new List<PosposProduct>();
             var page = 1;
             const int pageSize = 1000;
 
@@ -111,7 +112,7 @@ namespace PigFarmManagement.Server.Services.ExternalServices
         }
 
         /// <inheritdoc />
-        public async Task<PosposProductDto?> GetProductByCodeAsync(string code)
+        public async Task<PosposProduct?> GetProductByCodeAsync(string code)
         {
             if (string.IsNullOrWhiteSpace(code))
                 throw new ArgumentException("Product code cannot be empty", nameof(code));

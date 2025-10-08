@@ -259,10 +259,8 @@
                 return;
             }
 
-            // Create the updated harvest object
-            var updatedHarvest = new HarvestResult(
-                HarvestToEdit.Id,
-                HarvestToEdit.PigPenId,
+            // Create the updated harvest DTO
+            var updateDto = new HarvestUpdateDto(
                 harvestDate!.Value,
                 totalPigs,
                 averageWeight,
@@ -272,7 +270,7 @@
             );
 
             // Call the API to update the harvest
-            var result = await PigPenService.UpdateHarvestResultAsync(updatedHarvest);
+            var result = await PigPenService.UpdateHarvestResultAsync(HarvestToEdit.PigPenId, HarvestToEdit.Id, updateDto);
             
             Snackbar.Add($"Harvest record updated successfully. Revenue: ฿{totalRevenue:N2}", Severity.Success);
             MudDialog.Close(DialogResult.Ok(result));

@@ -14,12 +14,12 @@ public static class FeedFormulaCalculationEndpoints
         group.MapGet("/by-category/{categoryName}", GetFeedFormulasByCategory)
             .WithName("GetFeedFormulasByCategory")
             .WithSummary("Get feed formulas by category name")
-            .Produces<IEnumerable<FeedFormulaWithCalculationResponse>>();
+            .Produces<IEnumerable<FeedFormulaWithCalculationDto>>();
 
         group.MapPost("/calculate-requirements", CalculateFeedRequirements)
             .WithName("CalculateFeedRequirements")
             .WithSummary("Calculate feed requirements for given pig quantity")
-            .Produces<FeedCalculationResponse>();
+            .Produces<FeedCalculationDto>();
     }
 
     private static async Task<IResult> GetFeedFormulasByCategory(string categoryName, int? pigCount, IFeedFormulaService feedFormulaService)
@@ -29,7 +29,7 @@ public static class FeedFormulaCalculationEndpoints
             var feedFormulas = await feedFormulaService.GetAllFeedFormulasAsync();
             var formulasByCategory = feedFormulas
                 .Where(f => !string.IsNullOrEmpty(f.CategoryName) && f.CategoryName.Equals(categoryName, StringComparison.OrdinalIgnoreCase))
-                .Select(f => new FeedFormulaWithCalculationResponse
+                .Select(f => new FeedFormulaWithCalculationDto
                 {
                     Id = f.Id,
                     Code = f.Code ?? string.Empty,
@@ -41,7 +41,11 @@ public static class FeedFormulaCalculationEndpoints
                     CreatedAt = f.CreatedAt,
                     UpdatedAt = f.UpdatedAt,
                     TotalBagsRequired = pigCount.HasValue ? (f.ConsumeRate ?? 0) * pigCount.Value : 0,
-                    PigCount = pigCount ?? 0
+                    PigCount = pigCount ?? 0,
+                    Brand = f.Brand ?? string.Empty,
+                    DisplayName = f.DisplayName,
+                    ConsumptionRate = f.ConsumptionRate,
+                    BrandDisplayName = f.Brand ?? string.Empty
                 });
 
             return Results.Ok(formulasByCategory);
@@ -63,7 +67,7 @@ public static class FeedFormulaCalculationEndpoints
             var totalBags = (feedFormula.ConsumeRate ?? 0) * request.PigCount;
             var totalCost = request.BagPrice.HasValue ? (decimal?)(totalBags * request.BagPrice.Value) : null;
 
-            var response = new FeedCalculationResponse
+            var response = new FeedCalculationDto
             {
                 FeedFormulaId = feedFormula.Id,
                 Name = feedFormula.Name ?? string.Empty,
@@ -73,7 +77,8 @@ public static class FeedFormulaCalculationEndpoints
                 TotalBagsRequired = totalBags,
                 BagPrice = request.BagPrice,
                 TotalCost = totalCost,
-                CalculationDate = DateTime.UtcNow
+                CalculationDate = DateTime.UtcNow,
+                Brand = feedFormula.Brand ?? string.Empty
             };
 
             return Results.Ok(response);
@@ -83,35 +88,4 @@ public static class FeedFormulaCalculationEndpoints
             return Results.Problem($"Error calculating feed requirements: {ex.Message}");
         }
     }
-}
-
-// Request and Response DTOs
-public record FeedCalculationRequest(Guid FeedFormulaId, int PigCount, decimal? BagPrice = null);
-
-public class FeedFormulaWithCalculationResponse
-{
-    public Guid Id { get; set; }
-    public string Code { get; set; } = string.Empty;
-    public string Name { get; set; } = string.Empty;
-    public string CategoryName { get; set; } = string.Empty;
-    public decimal ConsumeRate { get; set; }
-    public decimal Cost { get; set; }
-    public string UnitName { get; set; } = string.Empty;
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
-    public decimal TotalBagsRequired { get; set; }
-    public int PigCount { get; set; }
-}
-
-public class FeedCalculationResponse
-{
-    public Guid FeedFormulaId { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string CategoryName { get; set; } = string.Empty;
-    public int PigCount { get; set; }
-    public decimal ConsumeRate { get; set; }
-    public decimal TotalBagsRequired { get; set; }
-    public decimal? BagPrice { get; set; }
-    public decimal? TotalCost { get; set; }
-    public DateTime CalculationDate { get; set; }
 }

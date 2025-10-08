@@ -180,7 +180,7 @@
     private bool _isLoading;
     private bool _isImporting;
     private string _jsonContent = "";
-    private List<PosPosFeedTransaction> _dateRangeTransactions = new();
+    private List<PosPosTransaction> _dateRangeTransactions = new();
     private FeedImportResult? _importResult;
     private DateTime? _fromDate = DateTime.Today.AddDays(-7); // Default to last 7 days
     private DateTime? _toDate = DateTime.Today;

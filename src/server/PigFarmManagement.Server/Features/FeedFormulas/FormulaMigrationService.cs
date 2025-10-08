@@ -2,12 +2,11 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using PigFarmManagement.Server.Features.FeedFormulas;
 using PigFarmManagement.Server.Infrastructure.Data;
 using PigFarmManagement.Server.Infrastructure.Data.Entities;
 using PigFarmManagement.Shared.Models;
 
-namespace PigFarmManagement.Server.Services;
+namespace PigFarmManagement.Server.Features.FeedFormulas;
 
 /// <summary>
 /// Service for validating and maintaining the unified PigPenFormulaAssignment system

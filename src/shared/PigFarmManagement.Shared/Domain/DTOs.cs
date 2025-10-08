@@ -212,23 +212,5 @@ public class ImportSummary
 /// DTO representing a product from POSPOS API response.
 /// Used for product import and search functionality.
 /// </summary>
-public class PosposProductDto
-{
-    public string Id { get; set; } = string.Empty;
-    public string Code { get; set; } = string.Empty;
-    public string Name { get; set; } = string.Empty;
-    public decimal? Cost { get; set; }
-    public PosposCategoryDto? Category { get; set; }
-    public PosposUnitDto? Unit { get; set; }
-    public DateTime? LastUpdate { get; set; }
-}
-
-public class PosposCategoryDto
-{
-    public string Name { get; set; } = string.Empty;
-}
-
-public class PosposUnitDto
-{
-    public string Name { get; set; } = string.Empty;
-}
+// POSPOS product DTOs were moved to Domain/External/PosposProductDtos.cs
+// See: PigFarmManagement.Shared.Domain.External.PosposProductDto

@@ -6,27 +6,32 @@
 
 <MudDialog>
     <DialogContent>
-        <MudContainer Style="max-width: 500px;">
+        <MudContainer Style="max-width: 600px;">
             <MudGrid>
+                <!-- Read-only fields -->
                 <MudItem xs="6">
-                    <MudTextField @bind-Value="customerFirstName" 
+                    <MudTextField Value="@Customer.FirstName" 
                                  Label="First Name" 
                                  Variant="Variant.Outlined" 
-                                 Required="true"
-                                 RequiredError="First name is required" />
+                                 ReadOnly="true"
+                                 Disabled="true" />
                 </MudItem>
                 <MudItem xs="6">
-                    <MudTextField @bind-Value="customerLastName" 
+                    <MudTextField Value="@Customer.LastName" 
                                  Label="Last Name" 
-                                 Variant="Variant.Outlined" />
+                                 Variant="Variant.Outlined" 
+                                 ReadOnly="true"
+                                 Disabled="true" />
                 </MudItem>
                 <MudItem xs="12">
-                    <MudTextField @bind-Value="customerCode" 
+                    <MudTextField Value="@Customer.Code" 
                                  Label="Customer Code" 
                                  Variant="Variant.Outlined" 
-                                 Required="true"
-                                 RequiredError="Customer code is required" />
+                                 ReadOnly="true"
+                                 Disabled="true" />
                 </MudItem>
+                
+                <!-- Editable fields -->
                 <MudItem xs="12">
                     <MudSelect T="CustomerStatus" @bind-Value="customerStatus" 
                               Label="Customer Status" 
@@ -36,6 +41,69 @@
                         <MudSelectItem T="CustomerStatus" Value="@CustomerStatus.Inactive">Inactive</MudSelectItem>
                     </MudSelect>
                 </MudItem>
+                
+                <MudItem xs="6">
+                    <MudTextField @bind-Value="customerPhone" 
+                                 Label="Phone" 
+                                 Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="6">
+                    <MudTextField @bind-Value="customerEmail" 
+                                 Label="Email" 
+                                 Variant="Variant.Outlined"
+                                 InputType="InputType.Email" />
+                </MudItem>
+                
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="customerAddress" 
+                                 Label="Address" 
+                                 Variant="Variant.Outlined"
+                                 Lines="2" />
+                </MudItem>
+                
+                <MudItem xs="6">
+                    <MudTextField @bind-Value="customerZipcode" 
+                                 Label="Zipcode" 
+                                 Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="6">
+                    <MudSelect T="string" @bind-Value="customerSex" 
+                              Label="Gender" 
+                              Variant="Variant.Outlined"
+                              Clearable="true">
+                        <MudSelectItem T="string" Value="@("Male")">Male</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("Female")">Female</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                
+                <MudItem xs="6">
+                    <MudTextField @bind-Value="customerKeyCardId" 
+                                 Label="Key Card ID" 
+                                 Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="6">
+                    <MudTextField @bind-Value="customerExternalId" 
+                                 Label="External ID" 
+                                 Variant="Variant.Outlined" />
+                </MudItem>
+                
+                <!-- Location fields -->
+                <MudItem xs="6">
+                    <MudNumericField @bind-Value="customerLatitude" 
+                                    Label="Latitude" 
+                                    Variant="Variant.Outlined"
+                                    Min="-90" Max="90"
+                                    Step="0.000001M"
+                                    Format="F6" />
+                </MudItem>
+                <MudItem xs="6">
+                    <MudNumericField @bind-Value="customerLongitude" 
+                                    Label="Longitude" 
+                                    Variant="Variant.Outlined"
+                                    Min="-180" Max="180"
+                                    Step="0.000001M"
+                                    Format="F6" />
+                </MudItem>
             </MudGrid>
         </MudContainer>
     </DialogContent>
@@ -43,8 +111,7 @@
         <MudButton OnClick="Cancel">Cancel</MudButton>
         <MudButton Color="Color.Primary" 
                   Variant="Variant.Filled" 
-                  OnClick="Submit" 
-                  Disabled="@(!IsFormValid())">
+                  OnClick="Submit">
             Update Customer
         </MudButton>
     </DialogActions>
@@ -54,39 +121,56 @@
     [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
     [Parameter] public Customer Customer { get; set; } = null!;
 
-    private string customerFirstName = "";
-    private string customerLastName = "";
-    private string customerCode = "";
     private CustomerStatus customerStatus = CustomerStatus.Active;
+    private string? customerPhone = "";
+    private string? customerEmail = "";
+    private string? customerAddress = "";
+    private string? customerZipcode = "";
+    private string? customerSex = "";
+    private string? customerKeyCardId = "";
+    private string? customerExternalId = "";
+    private decimal? customerLatitude;
+    private decimal? customerLongitude;
 
     protected override void OnInitialized()
     {
-    // Initialize with existing customer data
-    customerFirstName = Customer.FirstName ?? string.Empty;
-    customerLastName = Customer.LastName ?? string.Empty;
-    customerCode = Customer.Code;
-    customerStatus = Customer.Status;
+        // Initialize with existing customer data
+        customerStatus = Customer.Status;
+        customerPhone = Customer.Phone;
+        customerEmail = Customer.Email;
+        customerAddress = Customer.Address;
+        customerZipcode = Customer.Zipcode;
+        customerSex = Customer.Sex;
+        customerKeyCardId = Customer.KeyCardId;
+        customerExternalId = Customer.ExternalId;
+        customerLatitude = Customer.Latitude;
+        customerLongitude = Customer.Longitude;
     }
 
     void Cancel() => MudDialog.Cancel();
 
-    private bool IsFormValid()
-    {
-        return !string.IsNullOrWhiteSpace(customerFirstName) &&
-               !string.IsNullOrWhiteSpace(customerCode);
-    }
-
     async Task Submit()
     {
-        if (!IsFormValid())
-            return;
-
         try
         {
-            var updatedCustomer = new Customer(Customer.Id, customerCode, customerStatus)
+            var updatedCustomer = new Customer(Customer.Id, Customer.Code, customerStatus)
             {
-                FirstName = customerFirstName,
-                LastName = customerLastName
+                FirstName = Customer.FirstName, // Keep original - not editable
+                LastName = Customer.LastName,   // Keep original - not editable
+                Phone = customerPhone,
+                Email = customerEmail,
+                Address = customerAddress,
+                Zipcode = customerZipcode,
+                Sex = customerSex,
+                KeyCardId = customerKeyCardId,
+                ExternalId = customerExternalId,
+                Latitude = customerLatitude,
+                Longitude = customerLongitude,
+                CreatedAt = Customer.CreatedAt,
+                UpdatedAt = DateTime.Now,
+                IsDeleted = Customer.IsDeleted,
+                DeletedAt = Customer.DeletedAt,
+                DeletedBy = Customer.DeletedBy
             };
             var result = await CustomerService.UpdateCustomerAsync(updatedCustomer);
             MudDialog.Close(DialogResult.Ok(result));

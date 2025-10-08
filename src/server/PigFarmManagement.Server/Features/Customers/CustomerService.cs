@@ -1,4 +1,6 @@
 using PigFarmManagement.Shared.Models;
+using PigFarmManagement.Server.Services;
+using PigFarmManagement.Server.Infrastructure.Data.Repositories;
 
 namespace PigFarmManagement.Server.Features.Customers;
 
@@ -6,23 +8,41 @@ public interface ICustomerService
 {
     Task<List<Customer>> GetAllCustomersAsync();
     Task<Customer?> GetCustomerByIdAsync(Guid id);
-    Task<Customer> CreateCustomerAsync(Customer customer);
-    Task<Customer> UpdateCustomerAsync(Customer customer);
+    Task<Customer> CreateCustomerAsync(CustomerCreateDto dto);
+    Task<Customer> UpdateCustomerAsync(Guid id, CustomerUpdateDto dto);
     Task<bool> DeleteCustomerAsync(Guid id);
+    
+    // Location management
+    Task<CustomerLocationDto?> GetCustomerLocationAsync(Guid customerId);
+    Task<CustomerLocationDto> UpdateCustomerLocationAsync(CustomerLocationDto location);
+    Task DeleteCustomerLocationAsync(Guid customerId);
+    
+    // Deletion validation
+    Task<CustomerDeletionValidation> ValidateCustomerDeletionAsync(Guid customerId);
+    Task<Customer> SoftDeleteCustomerAsync(CustomerDeletionRequest request);
+    Task HardDeleteCustomerAsync(CustomerDeletionRequest request);
 }
 
 public class CustomerService : ICustomerService
 {
-    private readonly ICustomerRepository _customerRepository;
+    private readonly Infrastructure.Data.Repositories.ICustomerRepository _customerRepository;
+    private readonly ICustomerLocationService _locationService;
+    private readonly ICustomerDeletionService _deletionService;
 
-    public CustomerService(ICustomerRepository customerRepository)
+    public CustomerService(
+        Infrastructure.Data.Repositories.ICustomerRepository customerRepository,
+        ICustomerLocationService locationService,
+        ICustomerDeletionService deletionService)
     {
         _customerRepository = customerRepository;
+        _locationService = locationService;
+        _deletionService = deletionService;
     }
 
     public async Task<List<Customer>> GetAllCustomersAsync()
     {
-        return await _customerRepository.GetAllAsync();
+        var customers = await _customerRepository.GetAllAsync();
+        return customers.ToList();
     }
 
     public async Task<Customer?> GetCustomerByIdAsync(Guid id)
@@ -30,50 +50,84 @@ public class CustomerService : ICustomerService
         return await _customerRepository.GetByIdAsync(id);
     }
 
-    public async Task<Customer> CreateCustomerAsync(Customer customer)
+    public async Task<Customer> CreateCustomerAsync(CustomerCreateDto dto)
     {
         // Business logic: Check if customer code already exists
-        if (await _customerRepository.ExistsWithCodeAsync(customer.Code))
+        var existingCustomer = await _customerRepository.GetByCodeAsync(dto.Code);
+        if (existingCustomer != null)
         {
             throw new InvalidOperationException("Customer code already exists");
         }
 
-        return await _customerRepository.CreateAsync(customer);
+        return await _customerRepository.CreateAsync(dto);
     }
 
-    public async Task<Customer> UpdateCustomerAsync(Customer customer)
+    public async Task<Customer> UpdateCustomerAsync(Guid id, CustomerUpdateDto dto)
     {
         // Business logic: Check if customer exists
-        var existingCustomer = await _customerRepository.GetByIdAsync(customer.Id);
+        var existingCustomer = await _customerRepository.GetByIdIncludingDeletedAsync(id);
         if (existingCustomer == null)
         {
             throw new InvalidOperationException("Customer not found");
         }
 
         // Business logic: Check if customer code already exists for another customer
-        if (await _customerRepository.ExistsWithCodeAsync(customer.Code, customer.Id))
+        if (dto.Code != null)
         {
-            throw new InvalidOperationException("Customer code already exists");
+            var codeConflict = await _customerRepository.GetByCodeAsync(dto.Code);
+            if (codeConflict != null && codeConflict.Id != id)
+            {
+                throw new InvalidOperationException("Customer code already exists");
+            }
         }
 
-        return await _customerRepository.UpdateAsync(customer);
+        return await _customerRepository.UpdateAsync(id, dto);
     }
 
     public async Task<bool> DeleteCustomerAsync(Guid id)
     {
-        // Business logic: Check if customer exists
-        var customer = await _customerRepository.GetByIdAsync(id);
-        if (customer == null)
+        // Use soft delete through the deletion service
+        var request = new CustomerDeletionRequest
         {
-            throw new InvalidOperationException("Customer not found");
-        }
+            CustomerId = id,
+            ForceDelete = false,
+            DeletedBy = "System",
+            Reason = "Legacy delete operation"
+        };
 
-        // Business logic: Check if customer has associated pig pens
-        if (await _customerRepository.HasAssociatedPigPensAsync(id))
-        {
-            throw new InvalidOperationException("Cannot delete customer with associated pig pens");
-        }
+        await _deletionService.SoftDeleteCustomerAsync(request);
+        return true;
+    }
 
-        return await _customerRepository.DeleteAsync(id);
+    // Location management methods
+    public async Task<CustomerLocationDto?> GetCustomerLocationAsync(Guid customerId)
+    {
+        return await _locationService.GetLocationAsync(customerId);
+    }
+
+    public async Task<CustomerLocationDto> UpdateCustomerLocationAsync(CustomerLocationDto location)
+    {
+        return await _locationService.UpdateLocationAsync(location);
+    }
+
+    public async Task DeleteCustomerLocationAsync(Guid customerId)
+    {
+        await _locationService.DeleteLocationAsync(customerId);
+    }
+
+    // Deletion validation methods
+    public async Task<CustomerDeletionValidation> ValidateCustomerDeletionAsync(Guid customerId)
+    {
+        return await _deletionService.ValidateCustomerDeletionAsync(customerId);
+    }
+
+    public async Task<Customer> SoftDeleteCustomerAsync(CustomerDeletionRequest request)
+    {
+        return await _deletionService.SoftDeleteCustomerAsync(request);
+    }
+
+    public async Task HardDeleteCustomerAsync(CustomerDeletionRequest request)
+    {
+        await _deletionService.HardDeleteCustomerAsync(request);
     }
 }

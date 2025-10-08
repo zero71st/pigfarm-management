@@ -253,36 +253,21 @@
         if (!IsFormValid() || !selectedCustomerId.HasValue || !registerDate.HasValue)
             return;
 
-        var updatedPigPen = PigPen with
-        {
-            CustomerId = selectedCustomerId.Value,
-            PenCode = penCode,
-            Type = selectedType,
-            PigQty = pigQty,
-            DepositPerPig = depositPerPig,
-            RegisterDate = registerDate.Value,
-            ActHarvestDate = actualHarvestDate,
-            EstimatedHarvestDate = estimatedHarvestDate,
-            SelectedBrand = selectedBrand, // Save the selected brand
-            Note = note // Save the note
-        };
+        var updateDto = new PigPenUpdateDto(
+            PenCode: penCode,
+            PigQty: pigQty,
+            RegisterDate: registerDate.Value,
+            ActHarvestDate: actualHarvestDate,
+            EstimatedHarvestDate: estimatedHarvestDate,
+            Type: selectedType,
+            SelectedBrand: selectedBrand,
+            DepositPerPig: depositPerPig,
+            Note: note
+        );
 
         try
         {
-            // If a brand is selected, automatically assign all formulas for that brand
-            if (!string.IsNullOrEmpty(selectedBrand))
-            {
-                var formulaAssignments = await CreateAutomaticFormulaAssignments(updatedPigPen.Id, selectedBrand);
-                if (formulaAssignments.Any())
-                {
-                    updatedPigPen = updatedPigPen with
-                    {
-                        FormulaAssignments = formulaAssignments
-                    };
-                }
-            }
-
-            await PigPenService.UpdatePigPenAsync(updatedPigPen);
+            var updatedPigPen = await PigPenService.UpdatePigPenAsync(PigPen.Id, updateDto);
             MudDialog.Close(DialogResult.Ok(updatedPigPen));
         }
         catch (Exception ex)

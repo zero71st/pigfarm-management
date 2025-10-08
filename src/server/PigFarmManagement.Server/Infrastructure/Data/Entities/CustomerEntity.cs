@@ -29,6 +29,15 @@ public class CustomerEntity
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     
+    // Location fields for Google Maps integration
+    public decimal? Latitude { get; set; }  // -90 to 90
+    public decimal? Longitude { get; set; } // -180 to 180
+    
+    // Soft deletion tracking
+    public bool IsDeleted { get; set; } = false;
+    public DateTime? DeletedAt { get; set; }
+    public string? DeletedBy { get; set; }
+    
     // Navigation Properties
     public virtual ICollection<PigPenEntity> PigPens { get; set; } = new List<PigPenEntity>();
     
@@ -47,7 +56,14 @@ public class CustomerEntity
             Sex = Sex,
             Zipcode = Zipcode,
             CreatedAt = CreatedAt,
-            UpdatedAt = UpdatedAt
+            UpdatedAt = UpdatedAt,
+            // Location properties
+            Latitude = Latitude,
+            Longitude = Longitude,
+            // Deletion tracking
+            IsDeleted = IsDeleted,
+            DeletedAt = DeletedAt,
+            DeletedBy = DeletedBy
         };
 
         return customer;
@@ -71,7 +87,14 @@ public class CustomerEntity
             Sex = customer.Sex,
             Zipcode = customer.Zipcode,
             CreatedAt = customer.CreatedAt,
-            UpdatedAt = customer.UpdatedAt
+            UpdatedAt = customer.UpdatedAt,
+            // Location properties
+            Latitude = customer.Latitude,
+            Longitude = customer.Longitude,
+            // Deletion tracking
+            IsDeleted = customer.IsDeleted,
+            DeletedAt = customer.DeletedAt,
+            DeletedBy = customer.DeletedBy
         };
     }
 }

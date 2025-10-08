@@ -1,17 +1,68 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using PigFarmManagement.Shared.Models;
-using PigFarmManagement.Shared.Contracts;
 using PigFarmManagement.Server.Infrastructure.Data.Repositories;
 using PigFarmManagement.Server.Services.ExternalServices;
 
-namespace PigFarmManagement.Server.Services;
+namespace PigFarmManagement.Server.Features.Feeds;
+/// <summary>
+/// Service contracts for feed import functionality
+/// Responsibility: Define the contract for external feed data integration services
+/// </summary>
+
+public interface IFeedImportService
+{
+    /// <summary>
+    /// Import feed data from POSPOS transactions
+    /// </summary>
+    Task<FeedImportResult> ImportPosPosFeedDataAsync(List<PosPosTransaction> transactions);
+    
+    /// <summary>
+    /// Import feed data from JSON content
+    /// </summary>
+    Task<FeedImportResult> ImportPosPosFeedFromJsonAsync(string jsonContent);
+    
+    // Note: mock-specific methods were removed. Use live POSPOS flows or ImportFromJsonAsync for testing.
+    
+    /// <summary>
+    /// Import POSPOS feed data for a specific pig pen
+    /// </summary>
+    Task<FeedImportResult> ImportPosPosFeedForPigPenAsync(Guid pigPenId, List<PosPosTransaction> transactions);
+    
+    /// <summary>
+    /// Get POSPOS feed data by customer code
+    /// </summary>
+    Task<List<PosPosTransaction>> GetPosPosTransactionByCustomerCodeAsync(string customerCode);
+    
+    /// <summary>
+    /// Get POSPOS feed data by date range
+    /// </summary>
+    Task<List<PosPosTransaction>> GetPosPosTransactionByDateRangeAsync(DateTime fromDate, DateTime toDate);
+    
+    /// <summary>
+    /// Get POSPOS feed data by customer code and date range
+    /// </summary>
+    Task<List<PosPosTransaction>> GetPosPosTransactionByCustomerAndDateRangeAsync(string customerCode, DateTime fromDate, DateTime toDate);
+    
+    /// <summary>
+    /// Get all POSPOS feed data by date range (without customer filtering)
+    /// </summary>
+    Task<List<PosPosTransaction>> GetAllPosPosTransactionByDateRangeAsync(DateTime fromDate, DateTime toDate);
+    
+    /// <summary>
+    /// Import POSPOS feed data by date range
+    /// </summary>
+    Task<FeedImportResult> ImportPosPosFeedByDateRangeAsync(DateTime fromDate, DateTime toDate);
+    
+    /// <summary>
+    /// Create demo feeds with complete product information for testing
+    /// </summary>
+}
 
 public class FeedImportService : IFeedImportService
 {
     private readonly IPigPenRepository _pigPenRepository;
     private readonly ICustomerRepository _customerRepository;
-    private readonly IFeedRepository _feedRepository;
     private readonly Infrastructure.Data.Repositories.IFeedRepository _efFeedRepository;
     private readonly IPosposTransactionClient _posposTrasactionClient;
     private readonly PigFarmManagement.Server.Features.FeedFormulas.IFeedFormulaService _feedFormulaService;
@@ -24,7 +75,6 @@ public class FeedImportService : IFeedImportService
     public FeedImportService(
         IPigPenRepository pigPenRepository,
         ICustomerRepository customerRepository,
-        IFeedRepository feedRepository,
         Infrastructure.Data.Repositories.IFeedRepository efFeedRepository,
         IPosposTransactionClient posposTransactionClient,
         PigFarmManagement.Server.Features.FeedFormulas.IFeedFormulaService feedFormulaService,
@@ -32,16 +82,14 @@ public class FeedImportService : IFeedImportService
     {
         _pigPenRepository = pigPenRepository;
         _customerRepository = customerRepository;
-        _feedRepository = feedRepository;
         _efFeedRepository = efFeedRepository;
         _posposTrasactionClient = posposTransactionClient;
         _feedFormulaService = feedFormulaService;
         _logger = logger;
 
-        InitializeData(); // Still needed for mock data
     }
 
-    public async Task<FeedImportResult> ImportPosPosFeedDataAsync(List<PosPosFeedTransaction> transactions)
+    public async Task<FeedImportResult> ImportPosPosFeedDataAsync(List<PosPosTransaction> transactions)
     {
         _logger.LogInformation("Starting POSPOS feed import with {TransactionCount} transactions", transactions.Count);
         
@@ -83,11 +131,11 @@ public class FeedImportService : IFeedImportService
         return result;
     }
 
-    public async Task<FeedImportResult> ImportFromJsonAsync(string jsonContent)
+    public async Task<FeedImportResult> ImportPosPosFeedFromJsonAsync(string jsonContent)
     {
         try
         {
-            var transactions = JsonSerializer.Deserialize<List<PosPosFeedTransaction>>(jsonContent,
+            var transactions = JsonSerializer.Deserialize<List<PosPosTransaction>>(jsonContent,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
             if (transactions == null)
@@ -111,7 +159,7 @@ public class FeedImportService : IFeedImportService
         }
     }
 
-    public async Task<FeedImportResult> ImportPosPosFeedForPigPenAsync(Guid pigPenId, List<PosPosFeedTransaction> transactions)
+    public async Task<FeedImportResult> ImportPosPosFeedForPigPenAsync(Guid pigPenId, List<PosPosTransaction> transactions)
     {
         var result = new FeedImportResult
         {
@@ -146,7 +194,7 @@ public class FeedImportService : IFeedImportService
 
     // Mock endpoints removed. Use ImportFromJsonAsync or the POSPOS date-range endpoints for testing.
 
-    public async Task<List<PosPosFeedTransaction>> GetPosPosFeedByCustomerCodeAsync(string customerCode)
+    public async Task<List<PosPosTransaction>> GetPosPosTransactionByCustomerCodeAsync(string customerCode)
     {
         // Default to last 30 days for customer-only queries
         var to = DateTime.UtcNow;
@@ -160,12 +208,12 @@ public class FeedImportService : IFeedImportService
             .ToList();
     }
 
-    public async Task<List<PosPosFeedTransaction>> GetPosPosFeedByDateRangeAsync(DateTime fromDate, DateTime toDate)
+    public async Task<List<PosPosTransaction>> GetPosPosTransactionByDateRangeAsync(DateTime fromDate, DateTime toDate)
     {
         return await _posposTrasactionClient.GetTransactionsByDateRangeAsync(fromDate, toDate);
     }
 
-    public async Task<List<PosPosFeedTransaction>> GetPosPosFeedByCustomerAndDateRangeAsync(string customerCode, DateTime fromDate, DateTime toDate)
+    public async Task<List<PosPosTransaction>> GetPosPosTransactionByCustomerAndDateRangeAsync(string customerCode, DateTime fromDate, DateTime toDate)
     {
         var transactions = await _posposTrasactionClient.GetTransactionsByDateRangeAsync(fromDate, toDate);
         return transactions
@@ -176,79 +224,20 @@ public class FeedImportService : IFeedImportService
             .ToList();
     }
 
-    public async Task<List<PosPosFeedTransaction>> GetAllPosPosFeedByDateRangeAsync(DateTime fromDate, DateTime toDate)
+    public async Task<List<PosPosTransaction>> GetAllPosPosTransactionByDateRangeAsync(DateTime fromDate, DateTime toDate)
     {
         return await _posposTrasactionClient.GetTransactionsByDateRangeAsync(fromDate, toDate);
     }
 
     public async Task<FeedImportResult> ImportPosPosFeedByDateRangeAsync(DateTime fromDate, DateTime toDate)
     {
-        var transactions = await GetPosPosFeedByDateRangeAsync(fromDate, toDate);
+        var transactions = await GetPosPosTransactionByDateRangeAsync(fromDate, toDate);
         return await ImportPosPosFeedDataAsync(transactions);
     }
 
-    public async Task<FeedImportResult> CreateDemoFeedsWithProductInfoAsync(Guid pigPenId)
-    {
-        var pigPen = await _pigPenRepository.GetByIdAsync(pigPenId);
-        if (pigPen == null)
-        {
-            return new FeedImportResult
-            {
-                FailedImports = 1,
-                Errors = new() { $"Pig pen with ID {pigPenId} not found" }
-            };
-        }
 
-        var demoFeeds = new List<Feed>
-        {
-            new Feed
-            {
-                Id = Guid.NewGuid(),
-                PigPenId = pigPenId,
-                ProductType = "อาหารสัตว์",
-                ProductCode = "PK64000161",
-                ProductName = "เจ็ท 120 หมู 40-60 กก.",
-                TransactionCode = $"DEMO-{DateTime.Now:yyyyMMdd}-001",
-                Quantity = 50,
-                UnitPrice = 580,
-                TotalPriceIncludeDiscount = 29000,
-                FeedDate = DateTime.UtcNow.AddDays(-1),
-                ExternalReference = "DEMO-FEED-001",
-                Notes = "Demo feed for testing",
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            }
-        };
-
-        var result = new FeedImportResult
-        {
-            TotalFeedItems = demoFeeds.Count
-        };
-
-        foreach (var feed in demoFeeds)
-        {
-            try
-            {
-                await _feedRepository.CreateAsync(feed);
-                result.SuccessfulImports++;
-            }
-            catch (Exception ex)
-            {
-                result.FailedImports++;
-                result.Errors.Add($"Failed to create demo feed: {ex.Message}");
-            }
-        }
-
-        return result;
-    }
-
-    private void InitializeData()
-    {
-        // Legacy initialization for mock data - keeping for compatibility
-        // This will be removed once all data comes from repositories
-    }
     // Legacy initialization for mock data - kept only as a historical placeholder.
-    private async Task ProcessTransactionAsync(PosPosFeedTransaction transaction, FeedImportResult result)
+    private async Task ProcessTransactionAsync(PosPosTransaction transaction, FeedImportResult result)
     {
         // Find or create customer based on buyer detail
         var customer = FindOrCreateCustomer(transaction.BuyerDetail);
@@ -265,7 +254,7 @@ public class FeedImportService : IFeedImportService
         await ProcessTransactionForPigPenAsync(transaction, pigPen, result);
     }
 
-    private async Task ProcessTransactionForPigPenAsync(PosPosFeedTransaction transaction, PigPen pigPen, FeedImportResult result)
+    private async Task ProcessTransactionForPigPenAsync(PosPosTransaction transaction, PigPen pigPen, FeedImportResult result)
     {
         _logger.LogDebug("Processing transaction {TransactionCode} for pig pen {PigPenId}", transaction.Code, pigPen.Id);
         

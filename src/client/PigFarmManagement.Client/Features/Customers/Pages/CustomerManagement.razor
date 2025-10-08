@@ -5,7 +5,10 @@
 @using PigFarmManagement.Client.Features.Customers.Services
 @using PigFarmManagement.Client.Features.Customers.Components
 @using PigFarmManagement.Client.Features.PigPens.Services
+@using PigFarmManagement.Client.Services
 @inject ICustomerService CustomerService
+@inject ICustomerLocationService CustomerLocationService
+@inject IGoogleMapsService GoogleMapsService
 @inject IPigPenService PigPenService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
@@ -33,57 +36,92 @@
                 OnKeyUp="OnSearchKeyUp" Immediate="true" />
         </MudItem>
         <MudItem xs="12" md="3">
-            <MudSelect T="CustomerStatus ?" @bind-Value="selectedCustomerStatus" Label="Filter by Status"
-                Variant="Variant.Outlined" Clearable="true" Margin="Margin.Dense" FullWidth="true">
-                <MudSelectItem T="CustomerStatus ?" Value="@CustomerStatus.Active">Active</MudSelectItem>
-                <MudSelectItem T="CustomerStatus ?" Value="@CustomerStatus.Inactive">Inactive</MudSelectItem>
+            <MudSelect T="CustomerStatus?" Value="selectedCustomerStatus"
+                       ValueChanged="OnStatusFilterChanged"
+                       Label="Filter by Status"
+                       Variant="Variant.Outlined" 
+                       Clearable="true" 
+                       Margin="Margin.Dense" 
+                       FullWidth="true"
+                       AnchorOrigin="Origin.BottomCenter">
+                <MudSelectItem T="CustomerStatus?" Value="@((CustomerStatus?)null)">All Statuses</MudSelectItem>
+                <MudSelectItem T="CustomerStatus?" Value="@CustomerStatus.Active">Active</MudSelectItem>
+                <MudSelectItem T="CustomerStatus?" Value="@CustomerStatus.Inactive">Inactive</MudSelectItem>
             </MudSelect>
         </MudItem>
         <MudItem xs="12" md="3" class="text-right align-self-center">
             <MudStack Row Spacing="1" Class="align-items-center justify-content-end">
-                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="StartImport"
-                    Disabled="_importRunning">
-                    <MudIcon Icon="@Icons.Material.Filled.Download" Class="mr-1" /> Import
-                </MudButton>
+                <!-- View Mode Toggle -->
+                <ViewModeToggle CurrentMode="currentViewMode" 
+                                CurrentModeChanged="OnViewModeChanged" 
+                                IsLoading="isLoading" />
+                
+                <!-- POS Sync Trigger -->
+                <MudTooltip Text="@(_posSyncRunning ? "Syncing with POS..." : "Sync with POS system")">
+                    <MudIconButton Icon="@Icons.Material.Filled.Sync" 
+                                   Color="Color.Info" 
+                                   OnClick="TriggerPosSync"
+                                   Disabled="_posSyncRunning"
+                                   Size="Size.Medium"
+                                   Class="@(_posSyncRunning ? "rotate-animation" : "")" />
+                </MudTooltip>
 
-                <MudSwitch @bind-Value="_persistMapping" Color="Color.Primary" />
-
+                <MudTooltip Text="Import customers from external source">
+                    <MudIconButton Icon="@Icons.Material.Filled.Download" 
+                                   Color="Color.Secondary" 
+                                   OnClick="StartImport"
+                                   Disabled="_importRunning"
+                                   Size="Size.Medium" />
+                </MudTooltip>
+@* 
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
                     OnClick="OpenAddCustomerDialog">
                     Add
-                </MudButton>
+                </MudButton> *@
             </MudStack>
         </MudItem>
     </MudGrid>
 
-    <!-- Customer Cards Grid -->
-    <MudGrid>
-        @if (isLoading)
+    <!-- Customer Display Area -->
+    @if (isLoading)
+    {
+        <div class="d-flex justify-center pa-8">
+            <MudProgressCircular Indeterminate="true" Size="Size.Medium" />
+        </div>
+    }
+    else if (filteredCustomers?.Any() == true)
+    {
+        @if (currentViewMode == ViewMode.Card)
         {
-            <MudItem xs="12">
-                <div class="d-flex justify-center pa-8">
-                    <MudProgressCircular Indeterminate="true" Size="Size.Medium" />
-                </div>
-            </MudItem>
-        }
-        else if (filteredCustomers?.Any() == true)
-        {
-            @foreach (var customer in filteredCustomers)
-            {
-                <MudItem xs="12" sm="6" md="4" lg="3">
-                    <CustomerCard Customer="customer" PigPenCount="@GetCustomerPigPenCount(customer.Id)" OnEdit="EditCustomer"
-                        OnDelete="DeleteCustomer" OnViewDetails="ViewCustomerDetails" />
-                </MudItem>
-            }
+            <!-- Customer Cards Grid -->
+            <MudGrid>
+                @foreach (var customer in filteredCustomers)
+                {
+                    <MudItem xs="12" sm="6" md="4" lg="3">
+                        <CustomerCard Customer="customer" 
+                                      PigPenCount="@GetCustomerPigPenCount(customer.Id)" 
+                                      OnEdit="EditCustomer"
+                                      OnDelete="ShowDeleteCustomerDialog" 
+                                      OnViewDetails="ViewCustomerDetails" />
+                    </MudItem>
+                }
+            </MudGrid>
         }
         else
         {
-            <MudItem xs="12">
-                <CustomerEmptyState OnAddCustomer="OpenAddCustomerDialog"
-                    HasFilters="@(!string.IsNullOrEmpty(searchText) || selectedCustomerStatus != null)" />
-            </MudItem>
+            <!-- Customer Table View -->
+            <CustomerTableView Customers="filteredCustomers"
+                               IsLoading="isLoading"
+                               OnEditCustomer="EditCustomer"
+                               OnEditLocation="EditCustomerLocation"
+                               OnDeleteCustomer="ShowDeleteCustomerDialog" />
         }
-    </MudGrid>
+    }
+    else
+    {
+        <CustomerEmptyState OnAddCustomer="OpenAddCustomerDialog"
+            HasFilters="@(!string.IsNullOrEmpty(searchText) || selectedCustomerStatus != null)" />
+    }
 
 
 </MudContainer>
@@ -95,6 +133,10 @@
     private bool isLoading = true;
     private string searchText = "";
     private CustomerStatus? selectedCustomerStatus = null;
+    
+    // New state for enhanced features
+    private ViewMode currentViewMode = ViewMode.Card;
+    private bool _posSyncRunning = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -131,24 +173,36 @@
     private void FilterCustomers()
     {
         filteredCustomers = customers.Where(c =>
-        (string.IsNullOrEmpty(searchText) ||
-        c.DisplayName.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
-        c.Code.Contains(searchText, StringComparison.OrdinalIgnoreCase)) &&
-        (selectedCustomerStatus == null || c.Status == selectedCustomerStatus)
+            // Search filter
+            (string.IsNullOrEmpty(searchText) ||
+             c.DisplayName.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+             c.Code.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+             (!string.IsNullOrEmpty(c.Phone) && c.Phone.Contains(searchText, StringComparison.OrdinalIgnoreCase)) ||
+             (!string.IsNullOrEmpty(c.Email) && c.Email.Contains(searchText, StringComparison.OrdinalIgnoreCase))) &&
+            // Status filter
+            (selectedCustomerStatus == null || c.Status == selectedCustomerStatus.Value)
         ).ToList();
 
         // Show the most recently imported/updated customers first
         // Use UpdatedAt (set by the importer) as the primary sort key. If UpdatedAt is null, treat it as DateTime.MinValue.
         filteredCustomers = filteredCustomers
-        .OrderByDescending(c => c.UpdatedAt)
-        .ThenByDescending(c => c.CreatedAt)
-        .ToList();
+            .OrderByDescending(c => c.UpdatedAt)
+            .ThenByDescending(c => c.CreatedAt)
+            .ToList();
+        
+        StateHasChanged();
     }
 
     private void OnSearchKeyUp(KeyboardEventArgs e)
     {
         FilterCustomers();
         StateHasChanged();
+    }
+
+    private void OnStatusFilterChanged(CustomerStatus? newStatus)
+    {
+        selectedCustomerStatus = newStatus;
+        FilterCustomers();
     }
 
     protected override void OnParametersSet()
@@ -221,6 +275,109 @@
         }
     }
 
+    // Enhanced deletion with validation dialog
+    private async Task ShowDeleteCustomerDialog(Customer customer)
+    {
+        try
+        {
+            // First validate deletion
+            var validation = await CustomerService.ValidateCustomerDeletionAsync(customer.Id);
+            
+            var parameters = new DialogParameters 
+            { 
+                ["Customer"] = customer,
+                ["ValidationResult"] = validation
+            };
+            
+            var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+            var dialog = await DialogService.ShowAsync<DeleteCustomerDialog>("Delete Customer", parameters, options);
+            var result = await dialog.Result;
+
+            if (!result.Canceled && result.Data is CustomerDeletionRequest deletionRequest)
+            {
+                try
+                {
+                    if (deletionRequest.ForceDelete)
+                    {
+                        // Hard delete
+                        var success = await CustomerService.HardDeleteCustomerAsync(deletionRequest);
+                        if (success)
+                        {
+                            await LoadData();
+                            Snackbar.Add("Customer permanently deleted!", Severity.Success);
+                        }
+                        else
+                        {
+                            Snackbar.Add("Failed to delete customer permanently.", Severity.Error);
+                        }
+                    }
+                    else
+                    {
+                        // Soft delete
+                        var updatedCustomer = await CustomerService.SoftDeleteCustomerAsync(deletionRequest);
+                        await LoadData();
+                        Snackbar.Add("Customer marked as deleted successfully!", Severity.Info);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Snackbar.Add($"Error deleting customer: {ex.Message}", Severity.Error);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error validating customer deletion: {ex.Message}", Severity.Error);
+        }
+    }
+
+    // Location management
+    private void EditCustomerLocation(Customer customer)
+    {
+        // TODO: Implement location editing dialog with Google Maps
+        // For now, show a simple message
+        Snackbar.Add($"Location editing for {customer.DisplayName} - Coming soon with Google Maps integration!", Severity.Info);
+    }
+
+    // View mode toggle
+    private void OnViewModeChanged(ViewMode newMode)
+    {
+        currentViewMode = newMode;
+        StateHasChanged();
+    }
+
+    // POS sync trigger
+    private async Task TriggerPosSync()
+    {
+        try
+        {
+            _posSyncRunning = true;
+            StateHasChanged();
+
+            var response = await Http.PostAsync("import/customers/sync", null);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadData();
+                Snackbar.Add("POS sync completed successfully!", Severity.Success);
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                Snackbar.Add($"POS sync failed: {error}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error during POS sync: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _posSyncRunning = false;
+            StateHasChanged();
+        }
+    }
+
     private async Task ViewCustomerDetails(Customer customer)
     {
         var parameters = new DialogParameters { ["Customer"] = customer };
@@ -230,15 +387,12 @@
 
 @code {
     // Import UI state
-    private bool _persistMapping = false;
     private bool _importRunning = false;
 
     private async Task StartImport()
     {
         var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
-        var parameters = new DialogParameters { ["PersistMapping"] = _persistMapping };
-        var dialog = await DialogService.ShowAsync<Components.ImportCandidatesDialog>("Import from POSPOS", parameters,
-        options);
+        var dialog = await DialogService.ShowAsync<Components.ImportCandidatesDialog>("Import from POSPOS", new DialogParameters(), options);
         var result = await dialog.Result;
         if (!result.Canceled)
         {
@@ -251,7 +405,7 @@
     {
         try
         {
-            var resp = await Http.GetAsync("/import/customers/summary");
+            var resp = await Http.GetAsync("/api/customers/import/summary");
             if (resp.IsSuccessStatusCode)
             {
                 var txt = await resp.Content.ReadAsStringAsync();
@@ -273,3 +427,18 @@
         }
     }
 }
+
+<style>
+    .rotate-animation {
+        animation: rotate 1s linear infinite;
+    }
+
+    @@keyframes rotate {
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+</style>

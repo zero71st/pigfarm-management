@@ -111,7 +111,7 @@
         _isLoading = true;
         try
         {
-            var list = await Http.GetFromJsonAsync<List<CandidateMember>>("/import/customers/candidates");
+            var list = await Http.GetFromJsonAsync<List<CandidateMember>>("/api/customers/import/candidates");
             if (list != null)
                 _candidates = list;
         }
@@ -167,7 +167,7 @@
 
         try
         {
-            var uri = "/import/customers/selected" + (PersistMapping ? "?persist=true" : "");
+            var uri = "/api/customers/import/selected" + (PersistMapping ? "?persist=true" : "");
             var resp = await Http.PostAsJsonAsync(uri, selectedIds);
             if (resp.IsSuccessStatusCode)
             {
