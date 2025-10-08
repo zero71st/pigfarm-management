@@ -6,6 +6,7 @@ using PigFarmManagement.Server.Services.ExternalServices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PigFarmManagement.Server.Services;
+using PigFarmManagement.Shared.Domain.External;
 
 namespace PigFarmManagement.Server.Features.FeedFormulas;
 
@@ -18,7 +19,7 @@ public interface IFeedFormulaService
     Task<bool> DeleteFeedFormulaAsync(Guid id);
     Task<bool> ExistsAsync(string code);
     Task<ImportResultDto> ImportProductsFromPosposAsync();
-    Task<IEnumerable<PosposProductDto>> GetPosposProductsAsync();
+    Task<IEnumerable<PosposProduct>> GetPosposProductsAsync();
     Task<ImportResultDto> ImportSelectedProductsFromPosposAsync(IEnumerable<string> productCodes);
     Task<PigFarmManagement.Shared.Models.ImportResult> ImportProductsByIdsAsync(ImportRequest request);
     // New DTO-returning methods for formula system operations
@@ -216,7 +217,7 @@ public class FeedFormulaService : IFeedFormulaService
         return new Guid(hash);
     }
 
-    public async Task<IEnumerable<PosposProductDto>> GetPosposProductsAsync()
+    public async Task<IEnumerable<PosposProduct>> GetPosposProductsAsync()
     {
         try
         {
@@ -382,7 +383,7 @@ public class FeedFormulaService : IFeedFormulaService
             var allPosposProducts = await _posposProductClient.GetAllProductsAsync();
             
             // Create a mapping from generated GUIDs back to POSPOS products
-            var posposProductMap = new Dictionary<Guid, PosposProductDto>();
+            var posposProductMap = new Dictionary<Guid, PosposProduct>();
             foreach (var product in allPosposProducts)
             {
                 if (!string.IsNullOrWhiteSpace(product.Id))
@@ -562,7 +563,7 @@ public class FeedFormulaService : IFeedFormulaService
     /// </summary>
     /// <param name="posposProduct">The POSPOS product to map</param>
     /// <returns>FeedFormulaCreateDto ready for persistence</returns>
-    private static FeedFormulaCreateDto MapPosposProductToFeedFormula(PosposProductDto posposProduct)
+    private static FeedFormulaCreateDto MapPosposProductToFeedFormula(PosposProduct posposProduct)
     {
         // Normalize product code: trim and convert to uppercase
         var normalizedCode = posposProduct.Code?.Trim().ToUpperInvariant() ?? string.Empty;

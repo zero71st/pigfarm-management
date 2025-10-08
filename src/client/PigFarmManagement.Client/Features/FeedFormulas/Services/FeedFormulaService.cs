@@ -1,5 +1,6 @@
 using System.Text.Json;
 using PigFarmManagement.Shared.Models;
+using PigFarmManagement.Shared.Domain.External;
 
 namespace PigFarmManagement.Client.Features.FeedFormulas.Services;
 
@@ -13,7 +14,7 @@ public interface IFeedFormulaService
     Task<bool> ExistsAsync(string productCode);
 
     Task<ImportResultDto> ImportSelectedFromPosposAsync(List<string> productCodes);
-    Task<List<PosposProductDto>> SearchPosposProductsAsync(string q);
+    Task<List<PosposProduct>> SearchPosposProductsAsync(string q);
 }
 
 public class FeedFormulaService : IFeedFormulaService
@@ -107,13 +108,13 @@ public class FeedFormulaService : IFeedFormulaService
         return JsonSerializer.Deserialize<ImportResultDto>(responseJson, _jsonOptions)!;
     }
 
-    public async Task<List<PosposProductDto>> SearchPosposProductsAsync(string q)
+    public async Task<List<PosposProduct>> SearchPosposProductsAsync(string q)
     {
         var response = await _httpClient.GetAsync($"api/products/search?q={Uri.EscapeDataString(q)}");
         response.EnsureSuccessStatusCode();
         
         var json = await response.Content.ReadAsStringAsync();
-        var products = JsonSerializer.Deserialize<IEnumerable<PosposProductDto>>(json, _jsonOptions) ?? [];
+        var products = JsonSerializer.Deserialize<IEnumerable<PosposProduct>>(json, _jsonOptions) ?? [];
         return products.ToList();
     }
 

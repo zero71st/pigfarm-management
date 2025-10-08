@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using PigFarmManagement.Shared.Models;
+using PigFarmManagement.Shared.Domain.External;
 
 namespace PigFarmManagement.Server.Services.ExternalServices
 {
@@ -14,14 +15,14 @@ namespace PigFarmManagement.Server.Services.ExternalServices
         /// Fetches all products from the POSPOS API.
         /// </summary>
         /// <returns>List of product DTOs from POSPOS</returns>
-        Task<List<PosposProductDto>> GetAllProductsAsync();
+        Task<List<PosposProduct>> GetAllProductsAsync();
 
         /// <summary>
         /// Fetches a single product by code from the POSPOS API.
         /// </summary>
         /// <param name="code">The product code (e.g., "PK64000158")</param>
         /// <returns>Product DTO or null if not found</returns>
-        Task<PosposProductDto?> GetProductByCodeAsync(string code);
+        Task<PosposProduct?> GetProductByCodeAsync(string code);
     }
 
     /// <summary>
@@ -30,6 +31,6 @@ namespace PigFarmManagement.Server.Services.ExternalServices
     public class PosposProductResponse
     {
         public int Success { get; set; }
-        public List<PosposProductDto> Data { get; set; } = new();
+        public List<PosposProduct> Data { get; set; } = new();
     }
 }

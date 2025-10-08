@@ -3,6 +3,7 @@
 @using Microsoft.AspNetCore.Components.Web
 @inject IFeedFormulaService FeedFormulaService
 @inject ISnackbar Snackbar
+@using PigFarmManagement.Shared.Domain.External
 
 <MudDialog>
     <TitleContent>
@@ -96,7 +97,7 @@
                     </MudPaper>
 
                     <!-- Products Grid -->
-                    <MudDataGrid T="PosposProductDto" 
+                    <MudDataGrid T="PosposProduct" 
                                 Items="@products" 
                                 Dense="true" 
                                 Hover="true" 
@@ -107,7 +108,7 @@
                                 FixedHeader="true">
                         
                         <Columns>
-                            <SelectColumn T="PosposProductDto" />
+                            <SelectColumn T="PosposProduct" />
                             <PropertyColumn Property="x => x.Code" Title="Code" />
                             <PropertyColumn Property="x => x.Name" Title="Product Name" />
                             <TemplateColumn Title="Category">
@@ -157,9 +158,9 @@
 @code {
     [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
 
-    private List<PosposProductDto> products = new();
-    private HashSet<PosposProductDto> selectedProductsHashSet = new();
-    private List<PosposProductDto> selectedProducts => selectedProductsHashSet.ToList();
+    private List<PosposProduct> products = new();
+    private HashSet<PosposProduct> selectedProductsHashSet = new();
+    private List<PosposProduct> selectedProducts => selectedProductsHashSet.ToList();
     
     private bool searching = false;
     private bool hasSearched = false;
@@ -199,7 +200,7 @@
         catch (Exception ex)
         {
             Snackbar.Add($"Error searching products: {ex.Message}", Severity.Error);
-            products = new List<PosposProductDto>();
+            products = new List<PosposProduct>();
         }
         finally
         {
