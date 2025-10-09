@@ -1,0 +1,263 @@
+@page "/admin/users"
+@using PigFarmManagement.Shared.Contracts.Authentication
+@using PigFarmManagement.Client.Features.Authentication.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.ComponentModel.DataAnnotations
+@using PigFarmManagement.Client.Features.Admin.Components
+@inject IAdminUserService AdminUserService
+@inject AuthenticationStateService AuthService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<PageTitle>User Management</PageTitle>
+
+<AuthorizeView Roles="Admin">
+    <Authorized>
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-4">
+            <MudText Typo="Typo.h4" Class="mb-4">User Management</MudText>
+            
+            <MudCard Class="mb-4">
+                <MudCardContent>
+                    <div class="d-flex justify-space-between align-center mb-4">
+                        <MudText Typo="Typo.h6">Users</MudText>
+                        <MudButton Variant="Variant.Filled" 
+                                  Color="Color.Primary" 
+                                  StartIcon="@Icons.Material.Filled.PersonAdd"
+                                  OnClick="@(() => OpenCreateUserDialog())">
+                            Create User
+                        </MudButton>
+                    </div>
+
+                    <div class="d-flex gap-4 mb-4">
+                        <MudTextField Value="searchText" 
+                                     Label="Search" 
+                                     Variant="Variant.Outlined" 
+                                     Adornment="Adornment.Start"
+                                     AdornmentIcon="@Icons.Material.Filled.Search"
+                                     ValueChanged="@((string value) => OnSearchTextChanged(value))"
+                                     DebounceInterval="500" />
+
+                        <MudSelect Value="selectedRole" 
+                                  Label="Filter by Role" 
+                                  Variant="Variant.Outlined"
+                                  Clearable="true"
+                                  T="string"
+                                  ValueChanged="@((string? value) => OnRoleFilterChanged(value))">
+                            <MudSelectItem T="string" Value="@("Admin")">Admin</MudSelectItem>
+                            <MudSelectItem T="string" Value="@("Manager")">Manager</MudSelectItem>
+                            <MudSelectItem T="string" Value="@("Worker")">Worker</MudSelectItem>
+                            <MudSelectItem T="string" Value="@("Viewer")">Viewer</MudSelectItem>
+                        </MudSelect>
+
+                        <MudSelect Value="selectedStatus" 
+                                  Label="Filter by Status" 
+                                  Variant="Variant.Outlined"
+                                  Clearable="true"
+                                  T="bool?"
+                                  ValueChanged="@((bool? value) => OnStatusFilterChanged(value))">
+                            <MudSelectItem T="bool?" Value="@(true)">Active</MudSelectItem>
+                            <MudSelectItem T="bool?" Value="@(false)">Inactive</MudSelectItem>
+                        </MudSelect>
+
+                        <MudButton Variant="Variant.Outlined" 
+                                  StartIcon="@Icons.Material.Filled.Search"
+                                  OnClick="LoadUsers">
+                            Search
+                        </MudButton>
+                    </div>
+                </MudCardContent>
+            </MudCard>
+
+            @if (isLoading)
+            {
+                <MudProgressLinear Indeterminate="true" />
+            }
+            else
+            {
+                <MudTable Items="@users" Hover="true" Breakpoint="Breakpoint.Sm">
+                    <HeaderContent>
+                        <MudTh>Username</MudTh>
+                        <MudTh>Email</MudTh>
+                        <MudTh>Roles</MudTh>
+                        <MudTh>Status</MudTh>
+                        <MudTh>Last Login</MudTh>
+                        <MudTh>Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate Context="userItem">
+                        <MudTd DataLabel="Username">@userItem.Username</MudTd>
+                        <MudTd DataLabel="Email">@userItem.Email</MudTd>
+                        <MudTd DataLabel="Roles">
+                            @foreach (var role in userItem.Roles)
+                            {
+                                <MudChip Size="Size.Small" Color="Color.Primary">@role</MudChip>
+                            }
+                        </MudTd>
+                        <MudTd DataLabel="Status">
+                            <MudChip Size="Size.Small" 
+                                     Color="@(userItem.IsActive ? Color.Success : Color.Default)">
+                                @(userItem.IsActive ? "Active" : "Inactive")
+                            </MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Last Login">
+                            @(userItem.LastLoginAt?.ToString("yyyy-MM-dd HH:mm") ?? "Never")
+                        </MudTd>
+                        <MudTd DataLabel="Actions">
+                            <MudButtonGroup>
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" 
+                                               Color="Color.Primary" 
+                                               Size="Size.Small"
+                                               OnClick="@(() => EditUser(userItem))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Key" 
+                                               Color="Color.Secondary" 
+                                               Size="Size.Small"
+                                               OnClick="@(() => ManageApiKeys(userItem))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Lock" 
+                                               Color="Color.Warning" 
+                                               Size="Size.Small"
+                                               OnClick="@(() => ResetPassword(userItem))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                                               Color="Color.Error" 
+                                               Size="Size.Small"
+                                               OnClick="@(() => DeleteUser(userItem))" />
+                            </MudButtonGroup>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+        </MudContainer>
+    </Authorized>
+    <NotAuthorized>
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-4">
+            <MudAlert Severity="Severity.Error">
+                <div class="d-flex align-center">
+                    <MudIcon Icon="Icons.Material.Filled.Security" Class="mr-3"/>
+                    <div>
+                        <MudText Typo="Typo.body1"><strong>Access Denied</strong></MudText>
+                        <MudText Typo="Typo.body2">You need Admin role to access user management.</MudText>
+                    </div>
+                </div>
+            </MudAlert>
+        </MudContainer>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private List<UserInfo> users = new();
+    private bool isLoading = false;
+    private string searchText = "";
+    private string? selectedRole;
+    private bool? selectedStatus;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUsers();
+    }
+
+    private async Task LoadUsers()
+    {
+        isLoading = true;
+        try
+        {
+            var response = await AdminUserService.GetUsersAsync(1, 100, selectedStatus, selectedRole, searchText);
+            if (response.IsSuccess)
+            {
+                users = response.Data?.ToList() ?? new List<UserInfo>();
+            }
+            else
+            {
+                Snackbar.Add($"Error loading users: {response.ErrorMessage}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading users: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task OnSearchTextChanged(string value)
+    {
+        searchText = value;
+        await LoadUsers();
+    }
+
+    private async Task OnRoleFilterChanged(string? value)
+    {
+        selectedRole = value;
+        await LoadUsers();
+    }
+
+    private async Task OnStatusFilterChanged(bool? value)
+    {
+        selectedStatus = value;
+        await LoadUsers();
+    }
+
+    private async Task OpenCreateUserDialog()
+    {
+        var dialog = await DialogService.ShowAsync<CreateUserDialog>("Create New User");
+        var result = await dialog.Result;
+        
+        if (!result.Canceled)
+        {
+            await LoadUsers();
+        }
+    }
+
+    private async Task EditUser(UserInfo user)
+    {
+        var parameters = new DialogParameters();
+        parameters.Add("UserId", user.Id);
+        
+        var dialog = await DialogService.ShowAsync<EditUserDialog>("Edit User", parameters);
+        var result = await dialog.Result;
+        
+        if (!result.Canceled)
+        {
+            await LoadUsers();
+        }
+    }
+
+    private async Task ManageApiKeys(UserInfo user)
+    {
+        var parameters = new DialogParameters();
+        parameters.Add("User", user);
+        
+        var dialog = await DialogService.ShowAsync<UserApiKeysDialog>($"API Keys - {user.Username}", parameters);
+        await dialog.Result;
+    }
+
+    private async Task ResetPassword(UserInfo user)
+    {
+        var parameters = new DialogParameters();
+        parameters.Add("User", user);
+        
+        var dialog = await DialogService.ShowAsync<ResetPasswordDialog>($"Reset Password - {user.Username}", parameters);
+        await dialog.Result;
+    }
+
+    private async Task DeleteUser(UserInfo user)
+    {
+        bool? confirm = await DialogService.ShowMessageBox(
+            "Confirm Delete",
+            $"Are you sure you want to delete user '{user.Username}'?",
+            yesText: "Delete", cancelText: "Cancel");
+
+        if (confirm == true)
+        {
+            var response = await AdminUserService.DeleteUserAsync(user.Id);
+            if (response.IsSuccess)
+            {
+                Snackbar.Add("User deleted successfully", Severity.Success);
+                await LoadUsers();
+            }
+            else
+            {
+                Snackbar.Add($"Error deleting user: {response.ErrorMessage}", Severity.Error);
+            }
+        }
+    }
+}

@@ -1,3 +1,5 @@
+@using Microsoft.AspNetCore.Components.Authorization
+
 <MudNavMenu>
     <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">
         <MudText Typo="Typo.body2">Dashboard</MudText>
@@ -14,4 +16,21 @@
     <MudNavLink Href="/reports" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Assessment">
         <MudText Typo="Typo.body2">Reports</MudText>
     </MudNavLink>
+    
+    <AuthorizeView Roles="Admin">
+        <Authorized>
+            <MudDivider Class="my-2" />
+            <!-- Admin Section Header -->
+            <div class="mud-nav-item mud-nav-link" style="padding: 8px 16px; display: flex; align-items: center; color: var(--mud-palette-text-secondary);">
+                <MudIcon Icon="@Icons.Material.Filled.AdminPanelSettings" Style="margin-right: 12px;" />
+                <MudText Typo="Typo.body2" Style="font-weight: 500;">Administration</MudText>
+            </div>
+            <!-- Admin Menu Items -->
+            <div style="padding-left: 16px;">
+                <MudNavLink Href="/admin/users" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.ManageAccounts">
+                    <MudText Typo="Typo.body2">User Management</MudText>
+                </MudNavLink>
+            </div>
+        </Authorized>
+    </AuthorizeView>
 </MudNavMenu>

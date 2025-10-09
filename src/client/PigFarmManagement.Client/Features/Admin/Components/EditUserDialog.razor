@@ -1,0 +1,192 @@
+@using PigFarmManagement.Shared.Contracts.Authentication
+@using System.ComponentModel.DataAnnotations
+@inject IAdminUserService AdminUserService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudContainer Class="pa-0">
+            @if (isLoadingUser)
+            {
+                <MudProgressLinear Indeterminate="true" />
+                <MudText Align="Align.Center" Class="mt-4">Loading user details...</MudText>
+            }
+            else if (currentUser == null)
+            {
+                <MudAlert Severity="Severity.Error">User not found</MudAlert>
+            }
+            else
+            {
+                <MudForm @ref="form" Model="@updateUserRequest" Validation="@(new DataAnnotationsValidator())">
+                    <MudGrid>
+                        <MudItem xs="12">
+                            <MudTextField Value="@currentUser.Username"
+                                         Label="Username"
+                                         Variant="Variant.Outlined"
+                                         ReadOnly="true"
+                                         HelperText="Username cannot be changed" />
+                        </MudItem>
+                        
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="updateUserRequest.Email"
+                                         Label="Email"
+                                         Variant="Variant.Outlined"
+                                         For="@(() => updateUserRequest.Email)"
+                                         InputType="InputType.Email" />
+                        </MudItem>
+                        
+                        <MudItem xs="12">
+                            <MudText Typo="Typo.subtitle2" Class="mb-2">Roles</MudText>
+                            <MudCheckBox @bind-Checked="isAdmin" Label="Admin" Color="Color.Primary" />
+                            <MudCheckBox @bind-Checked="isManager" Label="Manager" Color="Color.Primary" />
+                            <MudCheckBox @bind-Checked="isWorker" Label="Worker" Color="Color.Primary" />
+                            <MudCheckBox @bind-Checked="isViewer" Label="Viewer" Color="Color.Primary" />
+                            @if (!HasAnyRole())
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Error">At least one role must be selected</MudText>
+                            }
+                        </MudItem>
+                        
+                        <MudItem xs="12">
+                            <MudCheckBox @bind-Checked="updateUserRequest.IsActive" Label="Active" Color="Color.Primary" />
+                        </MudItem>
+                    </MudGrid>
+                </MudForm>
+            }
+        </MudContainer>
+    </DialogContent>
+    
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" 
+                   Variant="Variant.Filled" 
+                   OnClick="Submit"
+                   Disabled="@(!CanSubmit())"
+                   Class="ml-2">
+            @if (isSubmitting)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+            }
+            Update User
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public Guid UserId { get; set; }
+    
+    private MudForm form = null!;
+    private UserInfo? currentUser;
+    private UpdateUserRequest updateUserRequest = new();
+    private bool isLoadingUser = true;
+    private bool isSubmitting = false;
+    
+    // Role checkboxes
+    private bool isAdmin = false;
+    private bool isManager = false;
+    private bool isWorker = false;
+    private bool isViewer = false;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUser();
+    }
+    
+    private async Task LoadUser()
+    {
+        isLoadingUser = true;
+        try
+        {
+            var response = await AdminUserService.GetUserAsync(UserId);
+            if (response.IsSuccess && response.Data != null)
+            {
+                currentUser = response.Data;
+                
+                // Initialize form with current values
+                updateUserRequest = new UpdateUserRequest
+                {
+                    Email = currentUser.Email,
+                    Roles = currentUser.Roles,
+                    IsActive = currentUser.IsActive
+                };
+                
+                // Set role checkboxes
+                isAdmin = currentUser.Roles.Contains("Admin");
+                isManager = currentUser.Roles.Contains("Manager");
+                isWorker = currentUser.Roles.Contains("Worker");
+                isViewer = currentUser.Roles.Contains("Viewer");
+            }
+            else
+            {
+                Snackbar.Add($"Error loading user: {response.ErrorMessage}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading user: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoadingUser = false;
+        }
+    }
+    
+    private bool HasAnyRole()
+    {
+        return isAdmin || isManager || isWorker || isViewer;
+    }
+    
+    private bool CanSubmit()
+    {
+        return !isSubmitting && 
+               !isLoadingUser && 
+               currentUser != null &&
+               !string.IsNullOrWhiteSpace(updateUserRequest.Email) &&
+               HasAnyRole();
+    }
+    
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+    
+    private async Task Submit()
+    {
+        if (!CanSubmit()) return;
+        
+        isSubmitting = true;
+        
+        try
+        {
+            // Update roles based on checkboxes
+            var roles = new List<string>();
+            if (isAdmin) roles.Add("Admin");
+            if (isManager) roles.Add("Manager");
+            if (isWorker) roles.Add("Worker");
+            if (isViewer) roles.Add("Viewer");
+            
+            var request = updateUserRequest with { Roles = roles.ToArray() };
+            
+            var response = await AdminUserService.UpdateUserAsync(UserId, request);
+            
+            if (response.IsSuccess)
+            {
+                Snackbar.Add($"User '{currentUser!.Username}' updated successfully", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(response.Data));
+            }
+            else
+            {
+                Snackbar.Add($"Error updating user: {response.ErrorMessage}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error updating user: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+}
