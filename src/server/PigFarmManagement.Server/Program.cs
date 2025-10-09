@@ -15,6 +15,9 @@ builder.Services.AddSwaggerGen();
 // Add controllers support so attribute-based API controllers are mapped
 builder.Services.AddControllers();
 
+// Add authorization services
+builder.Services.AddAuthorization();
+
 // Bind POSPOS options from configuration / environment
 builder.Services.Configure<PigFarmManagement.Server.Infrastructure.Settings.PosposOptions>(builder.Configuration.GetSection("Pospos"));
 
@@ -170,6 +173,12 @@ else
 
 // Add forwarded headers support for reverse proxies
 app.UseForwardedHeaders();
+
+// Add API key authentication middleware
+app.UseMiddleware<PigFarmManagement.Server.Features.Authentication.ApiKeyMiddleware>();
+
+// Add authorization middleware
+app.UseAuthorization();
 
 // Add health check endpoint for Railway
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));

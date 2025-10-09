@@ -69,13 +69,42 @@ public static class AuthEndpoints
             return Results.Ok(response);
         }).AllowAnonymous();
 
+        group.MapPost("/logout", async (HttpContext http, PigFarmDbContext db) =>
+        {
+            // Get the API key from the X-Api-Key header
+            if (!http.Request.Headers.TryGetValue("X-Api-Key", out var apiKeyValues))
+                return Results.BadRequest(new { message = "API key required" });
+
+            var rawApiKey = apiKeyValues.FirstOrDefault();
+            if (string.IsNullOrWhiteSpace(rawApiKey))
+                return Results.BadRequest(new { message = "API key required" });
+
+            // Hash the raw key to find it in the database
+            var hashedKey = ApiKeyHash.HashApiKey(rawApiKey);
+            var apiKey = await db.ApiKeys.FirstOrDefaultAsync(k => k.HashedKey == hashedKey && k.IsActive);
+            
+            if (apiKey != null)
+            {
+                // Revoke the API key
+                apiKey.IsActive = false;
+                apiKey.RevokedAt = DateTime.UtcNow;
+                apiKey.RevokedBy = "self-logout";
+                await db.SaveChangesAsync();
+            }
+
+            return Results.Ok(new { message = "Logged out successfully" });
+        }).AllowAnonymous();
+
+
+
         group.MapGet("/me", async (HttpContext http, PigFarmDbContext db) =>
         {
             var user = http.User;
+            
             if (user?.Identity?.IsAuthenticated != true)
                 return Results.Unauthorized();
 
-            var name = user.Identity?.Name;
+            var name = user?.Identity?.Name;
             if (string.IsNullOrWhiteSpace(name))
                 return Results.Unauthorized();
 
@@ -94,7 +123,7 @@ public static class AuthEndpoints
             };
 
             return Results.Ok(info);
-        }).RequireAuthorization();
+        }).AllowAnonymous();
 
         return app;
     }
