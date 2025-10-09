@@ -66,22 +66,30 @@ builder.Services.AddCors(options =>
         }
         else
         {
-            // In production, allow Vercel domains AND localhost for development
+            // Production: strict CORS policy with specific allowed origins
             var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() 
                 ?? new[] { 
-                    "https://*.vercel.app", 
                     "https://pigfarm-management-client.vercel.app",  // Update with your actual Vercel URL
-                    "https://zero71st-pigfarm-management.vercel.app", // Common Vercel URL pattern
-                    "http://localhost:7000",     // Local development HTTP
-                    "https://localhost:7100"     // Local development HTTPS
+                    "https://zero71st-pigfarm-management.vercel.app" // Common Vercel URL pattern
                 };
             policy.WithOrigins(allowedOrigins)
                   .AllowAnyHeader()
                   .AllowAnyMethod()
-                  .SetIsOriginAllowedToAllowWildcardSubdomains(); // Allow wildcard subdomains
+                  .AllowCredentials(); // Allow credentials for API key auth
         }
     });
 });
+
+// Add HSTS and security headers for production
+if (!builder.Environment.IsDevelopment())
+{
+    builder.Services.AddHsts(options =>
+    {
+        options.Preload = true;
+        options.IncludeSubDomains = true;
+        options.MaxAge = TimeSpan.FromDays(365);
+    });
+}
 
 var app = builder.Build();
 
@@ -164,19 +172,53 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    // Production settings
+    // Production security hardening
+    app.UseHsts(); // HTTP Strict Transport Security
     app.UseHttpsRedirection();
     
-    // Security headers for production
+    // Comprehensive security headers middleware
     app.Use(async (context, next) =>
     {
-        context.Response.Headers["X-Frame-Options"] = "DENY";
-        context.Response.Headers["X-Content-Type-Options"] = "nosniff";
-        context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
-        context.Response.Headers["X-Permitted-Cross-Domain-Policies"] = "none";
-        context.Response.Headers["Cross-Origin-Embedder-Policy"] = "require-corp";
-        context.Response.Headers["Cross-Origin-Opener-Policy"] = "same-origin";
-        context.Response.Headers["Cross-Origin-Resource-Policy"] = "cross-origin";
+        var response = context.Response;
+        
+        // Prevent clickjacking attacks
+        response.Headers["X-Frame-Options"] = "DENY";
+        
+        // Prevent MIME type sniffing
+        response.Headers["X-Content-Type-Options"] = "nosniff";
+        
+        // Control referrer information
+        response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+        
+        // Prevent cross-domain policy access
+        response.Headers["X-Permitted-Cross-Domain-Policies"] = "none";
+        
+        // Cross-Origin Embedder Policy for isolation
+        response.Headers["Cross-Origin-Embedder-Policy"] = "require-corp";
+        
+        // Cross-Origin Opener Policy for security
+        response.Headers["Cross-Origin-Opener-Policy"] = "same-origin";
+        
+        // Cross-Origin Resource Policy
+        response.Headers["Cross-Origin-Resource-Policy"] = "cross-origin";
+        
+        // Content Security Policy - restrictive but allows API functionality
+        var csp = "default-src 'self'; " +
+                  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://maps.googleapis.com; " +
+                  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+                  "font-src 'self' https://fonts.gstatic.com; " +
+                  "img-src 'self' data: https:; " +
+                  "connect-src 'self' https://go.pospos.co https://maps.googleapis.com; " +
+                  "frame-ancestors 'none'; " +
+                  "base-uri 'self'; " +
+                  "form-action 'self'";
+        response.Headers["Content-Security-Policy"] = csp;
+        
+        // Remove server information disclosure
+        response.Headers.Remove("Server");
+        response.Headers.Remove("X-Powered-By");
+        response.Headers.Remove("X-AspNet-Version");
+        response.Headers.Remove("X-AspNetMvc-Version");
         
         await next.Invoke();
     });
