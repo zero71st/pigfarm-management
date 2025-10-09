@@ -225,9 +225,9 @@ src/
 
 **Risk Mitigation in Task Planning**:
 - Early configuration validation to catch issues before implementation
-- Contract tests before implementation to define expected behavior
 - Incremental middleware addition to isolate integration problems
 - Performance validation throughout to prevent late-stage optimizations
+- Manual testing procedures to validate functionality at each step
 
 **Expected Output**: 35-40 numbered, dependency-ordered tasks in tasks.md with clear [P] markers for parallel execution
 
@@ -236,7 +236,7 @@ src/
 
 **Phase 3**: Task execution (/tasks command creates tasks.md)  
 **Phase 4**: Implementation (execute tasks.md following constitutional principles)  
-**Phase 5**: Validation (run tests, execute quickstart.md, performance validation)
+**Phase 5**: Validation (manual testing, execute quickstart.md, performance validation)
 
 ## Complexity Tracking
 *Fill ONLY if Constitution Check has violations that must be justified*

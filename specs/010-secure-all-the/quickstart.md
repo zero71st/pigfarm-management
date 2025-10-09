@@ -35,12 +35,6 @@ Create or update `appsettings.Development.json`:
       "General": { "RequestsPerHour": 500, "WindowMinutes": 60 },
       "Admin": { "RequestsPerHour": 200, "WindowMinutes": 60 }
     },
-    "Logging": {
-      "SecurityEvents": {
-        "RetentionDays": 30,
-        "FilePath": "logs/security/events-{Date}.json"
-      }
-    },
     "Sessions": {
       "IdleTimeoutHours": 2,
       "CleanupIntervalMinutes": 30
@@ -58,10 +52,8 @@ builder.Services.Configure<SecuritySettings>(
 builder.Services.AddScoped<IApiKeyAuthenticationService, ApiKeyAuthenticationService>();
 builder.Services.AddScoped<IRoleAuthorizationService, RoleAuthorizationService>();
 builder.Services.AddScoped<IRateLimitingService, RateLimitingService>();
-builder.Services.AddSingleton<ISecurityEventLogger, SecurityEventLogger>();
 
 // Register middleware in correct order
-app.UseMiddleware<SecurityEventLoggingMiddleware>();
 app.UseMiddleware<ApiKeyAuthenticationMiddleware>();
 app.UseMiddleware<RoleBasedAuthorizationMiddleware>();
 app.UseMiddleware<RateLimitingMiddleware>();
@@ -205,32 +197,9 @@ Expected responses:
 - XSS attempt: HTTP 422 with `validation_failed` error
 - SQL injection: HTTP 422 with `validation_failed` error
 
-### Test 5: Security Logging Works
-Check log files after running tests:
-
-```bash
-# View security events log
-cat logs/security/events-2025-10-09.json | jq .
-
-# Should contain entries like:
-# {
-#   "timestamp": "2025-10-09T14:30:00Z",
-#   "userId": "12345", 
-#   "action": "Authentication",
-#   "result": "Success",
-#   "endpoint": "/api/customers"
-# }
-```
-
-Expected log entries:
-- Authentication events (success/failure)
-- Authorization checks (permitted/denied) 
-- Rate limiting violations
-- Input validation failures
-
 ## Performance Validation (10 minutes)
 
-### Test 6: Response Time Impact
+### Test 5: Response Time Impact
 ```bash
 # Measure baseline (before security middleware)
 time curl -H "X-Api-Key: your-api-key" \
@@ -240,13 +209,13 @@ time curl -H "X-Api-Key: your-api-key" \
 # Should add ~2-5ms overhead per request
 ```
 
-### Test 7: Memory Usage
+### Test 6: Memory Usage
 ```bash
 # Monitor memory before and after 1000 requests
 # Security middleware should add ~5-10MB for rate limiting cache
 ```
 
-### Test 8: Concurrent Load
+### Test 7: Concurrent Load
 ```bash
 # Use Apache Bench or similar tool
 ab -n 1000 -c 10 \
@@ -267,9 +236,6 @@ ab -n 1000 -c 10 \
       "General": { "RequestsPerHour": 1000 },
       "Admin": { "RequestsPerHour": 500 }
     },
-    "Logging": {
-      "SecurityEvents": { "RetentionDays": 7 }
-    },
     "Sessions": { "IdleTimeoutHours": 8 }
   }
 }
@@ -282,9 +248,6 @@ ab -n 1000 -c 10 \
     "RateLimiting": {
       "General": { "RequestsPerHour": 500 },
       "Admin": { "RequestsPerHour": 200 }
-    },
-    "Logging": {
-      "SecurityEvents": { "RetentionDays": 90 }
     },
     "Sessions": { "IdleTimeoutHours": 2 }
   }
@@ -303,16 +266,12 @@ ab -n 1000 -c 10 \
 **Cause**: Memory cache not configured properly  
 **Solution**: Verify `IMemoryCache` is registered in DI container
 
-#### Issue: Logs not being written
-**Cause**: File path permissions or disk space  
-**Solution**: Check log directory is writable and has sufficient space
-
 #### Issue: Performance degradation
 **Cause**: Synchronous middleware operations  
 **Solution**: Ensure all middleware uses async/await patterns
 
 ### Debug Mode
-Enable detailed security logging in development:
+Enable detailed security debugging in development:
 
 ```json
 {
@@ -326,10 +285,9 @@ Enable detailed security logging in development:
 
 ## Next Steps
 
-1. **Monitor Security Events**: Set up log aggregation and alerting
-2. **Performance Tuning**: Optimize cache sizes based on actual usage
-3. **Extended Validation**: Add custom validation rules for domain-specific security
-4. **Session Scaling**: Configure Redis for session storage in production
+1. **Performance Tuning**: Optimize cache sizes based on actual usage
+2. **Extended Validation**: Add custom validation rules for domain-specific security
+3. **Session Scaling**: Configure Redis for session storage in production
 5. **Security Hardening**: Add additional headers (HSTS, CSP, etc.)
 
 ---
