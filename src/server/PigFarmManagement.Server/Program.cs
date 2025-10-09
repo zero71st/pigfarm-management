@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography;
+using Microsoft.AspNetCore.Identity;
 using PigFarmManagement.Server.Infrastructure.Data;
 using PigFarmManagement.Server.Infrastructure.Extensions;
 using PigFarmManagement.Server.Services.ExternalServices;
@@ -85,6 +87,59 @@ using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<PigFarmDbContext>();
     context.Database.Migrate();
+}
+
+// One-time admin seeding: create an admin user (and one API key) if none exists
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<PigFarmDbContext>();
+    // Resolve services needed for hashing and api key creation
+    var hasher = new Microsoft.AspNetCore.Identity.PasswordHasher<object>();
+
+    // Check if any admin user exists
+    var hasAdmin = context.Users.Any(u => u.RolesCsv.Contains("Admin"));
+
+    if (!hasAdmin)
+    {
+        var adminUser = new PigFarmManagement.Server.Infrastructure.Data.Entities.UserEntity
+        {
+            Username = "admin",
+            Email = "admin@example.com",
+            RolesCsv = "Admin",
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow,
+            CreatedBy = "system-seed"
+        };
+
+        // Hash the default password
+        const string defaultPassword = "Admin123!";
+        adminUser.PasswordHash = hasher.HashPassword(null, defaultPassword);
+
+        context.Users.Add(adminUser);
+        context.SaveChanges();
+
+    // Create an API key for the admin and store hashed key (use ApiKeyHash to match validation)
+    var rawApiKey = PigFarmManagement.Server.Features.Authentication.Helpers.ApiKeyHash.GenerateApiKey();
+        var apiKeyEntity = new PigFarmManagement.Server.Infrastructure.Data.Entities.ApiKeyEntity
+        {
+            UserId = adminUser.Id,
+            Label = "Initial Admin Key",
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow,
+            LastUsedAt = null,
+            UsageCount = 0,
+            ExpiresAt = DateTime.UtcNow.AddYears(1)
+        };
+
+        // Store only hash of API key for security
+    apiKeyEntity.HashedKey = PigFarmManagement.Server.Features.Authentication.Helpers.ApiKeyHash.HashApiKey(rawApiKey);
+        context.ApiKeys.Add(apiKeyEntity);
+        context.SaveChanges();
+
+        Console.WriteLine("Seeded admin user: 'admin' with password 'Admin123!'");
+        Console.WriteLine("Initial admin API Key (store this securely):");
+        Console.WriteLine(rawApiKey);
+    }
 }
 
 // Configure the HTTP request pipeline
