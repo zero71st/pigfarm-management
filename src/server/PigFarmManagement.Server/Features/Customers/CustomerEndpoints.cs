@@ -8,20 +8,28 @@ public static class CustomerEndpoints
     {
         var group = builder.MapGroup("/api/customers").WithTags("Customers");
 
+        // TODO: Add security authorization policies once security middleware is enabled (Feature 010)
+        // For minimal APIs, use: .RequireAuthorization("PolicyName") or metadata attributes
+
         group.MapGet("/", GetAllCustomers)
             .WithName("GetAllCustomers");
+            // .RequireAuthorization(); // Requires "read:customers" permission
 
         group.MapGet("/{id:guid}", GetCustomerById)
             .WithName("GetCustomerById");
+            // .RequireAuthorization(); // Requires "read:customers" permission
 
         group.MapPost("/", CreateCustomer)
             .WithName("CreateCustomer");
+            // .RequireAuthorization(); // Requires "write:customers" permission
 
         group.MapPut("/{id:guid}", UpdateCustomer)
             .WithName("UpdateCustomer");
+            // .RequireAuthorization(); // Requires "write:customers" permission
 
         group.MapDelete("/{id:guid}", DeleteCustomer)
             .WithName("DeleteCustomer");
+            // .RequireAuthorization(); // Requires "delete:customers" permission
 
         // T018: Customer deletion validation endpoint
         group.MapPost("/{id:guid}/validate-deletion", ValidateCustomerDeletion)

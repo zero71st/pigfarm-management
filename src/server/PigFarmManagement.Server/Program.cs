@@ -55,6 +55,19 @@ builder.Services.AddScoped<PigFarmManagement.Server.Features.Customers.ICustomer
 builder.Services.AddScoped<PigFarmManagement.Server.Features.Customers.ICustomerDeletionService, PigFarmManagement.Server.Features.Customers.CustomerDeletionService>();
 builder.Services.AddScoped<PigFarmManagement.Server.Features.Customers.ICustomerLocationService, PigFarmManagement.Server.Features.Customers.CustomerLocationService>();
 
+// TODO: Enable security services registration after all files are created (Feature 010)
+// Security Configuration and Services
+// builder.Services.Configure<SecurityOptions>(builder.Configuration.GetSection("Security"));
+// builder.Services.AddSingleton<ISecurityConfigurationService, SecurityConfigurationService>();
+// builder.Services.AddScoped<IApiKeyValidationService, ApiKeyValidationService>();
+// builder.Services.AddSingleton<ISessionService, SessionService>();
+// builder.Services.AddSingleton<IRateLimitService, RateLimitService>();
+// builder.Services.AddScoped<IAuthorizationService, AuthorizationService>();
+// builder.Services.AddScoped<ISecurityService, SecurityService>();
+
+// Memory cache for API key validation and rate limiting
+builder.Services.AddMemoryCache();
+
 // CORS configuration for production
 builder.Services.AddCors(options =>
 {
@@ -227,7 +240,11 @@ else
 // Add forwarded headers support for reverse proxies
 app.UseForwardedHeaders();
 
-// Add API key authentication middleware
+// TODO: Enable security middleware after all components are ready (Feature 010)
+// Security middleware pipeline (order is important)
+// app.UseMiddleware<ApiKeyAuthenticationMiddleware>();
+
+// Existing API key middleware (to be replaced)
 app.UseMiddleware<PigFarmManagement.Server.Features.Authentication.ApiKeyMiddleware>();
 
 // Add authorization middleware
