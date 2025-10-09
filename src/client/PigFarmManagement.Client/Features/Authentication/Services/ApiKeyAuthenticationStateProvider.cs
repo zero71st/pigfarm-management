@@ -29,6 +29,7 @@ namespace PigFarmManagement.Client.Features.Authentication.Services
             {
                 new(System.Security.Claims.ClaimTypes.Name, user.Username),
                 new(System.Security.Claims.ClaimTypes.Email, user.Email),
+                new(System.Security.Claims.ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new("user_id", user.Id.ToString())
             };
 
@@ -38,8 +39,11 @@ namespace PigFarmManagement.Client.Features.Authentication.Services
                 claims.Add(new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, role));
             }
 
-            var identity = new System.Security.Claims.ClaimsIdentity(claims, "apikey");
-            return Task.FromResult(new AuthenticationState(new System.Security.Claims.ClaimsPrincipal(identity)));
+            // Make sure the identity is marked as authenticated with the correct authentication type
+            var identity = new System.Security.Claims.ClaimsIdentity(claims, "apikey", System.Security.Claims.ClaimTypes.Name, System.Security.Claims.ClaimTypes.Role);
+            var principal = new System.Security.Claims.ClaimsPrincipal(identity);
+            
+            return Task.FromResult(new AuthenticationState(principal));
         }
 
         private void NotifyAuthenticationStateChanged()

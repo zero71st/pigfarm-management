@@ -116,7 +116,7 @@ using (var scope = app.Services.CreateScope())
 
         // Hash the default password
         const string defaultPassword = "Admin123!";
-        adminUser.PasswordHash = hasher.HashPassword(null, defaultPassword);
+        adminUser.PasswordHash = hasher.HashPassword(new object(), defaultPassword);
 
         context.Users.Add(adminUser);
         context.SaveChanges();

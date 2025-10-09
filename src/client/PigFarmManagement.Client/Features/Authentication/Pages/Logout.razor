@@ -1,0 +1,70 @@
+@page "/logout"
+@using PigFarmManagement.Client.Features.Authentication.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateService AuthService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Logout - PigFarm Management</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="my-16">
+    <MudPaper Class="pa-8" Elevation="4">
+        <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-8">
+            Logging Out...
+        </MudText>
+        
+        <div class="d-flex justify-center">
+            <MudProgressCircular Indeterminate="true" />
+        </div>
+        
+        @if (!string.IsNullOrEmpty(debugMessage))
+        {
+            <MudText Typo="Typo.body2" Class="mt-4">@debugMessage</MudText>
+        }
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private string debugMessage = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            debugMessage = "Clearing authentication state...";
+            StateHasChanged();
+            
+            // Clear authentication
+            await AuthService.LogoutAsync();
+            
+            debugMessage = "Clearing browser storage...";
+            StateHasChanged();
+            
+            // Force clear all browser storage related to authentication
+            await JSRuntime.InvokeVoidAsync("localStorage.clear");
+            await JSRuntime.InvokeVoidAsync("sessionStorage.clear");
+            
+            debugMessage = "Authentication cleared. Redirecting...";
+            StateHasChanged();
+            
+            // Small delay to ensure state changes are processed
+            await Task.Delay(1000);
+            
+            Snackbar.Add("Logged out successfully", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            debugMessage = $"Error during logout: {ex.Message}";
+            Snackbar.Add($"Error during logout: {ex.Message}", Severity.Error);
+            StateHasChanged();
+            await Task.Delay(2000);
+        }
+        finally
+        {
+            // Force navigation with full page reload to clear any cached state
+            await JSRuntime.InvokeVoidAsync("window.location.assign", "/login");
+        }
+    }
+}

@@ -7,6 +7,7 @@ using PigFarmManagement.Client.Features.PigPens.Services;
 using PigFarmManagement.Client.Features.Dashboard.Services;
 using PigFarmManagement.Client.Features.Feeds.Services;
 using PigFarmManagement.Client.Features.FeedFormulas.Services;
+using PigFarmManagement.Client.Features.Admin.Services;
 using PigFarmManagement.Client.Services;
 using PigFarmManagement.Client.Features.Authentication.Services;
 using MudBlazor.Services;
@@ -62,5 +63,6 @@ builder.Services.AddScoped<IFeedService, FeedService>();
 builder.Services.AddScoped<IFeedFormulaService, FeedFormulaService>();
 builder.Services.AddScoped<IFeedFormulaCalculationService, FeedFormulaCalculationService>();
 builder.Services.AddScoped<IFeedImportService, FeedImportService>();
+builder.Services.AddScoped<IAdminUserService, AdminUserService>();
 
 await builder.Build().RunAsync();

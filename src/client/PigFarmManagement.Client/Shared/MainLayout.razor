@@ -1,10 +1,16 @@
 @inherits LayoutComponentBase
+@using PigFarmManagement.Client.Features.Authentication.Services
+@using PigFarmManagement.Client.Features.Authentication.Components
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateService AuthService
+@inject AuthenticationStateProvider AuthStateProvider
 
 <MudLayout>
     <MudAppBar Elevation="1">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
         <MudText Typo="Typo.h5" Class="ml-3">PIG FARM MANAGEMENT</MudText>
         <MudSpacer />
+        <LoginStatus />
         <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Inherit" />
     </MudAppBar>
     <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
@@ -19,6 +25,17 @@
 
 @code {
     bool _drawerOpen = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthService.InitializeAsync();
+        // Force authentication state change notification
+        if (AuthStateProvider is ApiKeyAuthenticationStateProvider provider)
+        {
+            await provider.GetAuthenticationStateAsync();
+        }
+        StateHasChanged();
+    }
 
     void DrawerToggle()
     {

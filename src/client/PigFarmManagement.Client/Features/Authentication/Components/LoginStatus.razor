@@ -56,8 +56,8 @@
 
     private async Task HandleLogout()
     {
-        await AuthService.LogoutAsync();
-        Navigation.NavigateTo("/login", forceLoad: true);
+        // Navigate to logout page for proper cleanup
+        Navigation.NavigateTo("/logout");
     }
 
     private Color GetRoleColor()

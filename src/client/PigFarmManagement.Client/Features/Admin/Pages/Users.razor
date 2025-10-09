@@ -1,0 +1,177 @@
+@page "/admin/users"
+@using PigFarmManagement.Shared.Contracts.Authentication
+@using PigFarmManagement.Client.Features.Authentication.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IAdminUserService AdminUserService
+@inject AuthenticationStateService AuthService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+
+<PageTitle>User Management</PageTitle>
+
+<AuthorizeView Roles="Admin">
+    <Authorized>
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-4">
+            <MudText Typo="Typo.h4" Class="mb-4">User Management</MudText>
+            
+            <MudCard Class="mb-4">
+                <MudCardContent>
+                    <div class="d-flex justify-space-between align-center mb-4">
+                        <MudText Typo="Typo.h6">Users</MudText>
+                        <MudButton Variant="Variant.Filled" 
+                                  Color="Color.Primary" 
+                                  StartIcon="@Icons.Material.Filled.PersonAdd"
+                                  OnClick="@(() => OpenCreateUserDialog())">
+                            Create User
+                        </MudButton>
+                    </div>
+
+                    <div class="d-flex gap-4 mb-4">
+                        <MudTextField @bind-Value="searchText" 
+                                     Label="Search" 
+                                     Variant="Variant.Outlined" 
+                                     Adornment="Adornment.Start"
+                                     AdornmentIcon="@Icons.Material.Filled.Search" />
+
+                        <MudButton Variant="Variant.Outlined" 
+                                  StartIcon="@Icons.Material.Filled.Search"
+                                  OnClick="LoadUsers">
+                            Search
+                        </MudButton>
+                    </div>
+                </MudCardContent>
+            </MudCard>
+
+            @if (isLoading)
+            {
+                <MudProgressLinear Indeterminate="true" />
+            }
+            else
+            {
+                <MudTable Items="@users" Hover="true" Breakpoint="Breakpoint.Sm">
+                    <HeaderContent>
+                        <MudTh>Username</MudTh>
+                        <MudTh>Email</MudTh>
+                        <MudTh>Roles</MudTh>
+                        <MudTh>Status</MudTh>
+                        <MudTh>Last Login</MudTh>
+                        <MudTh>Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate Context="userItem">
+                        <MudTd DataLabel="Username">@userItem.Username</MudTd>
+                        <MudTd DataLabel="Email">@userItem.Email</MudTd>
+                        <MudTd DataLabel="Roles">
+                            @foreach (var role in userItem.Roles)
+                            {
+                                <MudChip Size="Size.Small" Color="Color.Primary">@role</MudChip>
+                            }
+                        </MudTd>
+                        <MudTd DataLabel="Status">
+                            <MudChip Size="Size.Small" 
+                                     Color="@(userItem.IsActive ? Color.Success : Color.Default)">
+                                @(userItem.IsActive ? "Active" : "Inactive")
+                            </MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Last Login">
+                            @(userItem.LastLoginAt?.ToString("yyyy-MM-dd HH:mm") ?? "Never")
+                        </MudTd>
+                        <MudTd DataLabel="Actions">
+                            <MudButtonGroup>
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" 
+                                               Color="Color.Primary" 
+                                               Size="Size.Small"
+                                               OnClick="@(() => EditUser(userItem))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                                               Color="Color.Error" 
+                                               Size="Size.Small"
+                                               OnClick="@(() => DeleteUser(userItem))" />
+                            </MudButtonGroup>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+        </MudContainer>
+    </Authorized>
+    <NotAuthorized>
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-4">
+            <MudAlert Severity="Severity.Error">
+                <div class="d-flex align-center">
+                    <MudIcon Icon="Icons.Material.Filled.Security" Class="mr-3"/>
+                    <div>
+                        <MudText Typo="Typo.body1"><strong>Access Denied</strong></MudText>
+                        <MudText Typo="Typo.body2">You need Admin role to access user management.</MudText>
+                        <MudText Typo="Typo.body2">Current user: @(AuthService.CurrentUser?.Username ?? "Not logged in")</MudText>
+                        <MudText Typo="Typo.body2">Current roles: @(string.Join(", ", AuthService.CurrentUser?.Roles ?? new string[0]))</MudText>
+                        <MudText Typo="Typo.body2">Auth context available: @(context.User?.Identity?.IsAuthenticated ?? false)</MudText>
+                        <MudText Typo="Typo.body2">Auth context name: @(context.User?.Identity?.Name ?? "None")</MudText>
+                        <MudText Typo="Typo.body2">Auth context roles: @(string.Join(", ", context.User?.Claims?.Where(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Select(c => c.Value) ?? new string[0]))</MudText>
+                    </div>
+                </div>
+            </MudAlert>
+        </MudContainer>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private List<UserInfo> users = new();
+    private bool isLoading = false;
+    private string searchText = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUsers();
+    }
+
+    private async Task LoadUsers()
+    {
+        isLoading = true;
+        try
+        {
+            var response = await AdminUserService.GetUsersAsync(1, 100, null, null, searchText);
+            if (response.IsSuccess)
+            {
+                users = response.Data?.ToList() ?? new List<UserInfo>();
+            }
+            else
+            {
+                Snackbar.Add($"Error loading users: {response.ErrorMessage}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading users: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void OpenCreateUserDialog()
+    {
+        Snackbar.Add("Create user functionality will be implemented in the next iteration", Severity.Info);
+    }
+
+    private void EditUser(UserInfo user)
+    {
+        Snackbar.Add($"Edit user '{user.Username}' functionality will be implemented in the next iteration", Severity.Info);
+    }
+
+    private async Task DeleteUser(UserInfo user)
+    {
+        var result = await JSRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to delete user '{user.Username}'?");
+        if (result)
+        {
+            var response = await AdminUserService.DeleteUserAsync(user.Id);
+            if (response.IsSuccess)
+            {
+                Snackbar.Add("User deleted successfully", Severity.Success);
+                await LoadUsers();
+            }
+            else
+            {
+                Snackbar.Add($"Error deleting user: {response.ErrorMessage}", Severity.Error);
+            }
+        }
+    }
+}

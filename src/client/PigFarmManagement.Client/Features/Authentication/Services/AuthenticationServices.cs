@@ -86,6 +86,11 @@ namespace PigFarmManagement.Client.Features.Authentication.Services
                     // API key is invalid, clear it
                     await LogoutAsync();
                 }
+                else
+                {
+                    // Successfully loaded user, notify authentication state changed
+                    NotifyAuthenticationStateChanged();
+                }
             }
         }
 
@@ -105,14 +110,31 @@ namespace PigFarmManagement.Client.Features.Authentication.Services
         /// </summary>
         public async Task LogoutAsync()
         {
-            if (!string.IsNullOrEmpty(_currentApiKey))
+            try
             {
-                await _authApiService.LogoutAsync();
+                if (!string.IsNullOrEmpty(_currentApiKey))
+                {
+                    await _authApiService.LogoutAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log the error but continue with local logout
+                Console.WriteLine($"Error calling server logout: {ex.Message}");
             }
             
+            // Clear local state regardless of server response
             _currentUser = null;
             _currentApiKey = null;
             await _storage.ClearApiKeyAsync();
+            NotifyAuthenticationStateChanged();
+        }
+
+        /// <summary>
+        /// Force refresh of authentication state
+        /// </summary>
+        public void ForceRefresh()
+        {
             NotifyAuthenticationStateChanged();
         }
 
