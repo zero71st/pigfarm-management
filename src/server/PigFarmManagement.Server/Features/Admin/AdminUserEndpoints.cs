@@ -83,7 +83,7 @@ public static class AdminUserEndpoints
                 query = query.Where(u => u.IsActive == isActive.Value);
 
             if (!string.IsNullOrWhiteSpace(role))
-                query = query.Where(u => u.Roles.Contains(role));
+                query = query.Where(u => u.RolesCsv.Contains(role));
 
             if (!string.IsNullOrWhiteSpace(search))
                 query = query.Where(u => u.Username.Contains(search) || u.Email.Contains(search));

@@ -1,0 +1,174 @@
+@using PigFarmManagement.Shared.Contracts.Authentication
+@using System.ComponentModel.DataAnnotations
+@inject IAdminUserService AdminUserService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudContainer Class="pa-0">
+            <MudForm @ref="form" Model="@createUserRequest" Validation="@(new DataAnnotationsValidator())">
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="createUserRequest.Username"
+                                     Label="Username"
+                                     Required="true"
+                                     Variant="Variant.Outlined"
+                                     For="@(() => createUserRequest.Username)"
+                                     HelperText="Must be 3-50 characters" />
+                    </MudItem>
+                    
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="createUserRequest.Email"
+                                     Label="Email"
+                                     Required="true"
+                                     Variant="Variant.Outlined"
+                                     For="@(() => createUserRequest.Email)"
+                                     InputType="InputType.Email" />
+                    </MudItem>
+                    
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="createUserRequest.Password"
+                                     Label="Password"
+                                     Required="true"
+                                     Variant="Variant.Outlined"
+                                     For="@(() => createUserRequest.Password)"
+                                     InputType="@(showPassword ? InputType.Text : InputType.Password)"
+                                     Adornment="Adornment.End"
+                                     AdornmentIcon="@(showPassword ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)"
+                                     OnAdornmentClick="@(() => showPassword = !showPassword)"
+                                     HelperText="Minimum 6 characters" />
+                    </MudItem>
+                    
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="confirmPassword"
+                                     Label="Confirm Password"
+                                     Required="true"
+                                     Variant="Variant.Outlined"
+                                     InputType="@(showPassword ? InputType.Text : InputType.Password)"
+                                     Error="@(!string.IsNullOrEmpty(confirmPassword) && confirmPassword != createUserRequest.Password)"
+                                     ErrorText="Passwords do not match"
+                                     HelperText="Re-enter the password" />
+                    </MudItem>
+                    
+                    <MudItem xs="12">
+                        <MudText Typo="Typo.subtitle2" Class="mb-2">Roles</MudText>
+                        <MudCheckBox @bind-Checked="isAdmin" Label="Admin" Color="Color.Primary" />
+                        <MudCheckBox @bind-Checked="isManager" Label="Manager" Color="Color.Primary" />
+                        <MudCheckBox @bind-Checked="isWorker" Label="Worker" Color="Color.Primary" />
+                        <MudCheckBox @bind-Checked="isViewer" Label="Viewer" Color="Color.Primary" />
+                        @if (!HasAnyRole())
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Error">At least one role must be selected</MudText>
+                        }
+                    </MudItem>
+                    
+                    <MudItem xs="12">
+                        <MudCheckBox @bind-Checked="createUserRequest.IsActive" Label="Active" Color="Color.Primary" />
+                    </MudItem>
+                </MudGrid>
+            </MudForm>
+        </MudContainer>
+    </DialogContent>
+    
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" 
+                   Variant="Variant.Filled" 
+                   OnClick="Submit"
+                   Disabled="@(!CanSubmit())"
+                   Class="ml-2">
+            @if (isSubmitting)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+            }
+            Create User
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
+    
+    private MudForm form = null!;
+    private CreateUserRequest createUserRequest = new();
+    private string confirmPassword = "";
+    private bool showPassword = false;
+    private bool isSubmitting = false;
+    
+    // Role checkboxes
+    private bool isAdmin = false;
+    private bool isManager = false;
+    private bool isWorker = false;
+    private bool isViewer = true; // Default to Viewer
+    
+    protected override void OnInitialized()
+    {
+        createUserRequest = new CreateUserRequest
+        {
+            Username = "",
+            Email = "",
+            Password = "",
+            Roles = new[] { "Viewer" },
+            IsActive = true
+        };
+    }
+    
+    private bool HasAnyRole()
+    {
+        return isAdmin || isManager || isWorker || isViewer;
+    }
+    
+    private bool CanSubmit()
+    {
+        return !isSubmitting && 
+               !string.IsNullOrWhiteSpace(createUserRequest.Username) &&
+               !string.IsNullOrWhiteSpace(createUserRequest.Email) &&
+               !string.IsNullOrWhiteSpace(createUserRequest.Password) &&
+               confirmPassword == createUserRequest.Password &&
+               HasAnyRole();
+    }
+    
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+    
+    private async Task Submit()
+    {
+        if (!CanSubmit()) return;
+        
+        isSubmitting = true;
+        
+        try
+        {
+            // Update roles based on checkboxes
+            var roles = new List<string>();
+            if (isAdmin) roles.Add("Admin");
+            if (isManager) roles.Add("Manager");
+            if (isWorker) roles.Add("Worker");
+            if (isViewer) roles.Add("Viewer");
+            
+            var request = createUserRequest with { Roles = roles.ToArray() };
+            
+            var response = await AdminUserService.CreateUserAsync(request);
+            
+            if (response.IsSuccess)
+            {
+                Snackbar.Add($"User '{request.Username}' created successfully", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(response.Data));
+            }
+            else
+            {
+                Snackbar.Add($"Error creating user: {response.ErrorMessage}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error creating user: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+}

@@ -309,29 +309,4 @@ public record ApiResponse<T>
     public string? ErrorMessage { get; init; }
 }
 
-public record CreateApiKeyResponse
-{
-    public string ApiKey { get; init; } = "";
-    public Guid KeyId { get; init; }
-    public DateTime? ExpiresAt { get; init; }
-    public string? Label { get; init; }
-}
-
-public record RevokeAllKeysResponse
-{
-    public string Message { get; init; } = "";
-    public int RevokedCount { get; init; }
-    public DateTime Timestamp { get; init; }
-}
-
-public record CreateApiKeyRequest
-{
-    public string? Label { get; init; }
-    public int? ExpirationDays { get; init; }
-}
-
-public record ResetPasswordRequest
-{
-    public string NewPassword { get; init; } = "";
-    public bool RevokeApiKeys { get; init; } = true;
-}
+// All DTOs are now in shared contracts

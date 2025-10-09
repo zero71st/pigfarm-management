@@ -1,0 +1,288 @@
+@using PigFarmManagement.Shared.Contracts.Authentication
+@using System.ComponentModel.DataAnnotations
+@inject IAdminUserService AdminUserService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+
+<MudDialog>
+    <DialogContent>
+        <MudContainer Class="pa-0">
+            <div class="d-flex justify-space-between align-center mb-4">
+                <MudText Typo="Typo.h6">API Keys for @User.Username</MudText>
+                <MudButton Variant="Variant.Filled" 
+                          Color="Color.Primary" 
+                          StartIcon="@Icons.Material.Filled.Add"
+                          OnClick="@(() => ShowCreateKeyForm = !ShowCreateKeyForm)">
+                    Create API Key
+                </MudButton>
+            </div>
+
+            @if (ShowCreateKeyForm)
+            {
+                <MudCard Class="mb-4">
+                    <MudCardContent>
+                        <MudText Typo="Typo.h6" Class="mb-3">Create New API Key</MudText>
+                        <MudForm @ref="createKeyForm" Model="@createKeyRequest" Validation="@(new DataAnnotationsValidator())">
+                            <MudGrid>
+                                <MudItem xs="12" md="6">
+                                    <MudTextField @bind-Value="createKeyRequest.Label"
+                                                 Label="Label (Optional)"
+                                                 Variant="Variant.Outlined"
+                                                 HelperText="Descriptive name for this key" />
+                                </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudNumericField @bind-Value="createKeyRequest.ExpirationDays"
+                                                    Label="Expiration (Days)"
+                                                    Variant="Variant.Outlined"
+                                                    Min="1"
+                                                    Max="365"
+                                                    HelperText="1-365 days" />
+                                </MudItem>
+                                <MudItem xs="12">
+                                    <div class="d-flex gap-2">
+                                        <MudButton Color="Color.Primary" 
+                                                  Variant="Variant.Filled" 
+                                                  OnClick="CreateApiKey"
+                                                  Disabled="@isCreatingKey">
+                                            @if (isCreatingKey)
+                                            {
+                                                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                            }
+                                            Create Key
+                                        </MudButton>
+                                        <MudButton Variant="Variant.Outlined" OnClick="@(() => ShowCreateKeyForm = false)">
+                                            Cancel
+                                        </MudButton>
+                                    </div>
+                                </MudItem>
+                            </MudGrid>
+                        </MudForm>
+                    </MudCardContent>
+                </MudCard>
+            }
+
+            @if (!string.IsNullOrEmpty(newApiKey))
+            {
+                <MudAlert Severity="Severity.Success" Class="mb-4">
+                    <MudText Typo="Typo.subtitle1"><strong>New API Key Created</strong></MudText>
+                    <MudText Typo="Typo.body2" Class="mb-2">Save this key now - it will not be shown again!</MudText>
+                    <div class="d-flex align-center gap-2">
+                        <MudTextField Value="@newApiKey" 
+                                     ReadOnly="true" 
+                                     Variant="Variant.Outlined"
+                                     Class="flex-grow-1"
+                                     InputType="InputType.Password"
+                                     Adornment="Adornment.End"
+                                     AdornmentIcon="@Icons.Material.Filled.ContentCopy"
+                                     OnAdornmentClick="@(() => CopyToClipboard(newApiKey))" />
+                    </div>
+                </MudAlert>
+            }
+
+            @if (isLoadingKeys)
+            {
+                <MudProgressLinear Indeterminate="true" />
+            }
+            else
+            {
+                <MudTable Items="@apiKeys" Hover="true" Breakpoint="Breakpoint.Sm">
+                    <HeaderContent>
+                        <MudTh>Label</MudTh>
+                        <MudTh>Status</MudTh>
+                        <MudTh>Expires</MudTh>
+                        <MudTh>Last Used</MudTh>
+                        <MudTh>Usage Count</MudTh>
+                        <MudTh>Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate Context="keyItem">
+                        <MudTd DataLabel="Label">@(keyItem.Label ?? "Unlabeled")</MudTd>
+                        <MudTd DataLabel="Status">
+                            <MudChip Size="Size.Small" 
+                                     Color="@GetStatusColor(keyItem)">
+                                @keyItem.Status
+                            </MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Expires">@keyItem.ExpiresAt.ToString("yyyy-MM-dd")</MudTd>
+                        <MudTd DataLabel="Last Used">@(keyItem.LastUsedAt?.ToString("yyyy-MM-dd HH:mm") ?? "Never")</MudTd>
+                        <MudTd DataLabel="Usage Count">@keyItem.UsageCount</MudTd>
+                        <MudTd DataLabel="Actions">
+                            @if (keyItem.IsActive)
+                            {
+                                <MudIconButton Icon="@Icons.Material.Filled.Block" 
+                                               Color="Color.Error" 
+                                               Size="Size.Small"
+                                               OnClick="@(() => RevokeApiKey(keyItem))"
+                                               Title="Revoke Key" />
+                            }
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+
+                @if (apiKeys.Any(k => k.IsActive))
+                {
+                    <div class="mt-4">
+                        <MudButton Color="Color.Error" 
+                                  Variant="Variant.Outlined" 
+                                  StartIcon="@Icons.Material.Filled.Block"
+                                  OnClick="RevokeAllKeys">
+                            Revoke All Active Keys
+                        </MudButton>
+                    </div>
+                }
+            }
+        </MudContainer>
+    </DialogContent>
+    
+    <DialogActions>
+        <MudButton OnClick="Close">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public UserInfo User { get; set; } = null!;
+    
+    private MudForm createKeyForm = null!;
+    private List<ApiKeyInfo> apiKeys = new();
+    private CreateApiKeyRequest createKeyRequest = new();
+    private bool isLoadingKeys = true;
+    private bool isCreatingKey = false;
+    private bool ShowCreateKeyForm = false;
+    private string newApiKey = "";
+    
+    protected override async Task OnInitializedAsync()
+    {
+        createKeyRequest = new CreateApiKeyRequest
+        {
+            Label = "",
+            ExpirationDays = 30
+        };
+        
+        await LoadApiKeys();
+    }
+    
+    private async Task LoadApiKeys()
+    {
+        isLoadingKeys = true;
+        try
+        {
+            var response = await AdminUserService.GetUserApiKeysAsync(User.Id);
+            if (response.IsSuccess)
+            {
+                apiKeys = response.Data?.ToList() ?? new List<ApiKeyInfo>();
+            }
+            else
+            {
+                Snackbar.Add($"Error loading API keys: {response.ErrorMessage}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading API keys: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoadingKeys = false;
+        }
+    }
+    
+    private async Task CreateApiKey()
+    {
+        isCreatingKey = true;
+        newApiKey = "";
+        
+        try
+        {
+            var response = await AdminUserService.CreateApiKeyAsync(User.Id, createKeyRequest);
+            if (response.IsSuccess && response.Data != null)
+            {
+                newApiKey = response.Data.ApiKey;
+                Snackbar.Add("API key created successfully", Severity.Success);
+                ShowCreateKeyForm = false;
+                createKeyRequest = new CreateApiKeyRequest { Label = "", ExpirationDays = 30 };
+                await LoadApiKeys();
+            }
+            else
+            {
+                Snackbar.Add($"Error creating API key: {response.ErrorMessage}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error creating API key: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isCreatingKey = false;
+        }
+    }
+    
+    private async Task RevokeApiKey(ApiKeyInfo keyInfo)
+    {
+        bool? confirm = await JSRuntime.InvokeAsync<bool>("confirm", 
+            $"Are you sure you want to revoke the API key '{keyInfo.Label ?? "Unlabeled"}'?");
+            
+        if (confirm == true)
+        {
+            var response = await AdminUserService.RevokeApiKeyAsync(keyInfo.Id);
+            if (response.IsSuccess)
+            {
+                Snackbar.Add("API key revoked successfully", Severity.Success);
+                await LoadApiKeys();
+            }
+            else
+            {
+                Snackbar.Add($"Error revoking API key: {response.ErrorMessage}", Severity.Error);
+            }
+        }
+    }
+    
+    private async Task RevokeAllKeys()
+    {
+        bool? confirm = await JSRuntime.InvokeAsync<bool>("confirm", 
+            $"Are you sure you want to revoke ALL active API keys for user '{User.Username}'?");
+            
+        if (confirm == true)
+        {
+            var response = await AdminUserService.RevokeAllUserKeysAsync(User.Id);
+            if (response.IsSuccess)
+            {
+                Snackbar.Add($"All API keys revoked successfully", Severity.Success);
+                await LoadApiKeys();
+            }
+            else
+            {
+                Snackbar.Add($"Error revoking API keys: {response.ErrorMessage}", Severity.Error);
+            }
+        }
+    }
+    
+    private async Task CopyToClipboard(string text)
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", text);
+            Snackbar.Add("API key copied to clipboard", Severity.Success);
+        }
+        catch
+        {
+            Snackbar.Add("Could not copy to clipboard", Severity.Warning);
+        }
+    }
+    
+    private Color GetStatusColor(ApiKeyInfo keyInfo)
+    {
+        return keyInfo.Status switch
+        {
+            "Active" => Color.Success,
+            "Expired" => Color.Warning,
+            "Revoked" => Color.Error,
+            _ => Color.Default
+        };
+    }
+    
+    private void Close()
+    {
+        MudDialog.Close();
+    }
+}

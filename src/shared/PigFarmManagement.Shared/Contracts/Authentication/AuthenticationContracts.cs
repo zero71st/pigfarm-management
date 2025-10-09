@@ -41,32 +41,32 @@ public record CreateUserRequest
 {
     [Required]
     [StringLength(50, MinimumLength = 3)]
-    public string Username { get; init; } = "";
+    public string Username { get; set; } = "";
 
     [Required]
     [EmailAddress]
     [StringLength(255)]
-    public string Email { get; init; } = "";
+    public string Email { get; set; } = "";
 
     [Required]
     [StringLength(100, MinimumLength = 6)]
-    public string Password { get; init; } = "";
+    public string Password { get; set; } = "";
 
     [Required]
-    public string[] Roles { get; init; } = Array.Empty<string>();
+    public string[] Roles { get; set; } = Array.Empty<string>();
 
-    public bool IsActive { get; init; } = true;
+    public bool IsActive { get; set; } = true;
 }
 
 public record UpdateUserRequest
 {
     [StringLength(255)]
     [EmailAddress]
-    public string? Email { get; init; }
+    public string? Email { get; set; }
 
-    public string[]? Roles { get; init; }
+    public string[]? Roles { get; set; }
 
-    public bool? IsActive { get; init; }
+    public bool? IsActive { get; set; }
 }
 
 public record ChangePasswordRequest
@@ -78,6 +78,34 @@ public record ChangePasswordRequest
     [Required]
     [StringLength(100, MinimumLength = 6)]
     public string NewPassword { get; init; } = "";
+}
+
+public record ResetPasswordRequest
+{
+    [Required]
+    [StringLength(100, MinimumLength = 6)]
+    public string NewPassword { get; set; } = "";
+}
+
+public record CreateApiKeyRequest
+{
+    [StringLength(100)]
+    public string? Label { get; set; }
+
+    [Range(1, 365)]
+    public int ExpirationDays { get; set; } = 30;
+}
+
+public record CreateApiKeyResponse
+{
+    public string ApiKey { get; init; } = "";
+    public ApiKeyInfo KeyInfo { get; init; } = null!;
+}
+
+public record RevokeAllKeysResponse
+{
+    public int RevokedCount { get; init; }
+    public string Message { get; init; } = "";
 }
 
 public record ApiKeyRequest
