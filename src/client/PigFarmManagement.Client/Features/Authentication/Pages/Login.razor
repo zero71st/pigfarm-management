@@ -130,6 +130,10 @@
             if (success)
             {
                 Snackbar.Add("Login successful!", Severity.Success);
+                
+                // Small delay to allow authentication state to propagate
+                await Task.Delay(100);
+                
                 NavigateAfterLogin();
             }
             else
@@ -153,7 +157,14 @@
 
     private void NavigateAfterLogin()
     {
-        var returnUrl = ReturnUrl ?? "/";
+        var returnUrl = ReturnUrl;
+        
+        // If no return URL is specified, or if return URL is root, go to dashboard
+        if (string.IsNullOrEmpty(returnUrl) || returnUrl == "/")
+        {
+            returnUrl = "/dashboard";
+        }
+        
         Navigation.NavigateTo(returnUrl, forceLoad: true);
     }
 

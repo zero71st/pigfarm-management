@@ -1,4 +1,6 @@
 @page "/admin/users"
+@attribute [Authorize(Roles = "Admin")]
+@using Microsoft.AspNetCore.Authorization
 @using PigFarmManagement.Shared.Contracts.Authentication
 @using PigFarmManagement.Client.Features.Authentication.Services
 @using Microsoft.AspNetCore.Components.Authorization
@@ -11,9 +13,7 @@
 
 <PageTitle>User Management</PageTitle>
 
-<AuthorizeView Roles="Admin">
-    <Authorized>
-        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-4">
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-4">
             <MudText Typo="Typo.h4" Class="mb-4">User Management</MudText>
             
             <MudCard Class="mb-4">
@@ -123,21 +123,6 @@
                 </MudTable>
             }
         </MudContainer>
-    </Authorized>
-    <NotAuthorized>
-        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-4">
-            <MudAlert Severity="Severity.Error">
-                <div class="d-flex align-center">
-                    <MudIcon Icon="Icons.Material.Filled.Security" Class="mr-3"/>
-                    <div>
-                        <MudText Typo="Typo.body1"><strong>Access Denied</strong></MudText>
-                        <MudText Typo="Typo.body2">You need Admin role to access user management.</MudText>
-                    </div>
-                </div>
-            </MudAlert>
-        </MudContainer>
-    </NotAuthorized>
-</AuthorizeView>
 
 @code {
     private List<UserInfo> users = new();
