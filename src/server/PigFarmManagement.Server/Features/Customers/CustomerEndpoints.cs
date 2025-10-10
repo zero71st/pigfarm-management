@@ -12,45 +12,51 @@ public static class CustomerEndpoints
         // For minimal APIs, use: .RequireAuthorization("PolicyName") or metadata attributes
 
         group.MapGet("/", GetAllCustomers)
-            .WithName("GetAllCustomers");
-            // .RequireAuthorization(); // Requires "read:customers" permission
+            .WithName("GetAllCustomers")
+            .RequireAuthorization(); // Requires "read:customers" permission
 
         group.MapGet("/{id:guid}", GetCustomerById)
-            .WithName("GetCustomerById");
-            // .RequireAuthorization(); // Requires "read:customers" permission
+            .WithName("GetCustomerById")
+            .RequireAuthorization(); // Requires "read:customers" permission
 
         group.MapPost("/", CreateCustomer)
-            .WithName("CreateCustomer");
-            // .RequireAuthorization(); // Requires "write:customers" permission
+            .WithName("CreateCustomer")
+            .RequireAuthorization(); // Requires "write:customers" permission
 
         group.MapPut("/{id:guid}", UpdateCustomer)
-            .WithName("UpdateCustomer");
-            // .RequireAuthorization(); // Requires "write:customers" permission
+            .WithName("UpdateCustomer")
+            .RequireAuthorization(); // Requires "write:customers" permission
 
         group.MapDelete("/{id:guid}", DeleteCustomer)
-            .WithName("DeleteCustomer");
-            // .RequireAuthorization(); // Requires "delete:customers" permission
+            .WithName("DeleteCustomer")
+            .RequireAuthorization(); // Requires "delete:customers" permission
 
         // T018: Customer deletion validation endpoint
         group.MapPost("/{id:guid}/validate-deletion", ValidateCustomerDeletion)
-            .WithName("ValidateCustomerDeletion");
+            .WithName("ValidateCustomerDeletion")
+            .RequireAuthorization();
 
         // T019: Customer deletion endpoint (soft/hard)
         group.MapPost("/{id:guid}/soft-delete", SoftDeleteCustomer)
-            .WithName("SoftDeleteCustomer");
+            .WithName("SoftDeleteCustomer")
+            .RequireAuthorization();
             
         group.MapPost("/{id:guid}/hard-delete", HardDeleteCustomer)
-            .WithName("HardDeleteCustomer");
+            .WithName("HardDeleteCustomer")
+            .RequireAuthorization();
 
         // T020: Customer location update endpoint
         group.MapGet("/{id:guid}/location", GetCustomerLocation)
-            .WithName("GetCustomerLocation");
+            .WithName("GetCustomerLocation")
+            .RequireAuthorization();
             
         group.MapPut("/{id:guid}/location", UpdateCustomerLocation)
-            .WithName("UpdateCustomerLocation");
+            .WithName("UpdateCustomerLocation")
+            .RequireAuthorization();
             
         group.MapDelete("/{id:guid}/location", DeleteCustomerLocation)
-            .WithName("DeleteCustomerLocation");
+            .WithName("DeleteCustomerLocation")
+            .RequireAuthorization();
 
         return builder;
     }

@@ -28,7 +28,8 @@ public class SessionService : ISessionService
         // Set up cleanup timer
         var config = _configService.GetConfiguration();
         var cleanupInterval = TimeSpan.FromMinutes(config.SessionSettings.CleanupIntervalMinutes);
-        _cleanupTimer = new Timer(CleanupExpiredSessions, null, cleanupInterval, cleanupInterval);
+        _cleanupTimer = new Timer(CleanupExpiredSessions, null, 
+            cleanupInterval, cleanupInterval);
     }
 
     public async Task<SessionDto> CreateSessionAsync(

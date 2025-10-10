@@ -52,6 +52,16 @@ public class UserEntity
             .Select(r => r.Trim())
             .ToArray();
 
+    /// <summary>
+    /// Primary role for the user (first role in RolesCsv)
+    /// </summary>
+    public string Role => Roles.FirstOrDefault() ?? "ReadOnly";
+
+    /// <summary>
+    /// Display name for the user (alias for Username)
+    /// </summary>
+    public string Name => Username;
+
     public bool HasRole(string role) => Roles.Contains(role, StringComparer.OrdinalIgnoreCase);
 
     public bool IsAdmin => HasRole("Admin");

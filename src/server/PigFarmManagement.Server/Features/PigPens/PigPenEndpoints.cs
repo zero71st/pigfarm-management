@@ -6,7 +6,7 @@ public static class PigPenEndpoints
 {
     public static IEndpointRouteBuilder MapPigPenEndpoints(this IEndpointRouteBuilder builder)
     {
-        var group = builder.MapGroup("/api/pigpens").WithTags("PigPens");
+        var group = builder.MapGroup("/api/pigpens").WithTags("PigPens").RequireAuthorization();
 
         group.MapGet("/", GetAllPigPens)
             .WithName("GetAllPigPens");

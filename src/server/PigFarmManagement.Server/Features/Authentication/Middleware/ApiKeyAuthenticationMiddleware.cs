@@ -220,14 +220,14 @@ public class ApiKeyAuthenticationMiddleware
             if (rateLimitStatus.Policies.Any())
             {
                 var policy = rateLimitStatus.Policies.First();
-                context.Response.Headers.Add("X-RateLimit-Limit", policy.RequestsLimit.ToString());
-                context.Response.Headers.Add("X-RateLimit-Remaining", policy.RequestsRemaining.ToString());
-                context.Response.Headers.Add("X-RateLimit-Reset", policy.WindowReset.ToUnixTimeSeconds().ToString());
+                context.Response.Headers["X-RateLimit-Limit"] = policy.RequestsLimit.ToString();
+                context.Response.Headers["X-RateLimit-Remaining"] = policy.RequestsRemaining.ToString();
+                context.Response.Headers["X-RateLimit-Reset"] = policy.WindowReset.ToUnixTimeSeconds().ToString();
                 
                 if (policy.IsBlocked && policy.BlockedUntil.HasValue)
                 {
-                    context.Response.Headers.Add("X-RateLimit-RetryAfter", 
-                        policy.BlockedUntil.Value.ToUnixTimeSeconds().ToString());
+                    context.Response.Headers["X-RateLimit-RetryAfter"] = 
+                        policy.BlockedUntil.Value.ToUnixTimeSeconds().ToString();
                 }
             }
         }

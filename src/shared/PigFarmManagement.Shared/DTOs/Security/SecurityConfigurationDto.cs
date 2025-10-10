@@ -6,7 +6,7 @@ namespace PigFarmManagement.Shared.DTOs.Security;
 public class SecurityConfigurationDto
 {
     /// <summary>
-    /// Authentication configuration settings
+    /// API key configuration settings
     /// </summary>
     public ApiKeySettingsDto ApiKeySettings { get; set; } = new();
 
@@ -16,61 +16,50 @@ public class SecurityConfigurationDto
     public RoleSettingsDto RoleSettings { get; set; } = new();
 
     /// <summary>
-    /// Role-to-endpoint mapping for authorization rules
-    /// </summary>
-    public Dictionary<string, List<string>> EndpointGroups { get; set; } = new();
-
-    /// <summary>
-    /// Request threshold configurations per role/endpoint
-    /// </summary>
-    public Dictionary<string, RateLimitPolicyDto> RateLimitPolicies { get; set; } = new();
-
-    /// <summary>
     /// Session timeout and cleanup intervals
     /// </summary>
     public SessionSettingsDto SessionSettings { get; set; } = new();
+
+    /// <summary>
+    /// Whether middleware is enabled
+    /// </summary>
+    public bool MiddlewareEnabled { get; set; } = true;
+
+    /// <summary>
+    /// Paths to exclude from authentication
+    /// </summary>
+    public List<string> ExcludePaths { get; set; } = new();
+
+    /// <summary>
+    /// Whether to return detailed error messages
+    /// </summary>
+    public bool DetailedErrors { get; set; } = false;
 }
 
 /// <summary>
-/// Authentication configuration settings
+/// API key configuration settings
 /// </summary>
 public class ApiKeySettingsDto
 {
     /// <summary>
     /// Header name for API key authentication (default: X-Api-Key)
     /// </summary>
-    public string ApiKeyHeader { get; set; } = "X-Api-Key";
+    public string HeaderName { get; set; } = "X-Api-Key";
 
     /// <summary>
-    /// Cache timeout for API key validation
+    /// Enable API key validation
     /// </summary>
-    public TimeSpan CacheTimeout { get; set; } = TimeSpan.FromMinutes(5);
+    public bool EnableValidation { get; set; } = true;
 
     /// <summary>
-    /// Endpoints that allow anonymous access
+    /// Allow expired API keys (for testing)
     /// </summary>
-    public List<string> AllowAnonymousEndpoints { get; set; } = new() { "/api/health", "/api/version" };
-}
-
-/// <summary>
-/// Role definitions and hierarchy
-/// </summary>
-public class RoleSettingsDto
-{
-    /// <summary>
-    /// Available roles in the system
-    /// </summary>
-    public List<string> Roles { get; set; } = new() { "Admin", "User", "ReadOnly" };
+    public bool AllowExpired { get; set; } = false;
 
     /// <summary>
-    /// Role hierarchy levels (higher number = more permissions)
+    /// Cache API key validation results (in minutes)
     /// </summary>
-    public Dictionary<string, int> RoleHierarchy { get; set; } = new()
-    {
-        { "Admin", 100 },
-        { "User", 50 },
-        { "ReadOnly", 10 }
-    };
+    public int CacheMinutes { get; set; } = 5;
 }
 
 /// <summary>
@@ -79,22 +68,58 @@ public class RoleSettingsDto
 public class SessionSettingsDto
 {
     /// <summary>
-    /// Idle timeout for sessions
+    /// Session idle timeout in hours
     /// </summary>
-    public TimeSpan IdleTimeoutHours { get; set; } = TimeSpan.FromHours(2);
+    public int IdleTimeoutHours { get; set; } = 2;
 
     /// <summary>
-    /// Maximum session duration
+    /// Maximum session duration in hours (regardless of activity)
     /// </summary>
-    public TimeSpan MaxSessionHours { get; set; } = TimeSpan.FromHours(24);
+    public int MaxDurationHours { get; set; } = 24;
 
     /// <summary>
-    /// Session cleanup interval
+    /// Session cleanup interval in minutes
     /// </summary>
-    public TimeSpan CleanupIntervalMinutes { get; set; } = TimeSpan.FromMinutes(30);
+    public int CleanupIntervalMinutes { get; set; } = 15;
 
     /// <summary>
-    /// Whether manual refresh is required for session extension
+    /// Enable session validation
     /// </summary>
-    public bool RequireRefresh { get; set; } = true;
+    public bool EnableValidation { get; set; } = true;
+
+    /// <summary>
+    /// Header name for session ID
+    /// </summary>
+    public string HeaderName { get; set; } = "X-Session-Id";
+}
+
+/// <summary>
+/// Role definitions and hierarchy
+/// </summary>
+public class RoleSettingsDto
+{
+    /// <summary>
+    /// Role hierarchy levels (higher number = more permissions)
+    /// </summary>
+    public Dictionary<string, int> Hierarchy { get; set; } = new()
+    {
+        { "ReadOnly", 1 },
+        { "User", 2 },
+        { "Admin", 3 }
+    };
+
+    /// <summary>
+    /// Permissions by role
+    /// </summary>
+    public Dictionary<string, List<string>> Permissions { get; set; } = new()
+    {
+        { "ReadOnly", new() { "read:customers", "read:pigpens", "read:feeds" } },
+        { "User", new() { "read:customers", "write:customers", "read:pigpens", "write:pigpens", "read:feeds" } },
+        { "Admin", new() { "read:customers", "write:customers", "delete:customers", "read:pigpens", "write:pigpens", "delete:pigpens", "read:feeds", "write:feeds", "delete:feeds", "admin:users" } }
+    };
+
+    /// <summary>
+    /// Default role for new users
+    /// </summary>
+    public string DefaultRole { get; set; } = "ReadOnly";
 }

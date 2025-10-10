@@ -8,7 +8,8 @@ public static class ProductImportEndpoints
     public static void MapProductImportEndpoints(this IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup("/api/products/import")
-            .WithTags("Product Import");
+            .WithTags("Product Import")
+            .RequireAuthorization();
 
         group.MapPost("/", ImportProducts)
             .WithName("ImportProducts")

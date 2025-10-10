@@ -8,7 +8,7 @@ public static class CustomerImportEndpoints
 {
     public static void MapCustomerImportEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/customers/import").WithTags("Customer Import");
+        var group = app.MapGroup("/api/customers/import").WithTags("Customer Import").RequireAuthorization();
 
         // Core import endpoints
         group.MapPost("/", ImportAllCustomers)

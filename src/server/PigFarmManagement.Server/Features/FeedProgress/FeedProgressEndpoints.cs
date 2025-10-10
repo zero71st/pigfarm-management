@@ -8,7 +8,8 @@ public static class FeedProgressEndpoints
     public static IEndpointRouteBuilder MapFeedProgressEndpoints(this IEndpointRouteBuilder builder)
     {
         var group = builder.MapGroup("/api/pigpens/{pigPenId:guid}/feed-progress")
-            .WithTags("Feed Progress");
+            .WithTags("Feed Progress")
+            .RequireAuthorization();
 
         group.MapGet("/summary", GetFeedProgressSummary)
             .WithName("GetFeedProgressSummary")

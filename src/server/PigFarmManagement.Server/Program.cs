@@ -251,7 +251,8 @@ app.UseMiddleware<PigFarmManagement.Server.Features.Authentication.ApiKeyMiddlew
 app.UseAuthorization();
 
 // Add health check endpoint for Railway
-app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }))
+    .RequireAuthorization();
 
 app.UseCors();
 app.UseDefaultFiles();

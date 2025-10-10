@@ -9,7 +9,7 @@ public static class FeedImportEndpoints
 {
     public static void MapFeedImportEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/feeds/import").WithTags("Feed Import");
+        var group = app.MapGroup("/api/feeds/import").WithTags("Feed Import").RequireAuthorization();
 
         group.MapPost("/pospos", ImportPosPosFeedData)
             .WithName("ImportPosPosFeedData")
