@@ -6,14 +6,48 @@ using PigFarmManagement.Server.Infrastructure.Extensions;
 using PigFarmManagement.Server.Services.ExternalServices;
 using PigFarmManagement.Server.Features.Authentication;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo { Title = "PigFarmManagement API", Version = "v1" });
+
+    options.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
+    {
+        Description = "Enter your API key (no prefix). Example: abcdef12345",
+        Name = "X-Api-Key",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "ApiKey"
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "ApiKey"
+                },
+                Name = "X-Api-Key",
+                In = ParameterLocation.Header,
+            },
+            new string[] { }
+        }
+    });
+});
 
 // Add controllers support so attribute-based API controllers are mapped
 builder.Services.AddControllers();
+
+// Add authentication services with custom API key scheme
+builder.Services.AddAuthentication("ApiKey")
+    .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, PigFarmManagement.Server.Features.Authentication.ApiKeyAuthenticationHandler>("ApiKey", options => { });
 
 // Add authorization services
 builder.Services.AddAuthorization();
@@ -240,12 +274,8 @@ else
 // Add forwarded headers support for reverse proxies
 app.UseForwardedHeaders();
 
-// TODO: Enable security middleware after all components are ready (Feature 010)
-// Security middleware pipeline (order is important)
-// app.UseMiddleware<ApiKeyAuthenticationMiddleware>();
-
-// Existing API key middleware (to be replaced)
-app.UseMiddleware<PigFarmManagement.Server.Features.Authentication.ApiKeyMiddleware>();
+// Add authentication middleware (must come before authorization)
+app.UseAuthentication();
 
 // Add authorization middleware
 app.UseAuthorization();
