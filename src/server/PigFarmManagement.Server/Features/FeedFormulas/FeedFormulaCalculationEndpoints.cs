@@ -9,7 +9,8 @@ public static class FeedFormulaCalculationEndpoints
     public static void MapFeedFormulaCalculationEndpoints(this IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup("/api/feed-formulas")
-            .WithTags("Feed Formula Calculations");
+            .WithTags("Feed Formula Calculations")
+            .RequireAuthorization();
 
         group.MapGet("/by-category/{categoryName}", GetFeedFormulasByCategory)
             .WithName("GetFeedFormulasByCategory")

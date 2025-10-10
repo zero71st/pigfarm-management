@@ -20,50 +20,50 @@ public record Customer(Guid Id, string Code, CustomerStatus Status)
 
     public DateTime CreatedAt { get; init; } = DateTime.Now;
     public DateTime UpdatedAt { get; init; } = DateTime.Now;
-    
+
     // Location properties for Google Maps integration
     public decimal? Latitude { get; init; }  // -90 to 90
     public decimal? Longitude { get; init; } // -180 to 180
-    
+
     // Soft deletion tracking
     public bool IsDeleted { get; init; } = false;
     public DateTime? DeletedAt { get; init; }
     public string? DeletedBy { get; init; }
-    
+
     // Business logic
     public bool IsActive => Status == CustomerStatus.Active && !IsDeleted;
     public bool HasLocation => Latitude.HasValue && Longitude.HasValue;
-    public string DisplayName => $"{(string.IsNullOrWhiteSpace(FirstName) && string.IsNullOrWhiteSpace(LastName) ? Code : $"{FirstName} {LastName}" )} ({Code})";
+    public string DisplayName => $"{(string.IsNullOrWhiteSpace(FirstName) && string.IsNullOrWhiteSpace(LastName) ? Code : $"{FirstName} {LastName}")} ({Code})";
 };
 
 public record PigPen(Guid Id, Guid CustomerId, string PenCode, int PigQty,
     DateTime RegisterDate, DateTime? ActHarvestDate, DateTime? EstimatedHarvestDate,
-    decimal FeedCost, decimal Investment, decimal ProfitLoss, 
+    decimal FeedCost, decimal Investment, decimal ProfitLoss,
     PigPenType Type, decimal DepositPerPig, DateTime CreatedAt, DateTime UpdatedAt)
 {
     // Feed formula brand selection (for display purposes)
     public string? SelectedBrand { get; init; }
-    
+
     // Note field for additional information
     public string? Note { get; init; }
-    
+
     // Unified formula assignments - replaces the old FeedFormulaId, FeedFormulaSnapshot, and FeedFormulaAllocations systems
     public List<PigPenFormulaAssignment> FormulaAssignments { get; init; } = new();
-    
+
     // Flag to indicate if calculations are locked (for closed pig pens)
     public bool IsCalculationLocked { get; init; }
-    
+
     // Business computed properties
     public string Name => $"Pen {PenCode}";
     public string Code => PenCode;
     public int CurrentPigCount => PigQty;
     public int MaxCapacity => (int)(PigQty * 1.2); // 20% buffer for capacity
-    
+
     // Business logic
     public bool IsActive => ActHarvestDate == null || ActHarvestDate > DateTime.Now;
     public bool IsReadyForHarvest => EstimatedHarvestDate <= DateTime.Now;
     public decimal ProfitMargin => Investment != 0 ? (ProfitLoss / Investment) * 100 : 0;
-    
+
     // Feed calculation methods
     public decimal CalculateRequiredBags(decimal bagPerPig) => PigQty * bagPerPig;
     public decimal CalculateFeedCost(decimal bagPerPig, decimal bagPrice) => CalculateRequiredBags(bagPerPig) * bagPrice;
@@ -86,7 +86,7 @@ public record FeedFormula(
     // Business computed properties
     public string DisplayName => $"{Name} ({Code})";
     public string ConsumptionRate => ConsumeRate.HasValue ? $"{ConsumeRate:F1} per pig" : "Not set";
-    
+
     // Business logic
     public decimal CalculateTotalConsumption(int pigCount) => pigCount * (ConsumeRate ?? 0);
     public decimal CalculateCost(int pigCount) => CalculateTotalConsumption(pigCount) * (Cost ?? 0);

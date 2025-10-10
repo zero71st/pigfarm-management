@@ -65,4 +65,10 @@ builder.Services.AddScoped<IFeedFormulaCalculationService, FeedFormulaCalculatio
 builder.Services.AddScoped<IFeedImportService, FeedImportService>();
 builder.Services.AddScoped<IAdminUserService, AdminUserService>();
 
-await builder.Build().RunAsync();
+var app = builder.Build();
+
+// Initialize authentication state
+var authService = app.Services.GetRequiredService<PigFarmManagement.Client.Features.Authentication.Services.AuthenticationStateService>();
+await authService.InitializeAsync();
+
+await app.RunAsync();

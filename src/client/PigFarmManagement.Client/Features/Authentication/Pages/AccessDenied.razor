@@ -1,0 +1,40 @@
+@page "/access-denied"
+@using MudBlazor
+@using Microsoft.AspNetCore.Components
+@inject NavigationManager Navigation
+
+<PageTitle>Access Denied - PigFarm Management</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="my-16">
+    <MudPaper Class="pa-8" Elevation="4">
+        <MudStack Spacing="4" AlignItems="AlignItems.Center">
+            <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Large" Color="Color.Error" />
+            
+            <MudText Typo="Typo.h4" Align="Align.Center" Color="Color.Error">
+                Access Denied
+            </MudText>
+            
+            <MudText Typo="Typo.body1" Align="Align.Center" Class="mb-4">
+                You don't have permission to access this page. Please contact your administrator if you believe this is an error.
+            </MudText>
+            
+            <MudStack Direction="Row" Spacing="2">
+                <MudButton 
+                    Variant="Variant.Filled" 
+                    Color="Color.Primary" 
+                    StartIcon="@Icons.Material.Filled.Dashboard"
+                    OnClick="@(() => Navigation.NavigateTo("/dashboard"))">
+                    Go to Dashboard
+                </MudButton>
+                
+                <MudButton 
+                    Variant="Variant.Outlined" 
+                    Color="Color.Secondary" 
+                    StartIcon="@Icons.Material.Filled.Login"
+                    OnClick="@(() => Navigation.NavigateTo("/login"))">
+                    Login
+                </MudButton>
+            </MudStack>
+        </MudStack>
+    </MudPaper>
+</MudContainer>

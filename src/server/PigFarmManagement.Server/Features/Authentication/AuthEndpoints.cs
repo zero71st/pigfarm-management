@@ -82,7 +82,7 @@ public static class AuthEndpoints
             // Hash the raw key to find it in the database
             var hashedKey = ApiKeyHash.HashApiKey(rawApiKey);
             var apiKey = await db.ApiKeys.FirstOrDefaultAsync(k => k.HashedKey == hashedKey && k.IsActive);
-            
+
             if (apiKey != null)
             {
                 // Revoke the API key
@@ -100,7 +100,7 @@ public static class AuthEndpoints
         group.MapGet("/me", async (HttpContext http, PigFarmDbContext db) =>
         {
             var user = http.User;
-            
+
             if (user?.Identity?.IsAuthenticated != true)
                 return Results.Unauthorized();
 

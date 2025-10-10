@@ -1,0 +1,66 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components
+@using MudBlazor
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+
+@if (showContent)
+{
+    @ChildContent
+}
+else if (isLoading)
+{
+    <div class="d-flex justify-center align-center" style="height: 50vh;">
+        <div>Loading...</div>
+    </div>
+}
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public string? RequiredRole { get; set; }
+    [Parameter] public bool RequireAuthentication { get; set; } = true;
+
+    private bool showContent = false;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState?.User;
+
+            // Check if authentication is required
+            if (RequireAuthentication && user?.Identity?.IsAuthenticated != true)
+            {
+                // Redirect to login page
+                Navigation.NavigateTo("/login", true);
+                return;
+            }
+
+            // Check if specific role is required
+            if (!string.IsNullOrEmpty(RequiredRole) && user?.Identity?.IsAuthenticated == true)
+            {
+                if (!user.IsInRole(RequiredRole))
+                {
+                    // Redirect to access denied page
+                    Navigation.NavigateTo("/access-denied", true);
+                    return;
+                }
+            }
+
+            // User has access
+            showContent = true;
+        }
+        catch (Exception)
+        {
+            // If there's any issue with authentication, redirect to login
+            Navigation.NavigateTo("/login", true);
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+}

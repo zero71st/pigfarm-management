@@ -1,5 +1,7 @@
 @page "/pigpens"
+@attribute [Authorize]
 @using System.Linq
+@using Microsoft.AspNetCore.Authorization
 @using PigFarmManagement.Client.Features.PigPens.Components
 @inject ICustomerService CustomerService
 @inject IPigPenService PigPenService

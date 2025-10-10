@@ -53,9 +53,7 @@
                     <MudItem xs="12">
                         <MudText Typo="Typo.subtitle2" Class="mb-2">Roles</MudText>
                         <MudCheckBox @bind-Checked="isAdmin" Label="Admin" Color="Color.Primary" />
-                        <MudCheckBox @bind-Checked="isManager" Label="Manager" Color="Color.Primary" />
-                        <MudCheckBox @bind-Checked="isWorker" Label="Worker" Color="Color.Primary" />
-                        <MudCheckBox @bind-Checked="isViewer" Label="Viewer" Color="Color.Primary" />
+                        <MudCheckBox @bind-Checked="isUser" Label="User" Color="Color.Primary" />
                         @if (!HasAnyRole())
                         {
                             <MudText Typo="Typo.caption" Color="Color.Error">At least one role must be selected</MudText>
@@ -97,9 +95,7 @@
     
     // Role checkboxes
     private bool isAdmin = false;
-    private bool isManager = false;
-    private bool isWorker = false;
-    private bool isViewer = true; // Default to Viewer
+    private bool isUser = true; // Default to User
     
     protected override void OnInitialized()
     {
@@ -108,14 +104,14 @@
             Username = "",
             Email = "",
             Password = "",
-            Roles = new[] { "Viewer" },
+            Roles = new[] { "User" },
             IsActive = true
         };
     }
     
     private bool HasAnyRole()
     {
-        return isAdmin || isManager || isWorker || isViewer;
+        return isAdmin || isUser;
     }
     
     private bool CanSubmit()
@@ -144,9 +140,7 @@
             // Update roles based on checkboxes
             var roles = new List<string>();
             if (isAdmin) roles.Add("Admin");
-            if (isManager) roles.Add("Manager");
-            if (isWorker) roles.Add("Worker");
-            if (isViewer) roles.Add("Viewer");
+            if (isUser) roles.Add("User");
             
             var request = createUserRequest with { Roles = roles.ToArray() };
             

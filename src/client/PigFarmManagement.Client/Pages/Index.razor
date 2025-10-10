@@ -1,10 +1,46 @@
 @page "/"
 @using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Authorization
 @inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+
+@if (isLoading)
+{
+    <div class="d-flex justify-center align-center" style="height: 100vh;">
+        <MudProgressCircular Indeterminate="true" />
+    </div>
+}
 
 @code {
-    protected override void OnInitialized()
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
     {
-        Navigation.NavigateTo("/dashboard");
+        try
+        {
+            // Give a small delay to ensure any recent authentication state changes are processed
+            await Task.Delay(200);
+            
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState?.User;
+
+            if (user?.Identity?.IsAuthenticated == true)
+            {
+                Navigation.NavigateTo("/dashboard", true);
+            }
+            else
+            {
+                Navigation.NavigateTo("/login", true);
+            }
+        }
+        catch (Exception)
+        {
+            // If there's any issue with authentication, default to login
+            Navigation.NavigateTo("/login", true);
+        }
+        finally
+        {
+            isLoading = false;
+        }
     }
 }

@@ -8,6 +8,8 @@ Auto-generated from all feature plans. Last updated: 2025-10-08
 - SQLite (development), Supabase PostgreSQL (production) for data persistence
 - Google Maps JavaScript API for location tracking and mapping features
 - POSPOS API integration for feed data import and customer synchronization
+- C# .NET 8 (ASP.NET Core Web API) + ASP.NET Core 8.0, Entity Framework Core 8.0, BCrypt.Net-Next 4.0.3, Swashbuckle.AspNetCore 6.5.0 (010-secure-all-the)
+- Existing SQLite/PostgreSQL database (no new tables), configuration files, in-memory storage for sessions/rate limits (010-secure-all-the)
 
 ## Project Structure
 ```
@@ -57,13 +59,9 @@ dotnet test
 - Repository Pattern: Use batch querying for performance optimization with GetByExternalIdsAsync patterns
 
 ## Recent Changes
+- 010-secure-all-the: Added C# .NET 8 (ASP.NET Core Web API) + ASP.NET Core 8.0, Entity Framework Core 8.0, BCrypt.Net-Next 4.0.3, Swashbuckle.AspNetCore 6.5.0
 - 009-api-key-authentication: In development - API-key authentication system with admin-managed users, role-based authorization (Admin/Manager/Worker/Viewer), BCrypt password hashing, audit logging, and secure API key lifecycle management
 - 008-update-manage-customer: Completed enhanced customer management with Google Maps integration, soft deletion, location tracking, POS synchronization, and dual view modes (card/table)
-- Enhanced database schema with location fields and soft deletion support
-- Implemented comprehensive customer filtering and search functionality
-- Added modern UI with icon-only buttons and responsive design
-- Integrated Google Maps JavaScript API for location management
-- **Code Architecture Refactoring (October 2025)**: 
   - Moved all external API models (PosposMember, PosposProductDto, etc.) to shared/Domain/External
   - Refactored CustomerImportService to use database-based mapping with ExternalId field
   - Eliminated JSON file persistence in favor of efficient batch database queries

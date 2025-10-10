@@ -1,5 +1,8 @@
 @page "/dashboard"
+@attribute [Authorize]
 @using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Authorization
 @using MudBlazor
 @using PigFarmManagement.Shared.Models
 @using PigFarmManagement.Client.Features.Dashboard.Services

@@ -66,9 +66,7 @@
         return primaryRole switch
         {
             "admin" => Color.Error,
-            "manager" => Color.Warning,
-            "worker" => Color.Info,
-            "viewer" => Color.Default,
+            "user" => Color.Primary,
             _ => Color.Default
         };
     }

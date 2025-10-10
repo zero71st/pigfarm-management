@@ -11,7 +11,8 @@ public static class FeedFormulaEndpoints
     public static void MapFeedFormulaEndpoints(this IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup("/api/feed-formulas")
-            .WithTags("Feed Formulas");
+            .WithTags("Feed Formulas")
+            .RequireAuthorization();
 
         group.MapGet("/", GetAllFeedFormulas)
             .WithName("GetAllFeedFormulas")

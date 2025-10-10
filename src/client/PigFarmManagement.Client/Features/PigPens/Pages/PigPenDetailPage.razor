@@ -1,4 +1,6 @@
 @page "/pigpens/{pigPenId:guid}/detail"
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
 @inject HttpClient Http
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation

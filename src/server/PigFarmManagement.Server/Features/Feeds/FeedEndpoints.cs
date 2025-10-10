@@ -6,7 +6,7 @@ public static class FeedEndpoints
 {
     public static IEndpointRouteBuilder MapFeedEndpoints(this IEndpointRouteBuilder builder)
     {
-        var group = builder.MapGroup("/api/pigpens").WithTags("Feeds");
+        var group = builder.MapGroup("/api/pigpens").WithTags("Feeds").RequireAuthorization();
 
         group.MapPost("/{pigPenId:guid}/feeds", AddFeedToPigPen)
             .WithName("AddFeedToPigPen")
