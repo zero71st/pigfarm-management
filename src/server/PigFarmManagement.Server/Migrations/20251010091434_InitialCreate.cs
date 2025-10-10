@@ -3,10 +3,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace PigFarmManagement.Server.Infrastructure.Data.Migrations
+namespace PigFarmManagement.Server.Migrations
 {
     /// <inheritdoc />
-    public partial class AddFeedExternalReferenceUniqueIndex : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -28,7 +28,12 @@ namespace PigFarmManagement.Server.Infrastructure.Data.Migrations
                     Sex = table.Column<string>(type: "TEXT", nullable: true),
                     Zipcode = table.Column<string>(type: "TEXT", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    Latitude = table.Column<decimal>(type: "TEXT", nullable: true),
+                    Longitude = table.Column<decimal>(type: "TEXT", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    DeletedBy = table.Column<string>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -40,16 +45,45 @@ namespace PigFarmManagement.Server.Infrastructure.Data.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    ProductCode = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    ProductName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    Brand = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    BagPerPig = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    ExternalId = table.Column<Guid>(type: "TEXT", nullable: true),
+                    Code = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
+                    Cost = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    ConsumeRate = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    CategoryName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
+                    Brand = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
+                    UnitName = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
+                    LastUpdate = table.Column<DateTime>(type: "TEXT", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_FeedFormulas", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Users",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Username = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    Email = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
+                    PasswordHash = table.Column<string>(type: "TEXT", nullable: false),
+                    RolesCsv = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
+                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    CreatedBy = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
+                    ModifiedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    ModifiedBy = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
+                    LastLoginAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    DeletedBy = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Users", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -69,6 +103,7 @@ namespace PigFarmManagement.Server.Infrastructure.Data.Migrations
                     Type = table.Column<int>(type: "INTEGER", nullable: false),
                     DepositPerPig = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     SelectedBrand = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
+                    Note = table.Column<string>(type: "TEXT", nullable: true),
                     IsCalculationLocked = table.Column<bool>(type: "INTEGER", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
@@ -82,6 +117,35 @@ namespace PigFarmManagement.Server.Infrastructure.Data.Migrations
                         principalTable: "Customers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ApiKeys",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    HashedKey = table.Column<string>(type: "TEXT", nullable: false),
+                    UserId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Label = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
+                    RolesCsv = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
+                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    ExpiresAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    RevokedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    LastUsedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    CreatedBy = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
+                    RevokedBy = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
+                    UsageCount = table.Column<int>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ApiKeys", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ApiKeys_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -114,12 +178,21 @@ namespace PigFarmManagement.Server.Infrastructure.Data.Migrations
                     ProductType = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
                     ProductCode = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
                     ProductName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    InvoiceNumber = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    TransactionCode = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
                     Quantity = table.Column<int>(type: "INTEGER", nullable: false),
                     UnitPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    TotalPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Cost = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    CostDiscountPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    PriceIncludeDiscount = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    Sys_TotalPriceIncludeDiscount = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    TotalPriceIncludeDiscount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Pos_TotalPriceIncludeDiscount = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     FeedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     ExternalReference = table.Column<string>(type: "TEXT", nullable: true),
+                    ExternalProductCode = table.Column<string>(type: "TEXT", nullable: true),
+                    ExternalProductName = table.Column<string>(type: "TEXT", nullable: true),
+                    InvoiceReferenceCode = table.Column<string>(type: "TEXT", nullable: true),
+                    UnmappedProduct = table.Column<bool>(type: "INTEGER", nullable: false),
                     Notes = table.Column<string>(type: "TEXT", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
@@ -200,6 +273,17 @@ namespace PigFarmManagement.Server.Infrastructure.Data.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_ApiKeys_HashedKey",
+                table: "ApiKeys",
+                column: "HashedKey",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ApiKeys_UserId",
+                table: "ApiKeys",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Customers_Code",
                 table: "Customers",
                 column: "Code",
@@ -211,17 +295,14 @@ namespace PigFarmManagement.Server.Infrastructure.Data.Migrations
                 column: "PigPenId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_FeedFormulas_ProductCode",
+                name: "IX_FeedFormulas_Code",
                 table: "FeedFormulas",
-                column: "ProductCode",
-                unique: true);
+                column: "Code");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Feeds_ExternalReference",
-                table: "Feeds",
-                column: "ExternalReference",
-                unique: true,
-                filter: "[ExternalReference] IS NOT NULL");
+                name: "IX_FeedFormulas_ExternalId",
+                table: "FeedFormulas",
+                column: "ExternalId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Feeds_PigPenId",
@@ -253,11 +334,26 @@ namespace PigFarmManagement.Server.Infrastructure.Data.Migrations
                 table: "PigPens",
                 column: "PenCode",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_Email",
+                table: "Users",
+                column: "Email",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_Username",
+                table: "Users",
+                column: "Username",
+                unique: true);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "ApiKeys");
+
             migrationBuilder.DropTable(
                 name: "Deposits");
 
@@ -269,6 +365,9 @@ namespace PigFarmManagement.Server.Infrastructure.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "PigPenFormulaAssignments");
+
+            migrationBuilder.DropTable(
+                name: "Users");
 
             migrationBuilder.DropTable(
                 name: "FeedFormulas");
