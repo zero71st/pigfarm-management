@@ -23,7 +23,7 @@ public class UserEntity
     public string PasswordHash { get; set; } = "";
 
     /// <summary>
-    /// Comma-separated roles (Admin,Manager,Worker,Viewer)
+    /// Comma-separated roles (Admin,User)
     /// </summary>
     [MaxLength(255)]
     public string RolesCsv { get; set; } = "";
@@ -55,7 +55,7 @@ public class UserEntity
     /// <summary>
     /// Primary role for the user (first role in RolesCsv)
     /// </summary>
-    public string Role => Roles.FirstOrDefault() ?? "ReadOnly";
+    public string Role => Roles.FirstOrDefault() ?? "User";
 
     /// <summary>
     /// Display name for the user (alias for Username)
@@ -65,7 +65,5 @@ public class UserEntity
     public bool HasRole(string role) => Roles.Contains(role, StringComparer.OrdinalIgnoreCase);
 
     public bool IsAdmin => HasRole("Admin");
-    public bool IsManager => HasRole("Manager") || IsAdmin;
-    public bool IsWorker => HasRole("Worker") || IsManager;
-    public bool IsViewer => HasRole("Viewer") || IsWorker;
+    public bool IsUser => HasRole("User") || IsAdmin;
 }

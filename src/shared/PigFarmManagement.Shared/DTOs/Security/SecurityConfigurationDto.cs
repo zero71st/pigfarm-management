@@ -103,9 +103,8 @@ public class RoleSettingsDto
     /// </summary>
     public Dictionary<string, int> Hierarchy { get; set; } = new()
     {
-        { "ReadOnly", 1 },
-        { "User", 2 },
-        { "Admin", 3 }
+        { "User", 1 },
+        { "Admin", 2 }
     };
 
     /// <summary>
@@ -113,13 +112,12 @@ public class RoleSettingsDto
     /// </summary>
     public Dictionary<string, List<string>> Permissions { get; set; } = new()
     {
-        { "ReadOnly", new() { "read:customers", "read:pigpens", "read:feeds" } },
-        { "User", new() { "read:customers", "write:customers", "read:pigpens", "write:pigpens", "read:feeds" } },
-        { "Admin", new() { "read:customers", "write:customers", "delete:customers", "read:pigpens", "write:pigpens", "delete:pigpens", "read:feeds", "write:feeds", "delete:feeds", "admin:users" } }
+        { "User", new() { "read:customers", "write:customers", "delete:customers", "read:pigpens", "write:pigpens", "delete:pigpens", "read:feeds", "write:feeds", "delete:feeds", "read:dashboard" } },
+        { "Admin", new() { "read:customers", "write:customers", "delete:customers", "read:pigpens", "write:pigpens", "delete:pigpens", "read:feeds", "write:feeds", "delete:feeds", "read:dashboard", "admin:users", "admin:apikeys", "admin:system" } }
     };
 
     /// <summary>
     /// Default role for new users
     /// </summary>
-    public string DefaultRole { get; set; } = "ReadOnly";
+    public string DefaultRole { get; set; } = "User";
 }
