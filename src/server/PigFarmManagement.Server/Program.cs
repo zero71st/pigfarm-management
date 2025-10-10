@@ -147,68 +147,102 @@ using (var scope = app.Services.CreateScope())
     context.Database.Migrate();
 }
 
-// One-time admin seeding: create an admin user (and one API key) if none exists
-// Security gate: only allow seeding in non-production with explicit environment variable
-var allowSeeding = Environment.GetEnvironmentVariable("SEED_ADMIN") == "true" 
-    && !app.Environment.IsProduction();
-
-if (allowSeeding)
+// One-time admin seeding: ensure at least one Admin user exists
+// Behavior:
+//  - If an Admin user already exists, no action is taken.
+//  - Otherwise an admin user is created using environment vars when provided:
+//      ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_APIKEY
+//  - If secrets are not provided, a secure password and API key are generated and printed once.
+using (var scope = app.Services.CreateScope())
 {
-    using (var scope = app.Services.CreateScope())
+    var context = scope.ServiceProvider.GetRequiredService<PigFarmDbContext>();
+    var loggerFactory = scope.ServiceProvider.GetRequiredService<ILoggerFactory>();
+    var logger = loggerFactory.CreateLogger("AdminSeeder");
+
+    try
     {
-        var context = scope.ServiceProvider.GetRequiredService<PigFarmDbContext>();
-        // Resolve services needed for hashing and api key creation
-        var hasher = new Microsoft.AspNetCore.Identity.PasswordHasher<object>();
+        var hasAdmin = context.Users.Any(u => u.RolesCsv != null && u.RolesCsv.Contains("Admin"));
 
-        // Check if any admin user exists
-        var hasAdmin = context.Users.Any(u => u.RolesCsv.Contains("Admin"));
-
-        if (!hasAdmin)
+        if (hasAdmin)
         {
+            logger.LogInformation("Admin user already exists; skipping admin seed.");
+        }
+        else
+        {
+            // Read env vars or use defaults
+            var adminUsername = Environment.GetEnvironmentVariable("ADMIN_USERNAME") ?? "admin";
+            var adminEmail = Environment.GetEnvironmentVariable("ADMIN_EMAIL") ?? "admin@example.com";
+            var providedPassword = Environment.GetEnvironmentVariable("ADMIN_PASSWORD");
+            var providedApiKey = Environment.GetEnvironmentVariable("ADMIN_APIKEY");
+
+            // Generate password and API key if not provided
+            var password = string.IsNullOrWhiteSpace(providedPassword)
+                ? Convert.ToBase64String(RandomNumberGenerator.GetBytes(12)).Replace("=", "")
+                : providedPassword;
+
+            var rawApiKey = string.IsNullOrWhiteSpace(providedApiKey)
+                ? PigFarmManagement.Server.Features.Authentication.Helpers.ApiKeyHash.GenerateApiKey()
+                : providedApiKey!;
+
+            var hasher = new Microsoft.AspNetCore.Identity.PasswordHasher<object>();
+
             var adminUser = new PigFarmManagement.Server.Infrastructure.Data.Entities.UserEntity
             {
-                Username = "admin",
-                Email = "admin@example.com",
-                RolesCsv = "Admin",
+                Username = adminUsername,
+                Email = adminEmail,
+                RolesCsv = "Admin,User",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow,
                 CreatedBy = "system-seed"
             };
 
-            // Hash the default password
-            const string defaultPassword = "Admin123!@#";
-            adminUser.PasswordHash = hasher.HashPassword(new object(), defaultPassword);
+            adminUser.PasswordHash = hasher.HashPassword(new object(), password);
 
             context.Users.Add(adminUser);
             context.SaveChanges();
 
-        // Create an API key for the admin and store hashed key (use ApiKeyHash to match validation)
-        var rawApiKey = PigFarmManagement.Server.Features.Authentication.Helpers.ApiKeyHash.GenerateApiKey();
             var apiKeyEntity = new PigFarmManagement.Server.Infrastructure.Data.Entities.ApiKeyEntity
             {
                 UserId = adminUser.Id,
                 Label = "Initial Admin Key",
+                RolesCsv = adminUser.RolesCsv,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow,
-                LastUsedAt = null,
-                UsageCount = 0,
                 ExpiresAt = DateTime.UtcNow.AddYears(1)
             };
 
-            // Store only hash of API key for security
-        apiKeyEntity.HashedKey = PigFarmManagement.Server.Features.Authentication.Helpers.ApiKeyHash.HashApiKey(rawApiKey);
+            apiKeyEntity.HashedKey = PigFarmManagement.Server.Features.Authentication.Helpers.ApiKeyHash.HashApiKey(rawApiKey);
             context.ApiKeys.Add(apiKeyEntity);
             context.SaveChanges();
 
-            Console.WriteLine("Seeded admin user: 'admin' with password 'Admin123!'");
-            Console.WriteLine("Initial admin API Key (store this securely):");
-            Console.WriteLine(rawApiKey);
+            // Only log secrets if they were generated here (not supplied via env vars)
+            logger.LogInformation("Seeded initial admin user: {Username} ({Email})", adminUser.Username, adminUser.Email);
+            if (string.IsNullOrWhiteSpace(providedPassword))
+            {
+                logger.LogWarning("Generated admin password (store this securely and rotate on first login): {Password}", password);
+            }
+            else
+            {
+                logger.LogInformation("Admin password was provided via ADMIN_PASSWORD environment variable.");
+            }
+
+            if (string.IsNullOrWhiteSpace(providedApiKey))
+            {
+                logger.LogWarning("Generated admin API key (copy now, it will not be shown again): {ApiKey}", rawApiKey);
+            }
+            else
+            {
+                logger.LogInformation("Admin API key was provided via ADMIN_APIKEY environment variable.");
+            }
+
+            logger.LogInformation("Admin seeding completed.");
         }
     }
-}
-else
-{
-    Console.WriteLine("Admin seeding skipped. To enable: set SEED_ADMIN=true environment variable (non-production only).");
+    catch (Exception ex)
+    {
+        // Use the existing logger created above to avoid variable shadowing
+        logger.LogError(ex, "Error while attempting to seed admin user");
+    }
 }
 
 // Configure the HTTP request pipeline
