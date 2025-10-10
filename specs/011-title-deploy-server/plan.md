@@ -1,8 +1,8 @@
 
-# Implementation Plan: Enhanced Customer Management
+# Implementation Plan: [FEATURE]
 
-**Branch**: `008-update-manage-customer` | **Date**: October 5, 2025 | **Spec**: [spec.md](spec.md)
-**Input**: Feature specification from `/specs/008-update-manage-customer/spec.md`
+**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
+**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
 
 ## Execution Flow (/plan command scope)
 ```
@@ -31,27 +31,23 @@
 - Phase 3-4: Implementation execution (manual or via tools)
 
 ## Summary
-Enhanced customer management system allowing deletion of customers, manual and automatic POS updates, Google Maps location integration, and view mode switching between card (default) and table layouts. Technical approach leverages existing .NET 8 Blazor architecture with MudBlazor UI components, Entity Framework Core for data persistence, and Google Maps API integration for location display.
+[Extract from feature spec: primary requirement + technical approach from research]
 
 ## Technical Context
-**Language/Version**: C# .NET 8  
-**Primary Dependencies**: Blazor WebAssembly, MudBlazor UI, Entity Framework Core, Google Maps JavaScript API  
-**Storage**: SQLite (development), Supabase PostgreSQL (production)  
-**Testing**: xUnit, Bunit (Blazor component testing)  
-**Target Platform**: Web browsers (Blazor WebAssembly client-server architecture)
-**Project Type**: web - frontend (Blazor WASM) + backend (.NET Core Web API)  
-**Performance Goals**: <500ms customer list loading, <200ms location map rendering  
-**Constraints**: Existing customer data preservation, POS API integration compatibility  
-**Scale/Scope**: ~1000 customers, Google Maps API rate limits
+**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
+**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
+**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
+**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
+**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
+**Project Type**: [single/web/mobile - determines source structure]  
+**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
+**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
+**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
 
 ## Constitution Check
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-✅ **Mission Alignment**: Feature supports core farm operations management (customer lifecycle)  
-✅ **Data Integrity**: Customer deletion includes safety checks for active relationships; POS sync preserves authoritative external data  
-✅ **Simplicity**: Leverages existing architecture patterns and UI components without introducing new complexity  
-✅ **Feature Architecture**: Follows existing feature-based structure under `src/client/Features/Customers` and `src/server/Features/Customers`  
-✅ **Single Owner**: Implementation controlled by project owner with appropriate documentation
+[Gates determined based on constitution file]
 
 ## Project Structure
 
@@ -67,40 +63,50 @@ specs/[###-feature]/
 ```
 
 ### Source Code (repository root)
+<!--
+  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
+  for this feature. Delete unused options and expand the chosen structure with
+  real paths (e.g., apps/admin, packages/something). The delivered plan must
+  not include Option labels.
+-->
 ```
-backend/
-└── src/server/PigFarmManagement.Server/
-    ├── Features/Customers/           # Customer management feature
-    │   ├── CustomerEndpoints.cs      # API endpoints
-    │   ├── CustomerService.cs        # Business logic
-    │   └── CustomerRepository.cs     # Data access
-    ├── Infrastructure/Data/
-    │   ├── Entities/CustomerEntity.cs # Updated with location fields
-    │   └── Migrations/               # Location coordinate fields migration
-    └── Services/
-        └── PosposImporter.cs         # Enhanced POS sync service
-
-frontend/
-└── src/client/PigFarmManagement.Client/
-    ├── Features/Customers/
-    │   ├── Components/
-    │   │   ├── CustomerManagement.razor      # Enhanced with delete & view switching
-    │   │   ├── EditCustomerDialog.razor      # Enhanced with location fields
-    │   │   ├── CustomerLocationMap.razor     # NEW: Google Maps integration
-    │   │   └── CustomerTableView.razor       # NEW: Table view component
-    │   ├── Services/CustomerService.cs       # Enhanced with delete & location
-    │   └── Pages/                            # Existing structure maintained
-    └── wwwroot/                              # Google Maps API integration
+# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
+src/
+├── models/
+├── services/
+├── cli/
+└── lib/
 
 tests/
-├── src/server/PigFarmManagement.Server.Tests/
-│   ├── Features/Customers/           # Customer feature tests
-│   └── Integration/                  # API integration tests
-└── src/client/PigFarmManagement.Client.Tests/
-    └── Features/Customers/           # Blazor component tests
+├── contract/
+├── integration/
+└── unit/
+
+# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
+backend/
+├── src/
+│   ├── models/
+│   ├── services/
+│   └── api/
+└── tests/
+
+frontend/
+├── src/
+│   ├── components/
+│   ├── pages/
+│   └── services/
+└── tests/
+
+# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
+api/
+└── [same as backend above]
+
+ios/ or android/
+└── [platform-specific structure: feature modules, UI flows, platform tests]
 ```
 
-**Structure Decision**: Web application structure selected based on existing Blazor WebAssembly + .NET Core Web API architecture. Feature-based organization maintained under `Features/Customers` following constitutional guidance.
+**Structure Decision**: [Document the selected structure and reference the real
+directories captured above]
 
 ## Phase 0: Outline & Research
 1. **Extract unknowns from Technical Context** above:
@@ -136,14 +142,12 @@ tests/
    - Use standard REST/GraphQL patterns
    - Output OpenAPI/GraphQL schema to `/contracts/`
 
-3. **Generate contract tests** from contracts:
-   - One test file per endpoint
-   - Assert request/response schemas
-   - Tests must fail (no implementation yet)
+3. **Produce contract artifacts** from contracts:
+   - Produce API contracts (OpenAPI) for operators and integrators.
 
-4. **Extract test scenarios** from user stories:
-   - Each story → integration test scenario
-   - Quickstart test = story validation steps
+4. **Extract manual validation scenarios** from user stories:
+   - Each story → a manual validation checklist used during deployment verification.
+   - Quickstart includes step-by-step manual validation steps (no automated tests are created by default).
 
 5. **Update agent file incrementally** (O(1) operation):
    - Run `.specify/scripts/powershell/update-agent-context.ps1 -AgentType copilot`
@@ -160,11 +164,20 @@ tests/
 *This section describes what the /tasks command will do - DO NOT execute during /plan*
 
 **Task Generation Strategy**:
- - Focus on implementation tasks and manual validation checklists (no automated tests generated by default)
+- Load `.specify/templates/tasks-template.md` as base
+- Generate tasks from Phase 1 design docs (contracts, data model, quickstart)
+- Each contract → contract test task [P]
+- Each entity → model creation task [P] 
+- Each user story → integration test task
+- Implementation tasks to make tests pass
+
 **Ordering Strategy**:
-- Implementation ordering: models → services → API → UI; validate each milestone with manual checks
-**Estimated Output**: 35-40 numbered, ordered tasks covering:
-- 5 database/entity tasks
+- TDD order: Tests before implementation 
+- Dependency order: Models before services before UI
+- Mark [P] for parallel execution (independent files)
+
+**Estimated Output**: 25-30 numbered, ordered tasks in tasks.md
+
 **IMPORTANT**: This phase is executed by the /tasks command, NOT by /plan
 
 ## Phase 3+: Future Implementation
@@ -172,7 +185,7 @@ tests/
 
 **Phase 3**: Task execution (/tasks command creates tasks.md)  
 **Phase 4**: Implementation (execute tasks.md following constitutional principles)  
-**Phase 5**: Validation (manual validation using quickstart.md and performance checks)
+**Phase 5**: Validation (run tests, execute quickstart.md, performance validation)
 
 ## Complexity Tracking
 *Fill ONLY if Constitution Check has violations that must be justified*
@@ -187,18 +200,20 @@ tests/
 *This checklist is updated during execution flow*
 
 **Phase Status**:
-- [x] Phase 0: Research complete (/plan command)
-- [x] Phase 1: Design complete (/plan command)
-- [x] Phase 2: Task planning complete (/plan command - describe approach only)
+ - [x] Phase 0: Research complete (/plan command)
+ - [x] Phase 1: Design complete (/plan command)
+- [ ] Phase 2: Task planning complete (/plan command - describe approach only)
 - [ ] Phase 3: Tasks generated (/tasks command)
 - [ ] Phase 4: Implementation complete
 - [ ] Phase 5: Validation passed
 
 **Gate Status**:
-- [x] Initial Constitution Check: PASS
-- [x] Post-Design Constitution Check: PASS  
-- [x] All NEEDS CLARIFICATION resolved
-- [x] Complexity deviations documented (none required)
+- [ ] Initial Constitution Check: PASS
+- [ ] Post-Design Constitution Check: PASS
+ - [x] Initial Constitution Check: PASS
+ - [ ] Post-Design Constitution Check: PASS
+- [ ] All NEEDS CLARIFICATION resolved
+- [ ] Complexity deviations documented
 
 ---
 *Based on Constitution v2.1.1 - See `/memory/constitution.md`*
