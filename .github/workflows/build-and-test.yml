@@ -23,6 +23,5 @@ jobs:
 
     - name: Build
       run: dotnet build src/PigFarmManagement.sln --no-restore
-
-    - name: Test
-      run: dotnet test src/PigFarmManagement.sln --no-build --verbosity normal
+    # Tests removed per repository owner request: CI will no longer run `dotnet test`.
+    # If you want tests re-enabled later, restore the `Test` step above.
