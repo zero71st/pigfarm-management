@@ -43,8 +43,13 @@
 ### Problem Statement
 The PigFarm Management System currently lacks proper authentication and authorization mechanisms, creating security risks and limiting the ability to control access to sensitive farm data and operations. The system needs a secure, manageable authentication approach that balances security with operational simplicity.
 
+
 ### Solution Approach
-Implement an API-key based authentication system where administrators manage all user accounts and generate secure API keys. This approach provides strong security controls while maintaining operational simplicity for small to medium farm operations.
+Implement an API-key based authentication system where administrators manage all user accounts and generate secure API keys. The system includes a production-safe admin seeder:
+- On startup, if no admin exists, creates one using environment variables (ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_APIKEY).
+- In production, requires secrets to be set (no secret printing); in development, generates and logs them once for convenience.
+- For Railway/Postgres, set secrets in Railway variables before first deploy; seeder will not print secrets in production.
+This approach provides strong security controls while maintaining operational simplicity for small to medium farm operations.
 
 ### Success Criteria
 - **Security**: All sensitive operations require valid authentication and appropriate authorization

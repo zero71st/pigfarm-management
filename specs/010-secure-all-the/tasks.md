@@ -1,14 +1,4 @@
-# Tasks: Serve   → quickstart.md: Manual testing scenarios for validation
-3. Generate tasks by category:
-   → Setup: Security feature structure, configuration, dependencies
-   → Core: Configuration models, services, middleware components
-   → Integration: Middleware pipeline, DI registration, endpoint security
-   → Validation: Manual testing procedures and performance validation
-4. Apply task rules:
-   → Different files = mark [P] for parallel
-   → Middleware pipeline = sequential (order matters)
-   → Implementation-first approach with manual validation
-5. Generated 30 tasks focused on implementation and manual testingint Security Without Database Tables
+# Tasks: Server-Side Endpoint Security (Implemented)
 
 **Input**: Design documents from `/specs/010-secure-all-the/`
 **Prerequisites**: plan.md (required), research.md, data-model.md, contracts/
@@ -46,130 +36,29 @@ Based on plan.md structure:
 - **Client**: `src/client/PigFarmManagement.Client/`
 - **Shared**: `src/shared/PigFarmManagement.Shared/`
 
-## Phase 3.1: Setup and Foundation
+## Implemented Tasks (Based on Branch Commits)
 
-- [x] **T001** Create security feature directory structure in `src/server/PigFarmManagement.Server/Features/Authentication/` with subfolders: Middleware/, Services/, Configuration/, Models/
-- [ ] **T002** [P] Add security configuration models in `src/shared/PigFarmManagement.Shared/DTOs/Security/SecurityConfigurationDto.cs`
-- [x] **T003** [P] Add rate limiting models in `src/shared/PigFarmManagement.Shared/DTOs/Security/RateLimitDto.cs`
-- [x] **T004** [P] Add session management models in `src/shared/PigFarmManagement.Shared/DTOs/Security/SessionDto.cs`
-- [x] **T005** [P] Add validation response models in `src/shared/PigFarmManagement.Shared/DTOs/Security/ValidationDto.cs`
-- [x] **T006** [P] Add security service contracts in `src/shared/PigFarmManagement.Shared/Contracts/Security/ISecurityServices.cs`
+### Server-Side Security Implementation
+- [x] **T001** Add RequireAuthorization to all API endpoints in `src/server/PigFarmManagement.Server/Program.cs` and endpoint files
+- [x] **T002** Remove debug endpoints from customer endpoints in `src/server/PigFarmManagement.Server/Features/Customers/CustomerEndpoints.cs`
+- [x] **T003** Implement RBAC with Admin/User roles in authentication system
+- [x] **T004** Add authorization section to Swagger UI in `src/server/PigFarmManagement.Server/Program.cs`
+- [x] **T005** Apply 2-role system (Admin/User) in client-side components
+- [x] **T006** Add restrict page by role in client navigation and components
+- [x] **T007** Remove default admin access from authentication flow
+- [x] **T008** Remove test and tools projects from solution
+- [x] **T009** Reset database migrations to clean initial state
+- [x] **T010** Implement production-safe admin seeding in `src/server/PigFarmManagement.Server/Program.cs`
 
-## Phase 3.2: Core Implementation
+### Client-Side Security Implementation
+- [x] **T011** Update client components for Admin/User role system in `src/client/PigFarmManagement.Client/Features/Admin/`
+- [x] **T012** Restrict pages by role in client navigation in `src/client/PigFarmManagement.Client/Shared/NavMenu.razor`
+- [x] **T013** Update login status and authentication UI for role-based access
 
-### Configuration and Models
-- [x] **T007** Add security configuration service in `src/server/PigFarmManagement.Server/Features/Authentication/Configuration/SecurityConfigurationService.cs`
-- [x] **T008** Add API key validation service in `src/server/PigFarmManagement.Server/Features/Authentication/Services/ApiKeyValidationService.cs`
-- [x] **T009** Add session management service in `src/server/PigFarmManagement.Server/Features/Authentication/Services/SessionService.cs`
-- [x] **T010** Add rate limiting service in `src/server/PigFarmManagement.Server/Features/Authentication/Services/RateLimitService.cs`
-
-### Security Services
-- [x] **T011** Add authorization service in `src/server/PigFarmManagement.Server/Features/Authentication/Services/AuthorizationService.cs`
-- [x] **T012** [P] IRoleAuthorizationService implementation in `src/server/PigFarmManagement.Server/Features/Authentication/Services/SecurityService.cs`
-- [ ] **T013** [P] IRateLimitingService implementation in `src/server/PigFarmManagement.Server/Features/Authentication/Services/RateLimitingService.cs`
-- [ ] **T014** [P] IInputValidationService implementation in `src/server/PigFarmManagement.Server/Features/Authentication/Services/InputValidationService.cs`
-- [ ] **T015** [P] ISessionManagementService implementation in `src/server/PigFarmManagement.Server/Features/Authentication/Services/SessionManagementService.cs`
-
-### Middleware Components (Sequential - Order Matters)
-- [x] **T016** ApiKeyAuthenticationMiddleware in `src/server/PigFarmManagement.Server/Features/Authentication/Middleware/ApiKeyAuthenticationMiddleware.cs`
-- [ ] **T017** RoleBasedAuthorizationMiddleware in `src/server/PigFarmManagement.Server/Features/Authentication/Middleware/RoleBasedAuthorizationMiddleware.cs`
-- [ ] **T018** RateLimitingMiddleware in `src/server/PigFarmManagement.Server/Features/Authentication/Middleware/RateLimitingMiddleware.cs`
-- [ ] **T019** InputValidationMiddleware in `src/server/PigFarmManagement.Server/Features/Authentication/Middleware/InputValidationMiddleware.cs`
-
-### Security Controllers
-- [ ] **T020** [P] SecurityAuthController for /api/security/auth/* endpoints in `src/server/PigFarmManagement.Server/Features/Authentication/Controllers/SecurityAuthController.cs`
-- [ ] **T021** [P] SecurityMonitoringController for /api/security/ratelimit/* endpoints in `src/server/PigFarmManagement.Server/Features/Authentication/Controllers/SecurityMonitoringController.cs`
-- [ ] **T026** [P] IRateLimitingService implementation in `src/server/PigFarmManagement.Server/Features/Authentication/Services/RateLimitingService.cs`
-- [ ] **T027** [P] IInputValidationService implementation in `src/server/PigFarmManagement.Server/Features/Authentication/Services/InputValidationService.cs`
-- [ ] **T028** [P] ISessionManagementService implementation in `src/server/PigFarmManagement.Server/Features/Authentication/Services/SessionManagementService.cs`
-
-## Phase 3.3: Integration and Pipeline Setup
-
-- [x] **T022** Register security services in DI container in `src/server/PigFarmManagement.Server/Program.cs` (services registration section)
-- [x] **T023** Configure SecuritySettings with IOptions pattern in `src/server/PigFarmManagement.Server/Program.cs` (configuration section)
-- [x] **T024** Register middleware pipeline in correct order in `src/server/PigFarmManagement.Server/Program.cs` (middleware pipeline section)
-- [x] **T025** Add security attributes to existing controllers in `src/server/PigFarmManagement.Server/Features/Customers/CustomerEndpoints.cs`
-- [x] **T026** Update appsettings.json with security configuration in `src/server/PigFarmManagement.Server/appsettings.json`
-
-## Phase 3.4: Client Integration and Manual Validation
-
-- [x] **T027** [P] Update HTTP client service with X-Api-Key header handling in `src/client/PigFarmManagement.Client/Services/ApiClient.cs`
-- [x] **T028** [P] Manual testing: Authentication flow validation using quickstart guide procedures
-- [ ] **T029** [P] Manual testing: Role-based authorization scenarios with different user roles
-- [ ] **T030** [P] Manual testing: Rate limiting enforcement and performance validation (200ms p95 target)
-
-## Dependencies
-
-### Phase Dependencies
-- Setup (T001-T006) → Implementation (T007-T021) → Integration (T022-T026) → Validation (T027-T030)
-
-### Critical Sequence Dependencies
-- T001 (structure) blocks T007-T021 (all implementation files)
-- T006 (contracts) blocks T011-T015 (service implementations)
-- T016-T019 (middleware) blocks T024 (pipeline registration)
-- T022-T023 (DI/config) blocks T024 (pipeline registration)
-- T024 (pipeline) blocks T025 (endpoint security)
-
-### Middleware Order Dependencies (Sequential)
-- T016 → T017 → T018 → T019 → T024 (pipeline registration maintains order)
-
-## Parallel Execution Examples
-
-### Phase 3.2: Models and Services (can run simultaneously)
-```bash
-# Launch T007-T015 together:
-Task: "SecuritySettings configuration model in SecuritySettings.cs"
-Task: "RateLimitPolicy model in RateLimitPolicy.cs"
-Task: "SessionToken model in SessionToken.cs"
-Task: "IApiKeyAuthenticationService implementation in ApiKeyAuthenticationService.cs"
-Task: "IRoleAuthorizationService implementation in RoleAuthorizationService.cs"
-```
-
-### Phase 3.4: Manual Testing (can run simultaneously)
-```bash
-# Launch T028-T030 together:
-Task: "Manual testing: Authentication flow validation using quickstart guide procedures"
-Task: "Manual testing: Role-based authorization scenarios with different user roles"
-Task: "Manual testing: Rate limiting enforcement and performance validation"
-```
-
-## Manual Testing Approach
-
-### Authentication Testing
-- Use Postman/curl to test API key validation endpoints
-- Verify valid/invalid API key responses match contract specifications
-- Test authentication flow with different user roles
-
-### Authorization Testing
-- Test role-based access with Admin/User/ReadOnly roles
-- Verify endpoint access restrictions work correctly
-- Test unauthorized access returns proper error responses
-
-### Rate Limiting Testing
-- Make multiple requests to test rate limiting thresholds
-- Verify 429 responses when limits exceeded
-- Test rate limit reset after time window
-
-### Input Validation Testing
-- Test XSS and SQL injection attempts are blocked
-- Verify malformed requests return validation errors
-- Test oversized payloads are rejected
-
-### Performance Testing
-- Measure response times with security middleware enabled
-- Verify 200ms p95 response time target is met
-- Test memory usage under load
-
-## Validation Checklist
-*Completed after implementation*
-
-- [ ] All security endpoints respond correctly to manual testing
-- [ ] All middleware components function in correct order
-- [ ] Configuration-based security policies work without database changes
-- [ ] Parallel tasks are truly independent (different files, no shared state)
-- [ ] Each task specifies exact file path
-- [ ] Middleware order dependencies properly sequenced
-- [ ] Manual testing procedures validate all functionality
+### Database and Deployment
+- [x] **T014** Create fresh initial migration for clean database state
+- [x] **T015** Configure admin seeding for Railway/Postgres deployment with environment variables
+- [x] **T016** Update documentation for Railway deployment and seeding requirements
 
 ## Notes
 - **[P] tasks**: Different files, no dependencies, can run in parallel

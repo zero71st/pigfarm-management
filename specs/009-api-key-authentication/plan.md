@@ -33,18 +33,20 @@
 ## Summary
 API-key based authentication system with admin-managed user accounts. Implements secure X-Api-Key header authentication, role-based authorization (Admin/Manager/Worker/Viewer), and comprehensive user lifecycle management. No self-registration - all user creation handled by administrators. Uses hashed password storage, secure API key generation, and comprehensive audit logging.
 
+
 ## Design & Approach
 
 ### Phase 1: Planning Complete ✅
 
-**Design Review Summary**: The API-key authentication system follows a straightforward admin-managed approach that aligns with the project's single-owner operational model. The design prioritizes simplicity while maintaining enterprise-grade security patterns.
+**Design Review Summary**: The API-key authentication system is implemented with a production-safe admin seeder. The seeder ensures at least one admin user and API key exist, using environment variables for secrets in production and generating them in development. The design supports both local/dev and cloud (Railway/Postgres) deployment.
 
-**Key Design Decisions**:
+**Key Design Decisions (Reflected in Implementation):**
 - **Authentication Method**: X-Api-Key header authentication with admin-generated keys
-- **User Management**: Admin-only user creation with role-based authorization (Admin/Manager/Worker/Viewer)
+- **User Management**: Admin-only user creation with role-based authorization (Admin/User)
 - **Security**: BCrypt password hashing, SHA-256 API key hashing, comprehensive audit logging
-- **Architecture**: Feature-based organization following project patterns
+- **Admin Seeder**: On startup, checks for existing admin; if none, creates one using ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_APIKEY env vars. In production, requires secrets to be set (no secret printing); in dev, generates and logs them once.
 - **Database**: UserEntity and ApiKeyEntity with proper relationships and lifecycle management
+- **Deployment**: For Railway/Postgres, set secrets in Railway variables; seeder will not print secrets in production.
 
 **Constitutional Compliance**: ✅ Verified against constitution.md
 - Supports mission: Secure access to farm operations management
@@ -58,6 +60,12 @@ API-key based authentication system with admin-managed user accounts. Implements
 - User management endpoints with role-based access
 - API key lifecycle management with security considerations
 - Complete OpenAPI documentation with examples
+
+**Production/Railway Deployment Guidance:**
+- Use PostgreSQL (DATABASE_URL) for production; configure connection in Program.cs.
+- Set ADMIN_PASSWORD and ADMIN_APIKEY as Railway environment variables before first deploy.
+- Seeder will not print secrets in production; you must supply them for first admin creation.
+- For local/dev, secrets are generated and printed once for convenience.
 
 **Artifacts Generated**:
 - ✅ Comprehensive specification (641 lines) with security requirements

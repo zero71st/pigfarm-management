@@ -224,17 +224,25 @@
 - Set up CORS for client requests
 - Configure security headers
 
-### T019: Create Admin Seeding Service
-**Description**: Implement service to seed initial admin user on startup
-**Files**: `src/server/PigFarmManagement.Server/Infrastructure/Services/AdminSeedService.cs`
-**Dependencies**: T012, T017
-**Details**:
-- Create default admin user if none exists
-- Generate secure initial password
-- Log admin creation securely
-- Run during application startup
 
-### T020: Implement Client API Service [P]
+### [X] T019: Create Admin Seeding Service
+**Description**: Implement production-safe admin seeder to create initial admin user and API key on startup if none exists.
+**Files**: `src/server/PigFarmManagement.Server/Program.cs`
+**Dependencies**: T012, T017
+**Details (Implemented):**
+- On startup, checks if any Admin user exists. If not, creates one using environment variables (ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_APIKEY).
+- In production, requires ADMIN_PASSWORD and ADMIN_APIKEY to be set; fails startup if missing (no secret printing in production).
+- In development, generates strong secrets if not provided and logs them once at startup.
+- Seeder is idempotent: does nothing if an Admin already exists.
+- Fully integrated into Program.cs after migrations.
+- See plan.md for Railway/Postgres deployment and seeding instructions.
+
+**Production/Railway Notes:**
+- For Railway or any production deployment, set ADMIN_PASSWORD and ADMIN_APIKEY as environment variables in your platform's secret manager.
+- The seeder will not print secrets in production; you must supply them for first admin creation.
+- For local/dev, secrets are generated and printed once for convenience.
+
+### [X] T020: Implement Client API Service [P]
 **Description**: Create client-side service for authentication API calls
 **Files**: `src/client/PigFarmManagement.Client/Services/AuthApiService.cs`
 **Dependencies**: T004, T014

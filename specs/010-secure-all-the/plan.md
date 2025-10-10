@@ -31,7 +31,7 @@
 - Phase 3-4: Implementation execution (manual or via tools)
 
 ## Summary
-Implement comprehensive API endpoint security using existing API Keys table for authentication, role-based authorization (Admin/User/ReadOnly), in-memory rate limiting (500 req/hour general APIs, 200 for admin), file-based audit logging with 30-day retention, and 2-hour session management - all without adding new database tables. Technical approach leverages ASP.NET Core middleware pipeline with configuration-based security policies.
+Implement comprehensive API endpoint security using existing API Keys table for authentication, role-based authorization (Admin/User), RequireAuthorization on all endpoints, removed debug endpoints, Swagger authentication section, client-side role restrictions, removed default admin access, removed test and tools projects, reset database migrations, and production-safe admin seeding - all without adding new database tables. Technical approach leverages ASP.NET Core middleware pipeline with configuration-based security policies and Railway/Postgres deployment support.
 
 ## Technical Context
 **Language/Version**: C# .NET 8 (ASP.NET Core Web API)  
@@ -42,7 +42,7 @@ Implement comprehensive API endpoint security using existing API Keys table for 
 **Project Type**: Web application (Blazor WebAssembly frontend + ASP.NET Core Web API backend)  
 **Performance Goals**: 500 req/s baseline capacity, 200ms p95 response time for authentication checks  
 **Constraints**: No new database tables, maintain existing endpoint contracts, configuration-based approach only  
-**Scale/Scope**: 1000+ concurrent users, existing ~20 API endpoints, 3-role authorization hierarchy
+**Scale/Scope**: 1000+ concurrent users, existing ~20 API endpoints, 2-role authorization hierarchy (Admin/User)
 
 ## Constitution Check
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
