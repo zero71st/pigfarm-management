@@ -141,11 +141,17 @@ builder.Services.AddCors(options =>
         else
         {
             // Production: strict CORS policy with specific allowed origins
-            var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() 
-                ?? new[] { 
-                    "https://pigfarm-management-client.vercel.app",  // Update with your actual Vercel URL
-                    "https://zero71st-pigfarm-management.vercel.app" // Common Vercel URL pattern
-                };
+            var allowedOriginsConfig = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
+            var envAllowedOrigins = Environment.GetEnvironmentVariable("ALLOWED_ORIGINS")?.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            
+            var allowedOrigins = envAllowedOrigins ?? allowedOriginsConfig ?? new[] { 
+                "https://pigfarm-management.vercel.app",         // Your actual Vercel URL
+                "https://pigfarm-management-client.vercel.app",  // Alternative Vercel URL
+                "https://zero71st-pigfarm-management.vercel.app" // Common Vercel URL pattern
+            };
+            
+            // Log allowed origins for debugging
+            Console.WriteLine($"CORS: Allowing origins: {string.Join(", ", allowedOrigins)}");
             policy.WithOrigins(allowedOrigins)
                   .AllowAnyHeader()
                   .AllowAnyMethod()
@@ -367,8 +373,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 // Add health check endpoint for Railway
-app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }))
-    .RequireAuthorization();
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
 
 // Admin seed endpoint - idempotent seeder trigger (admin-only)
 app.MapPost("/admin/seed", async (HttpContext context, PigFarmDbContext dbContext, ILoggerFactory loggerFactory) =>
