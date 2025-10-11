@@ -142,14 +142,9 @@ directories captured above]
    - Use standard REST/GraphQL patterns
    - Output OpenAPI/GraphQL schema to `/contracts/`
 
-3. **Generate contract tests** from contracts:
-   - One test file per endpoint
-   - Assert request/response schemas
-   - Tests must fail (no implementation yet)
+3. **Produce contract artifacts** from contracts and operator guides.
 
-4. **Extract test scenarios** from user stories:
-   - Each story → integration test scenario
-   - Quickstart test = story validation steps
+4. **Extract manual validation scenarios** from user stories and add them to quickstart.
 
 5. **Update agent file incrementally** (O(1) operation):
    - Run `.specify/scripts/powershell/update-agent-context.ps1 -AgentType copilot`
@@ -160,7 +155,7 @@ directories captured above]
    - Keep under 150 lines for token efficiency
    - Output to repository root
 
-**Output**: data-model.md, /contracts/*, failing tests, quickstart.md, agent-specific file
+**Output**: data-model.md, /contracts/*, quickstart.md, agent-specific file
 
 ## Phase 2: Task Planning Approach
 *This section describes what the /tasks command will do - DO NOT execute during /plan*

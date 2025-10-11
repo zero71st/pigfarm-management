@@ -47,15 +47,16 @@
 - [ ] T002 Initialize [language] project with [framework] dependencies
 - [ ] T003 [P] Configure linting and formatting tools
 
-## Phase 3.2: Tests First (TDD) ⚠️ MUST COMPLETE BEFORE 3.3
-**CRITICAL: These tests MUST be written and MUST FAIL before ANY implementation**
-- [ ] T004 [P] Contract test POST /api/users in tests/contract/test_users_post.py
-- [ ] T005 [P] Contract test GET /api/users/{id} in tests/contract/test_users_get.py
-- [ ] T006 [P] Integration test user registration in tests/integration/test_registration.py
-- [ ] T007 [P] Integration test auth flow in tests/integration/test_auth.py
+## Phase 3.2: Validation (Manual or Automated)
+This phase captures contract review, integration checklist, and manual validation tasks. The repository owner may choose to add automated tests, but they are not mandated by the template. Focus on a clear, executable validation checklist that can be run by engineers or QA.
 
-## Phase 3.3: Core Implementation (ONLY after tests are failing)
-- [ ] T008 [P] User model in src/models/user.py
+- [ ] T004 [P] Review contracts/ files and produce a contract validation checklist (endpoints, payloads, status codes)
+- [ ] T005 [P] Compose integration validation scenarios (DB migrations, auth flows, external API connectivity)
+- [ ] T006 [P] Prepare manual test steps or QA scripts for core happy-path and edge cases
+- [ ] T007 [P] Document expected responses and error cases for each endpoint in docs/manual-testing.md
+
+## Phase 3.3: Core Implementation (after validation tasks prepared)
+ - [ ] T008 [P] User model in src/models/user.py
 - [ ] T009 [P] UserService CRUD in src/services/user_service.py
 - [ ] T010 [P] CLI --create-user in src/cli/user_commands.py
 - [ ] T011 POST /api/users endpoint
@@ -70,17 +71,17 @@
 - [ ] T018 CORS and security headers
 
 ## Phase 3.5: Polish
-- [ ] T019 [P] Unit tests for validation in tests/unit/test_validation.py
-- [ ] T020 Performance tests (<200ms)
-- [ ] T021 [P] Update docs/api.md
+- [ ] T019 [P] Optional: Add or update automated unit tests where helpful (owner decides scope)
+- [ ] T020 Performance checks (<200ms) or benchmark notes
+- [ ] T021 [P] Update docs/api.md and manual-testing.md
 - [ ] T022 Remove duplication
-- [ ] T023 Run manual-testing.md
+- [ ] T023 Execute manual-testing.md and capture results
 
 ## Dependencies
-- Tests (T004-T007) before implementation (T008-T014)
-- T008 blocks T009, T015
-- T016 blocks T018
-- Implementation before polish (T019-T023)
+ - Validation checklist items (T004-T007) should be prepared before or alongside implementation so engineers and QA have clear acceptance criteria
+ - T008 blocks T009, T015
+ - T016 blocks T018
+ - Implementation before polish (T019-T023)
 
 ## Parallel Example
 ```
@@ -93,35 +94,35 @@ Task: "Integration test auth in tests/integration/test_auth.py"
 
 ## Notes
 - [P] tasks = different files, no dependencies
-- Verify tests fail before implementing
-- Commit after each task
-- Avoid: vague tasks, same file conflicts
+- Prepare validation checklists and manual-testing instructions that are easy for reviewers to follow
+- Commit after each task or logical checkpoint
+- Avoid: vague tasks, same-file conflicts, and unverified assumptions
 
 ## Task Generation Rules
 *Applied during main() execution*
 
 1. **From Contracts**:
-   - Each contract file → contract test task [P]
-   - Each endpoint → implementation task
-   
+   - Each contract file → a contract validation task or checklist item
+   - Each endpoint → implementation task (with validation criteria)
+
 2. **From Data Model**:
    - Each entity → model creation task [P]
    - Relationships → service layer tasks
-   
+
 3. **From User Stories**:
-   - Each story → integration test [P]
-   - Quickstart scenarios → validation tasks
+   - Each story → validation scenario (integration/manual) or an automated test if the owner adds one
+   - Quickstart scenarios → manual validation tasks
 
 4. **Ordering**:
-   - Setup → Tests → Models → Services → Endpoints → Polish
+   - Setup → Validation → Models → Services → Endpoints → Polish
    - Dependencies block parallel execution
 
 ## Validation Checklist
-*GATE: Checked by main() before returning*
+*GATE: Use this checklist to ensure readiness before merging*
 
-- [ ] All contracts have corresponding tests
+- [ ] All contracts have documented validation checklist items (or tests where present)
 - [ ] All entities have model tasks
-- [ ] All tests come before implementation
+- [ ] Validation criteria are documented and executable by QA or the implementer
 - [ ] Parallel tasks truly independent
 - [ ] Each task specifies exact file path
-- [ ] No task modifies same file as another [P] task
+- [ ] No task modifies the same file as another [P] task

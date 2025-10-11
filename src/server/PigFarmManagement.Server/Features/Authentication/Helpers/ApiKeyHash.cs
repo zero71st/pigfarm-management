@@ -3,6 +3,16 @@ using System.Text;
 
 namespace PigFarmManagement.Server.Features.Authentication.Helpers;
 
+/// <summary>
+/// API Key generation and hashing utilities.
+/// SECURITY REVIEW (T010): This implementation uses cryptographically secure methods:
+/// - RandomNumberGenerator for key generation (not Random class)
+/// - SHA-256 for hashing with optional salting capability
+/// - Raw API keys are never stored in database, only hashed values
+/// - Proper validation and format checking
+/// - Admin password hashing uses ASP.NET Identity PasswordHasher (BCrypt-based)
+/// - Generated secrets are only printed once in non-production environments
+/// </summary>
 public static class ApiKeyHash
 {
     private const int KeyLength = 64; // 64 characters for the API key

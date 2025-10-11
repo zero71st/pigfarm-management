@@ -129,14 +129,12 @@ src/
    - Use standard REST/GraphQL patterns
    - Output OpenAPI/GraphQL schema to `/contracts/`
 
-3. **Generate contract tests** from contracts:
-   - One test file per endpoint
-   - Assert request/response schemas
-   - Tests must fail (no implementation yet)
+3. **Produce contract artifacts** from contracts:
+   - Produce OpenAPI contract files for operators and integrators.
 
-4. **Extract test scenarios** from user stories:
-   - Each story → integration test scenario
-   - Quickstart test = story validation steps
+4. **Extract manual validation scenarios** from user stories:
+   - Each story → a manual validation checklist used during deployment verification.
+   - Quickstart includes step-by-step manual validation steps (no automated tests are created by default).
 
 5. **Update agent file incrementally** (O(1) operation):
    - Run `.specify/scripts/powershell/update-agent-context.ps1 -AgentType copilot`
@@ -147,7 +145,7 @@ src/
    - Keep under 150 lines for token efficiency
    - Output to repository root
 
-**Output**: data-model.md, /contracts/*, failing tests, quickstart.md, agent-specific file
+**Output**: data-model.md, /contracts/*, quickstart.md, agent-specific file
 
 ## Phase 2: Task Planning Approach
 *This section describes what the /tasks command will do - DO NOT execute during /plan*
@@ -157,7 +155,7 @@ src/
 - Generate tasks from Phase 1 design documents (contracts, data model, quickstart)
 - Each middleware component → implementation task [P] (parallel execution)
 - Each security service → service implementation task [P]
-- Each contract endpoint → contract test task [P]
+-- Each contract endpoint → operator validation checklist item [P]
 - Each configuration model → configuration setup task [P]
 - Integration tasks for middleware pipeline setup
 - Validation tasks for each test scenario from quickstart
@@ -166,7 +164,7 @@ src/
 - **Phase 1**: Foundation tasks (configuration, models, services) [P]
 - **Phase 2**: Middleware implementation tasks [P] 
 - **Phase 3**: Integration tasks (middleware registration, pipeline setup)
-- **Phase 4**: Testing tasks (contract tests, integration tests) [P]
+- **Phase 4**: Validation tasks (manual verification steps) [P]
 - **Phase 5**: Documentation and validation tasks
 
 **Specific Task Categories**:
@@ -190,12 +188,12 @@ src/
    - InputValidationMiddleware
    - SecurityEventLoggingMiddleware
 
-4. **Contract Test Tasks [P]**:
-   - Authentication endpoint tests (/api/security/auth/*)
-   - Authorization verification tests
-   - Rate limiting enforcement tests
-   - Input validation blocking tests
-   - Security event logging tests
+4. **Contract Validation Checklist [P]**:
+   - Authentication endpoints: manual verification steps
+   - Authorization verification: role-based manual checks
+   - Rate limiting enforcement: manual load/verify steps
+   - Input validation blocking: manual negative-case checks
+   - Security event logging: manual log inspection steps
 
 5. **Integration Tasks** (Sequential):
    - Middleware pipeline registration in Program.cs

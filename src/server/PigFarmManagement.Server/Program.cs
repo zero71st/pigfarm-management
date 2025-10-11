@@ -7,6 +7,7 @@ using PigFarmManagement.Server.Services.ExternalServices;
 using PigFarmManagement.Server.Features.Authentication;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.OpenApi.Models;
+using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -59,13 +60,39 @@ builder.Services.Configure<PigFarmManagement.Server.Infrastructure.Settings.Posp
 builder.Services.Configure<PigFarmManagement.Server.Infrastructure.Settings.GoogleMapsOptions>(builder.Configuration.GetSection("GoogleMaps"));
 
 // Add Entity Framework
-builder.Services.AddDbContext<PigFarmDbContext>(options =>
+// Support both PostgreSQL (via DATABASE_URL for Railway) and SQLite (local dev)
+// See specs/011-title-deploy-server/quickstart.md for Railway deployment guidance
+var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+if (!string.IsNullOrWhiteSpace(databaseUrl))
 {
+    // Parse Railway PostgreSQL DATABASE_URL format: postgresql://user:password@host:port/database
+    var uri = new Uri(databaseUrl);
+    var userInfo = uri.UserInfo.Split(':', 2);
+    
+    var npgsqlBuilder = new NpgsqlConnectionStringBuilder
+    {
+        Host = uri.Host,
+        Port = uri.Port > 0 ? uri.Port : 5432,
+        Username = userInfo.Length > 0 ? Uri.UnescapeDataString(userInfo[0]) : "",
+        Password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "",
+        Database = uri.AbsolutePath.TrimStart('/'),
+        SslMode = SslMode.Require,
+        Pooling = true
+    };
+
+    builder.Services.AddDbContext<PigFarmDbContext>(options =>
+        options.UseNpgsql(npgsqlBuilder.ToString(), npgOptions => 
+            npgOptions.EnableRetryOnFailure()));
+}
+else
+{
+    // Fallback to SQLite for local development
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
                           ?? Environment.GetEnvironmentVariable("PIGFARM_CONNECTION")
                           ?? "Data Source=pigfarm.db";
-    options.UseSqlite(connectionString);
-});
+    builder.Services.AddDbContext<PigFarmDbContext>(options =>
+        options.UseSqlite(connectionString));
+}
 
 // Add application services
 builder.Services.AddApplicationServices();
@@ -140,24 +167,18 @@ if (!builder.Environment.IsDevelopment())
 
 var app = builder.Build();
 
-// Ensure database is created and seeded
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<PigFarmDbContext>();
-    context.Database.Migrate();
-}
+// Ensure database is created (migration via separate commands - see quickstart.md)
+// NOTE: Database.Migrate() is NOT called here per T005 migration strategy
 
 // One-time admin seeding: ensure at least one Admin user exists
-// Behavior:
-//  - If an Admin user already exists, no action is taken.
-//  - Otherwise an admin user is created using environment vars when provided:
-//      ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_APIKEY
-//  - If secrets are not provided, a secure password and API key are generated and printed once.
+// Production safety: requires ADMIN_PASSWORD and ADMIN_APIKEY in production, fails startup if missing
+// See specs/011-title-deploy-server/spec.md for requirements
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<PigFarmDbContext>();
     var loggerFactory = scope.ServiceProvider.GetRequiredService<ILoggerFactory>();
     var logger = loggerFactory.CreateLogger("AdminSeeder");
+    var isProduction = app.Environment.IsProduction();
 
     try
     {
@@ -175,7 +196,23 @@ using (var scope = app.Services.CreateScope())
             var providedPassword = Environment.GetEnvironmentVariable("ADMIN_PASSWORD");
             var providedApiKey = Environment.GetEnvironmentVariable("ADMIN_APIKEY");
 
-            // Generate password and API key if not provided
+            // Production safety: require secrets in production environment
+            if (isProduction)
+            {
+                if (string.IsNullOrWhiteSpace(providedPassword))
+                {
+                    logger.LogCritical("Production seeder failure: ADMIN_PASSWORD environment variable is required in production but was not provided. Application startup aborted.");
+                    Environment.Exit(1);
+                }
+
+                if (string.IsNullOrWhiteSpace(providedApiKey))
+                {
+                    logger.LogCritical("Production seeder failure: ADMIN_APIKEY environment variable is required in production but was not provided. Application startup aborted.");
+                    Environment.Exit(1);
+                }
+            }
+
+            // Generate password and API key if not provided (non-production only)
             var password = string.IsNullOrWhiteSpace(providedPassword)
                 ? Convert.ToBase64String(RandomNumberGenerator.GetBytes(12)).Replace("=", "")
                 : providedPassword;
@@ -215,24 +252,34 @@ using (var scope = app.Services.CreateScope())
             context.ApiKeys.Add(apiKeyEntity);
             context.SaveChanges();
 
-            // Only log secrets if they were generated here (not supplied via env vars)
+            // Logging: safe in all environments, but secrets only printed in non-production
             logger.LogInformation("Seeded initial admin user: {Username} ({Email})", adminUser.Username, adminUser.Email);
-            if (string.IsNullOrWhiteSpace(providedPassword))
+            
+            if (!isProduction)
             {
-                logger.LogWarning("Generated admin password (store this securely and rotate on first login): {Password}", password);
-            }
-            else
-            {
-                logger.LogInformation("Admin password was provided via ADMIN_PASSWORD environment variable.");
-            }
+                // Only log/print secrets in non-production environments
+                if (string.IsNullOrWhiteSpace(providedPassword))
+                {
+                    logger.LogWarning("Generated admin password (store this securely and rotate on first login): {Password}", password);
+                }
+                else
+                {
+                    logger.LogInformation("Admin password was provided via ADMIN_PASSWORD environment variable.");
+                }
 
-            if (string.IsNullOrWhiteSpace(providedApiKey))
-            {
-                logger.LogWarning("Generated admin API key (copy now, it will not be shown again): {ApiKey}", rawApiKey);
+                if (string.IsNullOrWhiteSpace(providedApiKey))
+                {
+                    logger.LogWarning("Generated admin API key (copy now, it will not be shown again): {ApiKey}", rawApiKey);
+                }
+                else
+                {
+                    logger.LogInformation("Admin API key was provided via ADMIN_APIKEY environment variable.");
+                }
             }
             else
             {
-                logger.LogInformation("Admin API key was provided via ADMIN_APIKEY environment variable.");
+                // Production: never log raw secrets, only indicate source
+                logger.LogInformation("Admin credentials were provided via environment variables (ADMIN_PASSWORD and ADMIN_APIKEY).");
             }
 
             logger.LogInformation("Admin seeding completed.");
@@ -240,8 +287,13 @@ using (var scope = app.Services.CreateScope())
     }
     catch (Exception ex)
     {
-        // Use the existing logger created above to avoid variable shadowing
         logger.LogError(ex, "Error while attempting to seed admin user");
+        if (isProduction)
+        {
+            logger.LogCritical("Admin seeding failed in production environment. Application startup aborted.");
+            Environment.Exit(1);
+        }
+        throw;
     }
 }
 
@@ -317,6 +369,174 @@ app.UseAuthorization();
 // Add health check endpoint for Railway
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }))
     .RequireAuthorization();
+
+// Admin seed endpoint - idempotent seeder trigger (admin-only)
+app.MapPost("/admin/seed", async (HttpContext context, PigFarmDbContext dbContext, ILoggerFactory loggerFactory) =>
+{
+    var logger = loggerFactory.CreateLogger("AdminSeedEndpoint");
+    var isProduction = context.RequestServices.GetRequiredService<IWebHostEnvironment>().IsProduction();
+    
+    try
+    {
+        // Parse request body for force parameter
+        var hasAdmin = dbContext.Users.Any(u => u.RolesCsv != null && u.RolesCsv.Contains("Admin"));
+        
+        if (hasAdmin)
+        {
+            logger.LogInformation("Admin seed endpoint called: Admin user already exists, no action taken.");
+            return Results.Ok(new { message = "Admin already exists", created = false });
+        }
+
+        // Check if production secrets are available
+        var providedPassword = Environment.GetEnvironmentVariable("ADMIN_PASSWORD");
+        var providedApiKey = Environment.GetEnvironmentVariable("ADMIN_APIKEY");
+        
+        if (isProduction && (string.IsNullOrWhiteSpace(providedPassword) || string.IsNullOrWhiteSpace(providedApiKey)))
+        {
+            logger.LogWarning("Admin seed endpoint called in production but required environment variables (ADMIN_PASSWORD, ADMIN_APIKEY) are missing.");
+            return Results.BadRequest(new { message = "Missing required environment variables for production seeding", created = false });
+        }
+
+        // Create admin user (reuse logic from startup seeder)
+        var adminUsername = Environment.GetEnvironmentVariable("ADMIN_USERNAME") ?? "admin";
+        var adminEmail = Environment.GetEnvironmentVariable("ADMIN_EMAIL") ?? "admin@example.com";
+
+        var password = string.IsNullOrWhiteSpace(providedPassword)
+            ? Convert.ToBase64String(RandomNumberGenerator.GetBytes(12)).Replace("=", "")
+            : providedPassword;
+
+        var rawApiKey = string.IsNullOrWhiteSpace(providedApiKey)
+            ? PigFarmManagement.Server.Features.Authentication.Helpers.ApiKeyHash.GenerateApiKey()
+            : providedApiKey!;
+
+        var hasher = new Microsoft.AspNetCore.Identity.PasswordHasher<object>();
+
+        var adminUser = new PigFarmManagement.Server.Infrastructure.Data.Entities.UserEntity
+        {
+            Username = adminUsername,
+            Email = adminEmail,
+            RolesCsv = "Admin,User",
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow,
+            CreatedBy = "endpoint-seed"
+        };
+
+        adminUser.PasswordHash = hasher.HashPassword(new object(), password);
+        dbContext.Users.Add(adminUser);
+        await dbContext.SaveChangesAsync();
+
+        var apiKeyEntity = new PigFarmManagement.Server.Infrastructure.Data.Entities.ApiKeyEntity
+        {
+            UserId = adminUser.Id,
+            Label = "Admin Key (Endpoint Created)",
+            RolesCsv = adminUser.RolesCsv,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow,
+            ExpiresAt = DateTime.UtcNow.AddYears(1)
+        };
+
+        apiKeyEntity.HashedKey = PigFarmManagement.Server.Features.Authentication.Helpers.ApiKeyHash.HashApiKey(rawApiKey);
+        dbContext.ApiKeys.Add(apiKeyEntity);
+        await dbContext.SaveChangesAsync();
+
+        logger.LogInformation("Admin seed endpoint: Created admin user {Username} ({Email})", adminUser.Username, adminUser.Email);
+        
+        // Production-safe logging for secrets (same pattern as startup seeder)
+        if (!isProduction)
+        {
+            // Only log/print secrets in non-production environments
+            if (string.IsNullOrWhiteSpace(providedPassword))
+            {
+                logger.LogWarning("Admin seed endpoint: Generated admin password (store this securely and rotate on first login): {Password}", password);
+            }
+            else
+            {
+                logger.LogInformation("Admin seed endpoint: Admin password was provided via ADMIN_PASSWORD environment variable.");
+            }
+
+            if (string.IsNullOrWhiteSpace(providedApiKey))
+            {
+                logger.LogWarning("Admin seed endpoint: Generated admin API key (copy now, it will not be shown again): {ApiKey}", rawApiKey);
+            }
+            else
+            {
+                logger.LogInformation("Admin seed endpoint: Admin API key was provided via ADMIN_APIKEY environment variable.");
+            }
+        }
+        else
+        {
+            // Production: never log raw secrets, only indicate source
+            logger.LogInformation("Admin seed endpoint: Admin credentials were provided via environment variables (ADMIN_PASSWORD and ADMIN_APIKEY).");
+        }
+        
+        return Results.Created("/admin/seed", new { message = "Admin user created", created = true, username = adminUser.Username });
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Admin seed endpoint failed");
+        return Results.Problem("Internal server error during admin seeding");
+    }
+})
+.RequireAuthorization(policy => policy.RequireRole("Admin"));
+
+// Migrations endpoint - trigger migrations manually (admin-only)
+app.MapPost("/migrations/run", async (PigFarmDbContext dbContext, ILoggerFactory loggerFactory) =>
+{
+    var logger = loggerFactory.CreateLogger("MigrationsEndpoint");
+    
+    // Create migration job record for audit purposes
+    var migrationJob = new PigFarmManagement.Server.Infrastructure.Data.Entities.MigrationJobEntity
+    {
+        StartedAt = DateTime.UtcNow,
+        Status = PigFarmManagement.Server.Infrastructure.Data.Entities.MigrationJobStatus.Running,
+        Source = "endpoint"
+    };
+
+    try
+    {
+        logger.LogInformation("Migration endpoint called: Starting database migration...");
+        
+        // Save initial migration job record
+        dbContext.MigrationJobs.Add(migrationJob);
+        await dbContext.SaveChangesAsync();
+        
+        // Apply pending migrations
+        await dbContext.Database.MigrateAsync();
+        
+        // Update migration job as successful
+        migrationJob.FinishedAt = DateTime.UtcNow;
+        migrationJob.Status = PigFarmManagement.Server.Infrastructure.Data.Entities.MigrationJobStatus.Success;
+        migrationJob.MigrationsApplied = 1; // Note: EF doesn't provide count of applied migrations
+        await dbContext.SaveChangesAsync();
+        
+        logger.LogInformation("Migration endpoint: Database migration completed successfully. Job ID: {JobId}", migrationJob.Id);
+        return Results.Ok(new { 
+            message = "Migrations applied successfully", 
+            timestamp = DateTime.UtcNow,
+            jobId = migrationJob.Id
+        });
+    }
+    catch (Exception ex)
+    {
+        // Update migration job as failed
+        migrationJob.FinishedAt = DateTime.UtcNow;
+        migrationJob.Status = PigFarmManagement.Server.Infrastructure.Data.Entities.MigrationJobStatus.Failed;
+        migrationJob.ErrorMessage = ex.Message;
+        
+        try
+        {
+            await dbContext.SaveChangesAsync();
+        }
+        catch (Exception saveEx)
+        {
+            logger.LogError(saveEx, "Failed to save migration job failure record");
+        }
+        
+        logger.LogError(ex, "Migration endpoint failed. Job ID: {JobId}", migrationJob.Id);
+        return Results.Problem("Migration failed: " + ex.Message);
+    }
+})
+.RequireAuthorization(policy => policy.RequireRole("Admin"));
 
 app.UseCors();
 app.UseDefaultFiles();

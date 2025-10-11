@@ -1,0 +1,39 @@
+openapi: 3.0.1
+info:
+  title: PigFarmManagement Deploy Contracts
+  version: 1.0.0
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: OK
+  /admin/seed:
+    post:
+      summary: Run admin seeder (idempotent)
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                force:
+                  type: boolean
+                  description: Force create admin even if exists (admin-only)
+      responses:
+        '201':
+          description: Admin created
+        '200':
+          description: Admin already exists (no-op)
+        '400':
+          description: Bad request (e.g., missing secrets in production)
+  /migrations/run:
+    post:
+      summary: Trigger migrations (admin/CI use)
+      responses:
+        '200':
+          description: Migrations applied
+        '500':
+          description: Migration failure
