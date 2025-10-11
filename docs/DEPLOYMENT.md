@@ -36,20 +36,56 @@ git push -u origin main
 ## Step 2: Deploy Server to Railway
 
 1. Go to https://railway.app and sign up/login
-2. Create a new project:
 
+2. Create a PostgreSQL database:
    - Click "New Project"
+   - Select "Provision PostgreSQL"
+   - Note down the `DATABASE_URL` from the Variables tab
+
+3. Create the server application:
+   - Click "New Project" again (or add service to existing project)
    - Select "Deploy from GitHub repo"
    - Choose your repository
    - Railway will automatically detect the Dockerfile
 
-3. Configure environment variables (if needed):
+4. Configure environment variables (REQUIRED for production):
+   Go to your project settings → Variables and add:
 
-   - Go to your project settings
-   - Add any required environment variables
+   ```
+   ASPNETCORE_ENVIRONMENT=Production
+   ASPNETCORE_URLS=http://+:8080
+   DATABASE_URL=<your-postgresql-connection-string-from-step-2>
+   ADMIN_USERNAME=admin
+   ADMIN_EMAIL=admin@yourcompany.com
+   ADMIN_PASSWORD=<secure-password-here>
+   ADMIN_APIKEY=<secure-api-key-here>
+   AllowedOrigins__0=<your-vercel-domain>
+   ```
 
-4. Your server will be available at: `https://your-app-name.railway.app`
-5. Note this URL for the next step
+   **CRITICAL**: The `ADMIN_PASSWORD` and `ADMIN_APIKEY` must be provided in production or the application will fail to start.
+
+5. Run database migrations BEFORE first deployment:
+   ```bash
+   # Install Railway CLI if not already installed
+   npm install -g @railway/cli
+   
+   # Login to Railway
+   railway login
+   
+   # Link to your project
+   railway link
+   
+   # Run migrations
+   railway run "dotnet ef database update --project src/server/PigFarmManagement.Server --connection \"$DATABASE_URL\""
+   ```
+
+6. Deploy the application:
+   - Railway will build and deploy automatically
+   - Your server will be available at: `https://your-app-name.railway.app`
+
+7. Verify deployment:
+   - Check health endpoint: `https://your-app-name.railway.app/health`
+   - Check logs for successful admin seeding message
 
 ## Step 3: Deploy Client to Vercel
 
@@ -100,15 +136,30 @@ After deployment, update the client configuration:
 
 ## Environment Variables
 
-### Railway (Server)
+### Railway (Server) - REQUIRED
 
-- `ASPNETCORE_ENVIRONMENT=Production`
-- `ASPNETCORE_URLS=http://+:8080`
-- `AllowedOrigins__0=https://your-vercel-app.vercel.app` (replace with actual URL)
+```bash
+ASPNETCORE_ENVIRONMENT=Production
+ASPNETCORE_URLS=http://+:8080
+DATABASE_URL=postgresql://user:password@host:port/database?sslmode=require
+ADMIN_USERNAME=admin
+ADMIN_EMAIL=admin@yourcompany.com
+ADMIN_PASSWORD=<secure-password-here>
+ADMIN_APIKEY=<secure-api-key-here>
+AllowedOrigins__0=https://your-vercel-app.vercel.app
+```
+
+**Security Notes:**
+- Generate a strong `ADMIN_PASSWORD` (at least 12 characters with mixed case, numbers, symbols)
+- Generate a secure `ADMIN_APIKEY` (64+ random characters)
+- Keep these secrets secure and rotate them periodically
+- The application will refuse to start in production if `ADMIN_PASSWORD` or `ADMIN_APIKEY` are missing
 
 ### Vercel (Client)
 
-- `ApiBaseUrl=https://your-railway-app.railway.app` (replace with actual URL)
+```bash
+ApiBaseUrl=https://your-railway-app.railway.app
+```
 
 ## Custom Domains (Optional)
 
@@ -136,6 +187,20 @@ After deployment, update the client configuration:
 2. **Build Failures**: Check the build logs in respective platforms
 3. **API Connection**: Verify the API base URL in client configuration
 4. **Health Check**: Railway expects the health endpoint to respond on `/health`
+5. **Admin Seeding Failures**: 
+   - Check Railway logs for "ADMIN_PASSWORD" or "ADMIN_APIKEY" missing errors
+   - Ensure secrets are set in Railway Variables tab
+   - Application will exit with code 1 if production secrets are missing
+6. **Database Connection Issues**:
+   - Verify `DATABASE_URL` is correctly set and includes SSL mode
+   - Check PostgreSQL service is running in Railway
+   - Run migrations before first deployment
+7. **Migration Issues**:
+   - Use Railway CLI: `railway run "dotnet ef database update --project src/server/PigFarmManagement.Server"`
+   - Or use the `/migrations/run` endpoint with admin API key after deployment
+8. **API Authentication**:
+   - Use the seeded admin API key for protected endpoints
+   - Check logs for "Admin created" messages to confirm seeding worked
 
 ## Local Development
 

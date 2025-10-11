@@ -22,6 +22,9 @@ public class PigFarmDbContext : DbContext
     public DbSet<UserEntity> Users { get; set; }
     public DbSet<ApiKeyEntity> ApiKeys { get; set; }
 
+    // Migration tracking entities
+    public DbSet<MigrationJobEntity> MigrationJobs { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -171,6 +174,16 @@ public class PigFarmDbContext : DbContext
                   .WithMany(u => u.ApiKeys)
                   .HasForeignKey(e => e.UserId)
                   .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Migration tracking entity configuration
+        modelBuilder.Entity<MigrationJobEntity>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.StartedAt);
+            entity.Property(e => e.Status).HasConversion<int>();
+            entity.Property(e => e.ErrorMessage).HasMaxLength(2000);
+            entity.Property(e => e.Source).HasMaxLength(50);
         });
 
     // Seed Data

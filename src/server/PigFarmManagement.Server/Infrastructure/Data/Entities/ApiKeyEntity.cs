@@ -4,7 +4,9 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace PigFarmManagement.Server.Infrastructure.Data.Entities;
 
 /// <summary>
-/// Represents an API key for user authentication with lifecycle management
+/// Represents an API key for user authentication with lifecycle management.
+/// SECURITY REVIEW (T010): This entity correctly stores only HashedKey (never raw API keys).
+/// Raw keys are generated in Features.Authentication.Helpers.ApiKeyHash and immediately hashed.
 /// </summary>
 public class ApiKeyEntity
 {
