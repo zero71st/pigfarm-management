@@ -158,7 +158,7 @@
 @code {
     [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
 
-    private List<PosposProduct> products = new();
+    private List<PosposProduct> products = new List<PosposProduct>();
     private HashSet<PosposProduct> selectedProductsHashSet = new();
     private List<PosposProduct> selectedProducts => selectedProductsHashSet.ToList();
     

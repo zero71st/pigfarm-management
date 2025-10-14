@@ -122,7 +122,33 @@ railway variables --set ADMIN_PASSWORD=YourSecurePassword123!
 railway variables --set ADMIN_APIKEY=admin-api-key-$(Get-Random -Maximum 9999)
 ```
 
-#### 4.3 Health Endpoint Configuration
+#### 4.3 POSPOS API Configuration
+
+**Optional**: Configure POSPOS API integration for customer and product import:
+
+```powershell
+# Required: POSPOS API key from your POSPOS admin panel
+railway variables --set POSPOS_API_KEY="your-pospos-api-key"
+
+# Required: POSPOS API base URLs (replace with your actual domain)
+railway variables --set POSPOS_PRODUCT_API_BASE="https://go.pospos.co/api"
+railway variables --set POSPOS_MEMBER_API_BASE="https://go.pospos.co/api"
+
+# Optional: For transaction import functionality
+railway variables --set POSPOS_TRANSACTIONS_API_BASE="https://go.pospos.co/api"
+```
+
+**Get Your POSPOS API Information**:
+1. Log into POSPOS admin panel → Settings → API Settings
+2. Copy your API key (format: `pk_live_...`)
+3. Verify your POSPOS domain (usually `go.pospos.co`)
+
+**Verification**: Check logs for POSPOS configuration:
+```
+info: PosposMemberClient configured. MemberApiBase='https://go.pospos.co/api', ApiKeySet=True
+```
+
+#### 4.4 Health Endpoint Configuration
 
 **Critical**: Ensure the health endpoint is publicly accessible for Railway's health checks:
 
@@ -139,6 +165,36 @@ app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = Dat
     "healthcheckTimeout": 100
   }
 }
+```
+
+#### 4.5 CORS Configuration for Client Applications
+
+**Critical**: Configure CORS to allow requests from your client application(s):
+
+```powershell
+# Set allowed origins for CORS (replace with your actual client URLs)
+railway variables --set ALLOWED_ORIGINS="https://your-client-app.vercel.app,https://localhost:7000,https://localhost:5173"
+```
+
+**Common Client Deployment Platforms**:
+- **Vercel**: `https://your-app-name.vercel.app`
+- **Netlify**: `https://your-app-name.netlify.app`
+- **Local Development**: `https://localhost:7000,https://localhost:5173`
+
+**Server-side CORS Configuration** (already implemented in Program.cs):
+```csharp
+// Production CORS policy reads from ALLOWED_ORIGINS environment variable
+var envAllowedOrigins = Environment.GetEnvironmentVariable("ALLOWED_ORIGINS")?.Split(',', StringSplitOptions.RemoveEmptyEntries);
+var allowedOrigins = envAllowedOrigins ?? /* fallback URLs */;
+policy.WithOrigins(allowedOrigins)
+      .AllowAnyHeader()
+      .AllowAnyMethod()
+      .AllowCredentials();
+```
+
+**Verification**: Check logs for CORS configuration:
+```
+CORS: Allowing origins: https://your-client-app.vercel.app, https://localhost:7000
 ```
 
 ### 5. Application Deployment
@@ -237,9 +293,41 @@ Starting Container
 info: AdminSeeder[0] Admin user already exists; skipping admin seed.
 ```
 
-### Issue 4: Railway Internal Hostname Issues
+### Issue 4: CORS Policy Blocking Client Requests
 
-### Issue 4: Railway Internal Hostname Issues
+**Problem**: Client application cannot access Railway API due to CORS policy
+```
+Access to fetch at 'https://your-api.railway.app/api/auth/login' from origin 'https://your-client.vercel.app' 
+has been blocked by CORS policy: Response to preflight request doesn't pass access control check: 
+No 'Access-Control-Allow-Origin' header is present on the requested resource.
+```
+
+**Root Cause**: Server doesn't allow requests from client application's domain
+
+**Solution**: Configure CORS with allowed origins:
+
+1. **Set environment variable**:
+```powershell
+railway variables --set ALLOWED_ORIGINS="https://your-client-app.vercel.app,https://localhost:7000"
+```
+
+2. **Verify CORS configuration in logs**:
+```
+CORS: Allowing origins: https://your-client-app.vercel.app, https://localhost:7000
+```
+
+3. **Update origins if client URL changes**:
+```powershell
+# For multiple origins
+railway variables --set ALLOWED_ORIGINS="https://app1.vercel.app,https://app2.netlify.app,https://localhost:7000"
+```
+
+**Common Client URLs**:
+- Vercel: `https://your-app-name.vercel.app`
+- Netlify: `https://your-app-name.netlify.app` 
+- Custom domain: `https://yourdomain.com`
+
+### Issue 5: Railway Internal Hostname Issues
 
 **Problem**: Cannot connect from local machine to Railway internal hostnames
 ```
@@ -280,6 +368,16 @@ The DATABASE_URL host 'postgres.railway.internal' appears to be an internal Rail
 | `ADMIN_EMAIL` | pigfarm-management | Admin email | `admin@company.com` |
 | `ADMIN_PASSWORD` | pigfarm-management | Admin password | `SecurePassword123!` |
 | `ADMIN_APIKEY` | pigfarm-management | Admin API key | `admin-api-key-1234` |
+| `ALLOWED_ORIGINS` | pigfarm-management | CORS allowed origins | `https://app.vercel.app,https://localhost:7000` |
+
+### Optional Environment Variables (POSPOS Integration)
+
+| Variable | Service | Description | Example |
+|----------|---------|-------------|---------|
+| `POSPOS_API_KEY` | pigfarm-management | POSPOS API key | `pk_live_abc123...` |
+| `POSPOS_PRODUCT_API_BASE` | pigfarm-management | POSPOS product API URL | `https://go.pospos.co/api` |
+| `POSPOS_MEMBER_API_BASE` | pigfarm-management | POSPOS member API URL | `https://go.pospos.co/api` |
+| `POSPOS_TRANSACTIONS_API_BASE` | pigfarm-management | POSPOS transactions API URL | `https://go.pospos.co/api` |
 
 ## Security Considerations
 
@@ -306,6 +404,25 @@ railway logs --follow
 
 # Check health endpoint specifically
 railway logs | Select-String "health|Health|Healthcheck"
+
+# Check CORS configuration in logs
+railway logs | Select-String "CORS"
+
+# Test API endpoints with curl
+curl "https://your-railway-url.railway.app/health"
+
+# Update CORS origins if client URL changes
+railway variables --set ALLOWED_ORIGINS="https://new-client-url.vercel.app,https://localhost:7000"
+
+# Check POSPOS configuration in logs
+railway logs | Select-String "POSPOS|Pospos"
+
+# Test POSPOS import endpoints
+curl -X POST "https://your-railway-url.railway.app/api/customers/import" -H "X-Api-Key: your-api-key"
+curl -X POST "https://your-railway-url.railway.app/api/feeds/import" -H "X-Api-Key: your-api-key"
+
+# Update POSPOS configuration
+railway variables --set POSPOS_API_KEY="new-api-key"
 
 # Restart application after fixes
 railway up --detach
@@ -342,13 +459,32 @@ For subsequent deployments:
 ✅ **Database Migration**: `Migrations applied successfully`  
 ✅ **Admin Seeding**: No admin seeding error messages in logs  
 ✅ **Health Check Passing**: No "service unavailable" errors in deployment logs  
+✅ **CORS Configuration**: Logs show `CORS: Allowing origins: your-client-url.vercel.app`  
 ✅ **Application Start**: HTTP request logs visible and "Starting Container" message  
 ✅ **Public Access**: Application accessible via Railway URL  
+✅ **Client Connectivity**: No CORS errors when client accesses API  
 ✅ **Authentication**: Admin login working with configured credentials  
 
 ---
 
 ## Recent Updates
+
+### October 11, 2025 - CORS Configuration Fix
+
+**Issue Resolved**: Client applications (Vercel, etc.) were blocked by CORS policy when accessing Railway API.
+
+**Changes Made**:
+1. **Added CORS Environment Variable**: `ALLOWED_ORIGINS` for flexible origin configuration
+2. **Updated Program.cs**: Enhanced CORS policy to read from environment variables
+3. **Added Logging**: Server now logs allowed origins for debugging
+4. **Deployed Fix**: Railway deployment updated with proper CORS settings
+
+**Configuration Added**:
+```bash
+railway variables --set ALLOWED_ORIGINS="https://pigfarm-management.vercel.app,https://localhost:7000,https://localhost:5173"
+```
+
+**Impact**: Client applications can now successfully communicate with Railway API without CORS errors.
 
 ### October 11, 2025 - Health Check Authorization Fix
 
