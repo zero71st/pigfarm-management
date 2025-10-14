@@ -36,28 +36,6 @@ namespace PigFarmManagement.Server.Services.ExternalServices
             _opts = opts?.Value ?? new PosposOptions();
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-            // Allow fallback to environment variables if config keys are not set
-            if (string.IsNullOrWhiteSpace(_opts.ProductApiBase))
-            {
-                var env = Environment.GetEnvironmentVariable("POSPOS_PRODUCT_API_BASE");
-                if (!string.IsNullOrWhiteSpace(env)) 
-                    _opts.ProductApiBase = env;
-                // Fallback to legacy environment variable name
-                else 
-                {
-                    var legacyEnv = Environment.GetEnvironmentVariable("POSPOS_API_BASE");
-                    if (!string.IsNullOrWhiteSpace(legacyEnv)) 
-                        _opts.ProductApiBase = legacyEnv;
-                }
-            }
-            
-            if (string.IsNullOrWhiteSpace(_opts.ApiKey))
-            {
-                var envKey = Environment.GetEnvironmentVariable("POSPOS_API_KEY");
-                if (!string.IsNullOrWhiteSpace(envKey)) 
-                    _opts.ApiKey = envKey;
-            }
-
             _logger.LogInformation(
                 "PosposProductClient configured. ProductApiBase='{Base}', ApiKeySet={HasKey}", 
                 _opts.ProductApiBase, 

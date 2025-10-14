@@ -54,7 +54,28 @@ builder.Services.AddAuthentication("ApiKey")
 builder.Services.AddAuthorization();
 
 // Bind POSPOS options from configuration / environment
-builder.Services.Configure<PigFarmManagement.Server.Infrastructure.Settings.PosposOptions>(builder.Configuration.GetSection("Pospos"));
+builder.Services.Configure<PigFarmManagement.Server.Infrastructure.Settings.PosposOptions>(options =>
+{
+    // Bind from Pospos configuration section first
+    builder.Configuration.GetSection("Pospos").Bind(options);
+    
+    // Override with environment variables if they exist (Railway deployment)
+    var productApiBase = Environment.GetEnvironmentVariable("POSPOS_PRODUCT_API_BASE");
+    if (!string.IsNullOrWhiteSpace(productApiBase))
+        options.ProductApiBase = productApiBase;
+        
+    var memberApiBase = Environment.GetEnvironmentVariable("POSPOS_MEMBER_API_BASE");
+    if (!string.IsNullOrWhiteSpace(memberApiBase))
+        options.MemberApiBase = memberApiBase;
+        
+    var transactionsApiBase = Environment.GetEnvironmentVariable("POSPOS_TRANSACTIONS_API_BASE");
+    if (!string.IsNullOrWhiteSpace(transactionsApiBase))
+        options.TransactionsApiBase = transactionsApiBase;
+        
+    var apiKey = Environment.GetEnvironmentVariable("POSPOS_API_KEY");
+    if (!string.IsNullOrWhiteSpace(apiKey))
+        options.ApiKey = apiKey;
+});
 
 // Bind Google Maps options from configuration / environment
 builder.Services.Configure<PigFarmManagement.Server.Infrastructure.Settings.GoogleMapsOptions>(builder.Configuration.GetSection("GoogleMaps"));
