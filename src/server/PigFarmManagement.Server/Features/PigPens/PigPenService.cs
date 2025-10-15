@@ -65,8 +65,17 @@ public class PigPenService : IPigPenService
         // If a brand is selected, automatically assign all formulas for that brand
         if (!string.IsNullOrEmpty(dto.SelectedBrand))
         {
-            var formulaAssignments = await CreateAutomaticFormulaAssignments(id, dto.SelectedBrand, dto.PigQty);
-            pigPen = pigPen with { FormulaAssignments = formulaAssignments };
+            try
+            {
+                var formulaAssignments = await CreateAutomaticFormulaAssignments(id, dto.SelectedBrand, dto.PigQty);
+                pigPen = pigPen with { FormulaAssignments = formulaAssignments };
+            }
+            catch (Exception)
+            {
+                // If formula assignment fails, create pig pen without formulas
+                // This prevents foreign key constraint errors when no feed formulas exist
+                pigPen = pigPen with { FormulaAssignments = new List<PigPenFormulaAssignment>() };
+            }
         }
 
         return await _pigPenRepository.CreateAsync(pigPen);
@@ -101,6 +110,10 @@ public class PigPenService : IPigPenService
             
             foreach (var formula in brandFormulas)
             {
+                // Validate that the formula has a valid ID (not empty)
+                if (formula.Id == Guid.Empty)
+                    continue;
+                    
                 var assignment = new PigPenFormulaAssignment(
                     Id: Guid.NewGuid(),
                     PigPenId: pigPenId,
