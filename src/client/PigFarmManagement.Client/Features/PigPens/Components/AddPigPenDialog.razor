@@ -229,14 +229,19 @@
 
         try
         {
+            // Convert dates to UTC to avoid timezone parsing issues on server
+            var registerDateUtc = registerDate!.Value.ToUniversalTime();
+            var actualHarvestDateUtc = actualHarvestDate?.ToUniversalTime();
+            var estimatedHarvestDateUtc = estimatedHarvestDate?.ToUniversalTime();
+
             // Create the pig pen first
             var pigPenDto = new PigPenCreateDto(
                 selectedCustomerId!.Value,
                 penCode,
                 pigQty,
-                registerDate!.Value,
-                actualHarvestDate,
-                estimatedHarvestDate,
+                registerDateUtc,
+                actualHarvestDateUtc,
+                estimatedHarvestDateUtc,
                 selectedType,
                 selectedBrand, // Save the selected brand
                 depositPerPig, // Custom deposit per pig amount

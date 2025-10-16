@@ -30,13 +30,10 @@ namespace PigFarmManagement.Client.Features.Authentication.Services
         {
             try
             {
-                var apiKey = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", API_KEY_STORAGE_KEY);
-                Console.WriteLine($"[BrowserApiKeyStorage] Retrieved API key from localStorage: {(!string.IsNullOrEmpty(apiKey) ? "Present" : "Missing")}");
-                return apiKey;
+                return await _jsRuntime.InvokeAsync<string>("localStorage.getItem", API_KEY_STORAGE_KEY);
             }
-            catch (Exception ex)
+            catch
             {
-                Console.Error.WriteLine($"[BrowserApiKeyStorage] Error retrieving API key: {ex.Message}");
                 return null;
             }
         }
@@ -200,30 +197,18 @@ namespace PigFarmManagement.Client.Features.Authentication.Services
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            Console.WriteLine($"[ApiKeyHandler] Processing request to: {request.RequestUri}");
-            
             var apiKey = await _storage.GetApiKeyAsync();
-            
-            Console.WriteLine($"[ApiKeyHandler] Retrieved API key: {(!string.IsNullOrEmpty(apiKey) ? "Present" : "Missing")}");
             
             if (!string.IsNullOrEmpty(apiKey))
             {
                 request.Headers.Add("X-Api-Key", apiKey);
-                Console.WriteLine($"[ApiKeyHandler] Added X-Api-Key header to request");
-            }
-            else
-            {
-                Console.Error.WriteLine($"[ApiKeyHandler] No API key found in storage!");
             }
 
             var response = await base.SendAsync(request, cancellationToken);
 
-            Console.WriteLine($"[ApiKeyHandler] Response status: {response.StatusCode}");
-
             // Handle 401 Unauthorized responses
             if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
             {
-                Console.WriteLine($"[ApiKeyHandler] Clearing invalid API key due to 401 response");
                 // Clear invalid API key
                 await _storage.ClearApiKeyAsync();
             }
