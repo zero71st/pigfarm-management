@@ -17,10 +17,9 @@ namespace PigFarmManagement.Server.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
+                .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
                 .HasAnnotation("ProductVersion", "9.0.1")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
-
-            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("PigFarmManagement.Server.Infrastructure.Data.Entities.ApiKeyEntity", b =>
                 {
@@ -77,7 +76,7 @@ namespace PigFarmManagement.Server.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ApiKeys");
+                    b.ToTable("ApiKeys", (string)null);
                 });
 
             modelBuilder.Entity("PigFarmManagement.Server.Infrastructure.Data.Entities.CustomerEntity", b =>
@@ -149,7 +148,7 @@ namespace PigFarmManagement.Server.Migrations
                     b.HasIndex("Code")
                         .IsUnique();
 
-                    b.ToTable("Customers");
+                    b.ToTable("Customers", (string)null);
                 });
 
             modelBuilder.Entity("PigFarmManagement.Server.Infrastructure.Data.Entities.DepositEntity", b =>
@@ -174,7 +173,7 @@ namespace PigFarmManagement.Server.Migrations
 
                     b.HasIndex("PigPenId");
 
-                    b.ToTable("Deposits");
+                    b.ToTable("Deposits", (string)null);
                 });
 
             modelBuilder.Entity("PigFarmManagement.Server.Infrastructure.Data.Entities.FeedEntity", b =>
@@ -261,7 +260,7 @@ namespace PigFarmManagement.Server.Migrations
 
                     b.HasIndex("PigPenId");
 
-                    b.ToTable("Feeds");
+                    b.ToTable("Feeds", (string)null);
                 });
 
             modelBuilder.Entity("PigFarmManagement.Server.Infrastructure.Data.Entities.FeedFormulaEntity", b =>
@@ -314,7 +313,7 @@ namespace PigFarmManagement.Server.Migrations
 
                     b.HasIndex("ExternalId");
 
-                    b.ToTable("FeedFormulas");
+                    b.ToTable("FeedFormulas", (string)null);
                 });
 
             modelBuilder.Entity("PigFarmManagement.Server.Infrastructure.Data.Entities.HarvestEntity", b =>
@@ -348,7 +347,7 @@ namespace PigFarmManagement.Server.Migrations
 
                     b.HasIndex("PigPenId");
 
-                    b.ToTable("Harvests");
+                    b.ToTable("Harvests", (string)null);
                 });
 
             modelBuilder.Entity("PigFarmManagement.Server.Infrastructure.Data.Entities.MigrationJobEntity", b =>
@@ -381,7 +380,7 @@ namespace PigFarmManagement.Server.Migrations
 
                     b.HasIndex("StartedAt");
 
-                    b.ToTable("MigrationJobs");
+                    b.ToTable("MigrationJobs", (string)null);
                 });
 
             modelBuilder.Entity("PigFarmManagement.Server.Infrastructure.Data.Entities.PigPenEntity", b =>
@@ -448,7 +447,7 @@ namespace PigFarmManagement.Server.Migrations
                     b.HasIndex("PenCode")
                         .IsUnique();
 
-                    b.ToTable("PigPens");
+                    b.ToTable("PigPens", (string)null);
                 });
 
             modelBuilder.Entity("PigFarmManagement.Server.Infrastructure.Data.Entities.PigPenFormulaAssignmentEntity", b =>
@@ -522,7 +521,7 @@ namespace PigFarmManagement.Server.Migrations
 
                     b.HasIndex("PigPenId");
 
-                    b.ToTable("PigPenFormulaAssignments");
+                    b.ToTable("PigPenFormulaAssignments", (string)null);
                 });
 
             modelBuilder.Entity("PigFarmManagement.Server.Infrastructure.Data.Entities.UserEntity", b =>
@@ -588,7 +587,7 @@ namespace PigFarmManagement.Server.Migrations
                     b.HasIndex("Username")
                         .IsUnique();
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("PigFarmManagement.Server.Infrastructure.Data.Entities.ApiKeyEntity", b =>

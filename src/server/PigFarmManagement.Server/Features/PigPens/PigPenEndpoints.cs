@@ -1,4 +1,5 @@
 using PigFarmManagement.Shared.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace PigFarmManagement.Server.Features.PigPens;
 
@@ -105,6 +106,11 @@ public static class PigPenEndpoints
         catch (InvalidOperationException ex)
         {
             return Results.BadRequest(ex.Message);
+        }
+        catch (DbUpdateException dbEx) when (dbEx.InnerException != null && dbEx.InnerException.Message.Contains("duplicate key value"))
+        {
+            // PostgreSQL unique violation -> PenCode already exists
+            return Results.Conflict(new { message = "A pig pen with the same PenCode already exists." });
         }
         catch (Exception ex)
         {

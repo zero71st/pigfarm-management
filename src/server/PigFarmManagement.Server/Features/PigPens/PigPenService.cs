@@ -1,6 +1,7 @@
 using PigFarmManagement.Shared.Models;
 using PigFarmManagement.Server.Features.FeedFormulas;
 using PigFarmManagement.Server.Infrastructure.Data.Repositories;
+using Microsoft.Extensions.Logging;
 using System.Linq;
 
 namespace PigFarmManagement.Server.Features.PigPens;
@@ -22,11 +23,13 @@ public class PigPenService : IPigPenService
 {
     private readonly IPigPenRepository _pigPenRepository;
     private readonly IFeedFormulaService _feedFormulaService;
+    private readonly ILogger<PigPenService> _logger;
 
-    public PigPenService(IPigPenRepository pigPenRepository, IFeedFormulaService feedFormulaService)
+    public PigPenService(IPigPenRepository pigPenRepository, IFeedFormulaService feedFormulaService, ILogger<PigPenService> logger)
     {
         _pigPenRepository = pigPenRepository;
         _feedFormulaService = feedFormulaService;
+        _logger = logger;
     }
 
     public async Task<List<PigPen>> GetAllPigPensAsync()
@@ -42,43 +45,52 @@ public class PigPenService : IPigPenService
 
     public async Task<PigPen> CreatePigPenAsync(PigPenCreateDto dto)
     {
-        var id = Guid.NewGuid();
-        var now = DateTime.UtcNow;
-        var pigPen = new PigPen(
-            id, 
-            dto.CustomerId, 
-            dto.PenCode, 
-            dto.PigQty, 
-            dto.RegisterDate, 
-            dto.ActHarvestDate, 
-            dto.EstimatedHarvestDate, 
-            0, 0, 0, // Initial values for FeedCost, Investment, ProfitLoss
-            dto.Type, // PigPenType
-            dto.DepositPerPig, // DepositPerPig from DTO
-            now, // CreatedAt
-            now) // UpdatedAt
+        try
         {
-            SelectedBrand = dto.SelectedBrand, // Store the selected brand
-            Note = dto.Note // Store the note
-        };
+            _logger.LogInformation("Creating pig pen with data: {PenCode}, Customer: {CustomerId}, Brand: {Brand}", 
+                dto.PenCode, dto.CustomerId, dto.SelectedBrand);
 
-        // If a brand is selected, automatically assign all formulas for that brand
-        if (!string.IsNullOrEmpty(dto.SelectedBrand))
-        {
-            try
+            var id = Guid.NewGuid();
+            var now = DateTime.UtcNow;
+            var pigPen = new PigPen(
+                id, 
+                dto.CustomerId, 
+                dto.PenCode, 
+                dto.PigQty, 
+                dto.RegisterDate, 
+                dto.ActHarvestDate, 
+                dto.EstimatedHarvestDate, 
+                0, 0, 0, // Initial values for FeedCost, Investment, ProfitLoss
+                dto.Type, // PigPenType
+                dto.DepositPerPig, // DepositPerPig from DTO
+                now, // CreatedAt
+                now) // UpdatedAt
             {
-                var formulaAssignments = await CreateAutomaticFormulaAssignments(id, dto.SelectedBrand, dto.PigQty);
-                pigPen = pigPen with { FormulaAssignments = formulaAssignments };
+                SelectedBrand = dto.SelectedBrand, // Store the selected brand
+                Note = dto.Note // Store the note
+            };
+
+            _logger.LogInformation("Pig pen object created, now attempting to save to database");
+
+            // TEMPORARILY SKIP FORMULA ASSIGNMENTS TO TEST BASIC PIG PEN CREATION
+            // This will help us identify if the issue is with basic pig pen creation or formula assignments
+            try 
+            {
+                var result = await _pigPenRepository.CreateAsync(pigPen);
+                _logger.LogInformation("Pig pen saved successfully with ID: {PigPenId}", result.Id);
+                return result;
             }
-            catch (Exception)
+            catch (Exception dbEx)
             {
-                // If formula assignment fails, create pig pen without formulas
-                // This prevents foreign key constraint errors when no feed formulas exist
-                pigPen = pigPen with { FormulaAssignments = new List<PigPenFormulaAssignment>() };
+                _logger.LogError(dbEx, "Database error while saving pig pen: {Message}", dbEx.Message);
+                throw;
             }
         }
-
-        return await _pigPenRepository.CreateAsync(pigPen);
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in CreatePigPenAsync: {Message}", ex.Message);
+            throw;
+        }
     }
 
     private async Task<List<PigPenFormulaAssignment>> CreateAutomaticFormulaAssignments(Guid pigPenId, string brand, int pigQty)

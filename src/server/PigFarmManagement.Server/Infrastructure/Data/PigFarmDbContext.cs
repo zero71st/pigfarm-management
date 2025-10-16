@@ -44,7 +44,7 @@ public class PigFarmDbContext : DbContext
         modelBuilder.Entity<PigPenEntity>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.HasIndex(e => e.PenCode).IsUnique();
+            entity.HasIndex(e => new { e.CustomerId, e.PenCode }).IsUnique();
             entity.Property(e => e.PenCode).IsRequired().HasMaxLength(50);
             entity.Property(e => e.FeedCost).HasColumnType("decimal(18,2)");
             entity.Property(e => e.Investment).HasColumnType("decimal(18,2)");
