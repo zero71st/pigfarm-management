@@ -167,8 +167,6 @@ builder.Services.AddCors(options =>
             
             var allowedOrigins = envAllowedOrigins ?? allowedOriginsConfig ?? new[] { 
                 "https://pigfarm-management.vercel.app",         // Your actual Vercel URL
-                "https://pigfarm-management-client.vercel.app",  // Alternative Vercel URL
-                "https://zero71st-pigfarm-management.vercel.app" // Common Vercel URL pattern
             };
             
             // Log allowed origins for debugging
