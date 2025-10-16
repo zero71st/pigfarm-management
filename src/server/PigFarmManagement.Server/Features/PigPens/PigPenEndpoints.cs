@@ -118,18 +118,35 @@ public static class PigPenEndpoints
         }
     }
 
-    private static async Task<IResult> UpdatePigPen(Guid id, PigPen pigPen, IPigPenService pigPenService)
+    private static async Task<IResult> UpdatePigPen(Guid id, PigPenUpdateDto dto, IPigPenService pigPenService)
     {
         try
         {
-            // Ensure the ID in the URL matches the pig pen ID
-            if (id != pigPen.Id)
+            // Load existing pig pen
+            var existing = await pigPenService.GetPigPenByIdAsync(id);
+            if (existing == null)
             {
-                return Results.BadRequest("Pig pen ID mismatch");
+                return Results.NotFound();
             }
 
-            var updatedPigPen = await pigPenService.UpdatePigPenAsync(pigPen);
-            return Results.Ok(updatedPigPen);
+            // Merge fields from DTO (only update when DTO field is not null)
+            var updatedPigPen = existing with
+            {
+                PenCode = dto.PenCode ?? existing.PenCode,
+                PigQty = dto.PigQty ?? existing.PigQty,
+                RegisterDate = dto.RegisterDate ?? existing.RegisterDate,
+                ActHarvestDate = dto.ActHarvestDate ?? existing.ActHarvestDate,
+                EstimatedHarvestDate = dto.EstimatedHarvestDate ?? existing.EstimatedHarvestDate,
+                Type = dto.Type ?? existing.Type,
+                SelectedBrand = dto.SelectedBrand ?? existing.SelectedBrand,
+                DepositPerPig = dto.DepositPerPig ?? existing.DepositPerPig,
+                Note = dto.Note ?? existing.Note,
+                CreatedAt = existing.CreatedAt,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            var result = await pigPenService.UpdatePigPenAsync(updatedPigPen);
+            return Results.Ok(result);
         }
         catch (InvalidOperationException ex)
         {

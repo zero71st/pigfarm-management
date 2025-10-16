@@ -71,6 +71,9 @@ public class PigPenService : IPigPenService
 
     public async Task<PigPen> UpdatePigPenAsync(Guid id, PigPenUpdateDto dto)
     {
+        // write dto object to console for debugging
+        Console.WriteLine(dto);
+        
         var response = await _httpClient.PutAsJsonAsync($"api/pigpens/{id}", dto);
         response.EnsureSuccessStatusCode();
         var updatedPigPen = await response.Content.ReadFromJsonAsync<PigPen>();
