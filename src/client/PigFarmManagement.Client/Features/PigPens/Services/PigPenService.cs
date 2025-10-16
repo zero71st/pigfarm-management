@@ -70,7 +70,10 @@ public class PigPenService : IPigPenService
             
             // Check if headers are set
             var authHeader = _httpClient.DefaultRequestHeaders.FirstOrDefault(h => h.Key == "X-Api-Key");
-            Console.WriteLine($"[PigPenService] API Key header present: {authHeader.Key != null}");
+            Console.WriteLine($"[PigPenService] API Key header present in DefaultRequestHeaders: {authHeader.Key != null}");
+            
+            // Log all default headers
+            Console.WriteLine($"[PigPenService] All default headers: {string.Join(", ", _httpClient.DefaultRequestHeaders.Select(h => h.Key))}");
             
             var response = await _httpClient.PostAsJsonAsync("api/pigpens", pigPen);
             
