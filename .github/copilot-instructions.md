@@ -12,6 +12,8 @@ Auto-generated from all feature plans. Last updated: 2025-10-08
 - Existing SQLite/PostgreSQL database (no new tables), configuration files, in-memory storage for sessions/rate limits (010-secure-all-the)
 - [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION] + [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION] (011-title-deploy-server)
 - [if applicable, e.g., PostgreSQL, CoreData, files or N/A] (011-title-deploy-server)
+- C# .NET 8, Blazor WebAssembly + MudBlazor UI Components, ASP.NET Core Web API client (012-refactor-the-client)
+- N/A (client-side refactoring only) (012-refactor-the-client)
 
 ## Project Structure
 ```
@@ -61,9 +63,9 @@ dotnet test
 - Repository Pattern: Use batch querying for performance optimization with GetByExternalIdsAsync patterns
 
 ## Recent Changes
+- 012-refactor-the-client: Added C# .NET 8, Blazor WebAssembly + MudBlazor UI Components, ASP.NET Core Web API client
 - 011-title-deploy-server: Added [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION] + [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]
 - 010-secure-all-the: Added C# .NET 8 (ASP.NET Core Web API) + ASP.NET Core 8.0, Entity Framework Core 8.0, BCrypt.Net-Next 4.0.3, Swashbuckle.AspNetCore 6.5.0
-- 009-api-key-authentication: In development - API-key authentication system with admin-managed users, role-based authorization (Admin/Manager/Worker/Viewer), BCrypt password hashing, audit logging, and secure API key lifecycle management
   - Moved all external API models (PosposMember, PosposProductDto, etc.) to shared/Domain/External
   - Refactored CustomerImportService to use database-based mapping with ExternalId field
   - Eliminated JSON file persistence in favor of efficient batch database queries
