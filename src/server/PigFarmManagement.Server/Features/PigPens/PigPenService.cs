@@ -72,8 +72,24 @@ public class PigPenService : IPigPenService
 
             _logger.LogInformation("Pig pen object created, now attempting to save to database");
 
-            // TEMPORARILY SKIP FORMULA ASSIGNMENTS TO TEST BASIC PIG PEN CREATION
-            // This will help us identify if the issue is with basic pig pen creation or formula assignments
+            // If a brand is selected, automatically assign all formulas for that brand
+            if (!string.IsNullOrEmpty(dto.SelectedBrand))
+            {
+                try
+                {
+                    var formulaAssignments = await CreateAutomaticFormulaAssignments(id, dto.SelectedBrand, dto.PigQty);
+                    pigPen = pigPen with { FormulaAssignments = formulaAssignments };
+                    _logger.LogInformation("Formula assignments created: {Count} assignments", formulaAssignments.Count);
+                }
+                catch (Exception formulaEx)
+                {
+                    _logger.LogWarning(formulaEx, "Failed to create formula assignments, creating pig pen without formulas");
+                    // If formula assignment fails, create pig pen without formulas
+                    // This prevents foreign key constraint errors when no feed formulas exist
+                    pigPen = pigPen with { FormulaAssignments = new List<PigPenFormulaAssignment>() };
+                }
+            }
+
             try 
             {
                 var result = await _pigPenRepository.CreateAsync(pigPen);
