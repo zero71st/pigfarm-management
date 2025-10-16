@@ -63,10 +63,35 @@ public class PigPenService : IPigPenService
 
     public async Task<PigPen> CreatePigPenAsync(PigPenCreateDto pigPen)
     {
-        var response = await _httpClient.PostAsJsonAsync("api/pigpens", pigPen);
-        response.EnsureSuccessStatusCode();
-        var createdPigPen = await response.Content.ReadFromJsonAsync<PigPen>();
-        return createdPigPen!;
+        try
+        {
+            Console.WriteLine($"[PigPenService] Sending request to: {_httpClient.BaseAddress}api/pigpens");
+            Console.WriteLine($"[PigPenService] Request data: {System.Text.Json.JsonSerializer.Serialize(pigPen)}");
+            
+            // Check if headers are set
+            var authHeader = _httpClient.DefaultRequestHeaders.FirstOrDefault(h => h.Key == "X-Api-Key");
+            Console.WriteLine($"[PigPenService] API Key header present: {authHeader.Key != null}");
+            
+            var response = await _httpClient.PostAsJsonAsync("api/pigpens", pigPen);
+            
+            Console.WriteLine($"[PigPenService] Response status: {response.StatusCode}");
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.Error.WriteLine($"[PigPenService] Error response: {errorContent}");
+                Console.Error.WriteLine($"[PigPenService] Response headers: {string.Join(", ", response.Headers.Select(h => $"{h.Key}: {string.Join(", ", h.Value)}"))}");
+            }
+            
+            response.EnsureSuccessStatusCode();
+            var createdPigPen = await response.Content.ReadFromJsonAsync<PigPen>();
+            return createdPigPen!;
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"[PigPenService] Exception in CreatePigPenAsync: {ex}");
+            throw;
+        }
     }
 
     public async Task<PigPen> UpdatePigPenAsync(Guid id, PigPenUpdateDto dto)

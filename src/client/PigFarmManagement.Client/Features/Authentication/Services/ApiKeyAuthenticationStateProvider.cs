@@ -19,8 +19,9 @@ namespace PigFarmManagement.Client.Features.Authentication.Services
         public override Task<AuthenticationState> GetAuthenticationStateAsync()
         {
             var user = _authService.CurrentUser;
+            var apiKey = _authService.CurrentApiKey;
             
-            if (user is null || !_authService.IsAuthenticated)
+            if (user is null || !_authService.IsAuthenticated || string.IsNullOrEmpty(apiKey))
             {
                 return Task.FromResult(new AuthenticationState(new System.Security.Claims.ClaimsPrincipal()));
             }
@@ -30,7 +31,8 @@ namespace PigFarmManagement.Client.Features.Authentication.Services
                 new(System.Security.Claims.ClaimTypes.Name, user.Username),
                 new(System.Security.Claims.ClaimTypes.Email, user.Email),
                 new(System.Security.Claims.ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new("user_id", user.Id.ToString())
+                new("user_id", user.Id.ToString()),
+                new("ApiKey", apiKey) // Add the API key to claims for ApiClient to use
             };
 
             // Add roles as separate claims

@@ -243,7 +243,11 @@
                 note // Note
             );
 
+            Console.WriteLine($"[AddPigPenDialog] Creating pig pen with data: {System.Text.Json.JsonSerializer.Serialize(pigPenDto)}");
+
             var createdPigPen = await PigPenService.CreatePigPenAsync(pigPenDto);
+
+            Console.WriteLine($"[AddPigPenDialog] Pig pen created successfully: {createdPigPen.Id}");
 
             // If a brand is selected, automatically assign all formulas for that brand
             if (!string.IsNullOrEmpty(selectedBrand))
@@ -259,8 +263,16 @@
 
             MudDialog.Close(DialogResult.Ok(createdPigPen));
         }
-        catch
+        catch (HttpRequestException httpEx)
         {
+            Console.Error.WriteLine($"[AddPigPenDialog] HTTP Error creating pig pen: {httpEx.Message}");
+            Console.Error.WriteLine($"[AddPigPenDialog] HTTP Error details: {httpEx}");
+            MudDialog.Cancel();
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"[AddPigPenDialog] Error creating pig pen: {ex.Message}");
+            Console.Error.WriteLine($"[AddPigPenDialog] Error details: {ex}");
             MudDialog.Cancel();
         }
     }
