@@ -31,8 +31,10 @@
                     <div class="d-flex gap-4 mb-4">
                         <MudTextField Value="searchText" 
                                      Label="Search" 
-                                     Variant="Variant.Outlined" 
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense" 
                                      Adornment="Adornment.Start"
+                                     
                                      AdornmentIcon="@Icons.Material.Filled.Search"
                                      ValueChanged="@((string value) => OnSearchTextChanged(value))"
                                      DebounceInterval="500" />
@@ -40,6 +42,7 @@
                         <MudSelect Value="selectedRole" 
                                   Label="Filter by Role" 
                                   Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
                                   Clearable="true"
                                   T="string"
                                   ValueChanged="@((string? value) => OnRoleFilterChanged(value))">
@@ -50,6 +53,7 @@
                         <MudSelect Value="selectedStatus" 
                                   Label="Filter by Status" 
                                   Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
                                   Clearable="true"
                                   T="bool?"
                                   ValueChanged="@((bool? value) => OnStatusFilterChanged(value))">
