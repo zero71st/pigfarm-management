@@ -31,7 +31,7 @@
 - Phase 3-4: Implementation execution (manual or via tools)
 
 ## Summary
-Update the POSPOS customer search to display only the single most recently added customer instead of all available customers, and disable the bulk "select all" checkbox. Individual customer selection remains enabled. This streamlines the customer workflow for imports and prevents accidental bulk operations. API failures display a distinct error message. Selection state is session-scoped and clears on page reload or new search.
+Update the POSPOS customer search to display only the single most recently added customer with NO UI option to switch contexts. The "select all" checkbox is disabled/hidden. Individual customer selection remains enabled. This streamlines the customer workflow for imports and prevents accidental bulk operations. API failures display a distinct error message. Selection state is session-scoped and clears on page reload or new search.
 
 ## Technical Context
 **Language/Version**: C# .NET 8 (backend), Blazor WebAssembly (frontend)  
@@ -145,16 +145,15 @@ tests/
    - No new DTOs required; existing CandidateMember class extended with source context
 
 2. **API modifications** from functional requirements:
-   - Endpoint: `GET /api/customers/import/candidates?source=pospos` → returns latest POSPOS member only
-   - Endpoint: `GET /api/customers/import/candidates?source=all` → returns all POSPOS members (existing behavior)
-   - Endpoint: `GET /api/customers/import/candidates` (no param) → returns all (backward compatible)
+   - Endpoint: `GET /api/customers/import/candidates` (no parameters) → returns latest POSPOS member only (always pospos context)
    - Error response: Catch and return via snackbar; distinct message for POSPOS service failures
    - Contract output: `/contracts/import-candidates-api.openapi.json` (specification of enhanced endpoint)
+   - **Note**: Source parameter default changed to "pospos" with validation accepting only "pospos" value (simplified from original plan)
 
 3. **Component modifications**:
    - ImportCandidatesDialog.razor: Disable/hide select-all checkbox header
    - Maintain individual row selection capability
-   - Call API with source parameter (default: all, enhancement: pospos source)
+   - Remove UI buttons for switching between "All Members" and "Latest Member" (always pospos context)
    - Keep session-scoped selection state
 
 4. **Agent context update**:
@@ -267,14 +266,16 @@ Comprehensive testing and deployment verification document with:
 ## Phase 0 Artifact: Research
 
 **Decision: POSPOS Search Filtering Strategy**
-- **Choice**: Server-side filtering with `OrderByDescending(CreatedAt).Take(1)` on CustomerRepository
+- **Choice**: Server-side filtering with `OrderByDescending(CreatedAt).Take(1)` always applied (no context switching)
 - **Rationale**: 
   - Reduces payload to single customer (efficient)
   - Consistent with existing POSPOS integration patterns
   - Minimizes client-side logic
+  - Eliminates UI complexity by removing source switcher buttons
 - **Alternatives considered**: 
   - Client-side filtering after fetching all (rejected: inefficient for large datasets)
   - Cached result strategy (rejected: doesn't reduce query load)
+  - Conditional filtering via source parameter (implemented initially, then simplified to always-pospos)
 
 **Decision: Selection State Management**
 - **Choice**: Session-scoped, client-side state (no persistence)

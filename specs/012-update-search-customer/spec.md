@@ -58,13 +58,13 @@ When creating this spec from a user prompt:
 An admin user searches for customers from the POSPOS integration. Currently, the search results show all available customers, which is overwhelming when importing or selecting customers. The user needs to see only the most recently added customer(s) from POSPOS to streamline the workflow. Additionally, the bulk select functionality (selecting multiple customers at once via a "select all" checkbox) should be disabled as it can lead to accidental mass operations.
 
 ### Acceptance Scenarios
-1. **Given** an admin user is on the customer search page, **When** they perform a search for customers from POSPOS, **Then** the search results display only the single most recently added customer instead of all available customers
+1. **Given** an admin user opens the customer import dialog, **When** the dialog loads, **Then** the search results display only the single most recently added POSPOS customer (no UI option to switch to "all members")
 
-2. **Given** a search result is displayed in the table, **When** the admin looks at the table header, **Then** the "select all" checkbox is disabled/hidden and cannot be clicked
+2. **Given** a search result is displayed in the table, **When** the admin looks at the table header, **Then** the "select all" checkbox is hidden/disabled and cannot be clicked
 
-3. **Given** a search result with customers is displayed, **When** the admin clicks on an individual customer row, **Then** that customer is selected for further actions (viewing details, importing, etc.)
+3. **Given** a search result with customers is displayed, **When** the admin clicks on an individual customer row, **Then** that customer is selected for further actions (importing, etc.)
 
-4. **Given** the admin searches for POSPOS customers but none exist yet, **When** the search completes, **Then** an empty table with a clear "No customers found" or similar message is displayed
+4. **Given** the admin opens the dialog but no POSPOS customers exist, **When** the search completes, **Then** an empty table with a clear "No customers found" message is displayed
 
 ### Edge Cases
 - How is "latest customer" defined when multiple customers were added at the same time? The system should use creation timestamp as the ordering criterion; if timestamps are identical, use customer ID as secondary sort order.
@@ -74,14 +74,14 @@ An admin user searches for customers from the POSPOS integration. Currently, the
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
-- **FR-001**: System MUST filter customer search results from POSPOS to display only the single most recently added customer
+- **FR-001**: System MUST filter customer search results from POSPOS to display only the single most recently added customer (no UI option to switch contexts)
 - **FR-002**: System MUST remove or disable the "select all" checkbox from the search results table header
 - **FR-003**: System MUST prevent bulk selection of multiple customers via the disabled "select all" feature
 - **FR-004**: System MUST allow individual customer selection via single-click on customer rows
 - **FR-004a**: System MUST maintain selected customer state for the duration of the current browser session (selection clears on page reload or when a new search is performed)
 - **FR-005**: System MUST display a clear "No customers found" message when the POSPOS search returns no results
 - **FR-005a**: System MUST display a distinct error message "POSPOS service unavailable. Please try again later." when the POSPOS API fails or times out
-- **FR-006**: System MUST apply this filtering only to POSPOS customer searches, not to other customer search contexts
+- **FR-006**: System MUST always operate in POSPOS mode (latest member only); no "all members" option available to users
 
 ### Business Requirements
 - **BR-001**: Reduce user confusion from large customer lists during imports
@@ -100,6 +100,7 @@ An admin user searches for customers from the POSPOS integration. Currently, the
 ### Session 2025-11-29
 - Q: Selection state persistence → A: Selection stays for the current browser session only (clears on page reload or new search)
 - Q: POSPOS API failure handling → A: Show error message "POSPOS service unavailable. Please try again later."
+- Q: Remove UI buttons for switching sources? → A: Yes. FINAL STATE: Remove both "All Members" and "Latest Member" buttons entirely. Always show latest member only (pospos mode).
 *GATE: Automated checks run during main() execution*
 
 ### Content Quality

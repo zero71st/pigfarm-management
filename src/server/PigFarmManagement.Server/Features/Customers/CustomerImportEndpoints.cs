@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using PigFarmManagement.Shared.Models;
 using PigFarmManagement.Server.Services.ExternalServices;
+using PigFarmManagement.Server.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace PigFarmManagement.Server.Features.Customers;
 
@@ -124,44 +126,26 @@ public static class CustomerImportEndpoints
     {
         try
         {
-            // Validate source parameter
-            if (!string.IsNullOrWhiteSpace(source) && 
-                !source.Equals("pospos", StringComparison.OrdinalIgnoreCase) && 
-                !source.Equals("all", StringComparison.OrdinalIgnoreCase))
-            {
-                return Results.BadRequest(new { error = "Invalid source. Must be 'pospos' or 'all'." });
-            }
-
             var members = await posposClient.GetMembersAsync();
 
-            // Apply source filtering
-            if (source.Equals("pospos", StringComparison.OrdinalIgnoreCase))
-            {
-                // Return only the latest member by CreatedAt, with Id as tiebreaker
-                members = members
-                    .OrderByDescending(m => m.CreatedAt)
-                    .ThenByDescending(m => m.Id)
-                    .Take(1)
-                    .ToList();
-            }
-            // If source is "all" or omitted, keep all members (existing behavior)
-
-            // Project to a shape the Blazor client expects (PascalCase properties)
-            var projected = members.Select(m => new
-            {
-                Id = m.Id,
-                Code = string.IsNullOrWhiteSpace(m.Code) ? m.Id : m.Code,
-                FirstName = m.FirstName,
-                LastName = m.LastName,
-                Phone = string.IsNullOrWhiteSpace(m.Phone) ? m.PhoneNumber : m.Phone,
-                Email = m.Email,
-                Address = m.Address,
-                KeyCardId = m.KeyCardId,
-                ExternalId = m.Id,
-                Sex = m.Sex,
-                Zipcode = m.Zipcode,
-                CreatedAt = m.CreatedAt
-            });
+            // Return all members sorted by ID descending
+            var projected = members
+                .OrderByDescending(m => m.Id)
+                .Select(m => new
+                {
+                    Id = m.Id,
+                    Code = string.IsNullOrWhiteSpace(m.Code) ? m.Id : m.Code,
+                    FirstName = m.FirstName,
+                    LastName = m.LastName,
+                    Phone = string.IsNullOrWhiteSpace(m.Phone) ? m.PhoneNumber : m.Phone,
+                    Email = m.Email,
+                    Address = m.Address,
+                    KeyCardId = m.KeyCardId,
+                    ExternalId = m.Id,
+                    Sex = m.Sex,
+                    Zipcode = m.Zipcode,
+                    CreatedAt = m.CreatedAt
+                });
 
             return Results.Ok(projected);
         }

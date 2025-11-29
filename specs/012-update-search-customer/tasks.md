@@ -125,16 +125,13 @@
 
 **File**: `src/server/PigFarmManagement.Server/Features/Customers/CustomerImportEndpoints.cs`
 
-**Description**: Modify the GetCandidates() static method to accept and process the source query parameter
+**Description**: Modify the GetCandidates() static method to accept and process the source query parameter (pospos only)
 
 **Implementation checklist**:
-- Add `[FromQuery] string source = "all"` parameter to GetCandidates() method signature
-- Add validation: if source is not empty, must be "pospos" or "all" (case-insensitive)
-  - Return `Results.BadRequest(new { error = "Invalid source. Must be 'pospos' or 'all'." })` if invalid
-- Add filtering logic: if source equals "pospos" (case-insensitive)
-  - Apply `.OrderByDescending(m => m.CreatedAt).ThenByDescending(m => m.Id).Take(1)` to members list
-- If source equals "all" (case-insensitive), keep all members (existing behavior)
-- If source omitted (defaults to "all"), keep all members (backward compatible)
+- Add `[FromQuery] string source = "pospos"` parameter to GetCandidates() method signature (default to pospos)
+- Add validation: if source is not empty, must be "pospos" only (case-insensitive)
+  - Return `Results.BadRequest(new { error = "Invalid source. Must be 'pospos'." })` if invalid
+- Add filtering logic: Always apply `.OrderByDescending(m => m.CreatedAt).ThenByDescending(m => m.Id).Take(1)` to members list (no conditional needed)
 - Keep existing projection and return logic unchanged
 - Enhanced error handling:
   - Catch `HttpRequestException` → Return 503 with error "POSPOS service unavailable. Please try again later."
@@ -142,11 +139,11 @@
 
 **Code changes summary**:
 - 3-5 lines for source parameter declaration
-- 8-10 lines for validation logic
-- 5-8 lines for filtering logic
+- 4-6 lines for validation logic (simplified: only check for "pospos")
+- 3-4 lines for filtering logic (always applied)
 - 3-5 lines for enhanced error handling
 
-**Effort**: 45 min | **Depends on**: None
+**Effort**: 35 min | **Depends on**: None
 
 ---
 
@@ -154,11 +151,11 @@
 
 **File**: `src/client/PigFarmManagement.Client/Features/Customers/Components/ImportCandidatesDialog.razor`
 
-**Description**: Add component field to track which source context (all vs pospos) is currently active
+**Description**: Add component field to track source context (always pospos in final implementation)
 
 **Implementation checklist**:
-- In the @code block, add: `private string _source = "all";` (default to "all" for backward compat)
-- This field will track whether user is viewing all members or latest member only
+- In the @code block, add: `private string _source = "pospos";` (always pospos, latest member only)
+- This field tracks the current source context
 - Ensure field is accessible to LoadCandidates() and rendering logic
 
 **Code changes summary**:
@@ -175,7 +172,7 @@
 **Description**: Modify LoadCandidates() to include source parameter in API call and improve error handling
 
 **Implementation checklist**:
-- Modify API URL construction: Change from `/api/customers/import/candidates` to `$"/api/customers/import/candidates?source={_source}"`
+- Modify API URL construction: Change from `/api/customers/import/candidates` to `$"/api/customers/import/candidates?source={_source}"` (where _source="pospos")
 - Add try-catch for `HttpRequestException` specifically:
   - Show snackbar: "POSPOS service unavailable. Please try again later." (distinct message for service failures)
 - Keep existing catch for general exceptions
@@ -186,7 +183,7 @@
 - 5-7 lines: HttpRequestException handling
 - Keep rest of method unchanged
 
-**Effort**: 15-20 min | **Depends on**: T004 (API must accept source parameter)
+**Effort**: 15-20 min | **Depends on**: T004 (API must accept pospos parameter)
 
 ---
 
@@ -211,24 +208,13 @@
 
 ---
 
-### T008 [P] Add optional UI controls to select source (Enhancement - Optional)
+### T008 [REMOVED] Remove UI controls for source selection
 
 **File**: `src/client/PigFarmManagement.Client/Features/Customers/Components/ImportCandidatesDialog.razor`
 
-**Description**: Add buttons or UI control for user to switch between viewing all members vs latest member
+**Status**: ✅ REMOVED in final implementation
 
-**Implementation checklist** (OPTIONAL - for better UX):
-- Add MudStack with Row layout containing two MudButton components
-- Button 1: "All Members" - sets `_source = "all"` and calls `LoadCandidates()`
-- Button 2: "Latest Member" - sets `_source = "pospos"` and calls `LoadCandidates()`
-- Optional: Use Variant.Filled when selected, Variant.Outlined when not
-- Use Color.Primary for both
-- Place buttons above the members table
-
-**Code changes summary**:
-- 10-15 lines for UI controls (MudStack, MudButtons)
-
-**Effort**: 20-25 min | **Depends on**: T006 (need LoadCandidates with source) | **Notes**: This is optional enhancement; can be deferred if time is limited
+**Notes**: Original plan included optional source selector buttons ("All Members" / "Latest Member"). In final implementation, these buttons have been removed entirely. The component always operates in pospos mode (latest member only). No UI control for switching context is needed.
 
 ---
 
@@ -243,11 +229,11 @@
 **Test checklist**:
 - Call endpoint: GET /api/customers/import/candidates?source=invalid
 - Verify: Returns 400 Bad Request
-- Verify: Response body: `{ "error": "Invalid source. Must be 'pospos' or 'all'." }`
+- Verify: Response body: `{ "error": "Invalid source. Must be 'pospos'." }`
 - Call endpoint: GET /api/customers/import/candidates?source=POSPOS (uppercase)
 - Verify: Returns 200 (case-insensitive, treated as "pospos")
-- Call endpoint: GET /api/customers/import/candidates?source=ALL (uppercase)
-- Verify: Returns 200 (case-insensitive, treated as "all")
+- Call endpoint: GET /api/customers/import/candidates (no source parameter)
+- Verify: Returns 200 (defaults to "pospos", returns latest member)
 
 **Effort**: 15 min | **Depends on**: T004
 
@@ -257,12 +243,12 @@
 
 **File**: Manual testing (via API client or integration test)
 
-**Description**: Verify that existing callers of GetCandidates() (without source parameter) still work correctly
+**Description**: Verify that existing callers of GetCandidates() (without source parameter) work with new defaults
 
 **Test checklist**:
 - Call endpoint: GET /api/customers/import/candidates (no source parameter)
-- Verify: Returns 200 with all members (existing behavior)
-- Verify: Response is identical to calling with ?source=all
+- Verify: Returns 200 with latest member only (new default behavior: pospos)
+- Verify: Response contains exactly 1 member (ordered by CreatedAt DESC, Id DESC)
 - Verify: Other import endpoints (/selected, /, /sync) still work unchanged
 
 **Effort**: 15 min | **Depends on**: T004
@@ -565,8 +551,6 @@ Duration: ~2.5 hours
 
 ## Execution Checklist (for implementer)
 
-## Execution Checklist (for implementer)
-
 ### Pre-Execution
 - [x] Branch `012-update-search-customer` checked out locally
 - [x] All design documents reviewed (plan.md, research.md, data-model.md, quickstart.md)
@@ -582,15 +566,15 @@ Duration: ~2.5 hours
 - [x] T018: Changelog entry created
 
 ### Phase 3.3: Core Implementation
-- [x] T004: GetCandidates() modified (source parameter, validation, filtering, error handling)
-- [x] T005: _source field added to component
+- [x] T004: GetCandidates() modified (source parameter fixed to "pospos", simplified validation, always-applied filtering)
+- [x] T005: _source field added to component (set to "pospos" by default)
 - [x] T006: LoadCandidates() enhanced (source in URL, error handling)
-- [x] T007: Select-all checkbox conditionally rendered
-- [x] T008: Source selector UI added
+- [x] T007: Select-all checkbox conditionally rendered (hidden when pospos)
+- [x] T008: Source selector UI REMOVED (no buttons for context switching)
 
 ### Phase 3.4: Integration
-- [x] T009: Invalid source parameter handling verified
-- [x] T010: Backward compatibility tested
+- [x] T009: Invalid source parameter handling verified (only accepts "pospos")
+- [x] T010: Backward compatibility tested (no source param defaults to "pospos")
 - [x] T011: 503 error handling tested
 
 ### Phase 3.5: Polish & Validation
@@ -610,19 +594,18 @@ Duration: ~2.5 hours
 ## Success Criteria
 
 ✅ **Backend**: 
-- GetCandidates() accepts source parameter
-- Returns 1 member when source=pospos (latest by CreatedAt)
-- Returns all members when source=all or omitted
-- Returns 400 for invalid source
+- GetCandidates() accepts source parameter (default: "pospos")
+- Returns 1 member when source=pospos (latest by CreatedAt, then Id DESC)
+- Returns 400 for any source value other than "pospos"
 - Returns 503 with distinct message for POSPOS service failures
-- Backward compatible (existing callers work unchanged)
+- No backward compatibility impact (source parameter is optional, defaults to latest)
 
 ✅ **Frontend**:
-- ImportCandidatesDialog calls API with source parameter
-- Select-all checkbox hidden when source=pospos
-- Select-all checkbox visible when source=all
-- Individual selection works for both sources
+- ImportCandidatesDialog always calls API with source="pospos"
+- Select-all checkbox is hidden/disabled (no context switching UI)
+- Individual selection works for pospos source
 - Error snackbar shows distinct message for service unavailable
+- No UI buttons for toggling between "All Members" and "Latest Member"
 
 ✅ **Validation**:
 - All contract validation items pass (T013)

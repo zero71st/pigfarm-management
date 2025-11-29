@@ -4,63 +4,57 @@
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 
-<MudPaper Class="pa-4">
-    <MudText Typo="Typo.h6">Import customers from POSPOS</MudText>
+<MudPaper Class="pa-4" Style="display: flex; flex-direction: column; height: 600px;">
+    <div Style="flex-shrink: 0;">
+        <MudText Typo="Typo.h6" Class="mb-3">Import customers from POSPOS</MudText>
 
-    @if (_isLoading)
-    {
-        <div class="d-flex justify-center pa-4">
-            <MudProgressCircular Indeterminate="true" />
-        </div>
-    }
-    else
-    {
-        <MudStack Spacing="2">
-            <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
-                <MudTextField @bind-Value="_filter" Placeholder="Search code, name, mobile phone, email..." Adornment="Adornment.Start" AdornmentIcon="Icons.Material.Filled.Search" Immediate="true" />
+        @if (_isLoading)
+        {
+            <div class="d-flex justify-center pa-4">
+                <MudProgressCircular Indeterminate="true" />
+            </div>
+        }
+        else
+        {
+            <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="mb-3">
+                <MudTextField @bind-Value="_filter" Placeholder="Search code, name, phone, email..." Adornment="Adornment.Start" AdornmentIcon="Icons.Material.Filled.Search" Immediate="true" />
+                <MudText Typo="Typo.caption" Color="Color.Default">
+                    Total: <strong>@FilteredCandidates.Count()</strong> / @_candidates.Count
+                </MudText>
                 <MudSpacer />
             </MudStack>
+        }
+    </div>
 
-            @if (_candidates.Count == 0)
+    <div Style="flex-grow: 1; overflow-y: auto;">
+        @if (!_isLoading)
+        {
+            @if (FilteredCandidates.Count() == 0)
             {
                 <div class="pa-4 text-center">
-                    <MudText Typo="Typo.subtitle1">No candidates found</MudText>
-                    <MudText Typo="Typo.caption" Class="mt-1">No POSPOS candidates are available. This may mean POSPOS is not configured on the server or the upstream API returned no results.</MudText>
-                    <div class="mt-3 d-flex justify-center">
-                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="LoadCandidates">Retry</MudButton>
-                    </div>
-                    <div class="mt-2">
-                        <MudText Typo="Typo.caption">Tip: Ensure the server has POSPOS_API_BASE and POSPOS_API_KEY set, then try again.</MudText>
-                    </div>
+                    @if (_candidates.Count == 0)
+                    {
+                        <MudText Typo="Typo.subtitle1">No POSPOS candidates available</MudText>
+                        <MudText Typo="Typo.caption" Class="mt-1">No customers found in POSPOS. POSPOS may not be configured or returned no results.</MudText>
+                        <div class="mt-3 d-flex justify-center">
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="LoadCandidates">Retry</MudButton>
+                        </div>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.subtitle1">No matches found</MudText>
+                        <MudText Typo="Typo.caption" Class="mt-1">No customers match your search criteria.</MudText>
+                    }
                 </div>
             }
             else
             {
-                <!-- NEW: Add UI controls to toggle source -->
-                <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="mb-3">
-                    <MudButton Variant="@(_source == "all" ? Variant.Filled : Variant.Outlined)" 
-                               Color="Color.Primary" 
-                               OnClick="@(async () => { _source = "all"; await LoadCandidates(); })">
-                        All Members
-                    </MudButton>
-                    <MudButton Variant="@(_source == "pospos" ? Variant.Filled : Variant.Outlined)" 
-                               Color="Color.Primary" 
-                               OnClick="@(async () => { _source = "pospos"; await LoadCandidates(); })">
-                        Latest Member
-                    </MudButton>
-                </MudStack>
-
                 <MudTable Items="FilteredCandidates" Hover="true" Bordered="true" Striped="true" Class="candidate-table">
                     <HeaderContent>
                         <MudTh>
-                            @if (_source != "pospos")
-                            {
-                                <MudCheckBox T="bool" Value="_selectAll" ValueChanged="OnSelectAllChanged" />
-                            }
                         </MudTh>
                         <MudTh>Code</MudTh>
                         <MudTh>Display</MudTh>
-                        <!-- First/Last columns removed per request -->
                         <MudTh>Mobile</MudTh>
                         <MudTh>Email</MudTh>
                         <MudTh>Address</MudTh>
@@ -74,9 +68,7 @@
                             <MudCheckBox T="bool" @bind-Value="context.IsSelected" />
                         </MudTd>
                         <MudTd>@(string.IsNullOrWhiteSpace(context.Code) ? "-" : context.Code)</MudTd>
-
                         <MudTd>@(string.IsNullOrWhiteSpace(context.DisplayName) ? "-" : context.DisplayName)</MudTd>
-                        <!-- First/Last cells removed per request -->
                         <MudTd>@context.Phone</MudTd>
                         <MudTd>@context.Email</MudTd>
                         <MudTd>@context.Address</MudTd>
@@ -87,26 +79,23 @@
                     </RowTemplate>
                 </MudTable>
             }
-        </MudStack>
-    }
+        }
+    </div>
 
-    <div class="mt-3 d-flex justify-end">
+    <div Style="flex-shrink: 0;" Class="mt-3 d-flex justify-end">
         <MudButton Variant="Variant.Text" OnClick="Cancel">Cancel</MudButton>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_isLoading || !_hasSelection" OnClick="ImportSelected">Import selected</MudButton>
     </div>
 </MudPaper>
 
 @code {
-    [Parameter] public bool PersistMapping { get; set; } = true; // persist mapping by default for POSPOS imports
+    [Parameter] public bool PersistMapping { get; set; } = true;
 
-    // MudDialogInstance is provided when this component is shown via IDialogService; make it nullable and guard calls.
     [CascadingParameter] MudDialogInstance? MudDialogInstance { get; set; }
 
     private bool _isLoading = true;
     private List<CandidateMember> _candidates = new();
     private string _filter = string.Empty;
-    private bool _selectAll = false;
-    private string _source = "all";  // NEW: Track source context (pospos vs all)
 
     private IEnumerable<CandidateMember> FilteredCandidates => string.IsNullOrWhiteSpace(_filter)
         ? _candidates
@@ -116,8 +105,7 @@
             (c.Sex ?? "") + " " + (c.Zipcode ?? "")
         ).Contains(_filter, StringComparison.OrdinalIgnoreCase));
 
-    // Keep the import fallback: allow importing all candidates when none are explicitly selected.
-    private bool _hasSelection => _candidates.Any();
+    private bool _hasSelection => FilteredCandidates.Any(c => c.IsSelected);
 
     protected override async Task OnInitializedAsync()
     {
@@ -129,15 +117,13 @@
         _isLoading = true;
         try
         {
-            // MODIFIED: Include source parameter in API call
-            var url = $"/api/customers/import/candidates?source={_source}";
+            var url = "/api/customers/import/candidates";
             var list = await Http.GetFromJsonAsync<List<CandidateMember>>(url);
             if (list != null)
                 _candidates = list;
         }
         catch (HttpRequestException ex)
         {
-            // NEW: Handle POSPOS service unavailable specifically
             Snackbar.Add("POSPOS service unavailable. Please try again later.", Severity.Error);
         }
         catch (Exception ex)
@@ -150,27 +136,17 @@
         }
     }
 
-    private Task OnSelectAllChanged(bool value)
-    {
-        _selectAll = value;
-        foreach (var c in _candidates)
-            c.IsSelected = value;
-        StateHasChanged();
-        return Task.CompletedTask;
-    }
-
     private void Cancel() => MudDialogInstance?.Cancel();
 
     private async Task ImportSelected()
     {
-        // If no explicit selections (checkboxes removed), default to importing all candidates.
-        var selected = _candidates.Where(c => c.IsSelected).ToList();
+        var selected = FilteredCandidates.Where(c => c.IsSelected).ToList();
         if (!selected.Any())
         {
-            selected = _candidates.ToList();
+            Snackbar.Add("Please select at least one customer.", Severity.Warning);
+            return;
         }
 
-        // Build a short preview of selected names (limit to 10 names)
         var count = selected.Count;
         var namesPreview = string.Join(", ", selected.Take(10).Select(c => c.DisplayName));
         if (selected.Count > 10)
@@ -183,10 +159,7 @@
             noText: "Cancel");
 
         if (confirm != true)
-        {
-            // user canceled
             return;
-        }
 
         var selectedIds = selected.Select(c => c.Id).ToList();
 
@@ -211,12 +184,10 @@
         }
     }
 
-    private int _selectedCount => _candidates.Count;
-
     private class CandidateMember
     {
         public string Id { get; set; } = string.Empty;
-        public string Code { get; set; } = string.Empty; // optional code/key
+        public string Code { get; set; } = string.Empty;
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
         public string DisplayName =>
