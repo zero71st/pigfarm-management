@@ -1,120 +1,188 @@
 # PigFarmManagement Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2025-10-08
+Last updated: 2025-11-29
 
-## Active Technologies
-- C# .NET 8 + Blazor WebAssembly, .NET Core Web API, Entity Framework Core (Primary Stack)
-- MudBlazor UI Components for modern, responsive interface design
-- SQLite (development), Supabase PostgreSQL (production) for data persistence
-- Google Maps JavaScript API for location tracking and mapping features
-- POSPOS API integration for feed data import and customer synchronization
-- C# .NET 8 (ASP.NET Core Web API) + ASP.NET Core 8.0, Entity Framework Core 8.0, BCrypt.Net-Next 4.0.3, Swashbuckle.AspNetCore 6.5.0 (010-secure-all-the)
-- Existing SQLite/PostgreSQL database (no new tables), configuration files, in-memory storage for sessions/rate limits (010-secure-all-the)
-- [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION] + [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION] (011-title-deploy-server)
-- [if applicable, e.g., PostgreSQL, CoreData, files or N/A] (011-title-deploy-server)
+## Tech Stack
+- **Backend**: C# .NET 8 ASP.NET Core Web API with Entity Framework Core
+- **Frontend**: Blazor WebAssembly with MudBlazor UI components
+- **Database**: SQLite (dev), Railway PostgreSQL (production)
+- **Auth**: API-key based with ApiKeyAuthenticationHandler (ASP.NET Core authentication scheme)
+- **External APIs**: POSPOS (feeds/customers), Google Maps JavaScript API (location)
 
-## Project Structure
+## Feature-Based Architecture (Critical Pattern)
+**Why**: Vertical slices by business domain, not horizontal technical layers. Each feature owns its UI, logic, and data access.
+
 ```
 src/
-├── client/PigFarmManagement.Client/     # Blazor WebAssembly Frontend
-│   ├── Features/                        # Feature-based architecture
-│   │   ├── Authentication/              # API-key auth system (Feature 009)
-│   │   ├── Customers/                   # Enhanced customer management
-│   │   ├── PigPens/                     # Pig pen management
-│   │   └── Dashboard/                   # Main dashboard
-│   └── Services/                        # Client-side services
-├── server/PigFarmManagement.Server/     # .NET 8 Web API Backend
-│   ├── Features/                        # Feature-based architecture
-│   │   ├── Authentication/              # API-key auth + user management
-│   │   ├── Customers/                   # Customer CRUD + location + POS sync
-│   │   ├── PigPens/                     # Pig pen management
-│   │   └── Feeds/                       # Feed import and management
-│   └── Infrastructure/                  # EF Core, migrations, services
-└── shared/PigFarmManagement.Shared/     # Common DTOs and models
-    ├── DTOs/                            # Data Transfer Objects
-    ├── Domain/                          # Domain Models
-    │   ├── Authentication/              # UserEntity, ApiKeyEntity
-    │   └── External/                    # External API Models (POSPOS)
-    └── Contracts/                       # Service Interfaces
+├── client/Features/{Feature}/          # Client feature slice
+│   ├── Pages/{Feature}Page.razor       # Route component
+│   ├── Components/                     # Feature-specific UI
+│   └── Services/{Feature}Service.cs    # HTTP client wrapper
+├── server/Features/{Feature}/          # Server feature slice  
+│   ├── {Feature}Endpoints.cs           # Minimal API endpoints (extension methods)
+│   ├── {Feature}Service.cs             # Business logic (optional, prefer direct in endpoints)
+│   └── {Feature}Repository.cs          # Data access (if complex queries needed)
+└── shared/PigFarmManagement.Shared/    # Cross-cutting concerns
+    ├── DTOs/                           # Request/response contracts
+    ├── Domain/External/                # External API models (POSPOS, etc.)
+    └── Models/                         # Domain entities
 ```
 
-## Commands
+**Key Pattern**: Endpoints use extension methods for registration. See `WebApplicationExtensions.cs`:
+```csharp
+app.MapCustomerEndpoints();  // Each feature has MapXxxEndpoints()
+```
+
+## Development Workflow
+
+### Local Development
+```powershell
+# Server (defaults to SQLite)
+cd src/server/PigFarmManagement.Server
+dotnet run --urls http://localhost:5000
+
+# Client  
+cd src/client/PigFarmManagement.Client
+dotnet run --urls http://localhost:7000
+
+# Database Migrations (from project root)
+dotnet ef migrations add MigrationName --project src/server/PigFarmManagement.Server
+dotnet ef database update --project src/server/PigFarmManagement.Server
+```
+
+### Database Connection Strategy
+- **Dev**: SQLite via `Data Source=pigfarm.db` (automatic)
+- **Prod**: PostgreSQL via `DATABASE_URL` environment variable (Railway-style)
+- **Switching**: Set `DATABASE_URL` env var → auto-switches to PostgreSQL with Npgsql
+- See `Program.cs` lines 85-110 for parsing logic
+
+### Railway Deployment (Production)
 ```bash
-# Development
-cd src/server/PigFarmManagement.Server && dotnet run --urls http://localhost:5000
-cd src/client/PigFarmManagement.Client && dotnet run --urls http://localhost:7000
+# Required environment variables
+ASPNETCORE_ENVIRONMENT=Production
+DATABASE_URL=${{Postgres.DATABASE_PUBLIC_URL}}
+ADMIN_PASSWORD=<strong-password>       # Required, app exits if missing
+ADMIN_APIKEY=<secure-api-key>         # Required, app exits if missing
 
-# Database
-dotnet ef database update
-dotnet ef migrations add <MigrationName>
+# Optional customization
+ADMIN_USERNAME=admin
+ADMIN_EMAIL=admin@company.com
+ALLOWED_ORIGINS=https://your-app.vercel.app
 
-# Testing
-dotnet test
+# Manual migration (before first deploy)
+railway run "dotnet ef database update --project src/server/PigFarmManagement.Server"
 ```
 
-## Code Style
-- C# .NET 8: Follow standard Microsoft conventions with async/await patterns
-- Blazor Components: Use feature-based organization with proper component isolation
-- Entity Framework: Code-first approach with proper migrations
-- API Design: RESTful endpoints with proper HTTP status codes and OpenAPI documentation
-- External Models: All external API models (POSPOS) organized in shared/Domain/External folder
-- Repository Pattern: Use batch querying for performance optimization with GetByExternalIdsAsync patterns
+**Critical**: Admin seeding is production-safe. App WILL EXIT on startup if `ADMIN_PASSWORD` or `ADMIN_APIKEY` are missing in production. This is intentional to prevent weak defaults.
 
-## Recent Changes
-- 011-title-deploy-server: Added [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION] + [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]
-- 010-secure-all-the: Added C# .NET 8 (ASP.NET Core Web API) + ASP.NET Core 8.0, Entity Framework Core 8.0, BCrypt.Net-Next 4.0.3, Swashbuckle.AspNetCore 6.5.0
-- 009-api-key-authentication: In development - API-key authentication system with admin-managed users, role-based authorization (Admin/Manager/Worker/Viewer), BCrypt password hashing, audit logging, and secure API key lifecycle management
-  - Moved all external API models (PosposMember, PosposProductDto, etc.) to shared/Domain/External
-  - Refactored CustomerImportService to use database-based mapping with ExternalId field
-  - Eliminated JSON file persistence in favor of efficient batch database queries
-  - Simplified API contracts by removing persistMapping parameters
-  - Enhanced repository pattern with GetByExternalIdsAsync for performance optimization
+## Authentication Architecture (Feature 009)
 
-## Key Features Implemented
-### API-Key Authentication System (Feature 009) - In Development
-- Admin-managed user system with role-based authorization (Admin/Manager/Worker/Viewer)
-- Secure API key lifecycle management with X-Api-Key header authentication
-- BCrypt password hashing with configurable work factor for security
-- SHA-256 API key hashing with salting for secure storage
-- Comprehensive audit logging for security monitoring and compliance
-- Role hierarchy enforcement with proper permission inheritance
-- Automatic admin seeding for initial system setup
-- Rate limiting and security headers for production deployment
+**Current Implementation**: Direct endpoint pattern with `ApiKeyAuthenticationHandler`
+- **Handler**: `ApiKeyAuthenticationHandler.cs` - ASP.NET Core authentication scheme (registered in `Program.cs` line 51)
+- **Endpoints**: `AuthEndpoints.cs` - Login/logout with BCrypt password hashing, SHA-256 API key hashing
+- **NO middleware**: Previous `ApiKeyMiddleware.cs` implementations were removed (cleaner architecture)
+- **NO service layer**: Business logic lives directly in endpoints (simpler for this use case)
 
-### Enhanced Customer Management (Feature 008)
-- Complete CRUD operations with soft deletion and audit trail
-- Google Maps integration for customer location tracking
-- Dual view modes (card view default, table view) with persistent preferences
-- Advanced filtering by status (Active/Inactive/All) and real-time text search
-- POS system synchronization with conflict resolution (POS data takes precedence)
-- Modern UI with MudBlazor components, icon-only buttons, and responsive design
-- Comprehensive validation and error handling
+**How it works**:
+1. User logs in → `POST /api/auth/login` → generates API key → returns to client
+2. Client stores API key → sends via `X-Api-Key` header on subsequent requests
+3. `ApiKeyAuthenticationHandler` intercepts → validates → populates `HttpContext.User`
+4. Endpoints use `[Authorize]` attributes for protection
 
-### Database Enhancements
-- Entity Framework Core with SQLite (dev) and PostgreSQL (prod)
-- Customer location fields: Latitude, Longitude with validation
-- Soft deletion: IsDeleted, DeletedAt, DeletedBy fields
-- Enhanced audit trail and relationship tracking
+**Adding new authenticated endpoints**:
+```csharp
+group.MapPost("/protected", [Authorize] async (HttpContext context) => {
+    var userId = context.User.FindFirst("user_id")?.Value;
+    // Business logic here
+});
+```
 
-### POSPOS Integration
-- Feed import with pricing calculations and discount processing
-- Customer data synchronization with database-based ExternalId mapping
-- Efficient batch querying for customer import operations
-- Streamlined API contracts without complex persistence parameters
-- Comprehensive logging and error handling
+## Code Patterns
 
-### External API Model Organization
-- All external API models centralized in shared/Domain/External folder
-- PosposMember.cs: POSPOS member data integration model
-- PosposProductDtos.cs: Product, Category, and Unit DTOs for feed imports
-- Consistent namespace organization: PigFarmManagement.Shared.Domain.External
-- Global using statements for seamless access across client and server
+### Minimal API Endpoints (Server)
+```csharp
+public static class CustomerEndpoints
+{
+    public static WebApplication MapCustomerEndpoints(this WebApplication app)
+    {
+        var group = app.MapGroup("/api/customers").WithTags("Customers");
 
-### Database Optimization Patterns
-- Repository pattern with batch querying capabilities (GetByExternalIdsAsync)
-- ExternalId field as single source of truth for external system mapping
-- Elimination of dual persistence (JSON + Database) for simplified architecture
-- Enhanced performance through bulk operations and reduced database round trips
+        group.MapGet("", async (PigFarmDbContext db) =>
+            await db.Customers.Where(c => !c.IsDeleted).ToListAsync());
+            
+        group.MapPost("", [Authorize] async (CustomerCreateDto dto, PigFarmDbContext db) =>
+        {
+            var customer = CustomerEntity.FromModel(dto);
+            db.Customers.Add(customer);
+            await db.SaveChangesAsync();
+            return Results.Created($"/api/customers/{customer.Id}", customer.ToModel());
+        });
+        
+        return app;
+    }
+}
+```
+**Register in `WebApplicationExtensions.cs`**: `app.MapCustomerEndpoints();`
+
+### Blazor Service Pattern (Client)
+```csharp
+public class CustomerService : ICustomerService
+{
+    private readonly HttpClient _http;
+    
+    public async Task<List<Customer>> GetCustomersAsync()
+        => await _http.GetFromJsonAsync<List<Customer>>("/api/customers") ?? [];
+        
+    public async Task<Customer> CreateAsync(CustomerCreateDto dto)
+    {
+        var response = await _http.PostAsJsonAsync("/api/customers", dto);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<Customer>() 
+            ?? throw new InvalidOperationException();
+    }
+}
+```
+
+### External API Integration (POSPOS)
+- **Models**: All in `shared/Domain/External/` (e.g., `PosposMember.cs`, `PosposProductDtos.cs`)
+- **Clients**: HttpClient-based in `server/Services/ExternalServices/` (e.g., `PosposMemberClient.cs`)
+- **Mapping**: Use `ExternalId` field on entities for sync (no JSON file persistence)
+- **Batch queries**: Repository pattern with `GetByExternalIdsAsync` for performance
+
+## Database Patterns
+
+### Entity Framework Configuration
+- **DbContext**: `PigFarmDbContext.cs` with feature entities (Customers, PigPens, Feeds, Users, ApiKeys)
+- **Migrations**: PostgreSQL-specific (Railway prod), SQLite fallback (dev)
+- **Connection logic**: `Program.cs` parses `DATABASE_URL` → Npgsql for prod, SQLite for dev
+- **Soft deletion**: Use `IsDeleted`, `DeletedAt`, `DeletedBy` fields (see `CustomerEntity`)
+
+### Repository Pattern (When Needed)
+Only create repositories for complex queries. Most endpoints can use `PigFarmDbContext` directly.
+```csharp
+public class CustomerRepository : ICustomerRepository
+{
+    private readonly PigFarmDbContext _context;
+    
+    // Batch querying for external sync
+    public async Task<Dictionary<string, CustomerEntity>> GetByExternalIdsAsync(
+        IEnumerable<string> externalIds)
+    {
+        return await _context.Customers
+            .Where(c => externalIds.Contains(c.ExternalId))
+            .ToDictionaryAsync(c => c.ExternalId!);
+    }
+}
+```
+
+## Critical Conventions
+
+1. **No middleware for auth** - Use `ApiKeyAuthenticationHandler` (ASP.NET Core authentication scheme)
+2. **Extension methods for endpoints** - Each feature has `Map{Feature}Endpoints(this WebApplication app)`
+3. **Direct endpoint logic** - Avoid unnecessary service layers unless complexity demands it
+4. **External models in shared/** - All POSPOS/external API models go in `Domain/External/`
+5. **Production secrets required** - App exits if `ADMIN_PASSWORD`/`ADMIN_APIKEY` missing in production
+6. **Feature isolation** - Each feature owns its UI, endpoints, and data access (vertical slices)
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->
