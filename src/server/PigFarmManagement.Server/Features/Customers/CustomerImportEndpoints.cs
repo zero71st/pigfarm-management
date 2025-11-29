@@ -119,11 +119,32 @@ public static class CustomerImportEndpoints
     /// Get POSPOS members available for import
     /// </summary>
     private static async Task<IResult> GetCandidates(
-        IPosposMemberClient posposClient)
+        IPosposMemberClient posposClient,
+        [FromQuery] string source = "all")
     {
         try
         {
+            // Validate source parameter
+            if (!string.IsNullOrWhiteSpace(source) && 
+                !source.Equals("pospos", StringComparison.OrdinalIgnoreCase) && 
+                !source.Equals("all", StringComparison.OrdinalIgnoreCase))
+            {
+                return Results.BadRequest(new { error = "Invalid source. Must be 'pospos' or 'all'." });
+            }
+
             var members = await posposClient.GetMembersAsync();
+
+            // Apply source filtering
+            if (source.Equals("pospos", StringComparison.OrdinalIgnoreCase))
+            {
+                // Return only the latest member by CreatedAt, with Id as tiebreaker
+                members = members
+                    .OrderByDescending(m => m.CreatedAt)
+                    .ThenByDescending(m => m.Id)
+                    .Take(1)
+                    .ToList();
+            }
+            // If source is "all" or omitted, keep all members (existing behavior)
 
             // Project to a shape the Blazor client expects (PascalCase properties)
             var projected = members.Select(m => new
@@ -143,6 +164,11 @@ public static class CustomerImportEndpoints
             });
 
             return Results.Ok(projected);
+        }
+        catch (HttpRequestException ex)
+        {
+            // POSPOS service unavailable or network error
+            return Results.Json(new { error = "POSPOS service unavailable. Please try again later." }, statusCode: 503);
         }
         catch (Exception ex)
         {

@@ -184,5 +184,38 @@ public class CustomerRepository : ICustomerRepository
 5. **Production secrets required** - App exits if `ADMIN_PASSWORD`/`ADMIN_APIKEY` missing in production
 6. **Feature isolation** - Each feature owns its UI, endpoints, and data access (vertical slices)
 
+## Feature 012: POSPOS Import Enhancement (Latest Member Display)
+
+**Status**: In Development | **Date**: 2025-11-29
+
+**Scope**: Enhance existing POSPOS import workflow to show only the latest customer and disable bulk select-all operation
+
+**Files Modified**:
+- Backend: `src/server/PigFarmManagement.Server/Features/Customers/CustomerImportEndpoints.cs`
+- Frontend: `src/client/PigFarmManagement.Client/Features/Customers/Components/ImportCandidatesDialog.razor`
+
+**Key Changes**:
+
+1. **API Enhancement** - `GetCandidates()` method:
+   - Add optional `source` query parameter: `source=pospos|all` (default: `all`)
+   - When `source=pospos`: Return 1 latest member ordered by `CreatedAt DESC, Id DESC`
+   - When `source=all`: Return all members (existing behavior, backward compatible)
+   - Enhanced error handling: Return 503 with message "POSPOS service unavailable. Please try again later." for service failures
+
+2. **Component Enhancement** - `ImportCandidatesDialog.razor`:
+   - Add `_source` field to track context (pospos vs all)
+   - Modify `LoadCandidates()` to include source parameter in API URL
+   - Conditionally hide select-all checkbox when `_source == "pospos"`
+   - Individual row selection remains enabled for both sources
+   - Selection state session-scoped (clears on page reload, dialog close)
+
+**Pattern**: Modifies existing import infrastructure rather than creating new search. Server-side filtering (latest member determined by POSPOS API, filtered in endpoint).
+
+**Error Handling**: Distinct 503 status code and message for POSPOS service unavailability vs. other errors (500).
+
+**Selection State**: Session-scoped via component `_candidates` list. No persistence to database.
+
+**Testing**: See `specs/012-update-search-customer/quickstart.md` for validation scenarios.
+
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

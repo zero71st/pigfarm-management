@@ -36,10 +36,27 @@
             }
             else
             {
+                <!-- NEW: Add UI controls to toggle source -->
+                <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="mb-3">
+                    <MudButton Variant="@(_source == "all" ? Variant.Filled : Variant.Outlined)" 
+                               Color="Color.Primary" 
+                               OnClick="@(async () => { _source = "all"; await LoadCandidates(); })">
+                        All Members
+                    </MudButton>
+                    <MudButton Variant="@(_source == "pospos" ? Variant.Filled : Variant.Outlined)" 
+                               Color="Color.Primary" 
+                               OnClick="@(async () => { _source = "pospos"; await LoadCandidates(); })">
+                        Latest Member
+                    </MudButton>
+                </MudStack>
+
                 <MudTable Items="FilteredCandidates" Hover="true" Bordered="true" Striped="true" Class="candidate-table">
                     <HeaderContent>
                         <MudTh>
-                            <MudCheckBox T="bool" Value="_selectAll" ValueChanged="OnSelectAllChanged" />
+                            @if (_source != "pospos")
+                            {
+                                <MudCheckBox T="bool" Value="_selectAll" ValueChanged="OnSelectAllChanged" />
+                            }
                         </MudTh>
                         <MudTh>Code</MudTh>
                         <MudTh>Display</MudTh>
@@ -89,6 +106,7 @@
     private List<CandidateMember> _candidates = new();
     private string _filter = string.Empty;
     private bool _selectAll = false;
+    private string _source = "all";  // NEW: Track source context (pospos vs all)
 
     private IEnumerable<CandidateMember> FilteredCandidates => string.IsNullOrWhiteSpace(_filter)
         ? _candidates
@@ -111,9 +129,16 @@
         _isLoading = true;
         try
         {
-            var list = await Http.GetFromJsonAsync<List<CandidateMember>>("/api/customers/import/candidates");
+            // MODIFIED: Include source parameter in API call
+            var url = $"/api/customers/import/candidates?source={_source}";
+            var list = await Http.GetFromJsonAsync<List<CandidateMember>>(url);
             if (list != null)
                 _candidates = list;
+        }
+        catch (HttpRequestException ex)
+        {
+            // NEW: Handle POSPOS service unavailable specifically
+            Snackbar.Add("POSPOS service unavailable. Please try again later.", Severity.Error);
         }
         catch (Exception ex)
         {

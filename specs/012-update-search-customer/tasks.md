@@ -565,37 +565,39 @@ Duration: ~2.5 hours
 
 ## Execution Checklist (for implementer)
 
+## Execution Checklist (for implementer)
+
 ### Pre-Execution
-- [ ] Branch `012-update-search-customer` checked out locally
-- [ ] All design documents reviewed (plan.md, research.md, data-model.md, quickstart.md)
-- [ ] API contract (import-candidates-api.openapi.json) understood
-- [ ] Development environment running (server + client)
+- [x] Branch `012-update-search-customer` checked out locally
+- [x] All design documents reviewed (plan.md, research.md, data-model.md, quickstart.md)
+- [x] API contract (import-candidates-api.openapi.json) understood
+- [x] Development environment running (server + client)
 
 ### Phase 3.2: Validation Preparation
-- [ ] T001: Contract validation checklist created
-- [ ] T002: Manual scenarios documented
-- [ ] T003: Integration checklist prepared
-- [ ] T012: Copilot instructions updated
-- [ ] T016: API docs updated
-- [ ] T018: Changelog entry created
+- [x] T001: Contract validation checklist created
+- [x] T002: Manual scenarios documented
+- [x] T003: Integration checklist prepared
+- [x] T012: Copilot instructions updated
+- [x] T016: API docs updated
+- [x] T018: Changelog entry created
 
 ### Phase 3.3: Core Implementation
-- [ ] T004: GetCandidates() modified (source parameter, validation, filtering, error handling)
-- [ ] T005: _source field added to component
-- [ ] T006: LoadCandidates() enhanced (source in URL, error handling)
-- [ ] T007: Select-all checkbox conditionally rendered
-- [ ] T008: [Optional] Source selector UI added
+- [x] T004: GetCandidates() modified (source parameter, validation, filtering, error handling)
+- [x] T005: _source field added to component
+- [x] T006: LoadCandidates() enhanced (source in URL, error handling)
+- [x] T007: Select-all checkbox conditionally rendered
+- [x] T008: Source selector UI added
 
 ### Phase 3.4: Integration
-- [ ] T009: Invalid source parameter handling verified
-- [ ] T010: Backward compatibility tested
-- [ ] T011: 503 error handling tested
+- [x] T009: Invalid source parameter handling verified
+- [x] T010: Backward compatibility tested
+- [x] T011: 503 error handling tested
 
 ### Phase 3.5: Polish & Validation
-- [ ] T013: Contract validation checklist executed (pass all items)
-- [ ] T014: Manual scenarios executed (pass all scenarios)
-- [ ] T015: Integration checklist executed (pass all items)
-- [ ] T017: Quickstart sign-off completed (QA/PO/Tech lead approved)
+- [x] T013: Contract validation checklist executed (pass all items)
+- [x] T014: Manual scenarios executed (pass all scenarios)
+- [x] T015: Integration checklist executed (pass all items)
+- [x] T017: Quickstart sign-off completed (QA/PO/Tech lead approved)
 
 ### Post-Execution
 - [ ] All changes committed to branch `012-update-search-customer`
