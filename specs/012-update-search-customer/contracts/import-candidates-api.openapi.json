@@ -1,0 +1,322 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Customer Import API (POSPOS Enhancement)",
+    "description": "Endpoints for importing and managing POSPOS customer candidates with filtering support",
+    "version": "1.0.0",
+    "contact": {
+      "name": "PigFarmManagement",
+      "url": "https://pigfarm.example.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000/api",
+      "description": "Development server"
+    },
+    {
+      "url": "https://api.pigfarm.example.com/api",
+      "description": "Production server"
+    }
+  ],
+  "paths": {
+    "/customers/import/candidates": {
+      "get": {
+        "summary": "Get POSPOS members available for import",
+        "operationId": "getImportCandidates",
+        "tags": ["Customer Import"],
+        "description": "Retrieves list of members from POSPOS available for import. Can filter to return only the latest member or all members.",
+        "parameters": [
+          {
+            "name": "source",
+            "in": "query",
+            "description": "Filter context: 'pospos' returns 1 latest member; 'all' returns all available members (default)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["pospos", "all"],
+              "default": "all"
+            },
+            "example": "pospos"
+          }
+        ],
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved import candidates",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CandidateMember"
+                  },
+                  "description": "Array of available members. For source='pospos': 0-1 items. For source='all': 0-N items."
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Invalid source. Must be 'pospos' or 'all'."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid API key"
+          },
+          "500": {
+            "description": "Server error getting import candidates",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Failed to get import candidates: Network timeout"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "POSPOS service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "POSPOS service unavailable. Please try again later."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/customers/import/selected": {
+      "post": {
+        "summary": "Import selected members as customers",
+        "operationId": "importSelectedCustomers",
+        "tags": ["Customer Import"],
+        "description": "Import one or more POSPOS members as new customers into the system",
+        "parameters": [
+          {
+            "name": "persist",
+            "in": "query",
+            "description": "Persist mapping between POSPOS members and created customers",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Array of POSPOS member IDs to import",
+                "example": [
+                  "pospos-member-123",
+                  "pospos-member-456"
+                ]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Import completed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "imported": {
+                      "type": "integer",
+                      "example": 2
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Successfully imported 2 members"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request - no member IDs provided or other validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ids required"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid API key"
+          },
+          "500": {
+            "description": "Server error during import",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Failed to import selected customers: Database error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CandidateMember": {
+        "type": "object",
+        "required": ["id", "code"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique POSPOS member identifier",
+            "example": "pospos-member-123"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 20,
+            "description": "Member code (unique in POSPOS)",
+            "example": "CUST001"
+          },
+          "firstName": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 100,
+            "description": "Member first name",
+            "example": "John"
+          },
+          "lastName": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 100,
+            "description": "Member last name",
+            "example": "Doe"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Full name or code used for display",
+            "example": "John Doe"
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true,
+            "description": "Primary phone number",
+            "example": "+1-555-0123"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true,
+            "format": "email",
+            "description": "Email address",
+            "example": "john@example.com"
+          },
+          "address": {
+            "type": "string",
+            "nullable": true,
+            "description": "Physical address",
+            "example": "123 Farm Road, State, ZIP"
+          },
+          "keyCardId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Key card identifier",
+            "example": "KC001"
+          },
+          "externalId": {
+            "type": "string",
+            "description": "POSPOS external ID (same as id field)",
+            "example": "pospos-member-123"
+          },
+          "sex": {
+            "type": "string",
+            "nullable": true,
+            "enum": ["M", "F", "Other"],
+            "description": "Gender",
+            "example": "M"
+          },
+          "zipcode": {
+            "type": "string",
+            "nullable": true,
+            "description": "Postal code",
+            "example": "12345"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when member was created in POSPOS",
+            "example": "2025-11-25T14:30:00Z"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Api-Key",
+        "description": "API key for authentication (from admin login)"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Customer Import",
+      "description": "Customer import operations from POSPOS with filtering support"
+    }
+  ]
+}

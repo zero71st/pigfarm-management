@@ -69,6 +69,7 @@ An admin user searches for customers from the POSPOS integration. Currently, the
 ### Edge Cases
 - How is "latest customer" defined when multiple customers were added at the same time? The system should use creation timestamp as the ordering criterion; if timestamps are identical, use customer ID as secondary sort order.
 - If a customer is deleted or becomes invalid after being identified as the latest, the system should show the next most recent customer or display an empty result with a message.
+- If POSPOS API fails or times out during search, display error message: "POSPOS service unavailable. Please try again later."
 
 ## Requirements *(mandatory)*
 
@@ -77,7 +78,9 @@ An admin user searches for customers from the POSPOS integration. Currently, the
 - **FR-002**: System MUST remove or disable the "select all" checkbox from the search results table header
 - **FR-003**: System MUST prevent bulk selection of multiple customers via the disabled "select all" feature
 - **FR-004**: System MUST allow individual customer selection via single-click on customer rows
+- **FR-004a**: System MUST maintain selected customer state for the duration of the current browser session (selection clears on page reload or when a new search is performed)
 - **FR-005**: System MUST display a clear "No customers found" message when the POSPOS search returns no results
+- **FR-005a**: System MUST display a distinct error message "POSPOS service unavailable. Please try again later." when the POSPOS API fails or times out
 - **FR-006**: System MUST apply this filtering only to POSPOS customer searches, not to other customer search contexts
 
 ### Business Requirements
@@ -92,7 +95,11 @@ An admin user searches for customers from the POSPOS integration. Currently, the
 
 ---
 
-## Review & Acceptance Checklist
+## Clarifications
+
+### Session 2025-11-29
+- Q: Selection state persistence → A: Selection stays for the current browser session only (clears on page reload or new search)
+- Q: POSPOS API failure handling → A: Show error message "POSPOS service unavailable. Please try again later."
 *GATE: Automated checks run during main() execution*
 
 ### Content Quality
