@@ -169,7 +169,7 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td><strong>ยอดเงินฝากรวม:</strong></td>
+                                        <td><strong>ยอดเงินมัดจำรวม:</strong></td>
                                         <td class="text-right">
                                             @if (pigPen?.Type == PigPenType.Project)
                                             {
@@ -231,7 +231,7 @@
                     <CardHeaderContent>
                         <MudText Typo="Typo.h5">
                             <MudIcon Icon="@Icons.Material.Filled.AccountBalance" Class="mr-2" />
-                            เงินฝาก (@deposits.Count)
+                            เงินมัดจำ (@deposits.Count)
                         </MudText>
                     </CardHeaderContent>
                     <CardHeaderActions>
@@ -239,7 +239,7 @@
                                    Color="Color.Primary"
                                    StartIcon="@Icons.Material.Filled.Add"
                                    OnClick="AddDeposit">
-                            เพิ่มเงินฝาก
+                            เพิ่มเงินมัดจำ
                         </MudButton>
                     </CardHeaderActions>
                 </MudCardHeader>
@@ -252,7 +252,7 @@
                             <MudGrid>
                                 <MudItem xs="12" sm="8">
                                     <MudText Typo="Typo.subtitle1" Class="mb-2">
-                                        💰 ความคืบหน้าเงินฝาก
+                                        💰 ความคืบหน้าเงินมัดจำ
                                     </MudText>
                                     <MudProgressLinear Value="@((double)(depositCalculationInfo.CompletionPercentage * 100))" 
                                                      Color="@GetProgressColor()" 
@@ -307,14 +307,14 @@
                                     <MudButton Color="Color.Primary" 
                                              Size="Size.Small"
                                              Variant="Variant.Outlined"
-                                             Title="แก้ไขเงินฝาก"
+                                             Title="แก้ไขเงินมัดจำ"
                                              OnClick="@(() => EditDeposit(context))">
                                         ✏️ แก้ไข
                                     </MudButton>
                                     <MudButton Color="Color.Error" 
                                              Size="Size.Small"
                                              Variant="Variant.Outlined"
-                                             Title="ลบเงินฝาก"
+                                             Title="ลบเงินมัดจำ"
                                              OnClick="@(() => DeleteDeposit(context))">
                                         🗑️ ลบ
                                     </MudButton>
@@ -326,7 +326,7 @@
                 else
                 {
                     <MudAlert Severity="Severity.Info">
-                        <MudText>ไม่มีบันทึกเงินฝากสำหรับคอกสุกรนี้</MudText>
+                        <MudText>ไม่มีบันทึกเงินมัดจำสำหรับคอกสุกรนี้</MudText>
                     </MudAlert>
                 }
             </MudCardContent>
