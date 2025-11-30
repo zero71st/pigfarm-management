@@ -5,28 +5,45 @@
 @inject IDialogService DialogService
 
 <MudPaper Class="pa-4" Style="display: flex; flex-direction: column; height: 600px;">
+    <!-- Header Section - Search -->
     <div Style="flex-shrink: 0;">
         <MudText Typo="Typo.h6" Class="mb-3">Import customers from POSPOS</MudText>
 
-        @if (_isLoading)
+        @if (!_isLoading)
         {
-            <div class="d-flex justify-center pa-4">
-                <MudProgressCircular Indeterminate="true" />
-            </div>
-        }
-        else
-        {
-            <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="mb-3">
-                <MudTextField @bind-Value="_filter" Placeholder="Search code, name, phone, email..." Adornment="Adornment.Start" AdornmentIcon="Icons.Material.Filled.Search" Immediate="true" />
-                <MudText Typo="Typo.caption" Color="Color.Default">
-                    Total: <strong>@FilteredCandidates.Count()</strong> / @_candidates.Count
-                </MudText>
-                <MudSpacer />
-            </MudStack>
+            <MudTextField @bind-Value="_filter" 
+                         Label="Search code, name, phone, email..." 
+                         Variant="Variant.Outlined"
+                         Margin="Margin.Dense"
+                         Adornment="Adornment.Start" 
+                         AdornmentIcon="Icons.Material.Filled.Search" 
+                         Immediate="true"
+                         Clearable="true" />
         }
     </div>
 
-    <div Style="flex-grow: 1; overflow-y: auto;">
+    <!-- Total Count Section -->
+    @if (!_isLoading && _candidates.Count > 0)
+    {
+        <div Style="flex-shrink: 0;" Class="mt-3 mb-3">
+            <MudPaper Class="pa-3" Elevation="1">
+                <MudText Typo="Typo.body1">
+                    <strong>@FilteredCandidates.Count()</strong> of <strong>@_candidates.Count</strong> customers found
+                </MudText>
+            </MudPaper>
+        </div>
+    }
+
+    <!-- Loading State -->
+    @if (_isLoading)
+    {
+        <div class="d-flex justify-center pa-8" Style="flex-grow: 1;">
+            <MudProgressCircular Indeterminate="true" />
+        </div>
+    }
+
+    <!-- Table Section - Scrollable Content -->
+    <div Style="flex-grow: 1; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 4px;">
         @if (!_isLoading)
         {
             @if (FilteredCandidates.Count() == 0)
@@ -49,7 +66,7 @@
             }
             else
             {
-                <MudTable Items="FilteredCandidates" Hover="true" Bordered="true" Striped="true" Class="candidate-table">
+                <MudTable Items="FilteredCandidates" Hover="true" Bordered="true" Striped="true" Dense="true" Class="candidate-table">
                     <HeaderContent>
                         <MudTh>
                         </MudTh>
@@ -82,7 +99,8 @@
         }
     </div>
 
-    <div Style="flex-shrink: 0;" Class="mt-3 d-flex justify-end">
+    <!-- Footer Section - Buttons -->
+    <div Style="flex-shrink: 0;" Class="mt-3 d-flex justify-end gap-2">
         <MudButton Variant="Variant.Text" OnClick="Cancel">Cancel</MudButton>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_isLoading || !_hasSelection" OnClick="ImportSelected">Import selected</MudButton>
     </div>
@@ -122,7 +140,7 @@
             if (list != null)
                 _candidates = list;
         }
-        catch (HttpRequestException ex)
+        catch (HttpRequestException)
         {
             Snackbar.Add("POSPOS service unavailable. Please try again later.", Severity.Error);
         }
