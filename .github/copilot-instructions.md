@@ -255,5 +255,65 @@ public class CustomerRepository : ICustomerRepository
 
 **Testing**: See `specs/013-change-ui-to/quickstart.md` for manual validation scenarios (6 scenarios covering all features and formatting).
 
+## Feature 014: Invoice Management Tab in Feed History
+
+**Status**: Implementation Complete (Ready for Testing) | **Date**: 2025-11-30
+
+**Scope**: Add tabbed interface to pig pen detail page separating invoice management from feed history, with delete-by-invoice functionality
+
+**Files Modified**:
+- Backend: `PigPenEndpoints.cs`, `FeedRepository.cs`, `IRepositories.cs`
+- Shared: `InvoiceGroupDto.cs` (new), `PigPenDtos.cs`
+- Frontend Components: `InvoiceListTab.razor` (new), `FeedHistoryTab.razor` (new placeholder), `DeleteInvoiceConfirmDialog.razor` (new)
+- Frontend Services: `PigPenService.cs`
+- Frontend Pages: `PigPenDetailPage.razor`
+
+**Key Changes**:
+
+1. **API Enhancement** - `PigPenEndpoints.cs`:
+   - Added `DELETE /api/pigpens/{pigPenId}/invoices/{invoiceReferenceCode}` endpoint
+   - Returns `DeleteInvoiceResponse(int DeletedCount, string InvoiceReferenceCode, string Message)`
+   - Error handling: 400 (bad request), 404 (not found), 500 (internal error)
+   - Performance target: <50ms for typical invoice (5-10 items)
+
+2. **Repository Enhancement** - `FeedRepository.cs`:
+   - Added `DeleteByInvoiceReferenceAsync(Guid pigPenId, string invoiceReferenceCode)` method
+   - Atomic operation using `RemoveRange()` and `SaveChangesAsync()`
+   - Returns count of deleted items
+
+3. **Component Enhancement** - `InvoiceListTab.razor`:
+   - Client-side LINQ GroupBy on InvoiceReferenceCode for invoice grouping
+   - MudTable with Thai labels: รหัสใบแจ้งหนี้, รหัสธุรกรรม, ยอดรวม, วันที่, รายการ, ดำเนินการ
+   - Delete button triggers `DeleteInvoiceConfirmDialog`
+   - EventCallback pattern for parent notification (OnInvoiceDeleted)
+   - Empty state: Shows info alert with "นำเข้าอาหาร" button instruction
+
+4. **Component Enhancement** - `DeleteInvoiceConfirmDialog.razor`:
+   - Thai UI text: "ยืนยันการลบใบแจ้งหนี้", "การดำเนินการนี้ไม่สามารถย้อนกลับได้"
+   - Displays: invoice reference, item count (MudChip), formatted total amount
+   - Actions: "ยกเลิก" (Cancel), "ลบใบแจ้งหนี้" (Delete)
+
+5. **Page Enhancement** - `PigPenDetailPage.razor`:
+   - Replaced "Section 3: Feed History" with MudTabs component
+   - Tab 1 (default): "การจัดการใบแจ้งหนี้" (Invoice Management) with InvoiceListTab
+   - Tab 2: "ประวัติการให้อาหาร" (Feed History) with FeedHistoryTabContent RenderFragment
+   - Tab state management: `_activeTabIndex`, `OnTabChanged()`, `HandleInvoiceDeleted()` event handlers
+   - Automatic feed refresh on tab switch and invoice deletion
+
+**Pattern**: Feature-based vertical slice (PigPens feature owns enhancement). Client-side invoice grouping (no server-side aggregation). Minimal API pattern for DELETE endpoint. EventCallback pattern for parent-child communication.
+
+**API Contract**:
+- Endpoint: `DELETE /api/pigpens/{pigPenId}/invoices/{invoiceReferenceCode}`
+- Authorization: Required (RequireAuthorization on group)
+- Response: `DeleteInvoiceResponse` with DeletedCount, InvoiceReferenceCode, Message
+- Error codes: 400 (invalid reference), 404 (not found), 500 (internal error)
+
+**Performance Targets**:
+- Tab switch: <500ms
+- Invoice list load: <1s for 50-100 invoices
+- Delete operation: <50ms for typical invoice
+
+**Testing**: See `specs/014-add-invoice-list/quickstart.md` for manual validation scenarios (6 scenarios).
+
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

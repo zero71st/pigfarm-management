@@ -1,0 +1,78 @@
+@using Microsoft.AspNetCore.Components
+@using MudBlazor
+@using PigFarmManagement.Shared.Models
+
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.h6" Class="mb-4">รายการสินค้า</MudText>
+        
+        @if (InvoiceItems != null && InvoiceItems.Any())
+        {
+            <MudTable Items="@InvoiceItems" Hover="true" Striped="true" Dense="true" Elevation="0">
+                <HeaderContent>
+                    <MudTh>รหัสสินค้า</MudTh>
+                    <MudTh>ชื่อสินค้า</MudTh>
+                    <MudTh Style="text-align: center">จำนวน/หน่วย</MudTh>
+                    <MudTh Style="text-align: right">ราคา/หน่วย</MudTh>
+                    <MudTh Style="text-align: right">ส่วนลด</MudTh>
+                    <MudTh Style="text-align: right">ราคาหักส่วนลด</MudTh>
+                    <MudTh Style="text-align: right">รวม</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="รหัสสินค้า">@context.ProductCode</MudTd>
+                    <MudTd DataLabel="ชื่อสินค้า">@context.ProductName</MudTd>
+                    <MudTd DataLabel="จำนวน/หน่วย" Style="text-align: center">@context.Quantity.ToString("N0") @context.Unit</MudTd>
+                    <MudTd DataLabel="ราคา/หน่วย" Style="text-align: right">@context.UnitPriceBeforeDiscount.ToString("N2")</MudTd>
+                    <MudTd DataLabel="ส่วนลด" Style="text-align: right">@context.Discount.ToString("N2")</MudTd>
+                    <MudTd DataLabel="ราคาหักส่วนลด" Style="text-align: right">@context.UnitPrice.ToString("N2")</MudTd>
+                    <MudTd DataLabel="รวม" Style="text-align: right"><strong>@context.Total.ToString("N2")</strong></MudTd>
+                </RowTemplate>
+                <FooterContent>
+                    <MudTd colspan="6" Style="text-align: right; font-weight: bold;">ราคารวม</MudTd>
+                    <MudTd Style="text-align: right; font-weight: bold;">@SubTotal.ToString("N2")</MudTd>
+                </FooterContent>
+                <FooterContent>
+                    <MudTd colspan="6" Style="text-align: right; font-weight: bold;">ส่วนลด</MudTd>
+                    <MudTd Style="text-align: right; font-weight: bold;">@TotalDiscount.ToString("N2")</MudTd>
+                </FooterContent>
+                <FooterContent>
+                    <MudTd colspan="6" Style="text-align: right; font-weight: bold; background-color: #f5f5f5;">ยอดรวมสุทธิ</MudTd>
+                    <MudTd Style="text-align: right; font-weight: bold; background-color: #f5f5f5;">
+                        <MudText Color="Color.Primary" Typo="Typo.h6">@GrandTotal.ToString("N2")</MudText>
+                    </MudTd>
+                </FooterContent>
+            </MudTable>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Info">ไม่พบรายการสินค้า</MudAlert>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Color="Color.Primary" Variant="Variant.Text">ปิด</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public List<InvoiceItemDisplay> InvoiceItems { get; set; } = new();
+
+    private decimal SubTotal => InvoiceItems?.Sum(i => i.UnitPrice * i.Quantity) ?? 0;
+    private decimal TotalDiscount => InvoiceItems?.Sum(i => i.Discount) ?? 0;
+    private decimal GrandTotal => InvoiceItems?.Sum(i => i.Total) ?? 0;
+
+    private void Cancel() => MudDialog.Cancel();
+
+    public class InvoiceItemDisplay
+    {
+        public string ProductCode { get; set; } = "";
+        public string ProductName { get; set; } = "";
+        public decimal Quantity { get; set; }
+        public string Unit { get; set; } = "";
+        public decimal UnitPriceBeforeDiscount { get; set; }
+        public decimal UnitPrice { get; set; }
+        public decimal Discount { get; set; }
+        public decimal Total { get; set; }
+    }
+}

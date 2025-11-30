@@ -1,0 +1,169 @@
+@using Microsoft.AspNetCore.Components
+@using MudBlazor
+@using PigFarmManagement.Shared.Models
+@using PigFarmManagement.Shared.DTOs
+@inject IDialogService DialogService
+@inject IPigPenService PigPenService
+@inject ISnackbar Snackbar
+
+@if (invoiceGroups.Any())
+{
+    <MudTable Items="@invoiceGroups" Hover="true" Striped="true" Dense="true">
+        <HeaderContent>
+            <MudTh>รหัสบิลขาย</MudTh>
+            <MudTh Style="text-align: center">วันที่บิลขาย</MudTh>
+            <MudTh Style="text-align: center">จำนวนรายการ</MudTh>
+            <MudTh Style="text-align: right">ยอดรวม</MudTh>
+            <MudTh Style="text-align: center">การดำเนินการ</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="InvoiceReferenceCode">@context.InvoiceReferenceCode</MudTd>
+            <MudTd DataLabel="InvoiceDate" Style="text-align: center">
+                @context.InvoiceDate.ToString("yyyy-MM-dd")
+            </MudTd>
+            <MudTd DataLabel="ItemCount" Style="text-align: center">
+                <MudChip Size="Size.Small" Color="Color.Info">@context.ItemCount</MudChip>
+            </MudTd>
+            <MudTd DataLabel="TotalAmount" Style="text-align: right">
+                <MudText Color="Color.Success"><strong>฿@context.TotalAmount.ToString("N2")</strong></MudText>
+            </MudTd>
+            <MudTd DataLabel="Actions" Style="text-align: center">
+                <MudButtonGroup Size="Size.Small" Variant="Variant.Outlined">
+                    <MudButton Color="Color.Info" 
+                             Size="Size.Small"
+                             Variant="Variant.Outlined"
+                             Title="รายการสินค้า"
+                             OnClick="@(() => ShowInvoiceDetails(context))">
+                        📋 รายการสินค้า
+                    </MudButton>
+                    <MudButton Color="Color.Error" 
+                             Size="Size.Small"
+                             Variant="Variant.Outlined"
+                             Title="ลบบิลขาย"
+                             OnClick="@(() => DeleteInvoice(context))">
+                        🗑️ ลบ
+                    </MudButton>
+                </MudButtonGroup>
+            </MudTd>
+        </RowTemplate>
+        <FooterContent>
+            <MudTd colspan="3" Style="text-align: right; font-weight: bold;">ยอดรวมทั้งหมด</MudTd>
+            <MudTd Style="text-align: right; font-weight: bold;">
+                <MudText Color="Color.Success" Typo="Typo.h6">฿@invoiceGroups.Sum(i => i.TotalAmount).ToString("N2")</MudText>
+            </MudTd>
+            <MudTd></MudTd>
+        </FooterContent>
+    </MudTable>
+}
+else
+{
+    <MudAlert Severity="Severity.Info">
+        <MudText>ไม่พบข้อมูลบิลขาย</MudText>
+        <MudText Typo="Typo.body2" Class="mt-2">
+            ใช้ปุ่ม "นำเข้าอาหาร" เพื่อนำเข้าข้อมูลจาก POSPOS
+        </MudText>
+    </MudAlert>
+}
+
+@code {
+    [Parameter] public Guid PigPenId { get; set; }
+    [Parameter] public List<FeedItem> Feeds { get; set; } = new();
+    [Parameter] public EventCallback OnInvoiceDeleted { get; set; }
+
+    private List<InvoiceGroupDto> invoiceGroups = new();
+
+    protected override void OnParametersSet()
+    {
+        GroupInvoices();
+    }
+
+    private void GroupInvoices()
+    {
+        // Group feeds by InvoiceReferenceCode and create InvoiceGroupDto objects
+        invoiceGroups = Feeds
+            .Where(f => !string.IsNullOrWhiteSpace(f.InvoiceReferenceCode))
+            .GroupBy(f => f.InvoiceReferenceCode)
+            .Select(g => new InvoiceGroupDto(
+                InvoiceReferenceCode: g.Key!,
+                TransactionCode: g.First().TransactionCode ?? "-",
+                TotalAmount: g.Sum(f => f.Pos_TotalPriceIncludeDiscount ?? f.Sys_TotalPriceIncludeDiscount ?? 0),
+                InvoiceDate: g.OrderByDescending(f => f.Date).First().Date,
+                ItemCount: g.Count()
+            ))
+            .OrderBy(i => i.InvoiceDate)
+            .ToList();
+    }
+
+    private async Task ShowInvoiceDetails(InvoiceGroupDto invoice)
+    {
+        // Get all feed items for this invoice
+        var invoiceFeeds = Feeds
+            .Where(f => f.InvoiceReferenceCode == invoice.InvoiceReferenceCode)
+            .OrderBy(f => f.ProductCode)
+            .ToList();
+
+        // Convert to InvoiceItemDisplay
+        var invoiceItems = invoiceFeeds.Select(f => new InvoiceDetailsDialog.InvoiceItemDisplay
+        {
+            ProductCode = f.ProductCode ?? "-",
+            ProductName = f.ProductName ?? "-",
+            Quantity = f.QuantityKg / 25m, // Convert kg to bags
+            Unit = "กระสอบ",
+            UnitPriceBeforeDiscount = f.PricePerKg * 25m, // PricePerKg needs ×25 conversion to per-bag
+            UnitPrice = f.PriceIncludeDiscount ?? (f.PricePerKg * 25m), // Already per-bag from database
+            Discount = f.CostDiscountPrice ?? 0, // Already per-bag from database
+            Total = f.Pos_TotalPriceIncludeDiscount ?? f.Sys_TotalPriceIncludeDiscount ?? 0
+        }).ToList();
+
+        var parameters = new DialogParameters<InvoiceDetailsDialog>
+        {
+            { x => x.InvoiceItems, invoiceItems }
+        };
+
+        var options = new DialogOptions() 
+        { 
+            CloseButton = true, 
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        await DialogService.ShowAsync<InvoiceDetailsDialog>($"รายการสินค้า - {invoice.InvoiceReferenceCode}", parameters, options);
+    }
+
+    private async Task DeleteInvoice(InvoiceGroupDto invoice)
+    {
+        var parameters = new DialogParameters<DeleteInvoiceConfirmDialog>
+        {
+            { x => x.InvoiceReferenceCode, invoice.InvoiceReferenceCode },
+            { x => x.TotalAmount, invoice.TotalAmount },
+            { x => x.ItemCount, invoice.ItemCount }
+        };
+
+        var options = new DialogOptions() 
+        { 
+            CloseButton = true, 
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<DeleteInvoiceConfirmDialog>("ยืนยันการลบบิลขาย", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is bool confirmed && confirmed)
+        {
+            try
+            {
+                var response = await PigPenService.DeleteInvoiceByReferenceAsync(PigPenId, invoice.InvoiceReferenceCode);
+                
+                Snackbar.Add(response.Message, Severity.Success);
+                
+                // Trigger parent refresh
+                await OnInvoiceDeleted.InvokeAsync();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"เกิดข้อผิดพลาดในการลบบิลขาย: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+}

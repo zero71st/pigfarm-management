@@ -98,4 +98,22 @@ public class FeedRepository : IFeedRepository
         if (string.IsNullOrWhiteSpace(invoiceNumber)) return false;
         return await _context.Feeds.AnyAsync(f => f.TransactionCode == invoiceNumber);
     }
+
+    public async Task<int> DeleteByInvoiceReferenceAsync(Guid pigPenId, string invoiceReferenceCode)
+    {
+        if (string.IsNullOrWhiteSpace(invoiceReferenceCode))
+            return 0;
+
+        var feedsToDelete = await _context.Feeds
+            .Where(f => f.PigPenId == pigPenId && f.InvoiceReferenceCode == invoiceReferenceCode)
+            .ToListAsync();
+
+        if (!feedsToDelete.Any())
+            return 0;
+
+        _context.Feeds.RemoveRange(feedsToDelete);
+        await _context.SaveChangesAsync();
+
+        return feedsToDelete.Count;
+    }
 }

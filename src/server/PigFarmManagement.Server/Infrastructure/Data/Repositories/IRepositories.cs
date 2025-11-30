@@ -37,6 +37,7 @@ public interface IFeedRepository
     Task DeleteAsync(Guid id);
     Task<IEnumerable<Feed>> CreateManyAsync(IEnumerable<Feed> feeds);
     Task<bool> ExistsByInvoiceNumberAsync(string invoiceNumber); // Note: actually checks TransactionCode field
+    Task<int> DeleteByInvoiceReferenceAsync(Guid pigPenId, string invoiceReferenceCode);
 }
 
 public interface IDepositRepository
