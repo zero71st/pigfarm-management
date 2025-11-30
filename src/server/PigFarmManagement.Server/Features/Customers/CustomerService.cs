@@ -1,6 +1,7 @@
 using PigFarmManagement.Shared.Models;
 using PigFarmManagement.Server.Services;
 using PigFarmManagement.Server.Infrastructure.Data.Repositories;
+using Microsoft.Extensions.Logging;
 
 namespace PigFarmManagement.Server.Features.Customers;
 
@@ -21,6 +22,9 @@ public interface ICustomerService
     Task<CustomerDeletionValidation> ValidateCustomerDeletionAsync(Guid customerId);
     Task<Customer> SoftDeleteCustomerAsync(CustomerDeletionRequest request);
     Task HardDeleteCustomerAsync(CustomerDeletionRequest request);
+    
+    // Bulk deletion
+    Task<int> DeleteAllCustomersAsync();
 }
 
 public class CustomerService : ICustomerService
@@ -28,15 +32,18 @@ public class CustomerService : ICustomerService
     private readonly Infrastructure.Data.Repositories.ICustomerRepository _customerRepository;
     private readonly ICustomerLocationService _locationService;
     private readonly ICustomerDeletionService _deletionService;
+    private readonly ILogger<CustomerService> _logger;
 
     public CustomerService(
         Infrastructure.Data.Repositories.ICustomerRepository customerRepository,
         ICustomerLocationService locationService,
-        ICustomerDeletionService deletionService)
+        ICustomerDeletionService deletionService,
+        ILogger<CustomerService> logger)
     {
         _customerRepository = customerRepository;
         _locationService = locationService;
         _deletionService = deletionService;
+        _logger = logger;
     }
 
     public async Task<List<Customer>> GetAllCustomersAsync()
@@ -129,5 +136,44 @@ public class CustomerService : ICustomerService
     public async Task HardDeleteCustomerAsync(CustomerDeletionRequest request)
     {
         await _deletionService.HardDeleteCustomerAsync(request);
+    }
+
+    // Bulk deletion - hard delete all customers that don't have pig pens
+    public async Task<int> DeleteAllCustomersAsync()
+    {
+        var customers = await _customerRepository.GetAllAsync();
+        var count = 0;
+
+        foreach (var customer in customers.Where(c => !c.IsDeleted))
+        {
+            var request = new CustomerDeletionRequest
+            {
+                CustomerId = customer.Id,
+                ForceDelete = true,
+                DeletedBy = "System",
+                Reason = "Bulk delete all customers"
+            };
+
+            try
+            {
+                // Force delete to bypass pig pen validation for bulk delete
+                await _deletionService.HardDeleteCustomerAsync(request);
+                count++;
+            }
+            catch (InvalidOperationException ex)
+            {
+                // Skip customers that cannot be deleted
+                _logger.LogWarning("Skipped customer {CustomerId} during bulk delete: {Reason}", customer.Id, ex.Message);
+                continue;
+            }
+            catch (ArgumentException ex)
+            {
+                // Skip customers that don't exist
+                _logger.LogWarning("Skipped customer {CustomerId} during bulk delete: {Reason}", customer.Id, ex.Message);
+                continue;
+            }
+        }
+
+        return count;
     }
 }

@@ -7,26 +7,13 @@
     <MudText Typo="Typo.body1" Class="mb-4">
         @if (!HasFilters)
         {
-            <text>Start by adding your first customer to manage pig pens.</text>
+            <text>Import customers from POSPOS to get started.</text>
         }
         else
         {
             <text>Try adjusting your search criteria or filters.</text>
         }
     </MudText>
-    <MudButton Variant="Variant.Filled" 
-              Color="Color.Primary" 
-              StartIcon="Icons.Material.Filled.Add"
-              OnClick="OnAddCustomer">
-        @if (!HasFilters)
-        {
-            <text>Add First Customer</text>
-        }
-        else
-        {
-            <text>Add Customer</text>
-        }
-    </MudButton>
 </MudPaper>
 
 @code {

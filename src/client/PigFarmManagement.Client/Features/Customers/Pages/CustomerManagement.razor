@@ -76,6 +76,14 @@
                                    Disabled="_importRunning"
                                    Size="Size.Medium" />
                 </MudTooltip>
+
+                <MudTooltip Text="Delete all customers (Admin only)">
+                    <MudIconButton Icon="@Icons.Material.Filled.DeleteSweep" 
+                                   Color="Color.Error" 
+                                   OnClick="DeleteAllCustomers"
+                                   Disabled="isLoading"
+                                   Size="Size.Medium" />
+                </MudTooltip>
 @* 
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
                     OnClick="OpenAddCustomerDialog">
@@ -135,7 +143,7 @@
     private List<PigPen> pigPens = new();
     private bool isLoading = true;
     private string searchText = "";
-    private CustomerStatus? selectedCustomerStatus = null;
+    private CustomerStatus? selectedCustomerStatus = CustomerStatus.Active;
     
     // New state for enhanced features
     private ViewMode currentViewMode = ViewMode.Card;
@@ -391,6 +399,49 @@
 @code {
     // Import UI state
     private bool _importRunning = false;
+
+    private async Task DeleteAllCustomers()
+    {
+        // Show confirmation dialog
+        var parameters = new DialogParameters
+        {
+            ["ContentText"] = "Are you sure you want to delete ALL customers from the database? This action cannot be undone.",
+            ["ButtonText"] = "Delete All",
+            ["ButtonColor"] = Color.Error
+        };
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<DeleteConfirmationDialog>("Delete All Customers", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            try
+            {
+                isLoading = true;
+                var response = await Http.DeleteAsync("/api/customers/admin/delete-all");
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    await LoadData();
+                    Snackbar.Add("All customers deleted successfully!", Severity.Success);
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    Snackbar.Add($"Failed to delete customers: {error}", Severity.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting all customers: {ex.Message}", Severity.Error);
+            }
+            finally
+            {
+                isLoading = false;
+            }
+        }
+    }
 
     private async Task StartImport()
     {

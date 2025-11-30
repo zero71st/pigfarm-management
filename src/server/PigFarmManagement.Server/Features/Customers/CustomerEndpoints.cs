@@ -58,6 +58,12 @@ public static class CustomerEndpoints
             .WithName("DeleteCustomerLocation")
             .RequireAuthorization();
 
+        // Admin delete all customers endpoint
+        group.MapDelete("/admin/delete-all", DeleteAllCustomers)
+            .WithName("DeleteAllCustomers")
+            .WithSummary("Delete all customers (Admin only)")
+            .RequireAuthorization();
+
         return builder;
     }
 
@@ -258,6 +264,20 @@ public static class CustomerEndpoints
         catch (Exception ex)
         {
             return Results.Problem($"Error deleting customer location: {ex.Message}");
+        }
+    }
+
+    // Admin delete all customers endpoint
+    private static async Task<IResult> DeleteAllCustomers(ICustomerService customerService)
+    {
+        try
+        {
+            var deletedCount = await customerService.DeleteAllCustomersAsync();
+            return Results.Ok(new { message = $"All {deletedCount} customers deleted successfully", deletedCount });
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Error deleting all customers: {ex.Message}");
         }
     }
 }
