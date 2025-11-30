@@ -74,24 +74,10 @@
                     <!-- Selection Summary -->
                     <MudPaper Class="pa-3" Elevation="1">
                         <MudGrid AlignItems="Center">
-                            <MudItem xs="8">
+                            <MudItem xs="12">
                                 <MudText Typo="Typo.body1">
                                     <strong>@selectedProducts.Count</strong> of <strong>@products.Count</strong> products selected
                                 </MudText>
-                            </MudItem>
-                            <MudItem xs="4" Class="d-flex justify-end">
-                                <MudButtonGroup Size="Size.Small" Variant="Variant.Outlined">
-                                    <MudButton OnClick="SelectAll" 
-                                              StartIcon="@Icons.Material.Filled.SelectAll"
-                                              Disabled="@(selectedProducts.Count == products.Count)">
-                                        Select All
-                                    </MudButton>
-                                    <MudButton OnClick="ClearSelection" 
-                                              StartIcon="@Icons.Material.Filled.Clear"
-                                              Disabled="@(selectedProducts.Count == 0)">
-                                        Clear
-                                    </MudButton>
-                                </MudButtonGroup>
                             </MudItem>
                         </MudGrid>
                     </MudPaper>
@@ -207,18 +193,6 @@
             searching = false;
             StateHasChanged();
         }
-    }
-
-    private void SelectAll()
-    {
-        selectedProductsHashSet = products.ToHashSet();
-        StateHasChanged();
-    }
-
-    private void ClearSelection()
-    {
-        selectedProductsHashSet.Clear();
-        StateHasChanged();
     }
 
     private async Task ImportSelected()
