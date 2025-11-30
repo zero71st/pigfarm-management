@@ -217,5 +217,43 @@ public class CustomerRepository : ICustomerRepository
 
 **Testing**: See `specs/012-update-search-customer/quickstart.md` for validation scenarios.
 
+## Feature 013: Thai Language UI Conversion
+
+**Status**: Planning Complete | **Date**: 2025-11-30
+
+**Scope**: Convert all user-facing UI text from English to Thai language (hardcoded, no language switcher)
+
+**Key Changes**:
+
+1. **Global Culture Configuration** - `Program.cs`:
+   - Set `CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("th-TH")`
+   - Enables automatic Thai date/number/currency formatting
+
+2. **UI Text Translation** - All Razor components:
+   - Direct string replacement in buttons, labels, form fields, dialogs
+   - MudBlazor component properties (Label, Title, Text) updated to Thai
+   - Table headers, navigation menu items, page titles in Thai
+
+3. **Validation Messages** - DTOs with DataAnnotations:
+   - Update `ErrorMessage` parameters to Thai text
+   - Example: `[Required(ErrorMessage = "กรุณาระบุชื่อ")]`
+
+4. **Formatting Standards**:
+   - **Dates**: ISO format (yyyy-MM-dd)
+   - **Numbers**: Arabic numerals (0-9) with comma separators
+   - **Currency**: Thai Baht symbol prefix (฿1,234.56)
+
+5. **Technical Text Exclusions**:
+   - Backend API errors remain English
+   - Logging messages remain English
+   - Code comments remain English
+   - System documents (PDFs, emails) remain English
+
+**Pattern**: Hardcoded translation approach (no resource files or i18n framework) per simplicity principle. Pure presentation layer change with zero impact on data model or API contracts.
+
+**Affected Areas**: ~30 Razor components in `src/client/Features/`, ~15 DTOs in `src/shared/DTOs/`, ~20 client services
+
+**Testing**: See `specs/013-change-ui-to/quickstart.md` for manual validation scenarios (6 scenarios covering all features and formatting).
+
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->
