@@ -11,21 +11,21 @@
                 <!-- Read-only fields -->
                 <MudItem xs="6">
                     <MudTextField Value="@Customer.FirstName" 
-                                 Label="First Name" 
+                                 Label="ชื่อ" 
                                  Variant="Variant.Outlined" 
                                  ReadOnly="true"
                                  Disabled="true" />
                 </MudItem>
                 <MudItem xs="6">
                     <MudTextField Value="@Customer.LastName" 
-                                 Label="Last Name" 
+                                 Label="นามสกุล" 
                                  Variant="Variant.Outlined" 
                                  ReadOnly="true"
                                  Disabled="true" />
                 </MudItem>
                 <MudItem xs="12">
                     <MudTextField Value="@Customer.Code" 
-                                 Label="Customer Code" 
+                                 Label="รหัสลูกค้า" 
                                  Variant="Variant.Outlined" 
                                  ReadOnly="true"
                                  Disabled="true" />
@@ -34,63 +34,63 @@
                 <!-- Editable fields -->
                 <MudItem xs="12">
                     <MudSelect T="CustomerStatus" @bind-Value="customerStatus" 
-                              Label="Customer Status" 
+                              Label="สถานะลูกค้า" 
                               Variant="Variant.Outlined"
                               Required="true">
-                        <MudSelectItem T="CustomerStatus" Value="@CustomerStatus.Active">Active</MudSelectItem>
-                        <MudSelectItem T="CustomerStatus" Value="@CustomerStatus.Inactive">Inactive</MudSelectItem>
+                        <MudSelectItem T="CustomerStatus" Value="@CustomerStatus.Active">ใช้งาน</MudSelectItem>
+                        <MudSelectItem T="CustomerStatus" Value="@CustomerStatus.Inactive">ไม่ใช้งาน</MudSelectItem>
                     </MudSelect>
                 </MudItem>
                 
                 <MudItem xs="6">
                     <MudTextField @bind-Value="customerPhone" 
-                                 Label="Phone" 
+                                 Label="เบอร์โทรศัพท์" 
                                  Variant="Variant.Outlined" />
                 </MudItem>
                 <MudItem xs="6">
                     <MudTextField @bind-Value="customerEmail" 
-                                 Label="Email" 
+                                 Label="อีเมล" 
                                  Variant="Variant.Outlined"
                                  InputType="InputType.Email" />
                 </MudItem>
                 
                 <MudItem xs="12">
                     <MudTextField @bind-Value="customerAddress" 
-                                 Label="Address" 
+                                 Label="ที่อยู่" 
                                  Variant="Variant.Outlined"
                                  Lines="2" />
                 </MudItem>
                 
                 <MudItem xs="6">
                     <MudTextField @bind-Value="customerZipcode" 
-                                 Label="Zipcode" 
+                                 Label="รหัสไปรษณีย์" 
                                  Variant="Variant.Outlined" />
                 </MudItem>
                 <MudItem xs="6">
                     <MudSelect T="string" @bind-Value="customerSex" 
-                              Label="Gender" 
+                              Label="เพศ" 
                               Variant="Variant.Outlined"
                               Clearable="true">
-                        <MudSelectItem T="string" Value="@("Male")">Male</MudSelectItem>
-                        <MudSelectItem T="string" Value="@("Female")">Female</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("Male")">ชาย</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("Female")">หญิง</MudSelectItem>
                     </MudSelect>
                 </MudItem>
                 
                 <MudItem xs="6">
                     <MudTextField @bind-Value="customerKeyCardId" 
-                                 Label="Key Card ID" 
+                                 Label="รหัสบัตรคีย์การ์ด" 
                                  Variant="Variant.Outlined" />
                 </MudItem>
                 <MudItem xs="6">
                     <MudTextField @bind-Value="customerExternalId" 
-                                 Label="External ID" 
+                                 Label="รหัสภายนอก" 
                                  Variant="Variant.Outlined" />
                 </MudItem>
                 
                 <!-- Location fields -->
                 <MudItem xs="6">
                     <MudNumericField @bind-Value="customerLatitude" 
-                                    Label="Latitude" 
+                                    Label="ละติจูด" 
                                     Variant="Variant.Outlined"
                                     Min="-90" Max="90"
                                     Step="0.000001M"
@@ -98,7 +98,7 @@
                 </MudItem>
                 <MudItem xs="6">
                     <MudNumericField @bind-Value="customerLongitude" 
-                                    Label="Longitude" 
+                                    Label="ลองจิจูด" 
                                     Variant="Variant.Outlined"
                                     Min="-180" Max="180"
                                     Step="0.000001M"
@@ -108,11 +108,11 @@
         </MudContainer>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton OnClick="Cancel">ยกเลิก</MudButton>
         <MudButton Color="Color.Primary" 
                   Variant="Variant.Filled" 
                   OnClick="Submit">
-            Update Customer
+            อัปเดตลูกค้า
         </MudButton>
     </DialogActions>
 </MudDialog>

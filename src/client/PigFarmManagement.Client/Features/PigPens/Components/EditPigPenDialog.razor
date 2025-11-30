@@ -16,8 +16,8 @@
         <MudContainer Style="max-width: 500px;">
             <MudGrid>
                 <MudItem xs="12">
-                    <MudSelect T="Guid?" @bind-Value="selectedCustomerId" Label="Customer" Variant="Variant.Outlined" Required="true">
-                        <MudSelectItem T="Guid?" Value="@((Guid?)null)">-- Select Customer --</MudSelectItem>
+                    <MudSelect T="Guid?" @bind-Value="selectedCustomerId" Label="ลูกค้า" Variant="Variant.Outlined" Required="true">
+                        <MudSelectItem T="Guid?" Value="@((Guid?)null)">-- เลือกลูกค้า --</MudSelectItem>
                         @foreach (var customer in customers)
                         {
                             <MudSelectItem T="Guid?" Value="@((Guid?)customer.Id)">@customer.DisplayName (@customer.Status)</MudSelectItem>
@@ -25,18 +25,18 @@
                     </MudSelect>
                 </MudItem>
                 <MudItem xs="12">
-                    <MudTextField @bind-Value="penCode" Label="Pen Code" Variant="Variant.Outlined" Required="true" />
+                    <MudTextField @bind-Value="penCode" Label="รหัสคอก" Variant="Variant.Outlined" Required="true" />
                 </MudItem>
                 <MudItem xs="12">
-                    <MudSelect T="PigPenType" @bind-Value="selectedType" Label="Pig Pen Type" Variant="Variant.Outlined" Required="true">
-                        <MudSelectItem T="PigPenType" Value="PigPenType.Cash">Cash</MudSelectItem>
-                        <MudSelectItem T="PigPenType" Value="PigPenType.Project">Project</MudSelectItem>
+                    <MudSelect T="PigPenType" @bind-Value="selectedType" Label="ประเภทคอก" Variant="Variant.Outlined" Required="true">
+                        <MudSelectItem T="PigPenType" Value="PigPenType.Cash">เงินสด</MudSelectItem>
+                        <MudSelectItem T="PigPenType" Value="PigPenType.Project">โครงการ</MudSelectItem>
                     </MudSelect>
                 </MudItem>
                 <MudItem xs="6">
                     <MudNumericField Value="pigQty" 
                                    ValueChanged="@((int value) => OnPigQuantityChanged(value))"
-                                   Label="Pig Quantity" 
+                                   Label="จำนวนสุกร" 
                                    Variant="Variant.Outlined" 
                                    Min="1" 
                                    Required="true" />
@@ -55,37 +55,37 @@
                 <MudItem xs="6">
                     <MudDatePicker Date="registerDate" 
                                   DateChanged="@OnRegisterDateChanged"
-                                  Label="Register Date" 
+                                  Label="วันที่ลงทะเบียน" 
                                   Variant="Variant.Outlined" 
                                   Required="true" />
                 </MudItem>
                 <MudItem xs="6">
                     <MudDatePicker @bind-Date="estimatedHarvestDate" 
-                                  Label="Estimated Harvest Date" 
+                                  Label="วันเก็บเกี่ยวโดยประมาณ" 
                                   Variant="Variant.Outlined" 
                                   ReadOnly="true"
-                                  HelperText="Auto-calculated: Register Date + 120 days" />
+                                  HelperText="คำนวณอัตโนมัติ: วันลงทะเบียน + 120 วัน" />
                 </MudItem>
                 <MudItem xs="6">
-                    <MudDatePicker @bind-Date="actualHarvestDate" Label="Actual Harvest Date" Variant="Variant.Outlined" />
+                    <MudDatePicker @bind-Date="actualHarvestDate" Label="วันเก็บเกี่ยวจริง" Variant="Variant.Outlined" />
                 </MudItem>
                 
                 <!-- Feed Brand Selection -->
                 <MudItem xs="12">
                     <MudDivider DividerType="DividerType.FullWidth" />
-                    <MudText Typo="Typo.h6" Class="mt-3 mb-2">Feed Brand Selection</MudText>
+                    <MudText Typo="Typo.h6" Class="mt-3 mb-2">การเลือกยี่ห้ออาหาร</MudText>
                     <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
-                        Select a feed brand. All available formulas for the selected brand will be automatically assigned.
+                        เลือกยี่ห้ออาหาร สูตรอาหารที่มีสำหรับยี่ห้อที่เลือกจะถูกกำหนดโดยอัตโนมัติ
                     </MudText>
                 </MudItem>
 
                 <MudItem xs="12">
                     <MudSelect T="string"
                              @bind-Value="selectedBrand"
-                             Label="Feed Brand"
+                             Label="ยี่ห้ออาหาร"
                              Variant="Variant.Outlined"
                              Required="true">
-                        <MudSelectItem T="string" Value="@((string?)null)">-- Select Brand --</MudSelectItem>
+                        <MudSelectItem T="string" Value="@((string?)null)">-- เลือกยี่ห้อ --</MudSelectItem>
                         @foreach (var brand in availableBrands)
                         {
                             <MudSelectItem T="string" Value="@brand">@brand</MudSelectItem>
@@ -98,7 +98,7 @@
                     <MudItem xs="12">
                         <MudAlert Severity="Severity.Info" Class="mt-2">
                             <MudText Typo="Typo.body2">
-                                <strong>@selectedBrand</strong> brand selected. All available feed formulas for this brand will be automatically assigned when the pig pen is updated.
+                                เลือกยี่ห้อ <strong>@selectedBrand</strong> แล้ว สูตรอาหารทั้งหมดสำหรับยี่ห้อนี้จะถูกกำหนดโดยอัตโนมัติเมื่อปรับปรุงคอกสุกร
                             </MudText>
                         </MudAlert>
                     </MudItem>
@@ -107,18 +107,18 @@
                 <!-- Note Section -->
                 <MudItem xs="12">
                     <MudTextField @bind-Value="note" 
-                                 Label="Note" 
+                                 Label="หมายเหตุ" 
                                  Variant="Variant.Outlined" 
                                  Lines="3"
-                                 Placeholder="Enter any additional notes about this pig pen..." />
+                                 Placeholder="ป้อนข้อมูลเพิ่มเติมเกี่ยวกับคอกสุกรนี้..." />
                 </MudItem>
             </MudGrid>
         </MudContainer>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton OnClick="Cancel">ยกเลิก</MudButton>
         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save" Disabled="@(!IsFormValid())">
-            Update Pig Pen
+            ปรับปรุงคอกสุกร
         </MudButton>
     </DialogActions>
 </MudDialog>

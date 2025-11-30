@@ -44,15 +44,15 @@
 
 ## Phase 3.1: Font & Culture Setup
 
-- [ ] **T001** Import Prompt font from Google Fonts in `src/client/PigFarmManagement.Client/wwwroot/index.html`
+- [x] **T001** Import Prompt font from Google Fonts in `src/client/PigFarmManagement.Client/wwwroot/index.html`
   - Add `<link>` tags in `<head>` section for Prompt font (weights: 300, 400, 500, 600, 700)
   - Verify font loads correctly in browser DevTools Network tab
 
-- [ ] **T002** Add global CSS font override in `src/client/PigFarmManagement.Client/wwwroot/css/app.css`
+- [x] **T002** Add global CSS font override in `src/client/PigFarmManagement.Client/wwwroot/css/app.css`
   - Set `font-family: "Prompt", "Leelawadee UI", Tahoma, sans-serif;` for body and .mud-typography
   - Test font rendering on sample page
 
-- [ ] **T003** Configure Thai culture (th-TH) in `src/client/PigFarmManagement.Client/Program.cs`
+- [x] **T003** Configure Thai culture (th-TH) in `src/client/PigFarmManagement.Client/Program.cs`
   - Set `CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("th-TH")`
   - Set `CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("th-TH")`
   - Verify date/number/currency formatting uses Thai locale
@@ -61,22 +61,22 @@
 
 ## Phase 3.2: Customer Feature Translation
 
-- [ ] **T004** [P] Translate Customer pages in `src/client/Features/Customers/Pages/`
+- [x] **T004** [P] Translate Customer pages in `src/client/Features/Customers/Pages/`
   - `CustomersPage.razor`: Page title, table headers, buttons ("เพิ่มลูกค้า", "แก้ไข", "ลบ")
   - All dialog titles and confirmation messages to Thai
   - Search placeholder text to Thai
 
-- [ ] **T005** [P] Translate Customer components in `src/client/Features/Customers/Components/`
+- [x] **T005** [P] Translate Customer components in `src/client/Features/Customers/Components/`
   - `ImportCandidatesDialog.razor`: Dialog title, buttons, labels, status messages
   - `CustomerFormDialog.razor` (if exists): Form field labels to Thai
   - All MudBlazor component properties (Label, Title, Text) to Thai
 
-- [ ] **T006** [P] Translate Customer DTOs in `src/shared/DTOs/`
+- [x] **T006** [P] Translate Customer DTOs in `src/shared/DTOs/`
   - `CustomerCreateDto.cs`, `CustomerUpdateDto.cs`: DataAnnotations ErrorMessage to Thai
   - Example: `[Required(ErrorMessage = "กรุณาระบุชื่อลูกค้า")]`
   - `[StringLength(100, ErrorMessage = "ชื่อต้องมีความยาวไม่เกิน 100 ตัวอักษร")]`
 
-- [ ] **T007** [P] Translate Customer services in `src/client/Features/Customers/Services/`
+- [x] **T007** [P] Translate Customer services in `src/client/Features/Customers/Services/`
   - `CustomerService.cs`: User-facing exception messages, Snackbar notifications to Thai
   - Success messages: "บันทึกลูกค้าสำเร็จ", "ลบลูกค้าสำเร็จ"
   - Error messages: "ไม่สามารถบันทึกลูกค้าได้", etc.
@@ -85,21 +85,21 @@
 
 ## Phase 3.3: Pig Pen Feature Translation
 
-- [ ] **T008** [P] Translate Pig Pen pages in `src/client/Features/PigPens/Pages/`
+- [x] **T008** [P] Translate Pig Pen pages in `src/client/Features/PigPens/Pages/`
   - `PigPensPage.razor` (or equivalent): Page title, table headers, action buttons
   - Date displays to use ISO format (yyyy-MM-dd) - verify culture setting applies
   - Number displays with comma separators
 
-- [ ] **T009** [P] Translate Pig Pen components in `src/client/Features/PigPens/Components/`
+- [x] **T009** [P] Translate Pig Pen components in `src/client/Features/PigPens/Components/`
   - `PigPenFormDialog.razor` (if exists): Form labels to Thai
   - `PigPenPosImportDialog.razor`: Import instructions, progress messages to Thai
   - All confirmation dialogs to Thai
 
-- [ ] **T010** [P] Translate Pig Pen DTOs in `src/shared/DTOs/`
+- [x] **T010** [P] Translate Pig Pen DTOs in `src/shared/DTOs/`
   - Pig pen-related DTOs: DataAnnotations ErrorMessage to Thai
   - Validation messages for required fields, ranges, formats
 
-- [ ] **T011** [P] Translate Pig Pen services in `src/client/Features/PigPens/Services/`
+- [x] **T011** [P] Translate Pig Pen services in `src/client/Features/PigPens/Services/`
   - User-facing messages and notifications to Thai
   - Import success/error messages to Thai
 
@@ -107,22 +107,22 @@
 
 ## Phase 3.4: Feed Feature Translation
 
-- [ ] **T012** [P] Translate Feed pages in `src/client/Features/Feeds/Pages/`
+- [x] **T012** [P] Translate Feed pages in `src/client/Features/Feeds/Pages/`
   - Feed management page: Title, headers, buttons to Thai
   - Formula creation/edit page: All labels and instructions to Thai
   - Status labels: "ใช้งาน" (Active), "ไม่ใช้งาน" (Inactive)
 
-- [ ] **T013** [P] Translate Feed components in `src/client/Features/Feeds/Components/`
+- [x] **T013** [P] Translate Feed components in `src/client/Features/Feeds/Components/`
   - `FeedImportDialog.razor`: Import flow messages, file upload labels to Thai
   - `ProductSelectionDialog.razor`: Search placeholder, product column headers to Thai
   - All feed-related dialogs and forms to Thai
 
-- [ ] **T014** [P] Translate Feed DTOs in `src/shared/DTOs/`
+- [x] **T014** [P] Translate Feed DTOs in `src/shared/DTOs/`
   - Feed formula DTOs: Validation messages to Thai
   - Quantity/weight validation error messages
   - Required field messages
 
-- [ ] **T015** [P] Translate Feed services in `src/client/Features/Feeds/Services/`
+- [x] **T015** [P] Translate Feed services in `src/client/Features/Feeds/Services/`
   - Feed service notifications to Thai
   - Import/export status messages to Thai
   - Error handling messages to Thai
@@ -131,17 +131,17 @@
 
 ## Phase 3.5: Shared Components Translation
 
-- [ ] **T016** [P] Translate navigation in `src/client/Shared/`
+- [x] **T016** [P] Translate navigation in `src/client/Shared/`
   - `NavMenu.razor`: Menu item labels to Thai
   - "ลูกค้า" (Customers), "คอกสุกร" (Pig Pens), "อาหาร" (Feeds)
   - Dashboard/Home menu items to Thai
 
-- [ ] **T017** [P] Translate layout components in `src/client/Shared/`
+- [x] **T017** [P] Translate layout components in `src/client/Shared/`
   - `MainLayout.razor`: Header, footer text to Thai (if any)
   - User profile dropdown labels (if applicable)
   - Logout/login labels to Thai
 
-- [ ] **T018** [P] Translate shared dialogs and components in `src/client/Shared/Components/`
+- [x] **T018** [P] Translate shared dialogs and components in `src/client/Shared/Components/`
   - Common confirmation dialogs: "คุณแน่ใจหรือไม่?", "ยืนยัน", "ยกเลิก"
   - Loading indicators: "กำลังโหลด..."
   - Empty state messages: "ไม่มีข้อมูล"
@@ -150,11 +150,11 @@
 
 ## Phase 3.6: Currency Formatting
 
-- [ ] **T019** Add currency formatting with Baht symbol (฿) in all relevant components
+- [x] **T019** Add currency formatting with Baht symbol (฿) in all relevant components
   - Search for price/cost displays across all features
   - Apply `.ToString("C", new CultureInfo("th-TH"))` format
   - Verify displays as ฿1,234.56 (prefix, 2 decimals, comma separator)
-  - Files likely affected: Transaction displays, invoice views, feed pricing
+  - Files affected: Currency already formatted with ฿ symbol using N2 format throughout the application
 
 ---
 

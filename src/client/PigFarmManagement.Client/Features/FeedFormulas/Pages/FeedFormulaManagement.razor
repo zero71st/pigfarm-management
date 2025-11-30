@@ -8,18 +8,18 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
-<PageTitle>Feed Formula Management</PageTitle>
+<PageTitle>จัดการสูตรอาหาร</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-4">
     <MudText Typo="Typo.h4" GutterBottom="true" Class="mb-4">
         <MudIcon Icon="@Icons.Material.Filled.Science" Class="mr-2" />
-        Feed Formula Management
+        จัดการสูตรอาหาร
     </MudText>
 
     @if (loading)
     {
         <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="ma-2" />
-        <MudText>Loading feed formulas...</MudText>
+        <MudText>กำลังโหลดสูตรอาหาร...</MudText>
     }
     else
     {
@@ -31,7 +31,7 @@
                         <div style="display: flex; align-items: center;">
                             <MudIcon Icon="Icons.Material.Filled.Science" Color="Color.Primary" Style="margin-right: 8px;" />
                             <div>
-                                <MudText Typo="Typo.h6">Total Feed Formulas</MudText>
+                                <MudText Typo="Typo.h6">สูตรอาหารทั้งหมด</MudText>
                                 <MudText Typo="Typo.h4" Color="Color.Primary">@feedFormulas.Count</MudText>
                             </div>
                         </div>
@@ -71,11 +71,11 @@
                 <MudItem xs="12" sm="6" md="3">
                     <MudSelect T="string" 
                              @bind-Value="selectedBrandFilter" 
-                             Label="Filter by Brand" 
+                             Label="กรองตามแบรนด์" 
                              Variant="Variant.Outlined"
                              Margin="Margin.Dense"
                              Clearable="true">
-                        <MudSelectItem T="string" Value="@((string?)null)">All Brands</MudSelectItem>
+                        <MudSelectItem T="string" Value="@((string?)null)">แบรนด์ทั้งหมด</MudSelectItem>
                         @foreach (var brand in GetUniqueBrands())
                         {
                             <MudSelectItem T="string" Value="@brand">@brand (@GetBrandCount(brand))</MudSelectItem>
@@ -85,11 +85,11 @@
                 <MudItem xs="12" sm="6" md="3">
                     <MudSelect T="string" 
                              @bind-Value="selectedCategoryFilter" 
-                             Label="Filter by Category" 
+                             Label="กรองตามหมวดหมู่" 
                              Variant="Variant.Outlined"
                              Margin="Margin.Dense"
                              Clearable="true">
-                        <MudSelectItem T="string" Value="@((string?)null)">All Categories</MudSelectItem>
+                        <MudSelectItem T="string" Value="@((string?)null)">หมวดหมู่ทั้งหมด</MudSelectItem>
                         @foreach (var category in GetUniqueCategories())
                         {
                             <MudSelectItem T="string" Value="@category">@category (@GetCategoryCount(category))</MudSelectItem>
@@ -121,19 +121,19 @@
                               Color="Color.Success" 
                               StartIcon="@Icons.Material.Filled.CloudDownload"
                               OnClick="@ImportFromPospos">
-                        Import Products
+                        นำเข้าผลิตภัณฑ์
                     </MudButton>
                 </MudItem>
                 <MudItem xs="12" md="12" Class="d-flex align-center">
                     <MudText Typo="Typo.body2" Color="Color.Secondary">
-                        Showing @filteredFeedFormulas.Count of @feedFormulas.Count feed formulas
+                        แสดง @filteredFeedFormulas.Count จาก @feedFormulas.Count สูตรอาหาร
                         @if (!string.IsNullOrEmpty(selectedBrandFilter))
                         {
-                            <text> for brand "@selectedBrandFilter"</text>
+                            <text> สำหรับแบรนด์ "@selectedBrandFilter"</text>
                         }
                         @if (!string.IsNullOrEmpty(selectedCategoryFilter))
                         {
-                            <text> in category "@selectedCategoryFilter"</text>
+                            <text> ในหมวดหมู่ "@selectedCategoryFilter"</text>
                         }
                     </MudText>
                 </MudItem>
@@ -151,9 +151,9 @@
                      Groupable="false">
             
             <Columns>
-                <PropertyColumn Property="x => x.Code" Title="Product Code" />
-                <PropertyColumn Property="x => x.Name" Title="Product Name" />
-                <TemplateColumn Title="Category (POSPOS)" Sortable="false" Filterable="true">
+                <PropertyColumn Property="x => x.Code" Title="รหัสผลิตภัณฑ์" />
+                <PropertyColumn Property="x => x.Name" Title="ชื่อผลิตภัณฑ์" />
+                <TemplateColumn Title="หมวดหมู่ (POSPOS)" Sortable="false" Filterable="true">
                     <CellTemplate>
                         <MudChip Color="@GetBrandColor(context.Item.CategoryName ?? "")" 
                                 Size="Size.Small" 
@@ -162,19 +162,19 @@
                         </MudChip>
                     </CellTemplate>
                 </TemplateColumn>
-                <PropertyColumn Property="x => x.Brand" Title="Brand (Manual)" />
-                <PropertyColumn Property="x => x.Cost" Title="Cost" Format="N2" />
-                <PropertyColumn Property="x => x.UnitName" Title="Unit" />
-                <PropertyColumn Property="x => x.ConsumeRate" Title="Consume Rate" Format="F2" />
+                <PropertyColumn Property="x => x.Brand" Title="แบรนด์ (กำหนดเอง)" />
+                <PropertyColumn Property="x => x.Cost" Title="ราคา" Format="N2" />
+                <PropertyColumn Property="x => x.UnitName" Title="หน่วย" />
+                <PropertyColumn Property="x => x.ConsumeRate" Title="อัตราการใช้" Format="F2" />
                            
-                <TemplateColumn Title="Actions" CellClass="d-flex justify-end" Sortable="false" Filterable="false">
+                <TemplateColumn Title="การดำเนินการ" CellClass="d-flex justify-end" Sortable="false" Filterable="false">
                     <CellTemplate>
                         <div style="display: flex; gap: 8px;">
-                            <button class="btn btn-sm btn-primary" @onclick="@(() => OpenEditDialog(context.Item))" title="Edit">
-                                ✏️ Edit
+                            <button class="btn btn-sm btn-primary" @onclick="@(() => OpenEditDialog(context.Item))" title="แก้ไข">
+                                ✏️ แก้ไข
                             </button>
-                            <button class="btn btn-sm btn-danger" @onclick="@(() => DeleteFeedFormula(context.Item))" title="Delete">
-                                🗑️ Delete
+                            <button class="btn btn-sm btn-danger" @onclick="@(() => DeleteFeedFormula(context.Item))" title="ลบ">
+                                🗑️ ลบ
                             </button>
                         </div>
                     </CellTemplate>
@@ -182,7 +182,7 @@
             </Columns>
             
             <NoRecordsContent>
-                <MudText>No feed formulas found. Click "Add New Feed Formula" to create one.</MudText>
+                <MudText>ไม่พบสูตรอาหาร</MudText>
             </NoRecordsContent>
         </MudDataGrid>
     }
@@ -231,7 +231,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error loading feed formulas: {ex.Message}", Severity.Error);
+            Snackbar.Add($"เกิดข้อผิดพลาดในการโหลดสูตรอาหาร: {ex.Message}", Severity.Error);
         }
         finally
         {
@@ -319,7 +319,7 @@
             { x => x.FeedFormulaId, feedFormula.Id }
         };
         
-        var dialog = await DialogService.ShowAsync<EditFeedFormulaDialog>("Edit Feed Formula", parameters, new DialogOptions
+        var dialog = await DialogService.ShowAsync<EditFeedFormulaDialog>("แก้ไขสูตรอาหาร", parameters, new DialogOptions
         {
             MaxWidth = MaxWidth.Medium,
             FullWidth = true
@@ -329,17 +329,17 @@
         if (!result.Canceled)
         {
             await LoadFeedFormulas();
-            Snackbar.Add("Feed formula updated successfully", Severity.Success);
+            Snackbar.Add("อัปเดตสูตรอาหารสำเร็จ", Severity.Success);
         }
     }
 
     private async Task DeleteFeedFormula(FeedFormulaDto feedFormula)
     {
         var confirmed = await DialogService.ShowMessageBox(
-            "Delete Feed Formula",
-            $"Are you sure you want to delete '{feedFormula.Name ?? feedFormula.Code}'? This action cannot be undone.",
-            yesText: "Yes, Delete",
-            cancelText: "Cancel");
+            "ลบสูตรอาหาร",
+            $"คุณแน่ใจหรือไม่ว่าต้องการลบ '{feedFormula.Name ?? feedFormula.Code}'? การดำเนินการนี้ไม่สามารถย้อนกลับได้",
+            yesText: "ใช่ ลบเลย",
+            cancelText: "ยกเลิก");
 
         if (confirmed == true)
         {
@@ -349,11 +349,11 @@
                 if (deleted)
                 {
                     await LoadFeedFormulas();
-                    Snackbar.Add("Feed formula deleted successfully", Severity.Success);
+                    Snackbar.Add("ลบสูตรอาหารสำเร็จ", Severity.Success);
                 }
                 else
                 {
-                    Snackbar.Add("Feed formula not found", Severity.Warning);
+                    Snackbar.Add("ไม่พบสูตรอาหาร", Severity.Warning);
                 }
             }
             catch (Exception ex)
@@ -377,7 +377,7 @@
                 FullWidth = true
             };
 
-            var dialog = await DialogService.ShowAsync<ProductSelectionDialog>("Select Products to Import", parameters, options);
+            var dialog = await DialogService.ShowAsync<ProductSelectionDialog>("เลือกผลิตภัณฑ์เพื่อนำเข้า", parameters, options);
             var result = await dialog.Result;
 
             if (!result.Canceled)
@@ -390,7 +390,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error showing product selection dialog: {ex.Message}", Severity.Error);
+            Snackbar.Add($"เกิดข้อผิดพลาดในการแสดงหน้าต่างเลือกผลิตภัณฑ์: {ex.Message}", Severity.Error);
         }
     }
 }

@@ -9,39 +9,39 @@
             @if (loading)
             {
                 <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="ma-2" />
-                <MudText>Loading feed formula...</MudText>
+                <MudText>กำลังโหลดสูตรอาหาร...</MudText>
             }
             else if (feedFormula != null)
             {
                 <MudForm @ref="form" @bind-IsValid="@isValid" @bind-Errors="@errors">
                     <MudTextField @bind-Value="productCode"
-                                 Label="Product Code"
+                                 Label="รหัสผลิตภัณฑ์"
                                  Required="true"
-                                 RequiredError="Product code is required"
+                                 RequiredError="กรุณาระบุรหัสผลิตภัณฑ์"
                                  For="@(() => productCode)" />
 
                     <MudTextField @bind-Value="productName"
-                                 Label="Product Name"
+                                 Label="ชื่อผลิตภัณฑ์"
                                  Required="true"
-                                 RequiredError="Product name is required"
+                                 RequiredError="กรุณาระบุชื่อผลิตภัณฑ์"
                                  For="@(() => productName)" />
 
                     <MudTextField @bind-Value="categoryName"
-                                 Label="Category (from POSPOS)"
+                                 Label="หมวดหมู่ (จาก POSPOS)"
                                  ReadOnly="true"
                                  Disabled="true"
                                  For="@(() => categoryName)" />
 
                     <MudTextField @bind-Value="brand"
-                                 Label="Brand"
+                                 Label="แบรนด์"
                                  Required="false"
-                                 HelperText="Update brand manually as needed"
+                                 HelperText="อัปเดตแบรนด์ตามความต้องการ"
                                  For="@(() => brand)" />
 
                     <MudNumericField @bind-Value="consumeRate"
-                                   Label="Consume Rate"
+                                   Label="อัตราการใช้"
                                    Required="true"
-                                   RequiredError="Consume rate is required"
+                                   RequiredError="กรุณาระบุอัตราการใช้"
                                    Min="0.1m"
                                    Max="10.0m"
                                    Step="0.1m"
@@ -49,33 +49,33 @@
                                    For="@(() => consumeRate)" />
 
                     <MudNumericField @bind-Value="cost"
-                                   Label="Cost"
+                                   Label="ราคา"
                                    Required="true"
-                                   RequiredError="Cost is required"
+                                   RequiredError="กรุณาระบุราคา"
                                    Min="0m"
                                    Step="0.01m"
                                    Format="F2"
                                    For="@(() => cost)" />
 
                     <MudTextField @bind-Value="unitName"
-                                 Label="Unit"
+                                 Label="หน่วย"
                                  For="@(() => unitName)" />
 
                     <MudText Typo="Typo.caption" Class="mt-2">
-                        Consumption rate: @consumeRate.ToString("F2") per pig
+                        อัตราการกิน: @consumeRate.ToString("F2") ต่อสุกร
                     </MudText>
                 </MudForm>
             }
             else
             {
                 <MudAlert Severity="Severity.Error">
-                    Feed formula not found.
+                    ไม่พบสูตรอาหาร
                 </MudAlert>
             }
         </MudContainer>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton OnClick="Cancel">ยกเลิก</MudButton>
         <MudButton Color="Color.Primary" 
                   Variant="Variant.Filled" 
                   OnClick="Submit" 
@@ -83,11 +83,11 @@
             @if (saving)
             {
                 <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/>
-                <MudText Class="ms-2">Updating...</MudText>
+                <MudText Class="ms-2">กำลังอัปเดต...</MudText>
             }
             else
             {
-                <MudText>Update</MudText>
+                <MudText>อัปเดต</MudText>
             }
         </MudButton>
     </DialogActions>
@@ -137,7 +137,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error loading feed formula: {ex.Message}", Severity.Error);
+            Snackbar.Add($"เกิดข้อผิดพลาดในการโหลดสูตรอาหาร: {ex.Message}", Severity.Error);
         }
         finally
         {
@@ -164,7 +164,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error updating feed formula: {ex.Message}", Severity.Error);
+            Snackbar.Add($"เกิดข้อผิดพลาดในการอัปเดตสูตรอาหาร: {ex.Message}", Severity.Error);
         }
         finally
         {

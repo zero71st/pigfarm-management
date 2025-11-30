@@ -26,7 +26,7 @@
                 <MudItem xs="12">
                     <MudText Typo="Typo.h6" Class="mb-3">
                         <MudIcon Icon="Icons.Material.Filled.Agriculture" Class="mr-2" />
-                        Pig Pens (@pigPens.Count)
+                        คอกหมู (@pigPens.Count)
                     </MudText>
                     
                     @if (isLoading)
@@ -43,11 +43,11 @@
                                 <div class="d-flex justify-space-between align-center pa-2 mb-2 border-bottom">
                                     <div>
                                         <MudText Typo="Typo.body1">@pigPen.Name</MudText>
-                                        <MudText Typo="Typo.body2" Color="Color.Secondary">Code: @pigPen.Code</MudText>
+                                        <MudText Typo="Typo.body2" Color="Color.Secondary">รหัส: @pigPen.Code</MudText>
                                     </div>
                                     <div class="text-right">
                                         <MudText Typo="Typo.body2">
-                                            <strong>@pigPen.CurrentPigCount</strong>/@pigPen.MaxCapacity pigs
+                                            <strong>@pigPen.CurrentPigCount</strong>/@pigPen.MaxCapacity ตัว
                                         </MudText>
                                         <MudProgressLinear Value="@GetCapacityPercentage(pigPen)" 
                                                           Color="@GetCapacityColor(pigPen)" 
@@ -61,7 +61,7 @@
                     {
                         <MudPaper Class="pa-4 text-center" Elevation="1">
                             <MudIcon Icon="Icons.Material.Filled.Agriculture" Color="Color.Default" Class="mb-2" />
-                            <MudText Typo="Typo.body2">No pig pens assigned to this customer</MudText>
+                            <MudText Typo="Typo.body2">ไม่มีคอกหมูที่กำหนดให้ลูกค้านี้</MudText>
                         </MudPaper>
                     }
                 </MudItem>
@@ -71,31 +71,31 @@
                     <MudItem xs="12">
                         <MudText Typo="Typo.h6" Class="mb-3">
                             <MudIcon Icon="Icons.Material.Filled.Analytics" Class="mr-2" />
-                            Statistics
+                            สถิติ
                         </MudText>
                         <MudGrid>
                             <MudItem xs="6" sm="3">
                                 <MudPaper Class="pa-3 text-center" Elevation="1">
                                     <MudText Typo="Typo.h6" Color="Color.Primary">@pigPens.Count</MudText>
-                                    <MudText Typo="Typo.body2">Pig Pens</MudText>
+                                    <MudText Typo="Typo.body2">คอกหมู</MudText>
                                 </MudPaper>
                             </MudItem>
                             <MudItem xs="6" sm="3">
                                 <MudPaper Class="pa-3 text-center" Elevation="1">
                                     <MudText Typo="Typo.h6" Color="Color.Success">@pigPens.Sum(p => p.CurrentPigCount)</MudText>
-                                    <MudText Typo="Typo.body2">Total Pigs</MudText>
+                                    <MudText Typo="Typo.body2">หมูทั้งหมด</MudText>
                                 </MudPaper>
                             </MudItem>
                             <MudItem xs="6" sm="3">
                                 <MudPaper Class="pa-3 text-center" Elevation="1">
                                     <MudText Typo="Typo.h6" Color="Color.Info">@pigPens.Sum(p => p.MaxCapacity)</MudText>
-                                    <MudText Typo="Typo.body2">Max Capacity</MudText>
+                                    <MudText Typo="Typo.body2">ความจุสูงสุด</MudText>
                                 </MudPaper>
                             </MudItem>
                             <MudItem xs="6" sm="3">
                                 <MudPaper Class="pa-3 text-center" Elevation="1">
                                     <MudText Typo="Typo.h6" Color="Color.Warning">@(Math.Round(GetAverageCapacity(), 1))%</MudText>
-                                    <MudText Typo="Typo.body2">Avg Capacity</MudText>
+                                    <MudText Typo="Typo.body2">ความจุเฉลี่ย</MudText>
                                 </MudPaper>
                             </MudItem>
                         </MudGrid>
@@ -105,7 +105,7 @@
         </MudContainer>
     </DialogContent>
     <DialogActions>
-        <MudButton Color="Color.Primary" OnClick="Close">Close</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Close">ปิด</MudButton>
     </DialogActions>
 </MudDialog>
 

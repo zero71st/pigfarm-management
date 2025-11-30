@@ -7,12 +7,12 @@
 <MudPaper Class="pa-4" Style="display: flex; flex-direction: column; height: 600px;">
     <!-- Header Section - Search -->
     <div Style="flex-shrink: 0;">
-        <MudText Typo="Typo.h6" Class="mb-3">Import customers from POSPOS</MudText>
+        <MudText Typo="Typo.h6" Class="mb-3">นำเข้าลูกค้าจาก POSPOS</MudText>
 
         @if (!_isLoading)
         {
             <MudTextField @bind-Value="_filter" 
-                         Label="Search code, name, phone, email..." 
+                         Label="ค้นหารหัส, ชื่อ, เบอร์โทรศัพท์, อีเมล..." 
                          Variant="Variant.Outlined"
                          Margin="Margin.Dense"
                          Adornment="Adornment.Start" 
@@ -28,7 +28,7 @@
         <div Style="flex-shrink: 0;" Class="mt-3 mb-3">
             <MudPaper Class="pa-3" Elevation="1">
                 <MudText Typo="Typo.body1">
-                    <strong>@FilteredCandidates.Count()</strong> of <strong>@_candidates.Count</strong> customers found
+                    <strong>@FilteredCandidates.Count()</strong> จาก <strong>@_candidates.Count</strong> ลูกค้าที่พบ
                 </MudText>
             </MudPaper>
         </div>
@@ -51,16 +51,16 @@
                 <div class="pa-4 text-center">
                     @if (_candidates.Count == 0)
                     {
-                        <MudText Typo="Typo.subtitle1">No POSPOS candidates available</MudText>
-                        <MudText Typo="Typo.caption" Class="mt-1">No customers found in POSPOS. POSPOS may not be configured or returned no results.</MudText>
+                        <MudText Typo="Typo.subtitle1">ไม่มีผู้สมัคร POSPOS</MudText>
+                        <MudText Typo="Typo.caption" Class="mt-1">ไม่พบลูกค้าใน POSPOS POSPOS อาจไม่ได้ถูกตั้งค่าหรือไม่มีผลลัพธ์</MudText>
                         <div class="mt-3 d-flex justify-center">
-                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="LoadCandidates">Retry</MudButton>
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="LoadCandidates">ลองอีกครั้ง</MudButton>
                         </div>
                     }
                     else
                     {
-                        <MudText Typo="Typo.subtitle1">No matches found</MudText>
-                        <MudText Typo="Typo.caption" Class="mt-1">No customers match your search criteria.</MudText>
+                        <MudText Typo="Typo.subtitle1">ไม่พบผลลัพธ์ที่ตรงกัน</MudText>
+                        <MudText Typo="Typo.caption" Class="mt-1">ไม่มีลูกค้าที่ตรงกับเกณฑ์การค้นหาของคุณ</MudText>
                     }
                 </div>
             }
@@ -70,15 +70,15 @@
                     <HeaderContent>
                         <MudTh>
                         </MudTh>
-                        <MudTh>Code</MudTh>
-                        <MudTh>Display</MudTh>
-                        <MudTh>Mobile</MudTh>
-                        <MudTh>Email</MudTh>
-                        <MudTh>Address</MudTh>
-                        <MudTh>KeyCard</MudTh>
-                        <MudTh>ExternalId</MudTh>
-                        <MudTh>Sex</MudTh>
-                        <MudTh>Zip</MudTh>
+                        <MudTh>รหัส</MudTh>
+                        <MudTh>ชื่อแสดง</MudTh>
+                        <MudTh>มือถือ</MudTh>
+                        <MudTh>อีเมล</MudTh>
+                        <MudTh>ที่อยู่</MudTh>
+                        <MudTh>บัตรคีย์การ์ด</MudTh>
+                        <MudTh>รหัสภายนอก</MudTh>
+                        <MudTh>เพศ</MudTh>
+                        <MudTh>รหัสไปรษณีย์</MudTh>
                     </HeaderContent>
                     <RowTemplate>
                         <MudTd>
@@ -101,8 +101,8 @@
 
     <!-- Footer Section - Buttons -->
     <div Style="flex-shrink: 0;" Class="mt-3 d-flex justify-end gap-2">
-        <MudButton Variant="Variant.Text" OnClick="Cancel">Cancel</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_isLoading || !_hasSelection" OnClick="ImportSelected">Import selected</MudButton>
+        <MudButton Variant="Variant.Text" OnClick="Cancel">ยกเลิก</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_isLoading || !_hasSelection" OnClick="ImportSelected">นำเข้าที่เลือก</MudButton>
     </div>
 </MudPaper>
 
@@ -142,11 +142,11 @@
         }
         catch (HttpRequestException)
         {
-            Snackbar.Add("POSPOS service unavailable. Please try again later.", Severity.Error);
+            Snackbar.Add("ไม่สามารถเชื่อมต่อบริการ POSPOS ได้ กรุณาลองอีกครั้งในภายหลัง", Severity.Error);
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Failed to load candidates: {ex.Message}", Severity.Error);
+            Snackbar.Add($"ไม่สามารถโหลดผู้สมัครได้: {ex.Message}", Severity.Error);
         }
         finally
         {
@@ -161,20 +161,20 @@
         var selected = FilteredCandidates.Where(c => c.IsSelected).ToList();
         if (!selected.Any())
         {
-            Snackbar.Add("Please select at least one customer.", Severity.Warning);
+            Snackbar.Add("กรุณาเลือกลูกค้าอย่างน้อยหนึ่งรายการ", Severity.Warning);
             return;
         }
 
         var count = selected.Count;
         var namesPreview = string.Join(", ", selected.Take(10).Select(c => c.DisplayName));
         if (selected.Count > 10)
-            namesPreview += $", ... (+{selected.Count - 10} more)";
+            namesPreview += $", ... (+{selected.Count - 10} รายการเพิ่มเติม)";
 
         var confirm = await DialogService.ShowMessageBox(
-            "Confirm import",
-            $"You are about to import {count} member(s).\n\nPreview: {namesPreview}\n\nProceed?",
-            yesText: "Import",
-            noText: "Cancel");
+            "ยืนยันการนำเข้า",
+            $"คุณกำลังจะนำเข้า {count} สมาชิก\n\nตัวอย่าง: {namesPreview}\n\nดำเนินการต่อ?",
+            yesText: "นำเข้า",
+            noText: "ยกเลิก");
 
         if (confirm != true)
             return;
@@ -187,18 +187,18 @@
             var resp = await Http.PostAsJsonAsync(uri, selectedIds);
             if (resp.IsSuccessStatusCode)
             {
-                Snackbar.Add("Import completed.", Severity.Success);
+                Snackbar.Add("นำเข้าสำเร็จ", Severity.Success);
                 MudDialogInstance?.Close(DialogResult.Ok(true));
             }
             else
             {
                 var txt = await resp.Content.ReadAsStringAsync();
-                Snackbar.Add($"Import failed: {resp.StatusCode} - {txt}", Severity.Error);
+                Snackbar.Add($"การนำเข้าล้มเหลว: {resp.StatusCode} - {txt}", Severity.Error);
             }
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Import error: {ex.Message}", Severity.Error);
+            Snackbar.Add($"ข้อผิดพลาดในการนำเข้า: {ex.Message}", Severity.Error);
         }
     }
 

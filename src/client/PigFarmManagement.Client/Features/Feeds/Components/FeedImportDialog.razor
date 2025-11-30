@@ -5,39 +5,39 @@
 <MudDialog>
     <DialogContent>
         <div class="pa-4">
-            <MudText Typo="Typo.h6" Class="mb-4">Import Feed Data from POSPOS</MudText>
+            <MudText Typo="Typo.h6" Class="mb-4">นำเข้าข้อมูลอาหารจาก POSPOS</MudText>
             
             <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
                 <!-- Mock Data Import tab removed. Use Date Range or JSON Import for live data. -->
                 
-                <MudTabPanel Text="Date Range Import" Icon="@Icons.Material.Filled.DateRange">
+                <MudTabPanel Text="นำเข้าตามช่วงวันที่" Icon="@Icons.Material.Filled.DateRange">
                     <div class="d-flex flex-column gap-4">
                         <MudText Typo="Typo.body1" Class="mb-3">
-                            Import POSPOS feed transactions from a specific date range.
+                            นำเข้าธุรกรรมอาหาร POSPOS จากช่วงวันที่ที่กำหนด
                         </MudText>
                         
                         <div class="d-flex gap-4">
                             <MudDatePicker @bind-Date="_fromDate"
-                                         Label="From Date"
+                                         Label="จากวันที่"
                                          Variant="Variant.Outlined"
                                          DateFormat="yyyy-MM-dd"
-                                         HelperText="Start date for importing transactions" />
+                                         HelperText="วันที่เริ่มต้นสำหรับการนำเข้าธุรกรรม" />
                             
                             <MudDatePicker @bind-Date="_toDate"
-                                         Label="To Date"
+                                         Label="ถึงวันที่"
                                          Variant="Variant.Outlined"
                                          DateFormat="yyyy-MM-dd"
-                                         HelperText="End date for importing transactions" />
+                                         HelperText="วันที่สิ้นสุดสำหรับการนำเข้าธุรกรรม" />
                         </div>
                         
                         @if (_dateRangeTransactions.Any())
                         {
                             <MudCard>
                                 <MudCardContent>
-                                    <MudText Typo="Typo.h6" Class="mb-2">Preview Date Range Data</MudText>
+                                    <MudText Typo="Typo.h6" Class="mb-2">แสดงตัวอย่างข้อมูลตามช่วงวันที่</MudText>
                                     <MudText Typo="Typo.body2" Class="mb-2">
-                                        Found @_dateRangeTransactions.Count transaction(s) with @_dateRangeTransactions.Sum(t => t.OrderList.Count) feed items
-                                        from @(_fromDate?.ToString("yyyy-MM-dd")) to @(_toDate?.ToString("yyyy-MM-dd"))
+                                        พบ @_dateRangeTransactions.Count ธุรกรรม พร้อม @_dateRangeTransactions.Sum(t => t.OrderList.Count) รายการอาหาร
+                                        จาก @(_fromDate?.ToString("yyyy-MM-dd")) ถึง @(_toDate?.ToString("yyyy-MM-dd"))
                                     </MudText>
                                     
                                     @foreach (var transaction in _dateRangeTransactions.Take(3))
@@ -67,11 +67,11 @@
                                 @if (_isLoading)
                                 {
                                     <MudProgressCircular Size="Size.Small" Indeterminate="true" />
-                                    <span class="ml-2">Searching...</span>
+                                    <span class="ml-2">กำลังค้นหา...</span>
                                 }
                                 else
                                 {
-                                    <span>Search Transactions</span>
+                                    <span>ค้นหาธุรกรรม</span>
                                 }
                             </MudButton>
                             
@@ -85,11 +85,11 @@
                                     @if (_isImporting)
                                     {
                                         <MudProgressCircular Size="Size.Small" Indeterminate="true" />
-                                        <span class="ml-2">Importing...</span>
+                                        <span class="ml-2">กำลังนำเข้า...</span>
                                     }
                                     else
                                     {
-                                        <span>Import Selected Range</span>
+                                        <span>นำเข้าช่วงที่เลือก</span>
                                     }
                                 </MudButton>
                             }
@@ -97,18 +97,18 @@
                     </div>
                 </MudTabPanel>
                 
-                <MudTabPanel Text="JSON Import" Icon="@Icons.Material.Filled.Code">
+                <MudTabPanel Text="นำเข้า JSON" Icon="@Icons.Material.Filled.Code">
                     <div class="d-flex flex-column gap-4">
                         <MudText Typo="Typo.body1" Class="mb-3">
-                            Paste POSPOS JSON transaction data below to import feed records.
+                            วางข้อมูลธุรกรรม JSON จาก POSPOS ด้านล่างเพื่อนำเข้าบันทึกอาหาร
                         </MudText>
                         
                         <MudTextField @bind-Value="_jsonContent"
-                                    Label="POSPOS JSON Data"
+                                    Label="ข้อมูล JSON จาก POSPOS"
                                     Variant="Variant.Outlined"
                                     Lines="12"
-                                    Placeholder="Paste your POSPOS transaction JSON here..."
-                                    HelperText="Expected format: Array of transaction objects with order_list, buyer_detail, etc." />
+                                    Placeholder="วาง JSON ธุรกรรม POSPOS ของคุณที่นี่..."
+                                    HelperText="รูปแบบที่คาดหวัง: อาร์เรย์ของออบเจกต์ธุรกรรมที่มี order_list, buyer_detail, เป็นต้น" />
                         
                         <MudButton Color="Color.Primary" 
                                  Variant="Variant.Filled" 
@@ -118,11 +118,11 @@
                             @if (_isImporting)
                             {
                                 <MudProgressCircular Size="Size.Small" Indeterminate="true" />
-                                <span class="ml-2">Importing...</span>
+                                <span class="ml-2">กำลังนำเข้า...</span>
                             }
                             else
                             {
-                                <span>Import JSON Data</span>
+                                <span>นำเข้าข้อมูล JSON</span>
                             }
                         </MudButton>
                     </div>
@@ -132,18 +132,18 @@
             @if (_importResult != null)
             {
                 <MudAlert Severity="@(_importResult.FailedImports > 0 ? Severity.Warning : Severity.Success)" Class="mt-4">
-                    <MudText Typo="Typo.h6" Class="mb-2">Import Results</MudText>
+                    <MudText Typo="Typo.h6" Class="mb-2">ผลการนำเข้า</MudText>
                     <MudText Typo="Typo.body2">
-                        • Total Transactions: @_importResult.TotalTransactions<br/>
-                        • Total Feed Items: @_importResult.TotalFeedItems<br/>
-                        • Successful Imports: @_importResult.SuccessfulImports<br/>
-                        • Failed Imports: @_importResult.FailedImports
+                        • ธุรกรรมทั้งหมด: @_importResult.TotalTransactions<br/>
+                        • รายการอาหารทั้งหมด: @_importResult.TotalFeedItems<br/>
+                        • นำเข้าสำเร็จ: @_importResult.SuccessfulImports<br/>
+                        • นำเข้าล้มเหลว: @_importResult.FailedImports
                     </MudText>
                     
                     @if (_importResult.Errors.Any())
                     {
                         <MudText Typo="Typo.body2" Class="mt-2">
-                            <strong>Errors:</strong><br/>
+                            <strong>ข้อผิดพลาด:</strong><br/>
                             @foreach (var error in _importResult.Errors)
                             {
                                 <span>• @error<br/></span>
@@ -154,7 +154,7 @@
                     @if (_importResult.ImportedFeeds.Any())
                     {
                         <MudText Typo="Typo.body2" Class="mt-2">
-                            <strong>Imported Feeds:</strong><br/>
+                            <strong>อาหารที่นำเข้า:</strong><br/>
                             @foreach (var feed in _importResult.ImportedFeeds.Take(5))
                             {
                                 <span>• @feed.InvoiceCode - @feed.CustomerName (@feed.FeedItemsCount items, $@feed.TotalAmount.ToString("F2"))<br/></span>
@@ -170,7 +170,7 @@
         </div>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel">Close</MudButton>
+        <MudButton OnClick="Cancel">ปิด</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -202,16 +202,16 @@
             
             if (_importResult.FailedImports == 0)
             {
-                Snackbar.Add($"Successfully imported {_importResult.SuccessfulImports} transactions with {_importResult.TotalFeedItems} feed items", Severity.Success);
+                Snackbar.Add($"นำเข้าสำเร็จ {_importResult.SuccessfulImports} ธุรกรรมที่มี {_importResult.TotalFeedItems} รายการอาหาร", Severity.Success);
             }
             else
             {
-                Snackbar.Add($"Import completed with {_importResult.FailedImports} failures", Severity.Warning);
+                Snackbar.Add($"นำเข้าเสร็จสมบูรณ์แต่มีความล้มเหลว {_importResult.FailedImports} รายการ", Severity.Warning);
             }
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Import failed: {ex.Message}", Severity.Error);
+            Snackbar.Add($"การนำเข้าล้มเหลว: {ex.Message}", Severity.Error);
         }
         finally
         {
@@ -223,13 +223,13 @@
     {
         if (!_fromDate.HasValue || !_toDate.HasValue)
         {
-            Snackbar.Add("Please select both from and to dates", Severity.Warning);
+            Snackbar.Add("กรุณาเลือกวันที่เริ่มต้นและวันที่สิ้นสุด", Severity.Warning);
             return;
         }
 
         if (_fromDate.Value > _toDate.Value)
         {
-            Snackbar.Add("From date cannot be later than to date", Severity.Warning);
+            Snackbar.Add("วันที่เริ่มต้นต้องไม่สายกว่าวันที่สิ้นสุด", Severity.Warning);
             return;
         }
 
@@ -237,11 +237,11 @@
         try
         {
             _dateRangeTransactions = await FeedImportService.GetPosPosFeedByDateRangeAsync(_fromDate.Value, _toDate.Value);
-            Snackbar.Add($"Found {_dateRangeTransactions.Count} transactions in the selected date range", Severity.Success);
+            Snackbar.Add($"พบ {_dateRangeTransactions.Count} ธุรกรรมในช่วงวันที่ที่เลือก", Severity.Success);
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Failed to load date range data: {ex.Message}", Severity.Error);
+            Snackbar.Add($"โหลดข้อมูลช่วงวันที่ล้มเหลว: {ex.Message}", Severity.Error);
         }
         finally
         {
@@ -253,7 +253,7 @@
     {
         if (!_fromDate.HasValue || !_toDate.HasValue)
         {
-            Snackbar.Add("Please select both from and to dates", Severity.Warning);
+            Snackbar.Add("กรุณาเลือกวันที่เริ่มต้นและวันที่สิ้นสุด", Severity.Warning);
             return;
         }
 
@@ -264,16 +264,16 @@
             
             if (_importResult.FailedImports == 0)
             {
-                Snackbar.Add($"Successfully imported {_importResult.SuccessfulImports} transactions with {_importResult.TotalFeedItems} feed items from date range", Severity.Success);
+                Snackbar.Add($"นำเข้าสำเร็จ {_importResult.SuccessfulImports} ธุรกรรมที่มี {_importResult.TotalFeedItems} รายการอาหารจากช่วงวันที่", Severity.Success);
             }
             else
             {
-                Snackbar.Add($"Import completed with {_importResult.FailedImports} failures", Severity.Warning);
+                Snackbar.Add($"นำเข้าเสร็จสมบูรณ์แต่มีความล้มเหลว {_importResult.FailedImports} รายการ", Severity.Warning);
             }
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Import failed: {ex.Message}", Severity.Error);
+            Snackbar.Add($"การนำเข้าล้มเหลว: {ex.Message}", Severity.Error);
         }
         finally
         {

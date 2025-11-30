@@ -6,37 +6,37 @@
     <DialogContent>
         <div class="mb-4">
             <MudAlert Severity="Severity.Warning" Class="mb-3">
-                <strong>Warning:</strong> This action cannot be undone. Please review the deletion impact below.
+                <strong>คำเตือน:</strong> การกระทำนี้ไม่สามารถย้อนกลับได้ กรุณาตรวจสอบผลกระทบจากการลบด้านล่าง
             </MudAlert>
 
             <MudText Typo="Typo.h6" Class="mb-3">
-                Delete Customer: @Customer?.DisplayName
+                ลบลูกค้า: @Customer?.DisplayName
             </MudText>
 
             @if (ValidationResult != null)
             {
                 <MudCard Class="mb-3">
                     <MudCardContent>
-                        <MudText Typo="Typo.subtitle1" Class="mb-2">Deletion Impact:</MudText>
+                        <MudText Typo="Typo.subtitle1" Class="mb-2">ผลกระทบจากการลบ:</MudText>
                         
                         @if (!ValidationResult.CanDelete)
                         {
                             <MudAlert Severity="Severity.Error" Class="mb-2">
-                                <strong>Cannot delete this customer:</strong>
+                                <strong>ไม่สามารถลบลูกค้านี้ได้:</strong>
                             </MudAlert>
                         }
 
                         @if (ValidationResult.ActivePigPenCount > 0)
                         {
                             <MudChip Color="Color.Error" Size="Size.Small" Class="mr-2 mb-1">
-                                @ValidationResult.ActivePigPenCount Active Pig Pens
+                                @ValidationResult.ActivePigPenCount คอกหมูที่ใช้งาน
                             </MudChip>
                         }
 
                         @if (ValidationResult.ActiveTransactionCount > 0)
                         {
                             <MudChip Color="Color.Warning" Size="Size.Small" Class="mr-2 mb-1">
-                                @ValidationResult.ActiveTransactionCount Recent Transactions
+                                @ValidationResult.ActiveTransactionCount ธุรกรรมล่าสุด
                             </MudChip>
                         }
 
@@ -57,30 +57,30 @@
             {
                 <div class="d-flex justify-center">
                     <MudProgressCircular Indeterminate="true" />
-                    <MudText Class="ml-3">Validating deletion...</MudText>
+                    <MudText Class="ml-3">กำลังตรวจสอบการลบ...</MudText>
                 </div>
             }
             else if (ValidationResult?.CanDelete == true)
             {
                 <MudCard Class="mb-3">
                     <MudCardContent>
-                        <MudText Typo="Typo.subtitle2" Class="mb-2">Deletion Options:</MudText>
+                        <MudText Typo="Typo.subtitle2" Class="mb-2">ตัวเลือกการลบ:</MudText>
                         
                         <MudRadioGroup @bind-Value="selectedDeletionType">
                             <MudRadio Value="DeletionType.Soft" Color="Color.Primary">
                                 <div>
-                                    <MudText Typo="Typo.body1">Soft Delete (Recommended)</MudText>
+                                    <MudText Typo="Typo.body1">ลบแบบชั่วคราว (แนะนำ)</MudText>
                                     <MudText Typo="Typo.caption" Color="Color.Default">
-                                        Hide customer from normal views but preserve data for audit purposes
+                                        ซ่อนลูกค้าจากมุมมองปกติ แต่เก็บข้อมูลไว้เพื่อการตรวจสอบ
                                     </MudText>
                                 </div>
                             </MudRadio>
                             
                             <MudRadio Value="DeletionType.Hard" Color="Color.Error">
                                 <div>
-                                    <MudText Typo="Typo.body1">Permanent Delete</MudText>
+                                    <MudText Typo="Typo.body1">ลบถาวร</MudText>
                                     <MudText Typo="Typo.caption" Color="Color.Error">
-                                        Permanently remove all customer data (requires confirmation)
+                                        ลบข้อมูลลูกค้าทั้งหมดอย่างถาวร (ต้องยืนยัน)
                                     </MudText>
                                 </div>
                             </MudRadio>
@@ -89,8 +89,8 @@
                 </MudCard>
 
                 <MudTextField @bind-Value="deletionReason" 
-                              Label="Reason for deletion (optional)" 
-                              Placeholder="Enter reason for deleting this customer..."
+                              Label="เหตุผลในการลบ (ไม่บังคับ)" 
+                              Placeholder="ระบุเหตุผลในการลบลูกค้านี้..."
                               Lines="3"
                               Variant="Variant.Outlined"
                               Class="mb-3" />
@@ -99,11 +99,11 @@
                 {
                     <MudAlert Severity="Severity.Error" Class="mb-3">
                         <MudText Typo="Typo.body2">
-                            <strong>Final Warning:</strong> Permanent deletion will remove all customer data forever.
+                            <strong>คำเตือนสุดท้าย:</strong> การลบถาวรจะลบข้อมูลลูกค้าทั้งหมดตลอดไป
                         </MudText>
                         
                         <MudTextField @bind-Value="confirmationText" 
-                                      Label="Type 'DELETE' to confirm" 
+                                      Label="พิมพ์ 'DELETE' เพื่อยืนยัน" 
                                       Placeholder="DELETE"
                                       Class="mt-2" />
                     </MudAlert>
@@ -113,7 +113,7 @@
     </DialogContent>
     
     <DialogActions>
-        <MudButton OnClick="Cancel" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">ยกเลิก</MudButton>
         
         @if (ValidationResult?.CanDelete == true)
         {
@@ -130,7 +130,7 @@
             <MudButton Color="Color.Info" 
                        Variant="Variant.Filled" 
                        OnClick="Cancel">
-                Understood
+                เข้าใจแล้ว
             </MudButton>
         }
     </DialogActions>
@@ -169,7 +169,7 @@
 
     private string GetDeleteButtonText()
     {
-        return selectedDeletionType == DeletionType.Hard ? "Permanently Delete" : "Soft Delete";
+        return selectedDeletionType == DeletionType.Hard ? "ลบถาวร" : "ลบชั่วคราว";
     }
 
     private async Task ConfirmDelete()

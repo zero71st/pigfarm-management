@@ -11,21 +11,21 @@
 @using PigFarmManagement.Client.Features.PigPens.Components
 @inject IFeedFormulaCalculationService FeedFormulaCalculationService
 
-<PageTitle>Pig Pen Detail</PageTitle>
+<PageTitle>รายละเอียดคอกสุกร</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-6">
     @if (loading)
     {
         <div class="d-flex justify-center align-center" style="min-height: 400px;">
             <MudProgressCircular Indeterminate="true" Size="Size.Large" />
-            <MudText Class="ml-4" Typo="Typo.h6">Loading pig pen details...</MudText>
+            <MudText Class="ml-4" Typo="Typo.h6">กำลังโหลดรายละเอียดคอกสุกร...</MudText>
         </div>
     }
     else if (pigPen == null)
     {
         <MudAlert Severity="Severity.Error">
-            <MudText Typo="Typo.h6">Pig pen not found</MudText>
-            <MudText>The requested pig pen could not be found.</MudText>
+            <MudText Typo="Typo.h6">ไม่พบคอกสุกร</MudText>
+            <MudText>ไม่พบคอกสุกรที่ต้องการ</MudText>
         </MudAlert>
     }
     else
@@ -45,7 +45,7 @@
                                  Variant="Variant.Filled"
                                  Icon="Icons.Material.Filled.Lock"
                                  Class="mr-2">
-                            Calculations Locked
+                            ล็อกการคำนวณ
                         </MudChip>
                     }
                     @if (pigPen.ActHarvestDate.HasValue)
@@ -55,7 +55,7 @@
                                  Variant="Variant.Filled"
                                  Icon="Icons.Material.Filled.Cancel"
                                  Class="mr-2">
-                            Closed
+                            ปิดแล้ว
                         </MudChip>
                     }
                     @if (!pigPen.IsCalculationLocked && !pigPen.ActHarvestDate.HasValue)
@@ -64,7 +64,7 @@
                                  Size="Size.Medium" 
                                  Variant="Variant.Filled"
                                  Icon="Icons.Material.Filled.CheckCircle">
-                            Active
+                            ใช้งานอยู่
                         </MudChip>
                     }
                 </div>
@@ -75,14 +75,14 @@
                            StartIcon="@Icons.Material.Filled.ArrowBack"
                            OnClick="@(() => Navigation.NavigateTo("/pigpens"))"
                            Class="mr-2">
-                    Back to List
+                    กลับไปรายการ
                 </MudButton>
                 <MudButton Variant="Variant.Filled" 
                            Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.Edit"
                            OnClick="EditPigPen"
                            Disabled="@IsPigPenClosed()">
-                    Edit
+                    แก้ไข
                 </MudButton>
                 @* Force Close button - Show for all pig pens with smart behavior *@
                 @if (ShouldShowForceCloseButton())
@@ -105,7 +105,7 @@
                 <CardHeaderContent>
                     <MudText Typo="Typo.h5">
                         <MudIcon Icon="@Icons.Material.Filled.Info" Class="mr-2" />
-                        Pig Pen Information
+                        ข้อมูลคอกสุกร
                     </MudText>
                 </CardHeaderContent>
             </MudCardHeader>
@@ -115,15 +115,15 @@
                         <MudSimpleTable Style="overflow-x: auto;" Dense="true">
                             <tbody>
                                 <tr>
-                                    <td><strong>Customer:</strong></td>
+                                    <td><strong>ลูกค้า:</strong></td>
                                     <td>@(customer?.DisplayName ?? "Unknown Customer")</td>
                                 </tr>
                                 <tr>
-                                    <td><strong>Pen Code:</strong></td>
+                                    <td><strong>รหัสคอก:</strong></td>
                                     <td>@pigPen.PenCode</td>
                                 </tr>
                                 <tr>
-                                    <td><strong>Type:</strong></td>
+                                    <td><strong>ประเภท:</strong></td>
                                     <td>
                                         <MudChip Color="@(pigPen.Type == PigPenType.Cash ? Color.Success : Color.Info)" 
                                                  Size="Size.Small" Variant="Variant.Filled">
@@ -132,25 +132,25 @@
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td><strong>Quantity:</strong></td>
-                                    <td>@pigPen.PigQty pigs</td>
+                                    <td><strong>จำนวน:</strong></td>
+                                    <td>@pigPen.PigQty ตัว</td>
                                 </tr>
                                 <tr>
-                                    <td><strong>Register Date:</strong></td>
+                                    <td><strong>วันที่ลงทะเบียน:</strong></td>
                                     <td>@pigPen.RegisterDate.ToString("dd/MM/yyyy")</td>
                                 </tr>
                                 <tr>
-                                    <td><strong>Actual Harvest Date:</strong></td>
-                                    <td>@(pigPen.ActHarvestDate?.ToString("dd/MM/yyyy") ?? "Ongoing")</td>
+                                    <td><strong>วันเก็บเกี่ยวจริง:</strong></td>
+                                    <td>@(pigPen.ActHarvestDate?.ToString("dd/MM/yyyy") ?? "ยังดำเนินการ")</td>
                                 </tr>
                                 <tr>
-                                    <td><strong>Est. Harvest:</strong></td>
-                                    <td>@(pigPen.EstimatedHarvestDate?.ToString("dd/MM/yyyy") ?? "Not set")</td>
+                                    <td><strong>วันเก็บเกี่ยวโดยประมาณ:</strong></td>
+                                    <td>@(pigPen.EstimatedHarvestDate?.ToString("dd/MM/yyyy") ?? "ไม่ได้ตั้ง")</td>
                                 </tr>
                                 @if (!string.IsNullOrWhiteSpace(pigPen.Note))
                                 {
                                     <tr>
-                                        <td><strong>Note:</strong></td>
+                                        <td><strong>หมายเหตุ:</strong></td>
                                         <td style="max-width: 300px; word-wrap: break-word;">@pigPen.Note</td>
                                     </tr>
                                 }
@@ -163,13 +163,13 @@
                             <MudSimpleTable Style="overflow-x: auto;" Dense="true">
                                 <tbody>
                                     <tr>
-                                        <td><strong>Feed Cost:</strong></td>
+                                        <td><strong>ต้นทุนอาหาร:</strong></td>
                                         <td class="text-right">
                                             <MudText Color="Color.Primary">฿@summary.TotalFeedCost.ToString("N0")</MudText>
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td><strong>Total Deposits:</strong></td>
+                                        <td><strong>ยอดเงินฝากรวม:</strong></td>
                                         <td class="text-right">
                                             @if (pigPen?.Type == PigPenType.Project)
                                             {
@@ -202,13 +202,13 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td><strong>Investment:</strong></td>
+                                        <td><strong>เงินลงทุน:</strong></td>
                                         <td class="text-right">
                                             <MudText Color="Color.Info">฿@summary.Investment.ToString("N0")</MudText>
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td><strong>Profit/Loss:</strong></td>
+                                        <td><strong>กำไร/ขาดทุน:</strong></td>
                                         <td class="text-right">
                                             <MudText Color="@(summary.ProfitLoss >= 0 ? Color.Success : Color.Error)">
                                                 ฿@summary.ProfitLoss.ToString("N0")
@@ -231,7 +231,7 @@
                     <CardHeaderContent>
                         <MudText Typo="Typo.h5">
                             <MudIcon Icon="@Icons.Material.Filled.AccountBalance" Class="mr-2" />
-                            Deposits (@deposits.Count)
+                            เงินฝาก (@deposits.Count)
                         </MudText>
                     </CardHeaderContent>
                     <CardHeaderActions>
@@ -239,7 +239,7 @@
                                    Color="Color.Primary"
                                    StartIcon="@Icons.Material.Filled.Add"
                                    OnClick="AddDeposit">
-                            Add Deposit
+                            เพิ่มเงินฝาก
                         </MudButton>
                     </CardHeaderActions>
                 </MudCardHeader>
@@ -252,7 +252,7 @@
                             <MudGrid>
                                 <MudItem xs="12" sm="8">
                                     <MudText Typo="Typo.subtitle1" Class="mb-2">
-                                        💰 Deposit Progress
+                                        💰 ความคืบหน้าเงินฝาก
                                     </MudText>
                                     <MudProgressLinear Value="@((double)(depositCalculationInfo.CompletionPercentage * 100))" 
                                                      Color="@GetProgressColor()" 
@@ -272,13 +272,13 @@
                                     @if (depositCalculationInfo.RemainingDeposit > 0)
                                     {
                                         <MudText Typo="Typo.body2" Class="text-center mt-2">
-                                            <strong>@depositCalculationInfo.RemainingDepositFormatted</strong> remaining
+                                            <strong>@depositCalculationInfo.RemainingDepositFormatted</strong> คงเหลือ
                                         </MudText>
                                     }
                                     else
                                     {
                                         <MudText Typo="Typo.body2" Class="text-center mt-2" Style="color: #4caf50;">
-                                            ✅ Complete!
+                                            ✅ สมบูรณ์!
                                         </MudText>
                                     }
                                 </MudItem>
@@ -291,10 +291,10 @@
                 {
                     <MudTable Items="@deposits" Hover="true" Striped="true" Dense="true">
                         <HeaderContent>
-                            <MudTh>Date</MudTh>
-                            <MudTh Style="text-align: right">Amount</MudTh>
-                            <MudTh>Notes</MudTh>
-                            <MudTh Style="text-align: center">Actions</MudTh>
+                            <MudTh>วันที่</MudTh>
+                            <MudTh Style="text-align: right">จำนวนเงิน</MudTh>
+                            <MudTh>หมายเหตุ</MudTh>
+                            <MudTh Style="text-align: center">การดำเนินการ</MudTh>
                         </HeaderContent>
                         <RowTemplate>
                             <MudTd DataLabel="Date">@context.Date.ToString("dd/MM/yyyy")</MudTd>
@@ -307,16 +307,16 @@
                                     <MudButton Color="Color.Primary" 
                                              Size="Size.Small"
                                              Variant="Variant.Outlined"
-                                             Title="Edit Deposit"
+                                             Title="แก้ไขเงินฝาก"
                                              OnClick="@(() => EditDeposit(context))">
-                                        ✏️ Edit
+                                        ✏️ แก้ไข
                                     </MudButton>
                                     <MudButton Color="Color.Error" 
                                              Size="Size.Small"
                                              Variant="Variant.Outlined"
-                                             Title="Delete Deposit"
+                                             Title="ลบเงินฝาก"
                                              OnClick="@(() => DeleteDeposit(context))">
-                                        🗑️ Delete
+                                        🗑️ ลบ
                                     </MudButton>
                                 </MudButtonGroup>
                             </MudTd>
@@ -326,7 +326,7 @@
                 else
                 {
                     <MudAlert Severity="Severity.Info">
-                        <MudText>No deposits recorded for this pig pen.</MudText>
+                        <MudText>ไม่มีบันทึกเงินฝากสำหรับคอกสุกรนี้</MudText>
                     </MudAlert>
                 }
             </MudCardContent>
@@ -340,10 +340,10 @@
                     <MudAlert Severity="Severity.Info" Dense="true">
                         <MudText Typo="Typo.subtitle2" Class="mb-2">
                             <MudIcon Icon="Icons.Material.Filled.Info" Class="mr-2" />
-                            Cash Type Pig Pen
+                            คอกสุกรประเภทเงินสด
                         </MudText>
                         <MudText Typo="Typo.body2">
-                            Deposits are not applicable for Cash type pig pens. All transactions are handled as direct cash payments.
+                            ไม่มีการฝากเงินสำหรับคอกสุกรประเภทเงินสด ทุกรายการจะดำเนินการเป็นการชำระเงินสดโดยตรง
                         </MudText>
                     </MudAlert>
                 </MudCardContent>
@@ -356,7 +356,7 @@
                 <CardHeaderContent>
                     <MudText Typo="Typo.h5">
                         <MudIcon Icon="@Icons.Material.Filled.Fastfood" Class="mr-2" />
-                        Feed History (@feeds.Count)
+                        ประวัติการให้อาหาร (@feeds.Count)
                     </MudText>
                     @if (pigPen?.IsCalculationLocked == true)
                     {
@@ -365,7 +365,7 @@
                                  Variant="Variant.Filled" 
                                  Class="ml-3"
                                  Icon="@Icons.Material.Filled.Lock">
-                            Calculations Locked
+                            ล็อกการคำนวณ
                         </MudChip>
                     }
                 </CardHeaderContent>
@@ -374,7 +374,7 @@
                                Color="Color.Primary"
                                StartIcon="@Icons.Material.Filled.Download"
                                OnClick="ImportFeeds">
-                        Import Feeds
+                        นำเข้าอาหาร
                     </MudButton>
                 </CardHeaderActions>
             </MudCardHeader>
@@ -432,19 +432,19 @@
                                     @if (feedProgressSummary.Progress.RequiredBags > feedProgressSummary.Progress.ActualBags)
                                     {
                                         <MudText Typo="Typo.body2" Class="text-center mt-2">
-                                            <strong>@((feedProgressSummary.Progress.RequiredBags - feedProgressSummary.Progress.ActualBags).ToString("F1"))</strong> bags remaining
+                                            <strong>@((feedProgressSummary.Progress.RequiredBags - feedProgressSummary.Progress.ActualBags).ToString("F1"))</strong> กระสอบคงเหลือ
                                         </MudText>
                                     }
                                     else if (feedProgressSummary.Progress.ActualBags > feedProgressSummary.Progress.RequiredBags)
                                     {
                                         <MudText Typo="Typo.body2" Class="text-center mt-2" Style="color: #ff5722;">
-                                            ⚠️ Over by @((feedProgressSummary.Progress.ActualBags - feedProgressSummary.Progress.RequiredBags).ToString("F1")) bags
+                                            ⚠️ เกิน @((feedProgressSummary.Progress.ActualBags - feedProgressSummary.Progress.RequiredBags).ToString("F1")) กระสอบ
                                         </MudText>
                                     }
                                     else
                                     {
                                         <MudText Typo="Typo.body2" Class="text-center mt-2" Style="color: #4caf50;">
-                                            ✅ On target!
+                                            ✅ ตรงเป้า!
                                         </MudText>
                                     }
                                 </MudItem>
@@ -457,13 +457,13 @@
                 <div class="d-flex justify-end mb-3 gap-4">
                     <MudSwitch @bind-Value="_showFinancial" 
                                Color="Color.Primary" 
-                               Label="Show Financial" 
+                               Label="แสดงข้อมูลการเงิน" 
                                ThumbIcon="@(_showFinancial ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)"
                                UnCheckedColor="Color.Default" />
                     
                     <MudSwitch @bind-Value="_showSpecificProducts" 
                                Color="Color.Secondary" 
-                               Label="Show Service Charges" 
+                               Label="แสดงค่าบริการ" 
                                ThumbIcon="@(_showSpecificProducts ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)"
                                UnCheckedColor="Color.Default" />
                 </div>
@@ -589,7 +589,7 @@
                 <CardHeaderContent>
                     <MudText Typo="Typo.h5">
                         <MudIcon Icon="@Icons.Material.Filled.Agriculture" Class="mr-2" />
-                        Harvest Records (@harvests.Count)
+                        บันทึกการเก็บเกี่ยว (@harvests.Count)
                     </MudText>
                 </CardHeaderContent>
                 <CardHeaderActions>
@@ -597,7 +597,7 @@
                                Color="Color.Primary"
                                StartIcon="@Icons.Material.Filled.Add"
                                OnClick="AddHarvest">
-                        Add Harvest
+                        เพิ่มบันทึกการเก็บเกี่ยว
                     </MudButton>
                 </CardHeaderActions>
             </MudCardHeader>
@@ -640,17 +640,17 @@
                                 </MudItem>
                                 
                                 <MudItem xs="12" sm="6" md="3">
-                                    <MudText Typo="Typo.body2" Class="text-muted">Total Revenue:</MudText>
+                                    <MudText Typo="Typo.body2" Class="text-muted">รายรับรวม:</MudText>
                                     <MudText Typo="Typo.h6" Color="Color.Success">
                                         @harvestCalculationInfo.TotalRevenueFormatted
                                     </MudText>
                                     <MudText Typo="Typo.caption" Color="Color.Secondary">
-                                        @harvests.Count harvest(s)
+                                        @harvests.Count ครั้ง
                                     </MudText>
                                 </MudItem>
                                 
                                 <MudItem xs="12" sm="6" md="3">
-                                    <MudText Typo="Typo.body2" Class="text-muted">Avg Price/Kg:</MudText>
+                                    <MudText Typo="Typo.body2" Class="text-muted">ราคาเฉลี่ย/กก.:</MudText>
                                     <MudText Typo="Typo.h6" Color="Color.Info">
                                         @harvestCalculationInfo.AveragePricePerKgFormatted
                                     </MudText>
@@ -667,12 +667,12 @@
                 {
                     <MudTable Items="@harvests" Hover="true" Striped="true" Dense="true">
                         <HeaderContent>
-                            <MudTh>Date</MudTh>
-                            <MudTh Style="text-align: center">Pigs Sold</MudTh>
-                            <MudTh Style="text-align: right">Avg Weight (kg)</MudTh>
-                            <MudTh Style="text-align: right">Price per Kg</MudTh>
-                            <MudTh Style="text-align: right">Total Revenue</MudTh>
-                            <MudTh Style="text-align: center">Actions</MudTh>
+                            <MudTh>วันที่</MudTh>
+                            <MudTh Style="text-align: center">จำนวนสุกรที่ขาย</MudTh>
+                            <MudTh Style="text-align: right">น้ำหนักเฉลี่ย (กก.)</MudTh>
+                            <MudTh Style="text-align: right">ราคาต่อ กก.</MudTh>
+                            <MudTh Style="text-align: right">รายได้รวม</MudTh>
+                            <MudTh Style="text-align: center">การดำเนินการ</MudTh>
                         </HeaderContent>
                         <RowTemplate>
                             <MudTd DataLabel="Date">@context.HarvestDate.ToString("dd/MM/yyyy")</MudTd>
@@ -689,16 +689,16 @@
                                     <MudButton Color="Color.Primary" 
                                              Size="Size.Small"
                                              Variant="Variant.Outlined"
-                                             Title="Edit Harvest"
+                                             Title="แก้ไขบันทึกการเก็บเกี่ยว"
                                              OnClick="@(() => EditHarvest(context))">
-                                        ✏️ Edit
+                                        ✏️ แก้ไข
                                     </MudButton>
                                     <MudButton Color="Color.Error" 
                                              Size="Size.Small"
                                              Variant="Variant.Outlined"
-                                             Title="Delete Harvest"
+                                             Title="ลบบันทึกการเก็บเกี่ยว"
                                              OnClick="@(() => DeleteHarvest(context))">
-                                        🗑️ Delete
+                                        🗑️ ลบ
                                     </MudButton>
                                 </MudButtonGroup>
                             </MudTd>
@@ -708,7 +708,7 @@
                 else
                 {
                     <MudAlert Severity="Severity.Info">
-                        <MudText>No harvest records found for this pig pen.</MudText>
+                        <MudText>ไม่มีบันทึกการเก็บเกี่ยวสำหรับคอกสุกรนี้</MudText>
                     </MudAlert>
                 }
             </MudCardContent>

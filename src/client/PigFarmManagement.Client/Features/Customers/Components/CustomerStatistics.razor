@@ -6,19 +6,19 @@
         <MudItem xs="12" sm="6" md="4">
             <MudPaper Class="pa-3 text-center" Elevation="1">
                 <MudText Typo="Typo.h4" Color="Color.Primary">@Customers.Count</MudText>
-                <MudText Typo="Typo.body2">Total Customers</MudText>
+                <MudText Typo="Typo.body2">ลูกค้าทั้งหมด</MudText>
             </MudPaper>
         </MudItem>
         <MudItem xs="12" sm="6" md="4">
             <MudPaper Class="pa-3 text-center" Elevation="1">
                 <MudText Typo="Typo.h4" Color="Color.Success">@Customers.Count(c => c.Status == CustomerStatus.Active)</MudText>
-                <MudText Typo="Typo.body2">Active Customers</MudText>
+                <MudText Typo="Typo.body2">ลูกค้าที่ใช้งาน</MudText>
             </MudPaper>
         </MudItem>
         <MudItem xs="12" sm="6" md="4">
             <MudPaper Class="pa-3 text-center" Elevation="1">
                 <MudText Typo="Typo.h4" Color="Color.Error">@Customers.Count(c => c.Status == CustomerStatus.Inactive)</MudText>
-                <MudText Typo="Typo.body2">Inactive Customers</MudText>
+                <MudText Typo="Typo.body2">ลูกค้าที่ไม่ใช้งาน</MudText>
             </MudPaper>
         </MudItem>
 

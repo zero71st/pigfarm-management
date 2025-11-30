@@ -11,14 +11,14 @@
 
 <PageTitle>PIG PEN MANAGEMENT - Pig Pens</PageTitle>
 
-<MudText Typo="Typo.h4" GutterBottom="true">Pig Pen Management</MudText>
+<MudText Typo="Typo.h4" GutterBottom="true">จัดการคอกสุกร</MudText>
 
 <!-- Filter and Search Section -->
 <MudPaper Class="pa-4 ma-2" Elevation="2">
     <MudGrid>
         <MudItem xs="12" md="4">
-            <MudSelect T="Guid?" @bind-Value="SelectedCustomerId" Margin="Margin.Dense" Label="Filter Customer" Variant="Variant.Outlined">
-                <MudSelectItem T="Guid?" Value="@((Guid?)null)">All Customers</MudSelectItem>
+                <MudSelect T="Guid?" @bind-Value="SelectedCustomerId" Margin="Margin.Dense" Label="กรองลูกค้า" Variant="Variant.Outlined">
+                    <MudSelectItem T="Guid?" Value="@((Guid?)null)">ลูกค้าทั้งหมด</MudSelectItem>
                 @foreach (var customer in customers)
                 {
                     <MudSelectItem T="Guid?" Value="@((Guid?)customer.Id)">@customer.DisplayName (@customer.Status)</MudSelectItem>
@@ -26,14 +26,14 @@
             </MudSelect>
         </MudItem>
         <MudItem xs="12" md="4">
-            <MudSelect T="PigPenType?" @bind-Value="SelectedPigPenType" Margin="Margin.Dense" Label="Filter Type" Variant="Variant.Outlined">
-                <MudSelectItem T="PigPenType?" Value="@((PigPenType?)null)">All Types</MudSelectItem>
-                <MudSelectItem T="PigPenType?" Value="PigPenType.Cash">Cash</MudSelectItem>
-                <MudSelectItem T="PigPenType?" Value="PigPenType.Project">Project</MudSelectItem>
+                <MudSelect T="PigPenType?" @bind-Value="SelectedPigPenType" Margin="Margin.Dense" Label="กรองประเภท" Variant="Variant.Outlined">
+                    <MudSelectItem T="PigPenType?" Value="@((PigPenType?)null)">ทุกประเภท</MudSelectItem>
+                    <MudSelectItem T="PigPenType?" Value="PigPenType.Cash">เงินสด</MudSelectItem>
+                    <MudSelectItem T="PigPenType?" Value="PigPenType.Project">โครงการ</MudSelectItem>
             </MudSelect>
         </MudItem>
         <MudItem xs="12" md="4">
-            <MudTextField @bind-Value="SearchText" Label="Search" Variant="Variant.Outlined"  Margin="Margin.Dense"
+                    <MudTextField @bind-Value="SearchText" Label="ค้นหา" Variant="Variant.Outlined"  Margin="Margin.Dense"
                          Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" />
         </MudItem>
     </MudGrid>
@@ -42,34 +42,34 @@
 <!-- Pig Pen Management Section -->
 <MudPaper Class="pa-4 ma-2" Elevation="2">
     <div class="d-flex justify-space-between align-center mb-4">
-        <MudText Typo="Typo.h6">Pig Pen List</MudText>
+        <MudText Typo="Typo.h6">รายการคอกสุกร</MudText>
         <div class="d-flex gap-2">
             <MudButton Variant="Variant.Outlined" 
                        Color="Color.Info"
                        StartIcon="@Icons.Material.Filled.Refresh"
                        OnClick="RefreshData"
                        Size="Size.Small">
-                Refresh
+                รีเฟรช
             </MudButton>
             <MudButton Variant="Variant.Filled" Color="Color.Primary" 
                        StartIcon="@Icons.Material.Filled.Add" OnClick="ShowAddDialog">
-                Add New Pig Pen
+                เพิ่มคอกสุกรใหม่
             </MudButton>
         </div>
     </div>
 
     <MudTable Items="@filteredPigPens" Hover="true" Striped="true" Loading="@loading">
         <HeaderContent>
-            <MudTh>Customer</MudTh>
-            <MudTh>Pen Code</MudTh>
-            <MudTh>Type</MudTh>
-            <MudTh>Status</MudTh>
-            <MudTh>Quantity</MudTh>
-            <MudTh>Register Date</MudTh>
-            <MudTh>Est. Harvest</MudTh>
-            <MudTh>Days Remaining</MudTh>
-            <MudTh>Last Updated</MudTh>
-            <MudTh>Actions</MudTh>
+            <MudTh>ลูกค้า</MudTh>
+            <MudTh>รหัสคอก</MudTh>
+            <MudTh>ประเภท</MudTh>
+            <MudTh>สถานะ</MudTh>
+            <MudTh>จำนวน</MudTh>
+            <MudTh>วันที่ลงทะเบียน</MudTh>
+            <MudTh>วันเก็บเกี่ยวโดยประมาณ</MudTh>
+            <MudTh>จำนวนวันที่เหลือ</MudTh>
+            <MudTh>อัปเดตล่าสุด</MudTh>
+            <MudTh>การดำเนินการ</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Customer">@GetCustomerName(context.CustomerId)</MudTd>
@@ -87,7 +87,7 @@
                              Size="Size.Small" 
                              Variant="Variant.Filled"
                              Icon="Icons.Material.Filled.Cancel">
-                        Closed
+                        ปิดแล้ว
                     </MudChip>
                 }
                 else if (context.IsCalculationLocked)
@@ -96,7 +96,7 @@
                              Size="Size.Small" 
                              Variant="Variant.Filled"
                              Icon="Icons.Material.Filled.Lock">
-                        Locked
+                        ล็อกแล้ว
                     </MudChip>
                 }
                 else
@@ -105,7 +105,7 @@
                              Size="Size.Small" 
                              Variant="Variant.Filled"
                              Icon="Icons.Material.Filled.CheckCircle">
-                        Active
+                        ใช้งานอยู่
                     </MudChip>
                 }
             </MudTd>
@@ -117,7 +117,7 @@
                 {
                     var daysRemaining = (context.EstimatedHarvestDate.Value - DateTime.Now).Days;
                     <MudText Color="@(daysRemaining > 30 ? Color.Success : daysRemaining > 7 ? Color.Warning : Color.Error)">
-                        @daysRemaining days
+                        @daysRemaining วัน
                     </MudText>
                 }
                 else
@@ -138,7 +138,7 @@
                               Class="pa-1"
                               Style="min-width: 32px; font-size: 16px; line-height: 1;"
                             OnClick="() => ShowPosImportDialog(context.Id, GetCustomerName(context.CustomerId), context.PenCode, GetCustomerCode(context.CustomerId))"
-                              Title="Import feeds">
+                              Title="นำเข้าอาหาร">
                         <MudIcon Icon="@Icons.Material.Filled.Download" Size="Size.Small" />
                     </MudButton>
                     <MudButton Size="Size.Small"
@@ -147,7 +147,7 @@
                               Class="pa-1"
                               Style="min-width: 32px; font-size: 16px; line-height: 1;"
                               OnClick="() => NavigateToPigPenDetail(context.Id)"
-                              Title="View details">
+                              Title="ดูรายละเอียด">
                         <MudIcon Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" />
                     </MudButton>
                     <MudButton Size="Size.Small"
@@ -157,7 +157,7 @@
                               Style="min-width: 32px; font-size: 16px; line-height: 1;"
                               OnClick="() => ShowEditDialog(context)"
                               Disabled="@IsPigPenClosed(context)"
-                              Title="Edit">
+                              Title="แก้ไข">
                         <MudIcon Icon="@Icons.Material.Filled.Edit" Size="Size.Small" />
                     </MudButton>
                     <MudButton Size="Size.Small"
@@ -166,7 +166,7 @@
                               Class="pa-1"
                               Style="min-width: 32px; font-size: 16px; line-height: 1;"
                               OnClick="() => ShowDeleteDialog(context)"
-                              Title="Delete">
+                              Title="ลบ">
                         <MudIcon Icon="@Icons.Material.Filled.Delete" Size="Size.Small" />
                     </MudButton>
                 </div>
@@ -252,7 +252,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error loading data: {ex.Message}", Severity.Error);
+            Snackbar.Add($"เกิดข้อผิดพลาดในการโหลดข้อมูล: {ex.Message}", Severity.Error);
         }
         finally
         {
@@ -263,7 +263,7 @@
     private async Task RefreshData()
     {
         await LoadData();
-        Snackbar.Add("Data refreshed successfully", Severity.Info);
+        Snackbar.Add("รีเฟรชข้อมูลสำเร็จ", Severity.Info);
     }
 
     private void FilterPigPens()
@@ -284,13 +284,13 @@
 
     private async Task ShowAddDialog()
     {
-        var dialog = await DialogService.ShowAsync<AddPigPenDialog>("Add New Pig Pen");
+        var dialog = await DialogService.ShowAsync<AddPigPenDialog>("เพิ่มคอกสุกรใหม่");
         var result = await dialog.Result;
 
         if (!result.Canceled)
         {
             await LoadData();
-            Snackbar.Add("Pig pen added successfully!", Severity.Success);
+            Snackbar.Add("เพิ่มคอกสุกรสำเร็จ!", Severity.Success);
         }
     }
 
@@ -304,7 +304,7 @@
             { "CustomerCode", customerCode }
         };
 
-        var dialog = await DialogService.ShowAsync<PigPenPosImportDialog>("Import POSPOS Feed Data", parameters, new DialogOptions 
+        var dialog = await DialogService.ShowAsync<PigPenPosImportDialog>("นำเข้าข้อมูลอาหารจาก POSPOS", parameters, new DialogOptions 
         { 
             MaxWidth = MaxWidth.Large,
             FullWidth = true 
@@ -315,7 +315,7 @@
         if (!result.Canceled)
         {
             await LoadData(); // Refresh the list after import
-            Snackbar.Add("POSPOS feed import completed!", Severity.Success);
+            Snackbar.Add("นำเข้าอาหารจาก POSPOS สำเร็จ!", Severity.Success);
         }
     }
 
@@ -340,13 +340,13 @@
         var timeSpan = DateTime.UtcNow.Subtract(dateTime);
         
         if (timeSpan.TotalMinutes < 1)
-            return "Just now";
+            return "เมื่อสักครู่";
         if (timeSpan.TotalMinutes < 60)
-            return $"{(int)timeSpan.TotalMinutes} min ago";
+            return $"{(int)timeSpan.TotalMinutes} นาทีที่แล้ว";
         if (timeSpan.TotalHours < 24)
-            return $"{(int)timeSpan.TotalHours} hour{((int)timeSpan.TotalHours == 1 ? "" : "s")} ago";
+            return $"{(int)timeSpan.TotalHours} ชั่วโมงที่แล้ว";
         if (timeSpan.TotalDays < 7)
-            return $"{(int)timeSpan.TotalDays} day{((int)timeSpan.TotalDays == 1 ? "" : "s")} ago";
+            return $"{(int)timeSpan.TotalDays} วันที่แล้ว";
         
         return dateTime.ToString("MMM dd, yyyy");
     }
@@ -356,7 +356,7 @@
         // Prevent editing if pig pen is closed
         if (IsPigPenClosed(pigPen))
         {
-            Snackbar.Add("Cannot edit a closed pig pen", Severity.Warning);
+            Snackbar.Add("ไม่สามารถแก้ไขคอกสุกรที่ปิดแล้ว", Severity.Warning);
             return;
         }
 
@@ -365,13 +365,13 @@
             { x => x.PigPen, pigPen }
         };
 
-        var dialog = await DialogService.ShowAsync<EditPigPenDialog>("Edit Pig Pen", parameters);
+        var dialog = await DialogService.ShowAsync<EditPigPenDialog>("แก้ไขคอกสุกร", parameters);
         var result = await dialog.Result;
 
         if (!result.Canceled)
         {
             await LoadData();
-            Snackbar.Add("Pig pen updated successfully!", Severity.Success);
+            Snackbar.Add("อัปเดตคอกสุกรสำเร็จ!", Severity.Success);
         }
     }
 
@@ -379,10 +379,10 @@
     {
         var parameters = new DialogParameters
         {
-            { "ContentText", $"Are you sure you want to delete pig pen '{pigPen.PenCode}'? This action cannot be undone." }
+            { "ContentText", $"คุณแน่ใจหรือไม่ว่าต้องการลบคอกสุกร '{pigPen.PenCode}'? การดำเนินการนี้ไม่สามารถยกเลิกได้" }
         };
 
-        var dialog = await DialogService.ShowAsync<DeleteConfirmationDialog>("Delete Pig Pen", parameters);
+        var dialog = await DialogService.ShowAsync<DeleteConfirmationDialog>("ลบคอกสุกร", parameters);
         var result = await dialog.Result;
 
         if (!result.Canceled)
@@ -393,16 +393,16 @@
                 if (success)
                 {
                     await LoadData();
-                    Snackbar.Add("Pig pen deleted successfully!", Severity.Success);
+                    Snackbar.Add("ลบคอกสุกรสำเร็จ!", Severity.Success);
                 }
                 else
                 {
-                    Snackbar.Add("Failed to delete pig pen.", Severity.Error);
+                    Snackbar.Add("ลบคอกสุกรล้มเหลว", Severity.Error);
                 }
             }
             catch (Exception ex)
             {
-                Snackbar.Add($"Error deleting pig pen: {ex.Message}", Severity.Error);
+                Snackbar.Add($"เกิดข้อผิดพลาดในการลบคอกสุกร: {ex.Message}", Severity.Error);
             }
         }
     }

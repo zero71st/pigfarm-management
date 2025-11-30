@@ -12,7 +12,7 @@
                 <MudItem xs="12">
                     <MudText Typo="Typo.h6" Class="mb-4">
                         <MudIcon Icon="Icons.Material.Filled.Agriculture" Class="mr-2" />
-                        Add New Harvest Record
+                        เพิ่มบันทึกการเก็บเกี่ยว
                     </MudText>
                 </MudItem>
                 
@@ -25,12 +25,12 @@
                                 <MudGrid>
                                     <MudItem xs="12">
                                         <MudText Typo="Typo.subtitle2" Class="mb-2">
-                                            🐷 Pig Pen Information
+                                            🐷 ข้อมูลคอกสุกร
                                         </MudText>
                                     </MudItem>
                                     <MudItem xs="6">
                                         <MudText Typo="Typo.body2" Class="text-muted">
-                                            Pen Code:
+                                            รหัสคอก:
                                         </MudText>
                                         <MudText Typo="Typo.body1" Style="font-weight: 600;">
                                             @PigPen.PenCode
@@ -38,10 +38,10 @@
                                     </MudItem>
                                     <MudItem xs="6">
                                         <MudText Typo="Typo.body2" Class="text-muted">
-                                            Total Pigs:
+                                            จำนวนสุกรทั้งหมด:
                                         </MudText>
                                         <MudText Typo="Typo.body1" Style="font-weight: 600;">
-                                            @PigPen.PigQty pigs
+                                            @PigPen.PigQty ตัว
                                         </MudText>
                                     </MudItem>
                                     @if (remainingPigs > 0)
@@ -49,7 +49,7 @@
                                         <MudItem xs="12">
                                             <MudAlert Severity="Severity.Info" Dense="true">
                                                 <MudText Typo="Typo.body2">
-                                                    <strong>@remainingPigs pigs</strong> remain available for harvest
+                                                    <strong>@remainingPigs ตัว</strong> พร้อมสำหรับเก็บเกี่ยว
                                                 </MudText>
                                             </MudAlert>
                                         </MudItem>
@@ -59,7 +59,7 @@
                                         <MudItem xs="12">
                                             <MudAlert Severity="Severity.Warning" Dense="true">
                                                 <MudText Typo="Typo.body2">
-                                                    <strong>Warning:</strong> Total harvested pigs (@totalHarvestedPigs) exceeds pen capacity (@PigPen.PigQty)
+                                                    <strong>คำเตือน:</strong> จำนวนสุกรที่เก็บเกี่ยวแล้ว (@totalHarvestedPigs) เกินจำนวนที่คอกรองรับ (@PigPen.PigQty)
                                                 </MudText>
                                             </MudAlert>
                                         </MudItem>
@@ -69,7 +69,7 @@
                                         <MudItem xs="12">
                                             <MudAlert Severity="Severity.Success" Dense="true">
                                                 <MudText Typo="Typo.body2">
-                                                    All pigs have been harvested from this pen
+                                                    เก็บเกี่ยวสุกรครบทั้งหมดจากคอกนี้แล้ว
                                                 </MudText>
                                             </MudAlert>
                                         </MudItem>

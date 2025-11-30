@@ -12,7 +12,7 @@
                 <MudItem xs="12">
                     <MudText Typo="Typo.h6" Class="mb-4">
                         <MudIcon Icon="Icons.Material.Filled.Edit" Class="mr-2" />
-                        Edit Deposit
+                        แก้ไขเงินฝาก
                     </MudText>
                 </MudItem>
                 
@@ -25,35 +25,35 @@
                                 <MudGrid>
                                     <MudItem xs="12">
                                         <MudText Typo="Typo.subtitle2" Class="mb-2">
-                                            💰 Deposit Information
+                                            💰 ข้อมูลเงินฝาก
                                         </MudText>
                                     </MudItem>
                                     <MudItem xs="6">
                                         <MudText Typo="Typo.body2" Class="text-muted">
-                                            Expected Total:
+                                            ยอดที่คาดว่า:
                                         </MudText>
                                         <MudText Typo="Typo.body1" Style="font-weight: 600;">
                                             @calculationInfo.ExpectedTotalDepositFormatted
                                         </MudText>
                                         <MudText Typo="Typo.caption" Class="text-muted">
-                                            (@calculationInfo.PigQuantity pigs × @calculationInfo.DepositPerPigFormatted)
+                                            (@calculationInfo.PigQuantity ตัว × @calculationInfo.DepositPerPigFormatted)
                                         </MudText>
                                     </MudItem>
                                     <MudItem xs="6">
                                         <MudText Typo="Typo.body2" Class="text-muted">
-                                            Current Total:
+                                            ยอดปัจจุบัน:
                                         </MudText>
                                         <MudText Typo="Typo.body1" Style="font-weight: 600;">
                                             @GetCurrentTotalFormatted()
                                         </MudText>
                                         <MudText Typo="Typo.caption" Class="text-muted">
-                                            (@GetCompletionPercentageFormatted() complete)
+                                            (@GetCompletionPercentageFormatted() สมบูรณ์)
                                         </MudText>
                                     </MudItem>
                                     <MudItem xs="12">
                                         <MudDivider Class="my-2" />
                                         <MudText Typo="Typo.body2" Class="text-muted">
-                                            Remaining Needed (after edit):
+                                            คงเหลือ (หลังแก้ไข):
                                         </MudText>
                                         <MudText Typo="Typo.h6" Style="@($"color: {GetRemainingAmountColor()}")">
                                             @GetRemainingDepositFormatted()
@@ -61,7 +61,7 @@
                                         @if (GetRemainingDeposit() == 0)
                                         {
                                             <MudText Typo="Typo.caption" Style="color: #4caf50;">
-                                                ✅ Deposit requirement will be fulfilled
+                                                ✅ จะครบตามยอดที่ต้องการ
                                             </MudText>
                                         }
                                     </MudItem>
@@ -108,7 +108,7 @@
         </MudContainer>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton OnClick="Cancel">ยกเลิก</MudButton>
         <MudButton Color="Color.Primary" 
                    Variant="Variant.Filled" 
                    OnClick="Submit"
@@ -117,11 +117,11 @@
             @if (isSubmitting)
             {
                 <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                <MudText Class="ms-2">Updating...</MudText>
+                <MudText Class="ms-2">กำลังปรับปรุง...</MudText>
             }
             else
             {
-                <MudText>Update Deposit</MudText>
+                <MudText>ปรับปรุงเงินฝาก</MudText>
             }
         </MudButton>
     </DialogActions>

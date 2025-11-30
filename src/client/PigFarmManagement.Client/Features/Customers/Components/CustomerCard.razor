@@ -15,13 +15,13 @@
                 <MudMenuItem OnClick="() => OnEdit.InvokeAsync(Customer)">
                     <div class="d-flex align-center">
                         <MudIcon Icon="Icons.Material.Filled.Edit" Class="mr-2" />
-                        Edit
+                        แก้ไข
                     </div>
                 </MudMenuItem>
                 <MudMenuItem OnClick="() => OnDelete.InvokeAsync(Customer)">
                     <div class="d-flex align-center">
                         <MudIcon Icon="Icons.Material.Filled.Delete" Class="mr-2" />
-                        Delete
+                        ลบ
                     </div>
                 </MudMenuItem>
             </MudMenu>
@@ -29,10 +29,10 @@
     </MudCardHeader>
     <MudCardContent>
         <MudText Typo="Typo.body2" Class="mb-2">
-            <strong>Code:</strong> @Customer.Code
+            <strong>รหัส:</strong> @Customer.Code
         </MudText>
         <MudText Typo="Typo.body2" Class="mb-2">
-            <strong>Status:</strong> 
+            <strong>สถานะ:</strong> 
             <MudChip Text="@Customer.Status.ToString()" 
                     Color="@GetCustomerStatusColor(Customer.Status)" 
                     Size="Size.Small" />
@@ -40,30 +40,30 @@
         @if (!string.IsNullOrEmpty(Customer.Phone))
         {
             <MudText Typo="Typo.body2" Class="mb-2">
-                <strong>Phone:</strong> @Customer.Phone
+                <strong>เบอร์โทรศัพท์:</strong> @Customer.Phone
             </MudText>
         }
         @if (!string.IsNullOrEmpty(Customer.Email))
         {
             <MudText Typo="Typo.body2" Class="mb-2">
-                <strong>Email:</strong> @Customer.Email
+                <strong>อีเมล:</strong> @Customer.Email
             </MudText>
         }
         @if (!string.IsNullOrEmpty(Customer.Address))
         {
             <MudText Typo="Typo.body2" Class="mb-2">
-                <strong>Address:</strong> @Customer.Address
+                <strong>ที่อยู่:</strong> @Customer.Address
             </MudText>
         }
         @if (Customer.HasLocation)
         {
             <MudText Typo="Typo.body2" Class="mb-2">
                 <MudIcon Icon="@Icons.Material.Filled.LocationOn" Size="Size.Small" Class="mr-1" />
-                <strong>Location:</strong> @Customer.Latitude?.ToString("F4"), @Customer.Longitude?.ToString("F4")
+                <strong>ตำแหน่ง:</strong> @Customer.Latitude?.ToString("F4"), @Customer.Longitude?.ToString("F4")
             </MudText>
         }
         <MudText Typo="Typo.body2" Class="mb-2">
-            <strong>Pig Pens:</strong> @PigPenCount
+            <strong>คอกหมู:</strong> @PigPenCount
         </MudText>
     </MudCardContent>
     <MudCardActions>
@@ -71,7 +71,7 @@
                   Color="Color.Primary"
                   StartIcon="Icons.Material.Filled.Visibility"
                   OnClick="() => OnViewDetails.InvokeAsync(Customer)">
-            View Details
+            ดูรายละเอียด
         </MudButton>
     </MudCardActions>
 </MudCard>
