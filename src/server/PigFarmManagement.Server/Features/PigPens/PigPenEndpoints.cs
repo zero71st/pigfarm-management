@@ -1,5 +1,6 @@
 using PigFarmManagement.Shared.Models;
 using Microsoft.EntityFrameworkCore;
+using PigFarmManagement.Server.Infrastructure.Data.Repositories;
 
 namespace PigFarmManagement.Server.Features.PigPens;
 
@@ -66,6 +67,10 @@ public static class PigPenEndpoints
 
         group.MapPost("/{id:guid}/regenerate-assignments", RegenerateFormulaAssignments)
             .WithName("RegenerateFormulaAssignments");
+
+        // Delete invoice by reference code
+        group.MapDelete("/{pigPenId:guid}/invoices/{invoiceReferenceCode}", DeleteInvoiceByReference)
+            .WithName("DeleteInvoiceByReference");
 
         return builder;
     }
@@ -400,6 +405,54 @@ public static class PigPenEndpoints
         catch (Exception ex)
         {
             return Results.Problem($"Error regenerating formula assignments: {ex.Message}");
+        }
+    }
+
+    private static async Task<IResult> DeleteInvoiceByReference(
+        Guid pigPenId, 
+        string invoiceReferenceCode, 
+        IFeedRepository feedRepository,
+        ILogger<Program> logger)
+    {
+        try
+        {
+            // Validate invoice reference code
+            if (string.IsNullOrWhiteSpace(invoiceReferenceCode))
+            {
+                return Results.BadRequest(new { error = "Invoice reference code cannot be null or empty" });
+            }
+
+            // Delete feeds with matching invoice reference code
+            var deletedCount = await feedRepository.DeleteByInvoiceReferenceAsync(pigPenId, invoiceReferenceCode);
+
+            // Return 404 if no items found
+            if (deletedCount == 0)
+            {
+                return Results.NotFound(new 
+                { 
+                    error = $"No feed items found with invoice reference code '{invoiceReferenceCode}' for pig pen '{pigPenId}'" 
+                });
+            }
+
+            // Log deletion
+            logger.LogInformation(
+                "Deleted {DeletedCount} feed items for invoice {InvoiceReferenceCode} in pig pen {PigPenId}",
+                deletedCount, invoiceReferenceCode, pigPenId);
+
+            // Return success response
+            var response = new DeleteInvoiceResponse(
+                deletedCount,
+                invoiceReferenceCode,
+                $"Successfully deleted {deletedCount} feed items for invoice {invoiceReferenceCode}"
+            );
+
+            return Results.Ok(response);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error deleting invoice {InvoiceReferenceCode} for pig pen {PigPenId}", 
+                invoiceReferenceCode, pigPenId);
+            return Results.Problem($"Error deleting invoice: {ex.Message}");
         }
     }
 }

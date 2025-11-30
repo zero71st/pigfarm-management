@@ -9,6 +9,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### [Feature 014] Invoice Management Tab in Feed History (2025-11-30)
+
+**Feature**: Add tabbed interface to pig pen detail page separating invoice management from feed history, with delete-by-invoice functionality
+
+**Changes**:
+
+#### Backend (`PigPenEndpoints.cs`, `FeedRepository.cs`, `IRepositories.cs`)
+- Added `DELETE /api/pigpens/{pigPenId}/invoices/{invoiceReferenceCode}` endpoint
+  - Deletes all feed items associated with a specific invoice reference code
+  - Returns `DeleteInvoiceResponse` with deleted count, invoice reference, and message
+  - Error handling: 400 (invalid reference), 404 (not found), 500 (internal error)
+  - Logging: Records deletion count and invoice reference code
+- Added `DeleteByInvoiceReferenceAsync()` method to FeedRepository
+  - Atomic operation using `RemoveRange()` and `SaveChangesAsync()`
+  - Returns count of deleted items
+
+#### Shared DTOs (`InvoiceGroupDto.cs`, `PigPenDtos.cs`)
+- Created `InvoiceGroupDto` record for invoice list display
+  - Fields: InvoiceReferenceCode, TransactionCode, TotalAmount, InvoiceDate, ItemCount
+- Added `DeleteInvoiceResponse` record for delete operation response
+  - Fields: DeletedCount, InvoiceReferenceCode, Message
+
+#### Frontend Components (`InvoiceListTab.razor`, `FeedHistoryTab.razor`, `DeleteInvoiceConfirmDialog.razor`)
+- Created `InvoiceListTab` component
+  - Client-side LINQ GroupBy on InvoiceReferenceCode
+  - MudTable with 6 columns (Thai labels): reference code, transaction code, total amount, date, item count, actions
+  - Delete button triggers confirmation dialog
+  - EventCallback pattern for parent notification on deletion
+  - Empty state: Shows info alert with import button instruction
+- Created `DeleteInvoiceConfirmDialog` component
+  - Thai UI text: "ยืนยันการลบใบแจ้งหนี้"
+  - Displays: invoice reference, item count (MudChip), formatted total amount
+  - Warning: "การดำเนินการนี้ไม่สามารถย้อนกลับได้"
+  - Actions: "ยกเลิก" (Cancel) and "ลบใบแจ้งหนี้" (Delete)
+- Created `FeedHistoryTab` component placeholder for existing feed history
+
+#### Frontend Services (`PigPenService.cs`)
+- Added `DeleteInvoiceByReferenceAsync()` method
+  - HTTP DELETE call with EnsureSuccessStatusCode
+  - Returns `DeleteInvoiceResponse` DTO
+  - Throws InvalidOperationException on response parsing failure
+
+#### Frontend Pages (`PigPenDetailPage.razor`)
+- Replaced "Section 3: Feed History" with tabbed interface using MudTabs
+  - Tab 1 (default): "การจัดการใบแจ้งหนี้" (Invoice Management) with InvoiceListTab
+  - Tab 2: "ประวัติการให้อาหาร" (Feed History) with FeedHistoryTabContent RenderFragment
+- Added tab state management
+  - `_activeTabIndex` field for tracking active tab
+  - `OnTabChanged()` event handler - refreshes feeds on tab switch
+  - `HandleInvoiceDeleted()` event handler - refreshes feeds after deletion
+
+**Performance Targets**:
+- Tab switch: <500ms
+- Invoice list load: <1s for 50-100 invoices
+- Delete operation: <50ms (typical 5-10 items)
+
+**Testing**: Manual validation via `specs/014-add-invoice-list/quickstart.md` (6 scenarios)
+
+---
+
 ### [Feature 012] POSPOS Import Enhancement - Latest Member Display (2025-11-29)
 
 **Feature**: Enhance POSPOS customer import workflow to display only the latest customer and disable bulk select-all operation

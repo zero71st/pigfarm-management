@@ -34,6 +34,9 @@ public interface IPigPenService
 
     // Formula Assignments
     Task<List<PigPenFormulaAssignment>> GetFormulaAssignmentsAsync(Guid pigPenId);
+    
+    // Invoice Management
+    Task<DeleteInvoiceResponse> DeleteInvoiceByReferenceAsync(Guid pigPenId, string invoiceReferenceCode);
 }
 
 public class PigPenService : IPigPenService
@@ -174,5 +177,13 @@ public class PigPenService : IPigPenService
     {
         var assignments = await _httpClient.GetFromJsonAsync<List<PigPenFormulaAssignment>>($"api/pigpens/{pigPenId}/formula-assignments");
         return assignments ?? new List<PigPenFormulaAssignment>();
+    }
+
+    public async Task<DeleteInvoiceResponse> DeleteInvoiceByReferenceAsync(Guid pigPenId, string invoiceReferenceCode)
+    {
+        var response = await _httpClient.DeleteAsync($"api/pigpens/{pigPenId}/invoices/{invoiceReferenceCode}");
+        response.EnsureSuccessStatusCode();
+        var result = await response.Content.ReadFromJsonAsync<DeleteInvoiceResponse>();
+        return result ?? throw new InvalidOperationException("Failed to parse delete response");
     }
 }

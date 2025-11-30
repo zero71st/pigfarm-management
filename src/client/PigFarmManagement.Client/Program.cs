@@ -13,8 +13,10 @@ using PigFarmManagement.Client.Features.Authentication.Services;
 using MudBlazor.Services;
 using System.Globalization;
 
-// Configure Thai culture for the application
+// Configure Thai culture for the application with Gregorian calendar
 var thaiCulture = new CultureInfo("th-TH");
+// Use Gregorian calendar instead of Thai Buddhist calendar to avoid year offset (2568 vs 2025)
+thaiCulture.DateTimeFormat.Calendar = new GregorianCalendar();
 CultureInfo.DefaultThreadCurrentCulture = thaiCulture;
 CultureInfo.DefaultThreadCurrentUICulture = thaiCulture;
 

@@ -1,0 +1,398 @@
+@using Microsoft.AspNetCore.Components
+@using MudBlazor
+@using PigFarmManagement.Shared.Models
+@using PigFarmManagement.Shared.DTOs
+@using static PigFarmManagement.Client.Features.PigPens.Pages.PigPenDetailPage
+
+@if ((FeedFormulaCalculations != null && FeedFormulaCalculations.Any()) || (ComparisonData != null && ComparisonData.Any()))
+{
+    <!-- Product Visibility Control -->
+    <div class="d-flex justify-end mb-3 gap-4">
+        <MudSwitch @bind-Value="_showFinancial"
+                   Color="Color.Primary"
+                   Label="แสดงข้อมูลการเงิน"
+                   ThumbIcon="@(_showFinancial ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)"
+                   UnCheckedColor="Color.Default" />
+        <MudSwitch @bind-Value="_showSpecificProducts"
+                   Color="Color.Secondary"
+                   Label="แสดงทุกรายการ"
+                   ThumbIcon="@(_showSpecificProducts ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)"
+                   UnCheckedColor="Color.Default" />
+    </div>
+
+    <MudTable Items="@GetFilteredTableRows()" Hover="true" Striped="true">
+        <HeaderContent>
+            <MudTh>รหัสสินค้า</MudTh>
+            <MudTh>ชื่อสินค้า</MudTh>
+            <MudTh Style="text-align: center">สูตร (กระสอบ)</MudTh>
+            <MudTh Style="text-align: center">ใบแจ้งหนี้</MudTh>
+            <MudTh Style="text-align: center">วันที่ใบแจ้งหนี้</MudTh>
+            <MudTh Style="text-align: center">จำนวน (กระสอบ)</MudTh>
+            @if (_showFinancial)
+            {
+                <MudTh Style="text-align: center">ต้นทุน</MudTh>
+                <MudTh Style="text-align: center">ราคา+ส่วนลด</MudTh>
+                <MudTh Style="text-align: center">รวม (ระบบ)</MudTh>
+                <MudTh Style="text-align: center">รวม (POS)</MudTh>
+                <MudTh Style="text-align: center">กำไร</MudTh>
+            }
+        </HeaderContent>
+        <RowTemplate>
+            @{
+                var row = context as TableRowData;
+                var rowStyle = "";
+                var textStyle = "";
+                
+                if (row.IsGrandTotal)
+                {
+                    rowStyle = "background-color: #f5f5f5; border-top: 2px solid #1976d2; border-bottom: 2px solid #1976d2;";
+                    textStyle = "font-weight: bold; font-size: 1.1em; color: #1976d2;";
+                }
+                else if (row.IsSubTotal)
+                {
+                    rowStyle = "background-color: #fafafa; border-top: 1px solid #ccc;";
+                    textStyle = "font-weight: 600; color: #424242;";
+                }
+                else if (row.IsUnmatchedFeed)
+                {
+                    rowStyle = "background-color: #fff3cd;";
+                    textStyle = "color: #856404; font-weight: 500;";
+                }
+            }
+            <MudTd Style="@rowStyle">
+                <span style="@textStyle">
+                    @if (row.IsUnmatchedFeed && !string.IsNullOrEmpty(row.ProductCode) && row.IsFirstProductRow)
+                    {
+                        <MudTooltip Text="This feed was used but doesn't match any assigned formula - possible substitute feed due to stock shortage">
+                            <MudIcon Icon="@Icons.Material.Filled.Warning" 
+                                     Color="Color.Warning" 
+                                     Size="Size.Small" 
+                                     Class="mr-1" />
+                        </MudTooltip>
+                    }
+                    @(row.IsFirstProductRow ? row.ProductCode : "")
+                </span>
+            </MudTd>
+            <MudTd Style="@rowStyle">
+                <span style="@textStyle">@(row.IsFirstProductRow ? row.ProductName : "")</span>
+            </MudTd>
+            <MudTd Style="@($"text-align: center; {rowStyle}")">
+                <span style="@textStyle">@row.Formula</span>
+            </MudTd>
+            <MudTd Style="@($"text-align: center; {rowStyle}")">
+                <span style="@textStyle">@row.InvNo</span>
+            </MudTd>
+            <MudTd Style="@($"text-align: center; {rowStyle}")">
+                <span style="@textStyle">@row.InvDate</span>
+            </MudTd>
+            <MudTd Style="@($"text-align: center; {rowStyle}")">
+                <span style="@textStyle">@row.PerInvoiceBags</span>
+            </MudTd>
+            @if (_showFinancial)
+            {
+                <MudTd Style="@($"text-align: center; {rowStyle}")">
+                    <span style="@textStyle">@row.FeedCost</span>
+                </MudTd>
+                <MudTd Style="@($"text-align: center; {rowStyle}")">
+                    <span style="@textStyle">@row.PriceIncludeDiscount</span>
+                </MudTd>
+                <MudTd Style="@($"text-align: center; {rowStyle}")">
+                    <span style="@textStyle">@row.SysTotalPriceIncludeDiscount</span>
+                </MudTd>
+                <MudTd Style="@($"text-align: center; {rowStyle}")">
+                    <span style="@textStyle">@row.PosTotalPriceIncludeDiscount</span>
+                </MudTd>
+                <MudTd Style="@($"text-align: center; {rowStyle}")">
+                    <span style="@textStyle">@row.Profit</span>
+                </MudTd>
+            }
+        </RowTemplate>
+    </MudTable>
+}
+else
+{
+    <MudAlert Severity="Severity.Warning">
+        <MudText>ไม่มีการกำหนดสูตรอาหารสำหรับคอกสุกรนี้ กรุณากำหนดสูตรอาหารเพื่อเปรียบเทียบการใช้งาน</MudText>
+    </MudAlert>
+}
+
+@code {
+    [Parameter] public List<FeedItem> Feeds { get; set; } = new();
+    [Parameter] public IEnumerable<FeedFormulaWithCalculationDto>? FeedFormulaCalculations { get; set; }
+    [Parameter] public List<FeedComparisonData> ComparisonData { get; set; } = new();
+    [Parameter] public bool ShowFinancial { get; set; } = false;
+    [Parameter] public bool ShowSpecificProducts { get; set; } = false;
+
+    private bool _showFinancial = false;
+    private bool _showSpecificProducts = false;
+
+    protected override void OnParametersSet()
+    {
+        _showFinancial = ShowFinancial;
+        _showSpecificProducts = ShowSpecificProducts;
+    }
+
+    private string CalculateProfit(decimal? posTotal, decimal? feedCost, decimal quantity)
+    {
+        if (!posTotal.HasValue)
+            return "-";
+
+        if (!feedCost.HasValue)
+            return posTotal.Value.ToString("N2");
+
+        var totalCost = feedCost.Value * quantity;
+        var profit = posTotal.Value - totalCost;
+        return profit.ToString("N2");
+    }
+
+    private string CalculateSubTotalProfit(List<FeedHistoryEntry> entries)
+    {
+        decimal totalProfit = 0;
+        bool hasPosTotal = false;
+
+        foreach (var entry in entries)
+        {
+            if (entry.PosTotalPriceIncludeDiscount.HasValue)
+            {
+                hasPosTotal = true;
+
+                if (entry.FeedCost.HasValue)
+                {
+                    var totalCost = entry.FeedCost.Value * entry.Quantity;
+                    totalProfit += entry.PosTotalPriceIncludeDiscount.Value - totalCost;
+                }
+                else
+                {
+                    totalProfit += entry.PosTotalPriceIncludeDiscount.Value;
+                }
+            }
+        }
+
+        return hasPosTotal ? totalProfit.ToString("N2") : "-";
+    }
+
+    private string CalculateGrandTotalProfit(List<FeedComparisonData> comparisonData)
+    {
+        decimal totalProfit = 0;
+        bool hasPosTotal = false;
+
+        foreach (var comparison in comparisonData)
+        {
+            foreach (var entry in comparison.FeedHistoryEntries)
+            {
+                if (entry.PosTotalPriceIncludeDiscount.HasValue)
+                {
+                    hasPosTotal = true;
+
+                    if (entry.FeedCost.HasValue)
+                    {
+                        var totalCost = entry.FeedCost.Value * entry.Quantity;
+                        totalProfit += entry.PosTotalPriceIncludeDiscount.Value - totalCost;
+                    }
+                    else
+                    {
+                        totalProfit += entry.PosTotalPriceIncludeDiscount.Value;
+                    }
+                }
+            }
+        }
+
+        return hasPosTotal ? totalProfit.ToString("N2") : "-";
+    }
+
+    private List<TableRowData> GetTableRows()
+    {
+        var rows = new List<TableRowData>();
+
+        if (ComparisonData?.Any() != true)
+            return rows;
+
+        foreach (var comparison in ComparisonData)
+        {
+            if (comparison.FeedHistoryEntries.Any())
+            {
+                var firstInvoice = comparison.FeedHistoryEntries.First();
+                var perPigValue = comparison.IsUnmatchedFeed ? "N/A" : comparison.FormulaPerPig.ToString("F1");
+                var perPenValue = comparison.IsUnmatchedFeed ? "N/A" : comparison.FormulaTotal.ToString("0");
+                var combinedFormula = comparison.IsUnmatchedFeed ? "N/A" : $"{perPigValue} / {perPenValue}";
+                
+                rows.Add(new TableRowData
+                {
+                    ProductCode = comparison.ProductCode,
+                    ProductName = comparison.ProductName,
+                    Formula = combinedFormula,
+                    InvNo = firstInvoice.InvoiceReferenceCode,
+                    InvDate = firstInvoice.FeedDate.ToString("MM/dd/yyyy"),
+                    PerInvoiceBags = firstInvoice.Quantity.ToString("0"),
+                    FeedCost = firstInvoice.FeedCost?.ToString("N2") ?? "-",
+                    PriceIncludeDiscount = firstInvoice.PriceIncludeDiscount?.ToString("N2") ?? "-",
+                    SysTotalPriceIncludeDiscount = firstInvoice.SysTotalPriceIncludeDiscount?.ToString("N2") ?? "-",
+                    PosTotalPriceIncludeDiscount = firstInvoice.PosTotalPriceIncludeDiscount?.ToString("N2") ?? "-",
+                    Profit = CalculateProfit(firstInvoice.PosTotalPriceIncludeDiscount, firstInvoice.FeedCost, firstInvoice.Quantity),
+                    IsSubTotal = false,
+                    IsUnmatchedFeed = comparison.IsUnmatchedFeed,
+                    IsFirstProductRow = true
+                });
+
+                foreach (var invoice in comparison.FeedHistoryEntries.Skip(1))
+                {
+                    rows.Add(new TableRowData
+                    {
+                        ProductCode = comparison.ProductCode,
+                        ProductName = "",
+                        Formula = "",
+                        InvNo = invoice.InvoiceReferenceCode,
+                        InvDate = invoice.FeedDate.ToString("MM/dd/yyyy"),
+                        PerInvoiceBags = invoice.Quantity.ToString("0"),
+                        FeedCost = invoice.FeedCost?.ToString("N2") ?? "-",
+                        PriceIncludeDiscount = invoice.PriceIncludeDiscount?.ToString("N2") ?? "-",
+                        SysTotalPriceIncludeDiscount = invoice.SysTotalPriceIncludeDiscount?.ToString("N2") ?? "-",
+                        PosTotalPriceIncludeDiscount = invoice.PosTotalPriceIncludeDiscount?.ToString("N2") ?? "-",
+                        Profit = CalculateProfit(invoice.PosTotalPriceIncludeDiscount, invoice.FeedCost, invoice.Quantity),
+                        IsSubTotal = false,
+                        IsUnmatchedFeed = comparison.IsUnmatchedFeed,
+                        IsFirstProductRow = false
+                    });
+                }
+
+                var subTotalSysTotal = comparison.FeedHistoryEntries.Sum(e => e.SysTotalPriceIncludeDiscount ?? 0);
+                var subTotalPosTotal = comparison.FeedHistoryEntries.Sum(e => e.PosTotalPriceIncludeDiscount ?? 0);
+                var subTotalProfit = CalculateSubTotalProfit(comparison.FeedHistoryEntries);
+                
+                rows.Add(new TableRowData
+                {
+                    ProductCode = "",
+                    ProductName = "",
+                    Formula = "",
+                    InvNo = "Sub Total",
+                    InvDate = "",
+                    PerInvoiceBags = comparison.ActualTotal.ToString("0"),
+                    FeedCost = "-",
+                    PriceIncludeDiscount = "-",
+                    SysTotalPriceIncludeDiscount = subTotalSysTotal > 0 ? subTotalSysTotal.ToString("N2") : "-",
+                    PosTotalPriceIncludeDiscount = subTotalPosTotal > 0 ? subTotalPosTotal.ToString("N2") : "-",
+                    Profit = subTotalProfit,
+                    IsSubTotal = true,
+                    IsUnmatchedFeed = comparison.IsUnmatchedFeed,
+                    IsFirstProductRow = false
+                });
+            }
+            else
+            {
+                var perPigValue = comparison.IsUnmatchedFeed ? "N/A" : comparison.FormulaPerPig.ToString("F1");
+                var perPenValue = comparison.IsUnmatchedFeed ? "N/A" : comparison.FormulaTotal.ToString("0");
+                var combinedFormula = comparison.IsUnmatchedFeed ? "N/A" : $"{perPigValue} / {perPenValue}";
+                
+                rows.Add(new TableRowData
+                {
+                    ProductCode = comparison.ProductCode,
+                    ProductName = comparison.ProductName,
+                    Formula = combinedFormula,
+                    InvNo = "No Feeds",
+                    InvDate = "",
+                    PerInvoiceBags = "0",
+                    FeedCost = "-",
+                    PriceIncludeDiscount = "-",
+                    SysTotalPriceIncludeDiscount = "-",
+                    PosTotalPriceIncludeDiscount = "-",
+                    Profit = "-",
+                    IsSubTotal = false,
+                    IsUnmatchedFeed = comparison.IsUnmatchedFeed,
+                    IsFirstProductRow = true
+                });
+            }
+        }
+
+        var assignedFormulas = ComparisonData.Where(c => !c.IsUnmatchedFeed);
+        var grandTotalPerPig = assignedFormulas.Sum(c => c.FormulaPerPig);
+        var grandTotalPerPigPen = assignedFormulas.Sum(c => c.FormulaTotal);
+        var grandTotalPerInvoice = ComparisonData.Sum(c => c.ActualTotal);
+
+        var grandTotalCombined = grandTotalPerPig > 0 || grandTotalPerPigPen > 0 
+            ? $"{grandTotalPerPig.ToString("F1")} / {grandTotalPerPigPen.ToString("0")}" 
+            : "N/A";
+        
+        var grandTotalSysTotal = ComparisonData.SelectMany(c => c.FeedHistoryEntries).Sum(e => e.SysTotalPriceIncludeDiscount ?? 0);
+        var grandTotalPosTotal = ComparisonData.SelectMany(c => c.FeedHistoryEntries).Sum(e => e.PosTotalPriceIncludeDiscount ?? 0);
+        var grandTotalProfit = CalculateGrandTotalProfit(ComparisonData);
+        
+        rows.Add(new TableRowData
+        {
+            ProductCode = "",
+            ProductName = "",
+            Formula = grandTotalCombined,
+            InvNo = "Grand Total",
+            InvDate = "",
+            PerInvoiceBags = grandTotalPerInvoice.ToString("0"),
+            FeedCost = "-",
+            PriceIncludeDiscount = "-",
+            SysTotalPriceIncludeDiscount = grandTotalSysTotal > 0 ? grandTotalSysTotal.ToString("N2") : "-",
+            PosTotalPriceIncludeDiscount = grandTotalPosTotal > 0 ? grandTotalPosTotal.ToString("N2") : "-",
+            Profit = grandTotalProfit,
+            IsSubTotal = false,
+            IsGrandTotal = true,
+            IsUnmatchedFeed = false,
+            IsFirstProductRow = false
+        });
+
+        return rows;
+    }
+
+    private List<TableRowData> GetFilteredTableRows()
+    {
+        var allRows = GetTableRows();
+        
+        if (_showSpecificProducts)
+        {
+            return allRows;
+        }
+        
+        var specificProductCodes = new[] { "PK66000956", "PK66000957" };
+        var filteredRows = new List<TableRowData>();
+        
+        var filteredComparisonData = ComparisonData?.Where(c => !specificProductCodes.Contains(c.ProductCode)).ToList() ?? new List<FeedComparisonData>();
+        
+        foreach (var row in allRows)
+        {
+            if (row.IsGrandTotal)
+            {
+                var grandTotalPerInvoice = filteredComparisonData.Sum(c => c.ActualTotal);
+                var grandTotalSysTotal = filteredComparisonData.SelectMany(c => c.FeedHistoryEntries).Sum(e => e.SysTotalPriceIncludeDiscount ?? 0);
+                var grandTotalPosTotal = filteredComparisonData.SelectMany(c => c.FeedHistoryEntries).Sum(e => e.PosTotalPriceIncludeDiscount ?? 0);
+                var grandTotalProfit = CalculateGrandTotalProfit(filteredComparisonData);
+                
+                var assignedFormulas = filteredComparisonData.Where(c => !c.IsUnmatchedFeed);
+                var grandTotalPerPig = assignedFormulas.Sum(c => c.FormulaPerPig);
+                var grandTotalPerPigPen = assignedFormulas.Sum(c => c.FormulaTotal);
+                var grandTotalCombined = grandTotalPerPig > 0 || grandTotalPerPigPen > 0 
+                    ? $"{grandTotalPerPig.ToString("F1")} / {grandTotalPerPigPen.ToString("0")}" 
+                    : "N/A";
+                
+                filteredRows.Add(new TableRowData
+                {
+                    ProductCode = "",
+                    ProductName = "",
+                    Formula = grandTotalCombined,
+                    InvNo = "Grand Total",
+                    InvDate = "",
+                    PerInvoiceBags = grandTotalPerInvoice.ToString("0"),
+                    FeedCost = "-",
+                    PriceIncludeDiscount = "-",
+                    SysTotalPriceIncludeDiscount = grandTotalSysTotal > 0 ? grandTotalSysTotal.ToString("N2") : "-",
+                    PosTotalPriceIncludeDiscount = grandTotalPosTotal > 0 ? grandTotalPosTotal.ToString("N2") : "-",
+                    Profit = grandTotalProfit,
+                    IsSubTotal = false,
+                    IsGrandTotal = true,
+                    IsUnmatchedFeed = false,
+                    IsFirstProductRow = false
+                });
+            }
+            else if (!specificProductCodes.Contains(row.ProductCode) || string.IsNullOrEmpty(row.ProductCode))
+            {
+                filteredRows.Add(row);
+            }
+        }
+        
+        return filteredRows;
+    }
+}

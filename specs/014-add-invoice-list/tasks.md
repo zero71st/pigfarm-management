@@ -44,21 +44,21 @@
 ## Phase 3.2: Validation Preparation
 Manual validation scenarios documented in quickstart.md. No automated tests per user requirement.
 
-- [ ] **T001** [P] Review `contracts/delete-invoice-endpoint.md` and confirm DELETE endpoint specification (path params, response schema, business rules)
-- [ ] **T002** [P] Review `quickstart.md` scenarios 1-6 and prepare test data (pig pen with 10+ invoices, various item counts)
+- [x] **T001** [P] Review `contracts/delete-invoice-endpoint.md` and confirm DELETE endpoint specification (path params, response schema, business rules)
+- [x] **T002** [P] Review `quickstart.md` scenarios 1-6 and prepare test data (pig pen with 10+ invoices, various item counts)
 
 ---
 
 ## Phase 3.3: Core Implementation
 
 ### Backend (Server)
-- [ ] **T003** [P] Add `DeleteByInvoiceReferenceAsync()` method in `src/server/PigFarmManagement.Server/Infrastructure/Data/Repositories/FeedRepository.cs`
+- [x] **T003** [P] Add `DeleteByInvoiceReferenceAsync()` method in `src/server/PigFarmManagement.Server/Infrastructure/Data/Repositories/FeedRepository.cs`
   - Parameters: `Guid pigPenId, string invoiceReferenceCode`
   - Returns: `Task<int>` (deleted count)
   - Logic: `DELETE FROM Feeds WHERE PigPenId = @pigPenId AND InvoiceReferenceCode = @invoiceReferenceCode`
   - Transaction: Use atomic EF Core `SaveChangesAsync()`
 
-- [ ] **T004** Add DELETE endpoint in `src/server/PigFarmManagement.Server/Features/PigPens/PigPenEndpoints.cs`
+- [x] **T004** Add DELETE endpoint in `src/server/PigFarmManagement.Server/Features/PigPens/PigPenEndpoints.cs`
   - Route: `DELETE /api/pigpens/{pigPenId}/invoices/{invoiceReferenceCode}`
   - Authorization: `[Authorize]` attribute
   - Validation: Null/empty check on invoiceReferenceCode → 400
@@ -69,7 +69,7 @@ Manual validation scenarios documented in quickstart.md. No automated tests per 
   - **Dependency**: Blocked by T003 (needs repository method)
 
 ### Shared (DTOs)
-- [ ] **T005** [P] Create `InvoiceGroupDto.cs` in `src/shared/PigFarmManagement.Shared/DTOs/`
+- [x] **T005** [P] Create `InvoiceGroupDto.cs` in `src/shared/PigFarmManagement.Shared/DTOs/`
   - Record definition:
     ```csharp
     public record InvoiceGroupDto(
@@ -84,7 +84,7 @@ Manual validation scenarios documented in quickstart.md. No automated tests per 
 ### Frontend (Client)
 
 #### Components (New)
-- [ ] **T006** [P] Create `InvoiceListTab.razor` in `src/client/PigFarmManagement.Client/Features/PigPens/Components/`
+- [x] **T006** [P] Create `InvoiceListTab.razor` in `src/client/PigFarmManagement.Client/Features/PigPens/Components/`
   - Props: `Guid PigPenId, List<FeedDto> Feeds`
   - Grouping logic: LINQ `GroupBy(f => f.InvoiceReferenceCode)` → filter null/empty
   - UI: MudTable with columns (InvoiceReferenceCode, TransactionCode, TotalAmount ฿, InvoiceDate yyyy-MM-dd, ItemCount)
@@ -92,13 +92,13 @@ Manual validation scenarios documented in quickstart.md. No automated tests per 
   - Actions: Delete button per row → opens DeleteInvoiceConfirmDialog
   - Callback: `EventCallback OnInvoiceDeleted` to parent for refresh
 
-- [ ] **T007** [P] Create `FeedHistoryTab.razor` in `src/client/PigFarmManagement.Client/Features/PigPens/Components/`
+- [x] **T007** [P] Create `FeedHistoryTab.razor` in `src/client/PigFarmManagement.Client/Features/PigPens/Components/`
   - Extract existing feed history table code from `PigPenDetailPage.razor`
   - Props: `List<FeedDto> Feeds`
   - UI: Preserve existing MudTable layout (all feed detail columns)
   - No business logic changes - pure code extraction
 
-- [ ] **T008** [P] Create `DeleteInvoiceConfirmDialog.razor` in `src/client/PigFarmManagement.Client/Features/PigPens/Components/`
+- [x] **T008** [P] Create `DeleteInvoiceConfirmDialog.razor` in `src/client/PigFarmManagement.Client/Features/PigPens/Components/`
   - Props: `string InvoiceReferenceCode, decimal TotalAmount, int ItemCount`
   - UI: MudDialog with:
     - Title: "ยืนยันการลบใบแจ้งหนี้" (Confirm Delete Invoice)
@@ -108,7 +108,7 @@ Manual validation scenarios documented in quickstart.md. No automated tests per 
   - Callbacks: `EventCallback OnConfirm, EventCallback OnCancel`
 
 #### Services (Modify)
-- [ ] **T009** Add `DeleteInvoiceByReferenceAsync()` method in `src/client/PigFarmManagement.Client/Features/PigPens/Services/PigPenService.cs`
+- [x] **T009** Add `DeleteInvoiceByReferenceAsync()` method in `src/client/PigFarmManagement.Client/Features/PigPens/Services/PigPenService.cs`
   - Parameters: `Guid pigPenId, string invoiceReferenceCode`
   - HTTP call: `DELETE /api/pigpens/{pigPenId}/invoices/{invoiceReferenceCode}`
   - Returns: `Task<DeleteInvoiceResponse>`
@@ -116,19 +116,20 @@ Manual validation scenarios documented in quickstart.md. No automated tests per 
   - **Dependency**: Blocked by T004 (needs backend endpoint)
 
 #### Pages (Modify)
-- [ ] **T010** Wrap feed history section in MudTabs in `src/client/PigFarmManagement.Client/Features/PigPens/Pages/PigPenDetailPage.razor`
+- [x] **T010** Wrap feed history section in MudTabs in `src/client/PigFarmManagement.Client/Features/PigPens/Pages/PigPenDetailPage.razor`
   - Replace existing feed history `<div>` with `<MudTabs>` component
   - Tab 1 (default): "การจัดการใบแจ้งหนี้" (Invoice Management) → `<InvoiceListTab>`
-  - Tab 2: "ประวัติการให้อาหาร" (Feed History) → `<FeedHistoryTab>`
+  - Tab 2: "ประวัติการให้อาหาร" (Feed History) → `<FeedHistoryTabContent>` RenderFragment
   - Tab switch event: Reload feeds on `ActivePanelIndexChanged` (recalculate both tabs)
-  - Props passing: Pass `PigPenId` and `Feeds` to both tab components
+  - Props passing: Pass `PigPenId` and `Feeds` to InvoiceListTab
+  - Tab state management: `_activeTabIndex` with `OnTabChanged()` and `HandleInvoiceDeleted()` event handlers
   - **Dependency**: Blocked by T006, T007 (needs tab components)
 
 ---
 
 ## Phase 3.4: Integration
 
-- [ ] **T011** Add dialog integration in `InvoiceListTab.razor`
+- [x] **T011** Add dialog integration in `InvoiceListTab.razor`
   - Wire delete button click → show `DeleteInvoiceConfirmDialog`
   - On confirm → call `PigPenService.DeleteInvoiceByReferenceAsync()`
   - On success → show MudSnackbar success message
@@ -136,7 +137,7 @@ Manual validation scenarios documented in quickstart.md. No automated tests per 
   - On error → show MudSnackbar error message
   - **Dependency**: Blocked by T006, T008, T009 (needs tab, dialog, service)
 
-- [ ] **T012** Add tab refresh logic in `PigPenDetailPage.razor`
+- [x] **T012** Add tab refresh logic in `PigPenDetailPage.razor`
   - Handle `OnInvoiceDeleted` event from `InvoiceListTab`
   - Reload feeds: Call existing `LoadFeedsAsync()` method
   - Update both tabs: Feed list refresh automatically updates both tab components
@@ -151,6 +152,7 @@ Manual validation scenarios documented in quickstart.md. No automated tests per 
   - Test invoice list load: Verify <1s for 50-100 invoices
   - Test delete operation: Verify <1s including confirmation
   - Document any performance issues in CHANGELOG.md
+  - **Status**: Ready for testing after server/client startup
 
 - [ ] **T014** [P] Execute `quickstart.md` manual validation scenarios
   - Scenario 1: View invoice list grouped by reference code
@@ -160,8 +162,9 @@ Manual validation scenarios documented in quickstart.md. No automated tests per 
   - Scenario 5: Handle empty state (no invoices)
   - Scenario 6: Performance check (optional)
   - Document validation results in `specs/014-add-invoice-list/validation-results.md`
+  - **Status**: Ready for testing after server/client startup
 
-- [ ] **T015** [P] Update documentation
+- [x] **T015** [P] Update documentation
   - Add Feature 014 to `CHANGELOG.md` (Invoice Management tab)
   - Update `.github/copilot-instructions.md` if not auto-updated
   - Verify `docs/QUICKSTART.md` mentions invoice management (if applicable)

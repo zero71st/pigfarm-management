@@ -83,3 +83,12 @@ public record PigPenForceCloseRequest(
     string Reason,
     bool ConfirmForceClose = false
 );
+
+/// <summary>
+/// Response for deleting an invoice by reference code
+/// </summary>
+public record DeleteInvoiceResponse(
+    int DeletedCount,
+    string InvoiceReferenceCode,
+    string Message
+);
