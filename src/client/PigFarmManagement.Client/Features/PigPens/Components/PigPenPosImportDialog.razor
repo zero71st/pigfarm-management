@@ -1,6 +1,7 @@
 @using PigFarmManagement.Shared.Models
 @inject IFeedImportService FeedImportService
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 
 <MudDialog>
     <DialogContent>
@@ -10,14 +11,14 @@
             }
         </style>
         <div class="pa-4">
-            <MudText Typo="Typo.h6" Class="mb-4">Import POSPOS Feed for Pig Pen @PenCode</MudText>
+            <MudText Typo="Typo.h6" Class="mb-4">นำเข้าข้อมูลอาหารจาก POSPOS สำหรับคอก @PenCode</MudText>
             
             <MudAlert Severity="Severity.Info" Class="mb-4">
                 <MudText Typo="Typo.body2">
-                    <strong>Customer:</strong> @CustomerDisplayName<br/>
-                    <strong>Pen Code:</strong> @PenCode<br/>
-                    <strong>Note:</strong> Showing POSPOS transactions for customer code @_customerCode. 
-                    Select the transactions you want to import for this pig pen.
+                    <strong>ลูกค้า:</strong> @CustomerDisplayName<br/>
+                    <strong>รหัสคอก:</strong> @PenCode<br/>
+                    <strong>หมายเหตุ:</strong> แสดงธุรกรรม POSPOS สำหรับรหัสลูกค้า @_customerCode 
+                    เลือกธุรกรรมที่ต้องการนำเข้าสำหรับคอกนี้
                 </MudText>
             </MudAlert>
             
@@ -26,22 +27,22 @@
                 <MudCardContent>
                     <MudText Typo="Typo.h6" Class="mb-3">
                         <MudIcon Icon="@Icons.Material.Filled.DateRange" Class="mr-2"/>
-                        Filter by Date Range
+                        กรองตามช่วงวันที่
                     </MudText>
                     
                     <div class="d-flex gap-4 align-center">
                         <MudDatePicker Date="_fromDate"
                                      DateChanged="OnFromDateChanged"
-                                     Label="From Date"
+                                     Label="วันที่เริ่มต้น"
                                      Variant="Variant.Outlined"
                                      DateFormat="yyyy-MM-dd"
-                                     HelperText="Start date" />
+                                     HelperText="วันที่เริ่มต้น" />
                         
                         <MudDatePicker @bind-Date="_toDate"
-                                     Label="To Date"
+                                     Label="วันที่สิ้นสุด"
                                      Variant="Variant.Outlined"
                                      DateFormat="yyyy-MM-dd"
-                                     HelperText="End date" />
+                                     HelperText="วันที่สิ้นสุด" />
                         
                         <MudButton Color="Color.Info" 
                                  Variant="Variant.Filled" 
@@ -51,11 +52,11 @@
                             @if (_isLoading)
                             {
                                 <MudProgressCircular Size="Size.Small" Indeterminate="true" />
-                                <span class="ml-2">Searching...</span>
+                                <span class="ml-2">กำลังค้นหา...</span>
                             }
                             else
                             {
-                                <span>Search</span>
+                                <span>ค้นหา</span>
                             }
                         </MudButton>
                         
@@ -64,7 +65,7 @@
                                  StartIcon="@Icons.Material.Filled.Clear"
                                  OnClick="ClearDateFilter"
                                  Disabled="_isLoading">
-                            Clear Filter
+                            ล้างตัวกรอง
                         </MudButton>
                     </div>
                     
@@ -74,15 +75,15 @@
                             <MudIcon Icon="@Icons.Material.Filled.FilterAlt" Size="Size.Small" Class="mr-1"/>
                             @if (_fromDate.HasValue && _toDate.HasValue)
                             {
-                                <span>Filtering transactions from @_fromDate.Value.ToString("yyyy-MM-dd") to @_toDate.Value.ToString("yyyy-MM-dd")</span>
+                                <span>กรองธุรกรรมตั้งแต่ @_fromDate.Value.ToString("yyyy-MM-dd") ถึง @_toDate.Value.ToString("yyyy-MM-dd")</span>
                             }
                             else if (_fromDate.HasValue)
                             {
-                                <span>Filtering transactions from @_fromDate.Value.ToString("yyyy-MM-dd") onwards</span>
+                                <span>กรองธุรกรรมตั้งแต่ @_fromDate.Value.ToString("yyyy-MM-dd") เป็นต้นไป</span>
                             }
                             else if (_toDate.HasValue)
                             {
-                                <span>Filtering transactions up to @_toDate.Value.ToString("yyyy-MM-dd")</span>
+                                <span>กรองธุรกรรมถึง @_toDate.Value.ToString("yyyy-MM-dd")</span>
                             }
                         </MudText>
                     }
@@ -91,19 +92,19 @@
             
             @if (_availableTransactions.Any())
             {
-                <MudText Typo="Typo.h6" Class="mb-3">Available POSPOS Invoices for Customer Code: @_customerCode</MudText>
+                <MudText Typo="Typo.h6" Class="mb-3">บิลขาย POSPOS ที่พร้อมใช้งานสำหรับรหัสลูกค้า: @_customerCode</MudText>
                 
                 <MudTable Items="_availableTransactions" Hover="true" Striped="true" MultiSelection="true" 
                          @bind-SelectedItems="_selectedTransactions" T="PosPosTransaction"
                          SelectOnRowClick="false"
                          Class="no-select-all">
                     <HeaderContent>
-                        <MudTh><MudTableSortLabel SortBy="new Func<PosPosTransaction, object>(x => x.InvoiceReference.Code)">Invoice Code</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<PosPosTransaction, object>(x => x.Timestamp)">Date</MudTableSortLabel></MudTh>
-                        <MudTh>Customer</MudTh>
-                        <MudTh>Items</MudTh>
-                        <MudTh>Total Amount</MudTh>
-                        <MudTh>Preview</MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<PosPosTransaction, object>(x => x.InvoiceReference.Code)">รหัสบิลขาย</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<PosPosTransaction, object>(x => x.Timestamp)">วันที่</MudTableSortLabel></MudTh>
+                        <MudTh>ลูกค้า</MudTh>
+                        <MudTh>รายการ</MudTh>
+                        <MudTh>ยอดรวม</MudTh>
+                        <MudTh>ดูรายละเอียด</MudTh>
                     </HeaderContent>
                     <RowTemplate>
                         <MudTd DataLabel="Invoice Code">
@@ -111,12 +112,12 @@
                         </MudTd>
                         <MudTd DataLabel="Date">@context.Timestamp.ToString("yyyy-MM-dd HH:mm")</MudTd>
                         <MudTd DataLabel="Customer">@context.BuyerDetail.FirstName @context.BuyerDetail.LastName</MudTd>
-                        <MudTd DataLabel="Items">@context.OrderList.Count item(s)</MudTd>
-                        <MudTd DataLabel="Total Amount">$@context.GrandTotal.ToString("F2")</MudTd>
-                        <MudTd DataLabel="Preview">
+                        <MudTd DataLabel="รายการ">@context.OrderList.Count รายการ</MudTd>
+                        <MudTd DataLabel="ยอดรวม">@context.GrandTotal.ToString("N2")</MudTd>
+                        <MudTd DataLabel="ดูรายละเอียด">
                             <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Info"
                                      OnClick="() => ShowTransactionDetails(context)">
-                                View Items
+                                📋 รายการสินค้า
                             </MudButton>
                         </MudTd>
                     </RowTemplate>
@@ -126,11 +127,11 @@
                 {
                     <MudCard Class="mt-4">
                         <MudCardContent>
-                            <MudText Typo="Typo.h6" Class="mb-2">Selected Invoices Summary</MudText>
+                            <MudText Typo="Typo.h6" Class="mb-2">สรุปบิลขายที่เลือก</MudText>
                             <MudText Typo="Typo.body2">
-                                • @_selectedTransactions.Count invoice(s) selected<br/>
-                                • @_selectedTransactions.Sum(t => t.OrderList.Count) total feed items<br/>
-                                • $@_selectedTransactions.Sum(t => t.GrandTotal).ToString("F2") total amount
+                                • เลือกแล้ว @_selectedTransactions.Count บิลขาย<br/>
+                                • รวม @_selectedTransactions.Sum(t => t.OrderList.Count) รายการอาหาร<br/>
+                                • ยอดรวม @_selectedTransactions.Sum(t => t.GrandTotal).ToString("N2") บาท
                             </MudText>
                             
                             @if (_selectedTransactionDetails.Any())
@@ -138,13 +139,13 @@
                                 <MudExpansionPanels Elevation="0" Class="mt-3">
                                     @foreach (var transaction in _selectedTransactions)
                                     {
-                                        var panelText = $"{transaction.Code} - ${transaction.GrandTotal:F2}";
+                                        var panelText = $"{transaction.Code} - {transaction.GrandTotal:N2} บาท";
                                         <MudExpansionPanel Text="@panelText">>
                                             <div class="pa-2">
                                                 @foreach (var item in transaction.OrderList)
                                                 {
                                                     <MudChip Size="Size.Small" Color="Color.Secondary" Class="mr-1 mb-1">
-                                                        @item.Name (Qty: @item.Stock) - $@item.TotalPriceIncludeDiscount.ToString("F2")
+                                                        @item.Name (จำนวน: @item.Stock) - @item.TotalPriceIncludeDiscount.ToString("N2") บาท
                                                     </MudChip>
                                                 }
                                             </div>
@@ -178,20 +179,20 @@
             {
                 <div class="d-flex justify-center align-center" style="height: 200px;">
                     <MudProgressCircular Size="Size.Large" Indeterminate="true" />
-                    <MudText Class="ml-4">Loading POSPOS transactions...</MudText>
+                    <MudText Class="ml-4">กำลังโหลดธุรกรรม POSPOS...</MudText>
                 </div>
             }
             else
             {
                 <MudAlert Severity="Severity.Warning">
                     <MudText Typo="Typo.body1">
-                        No POSPOS transactions found in the selected date range
+                        ไม่พบธุรกรรม POSPOS ในช่วงวันที่ที่เลือก
                     </MudText>
                     <MudText Typo="Typo.body2" Class="mt-2">
-                        This could mean:
-                        <br/>• No transactions exist in POSPOS for the selected date range
-                        <br/>• POSPOS API is not returning data
-                        <br/>• Try adjusting the date range
+                        สาเหตุที่เป็นไปได้:
+                        <br/>• ไม่มีธุรกรรมใน POSPOS สำหรับช่วงวันที่ที่เลือก
+                        <br/>• POSPOS API ไม่ส่งข้อมูลกลับมา
+                        <br/>• ลองปรับช่วงวันที่ใหม่
                     </MudText>
                 </MudAlert>
             }
@@ -199,17 +200,17 @@
             @if (_importResult != null)
             {
                 <MudAlert Severity="@(_importResult.FailedImports > 0 ? Severity.Warning : Severity.Success)" Class="mt-4">
-                    <MudText Typo="Typo.h6" Class="mb-2">Import Results</MudText>
+                    <MudText Typo="Typo.h6" Class="mb-2">ผลการนำเข้า</MudText>
                     <MudText Typo="Typo.body2">
-                        • Successfully imported: @_importResult.SuccessfulImports transaction(s)<br/>
-                        • Total feed items: @_importResult.TotalFeedItems<br/>
-                        • Failed imports: @_importResult.FailedImports
+                        • นำเข้าสำเร็จ: @_importResult.SuccessfulImports ธุรกรรม<br/>
+                        • รวมรายการอาหาร: @_importResult.TotalFeedItems รายการ<br/>
+                        • นำเข้าไม่สำเร็จ: @_importResult.FailedImports รายการ
                     </MudText>
                     
                     @if (_importResult.Errors.Any())
                     {
                         <MudText Typo="Typo.body2" Class="mt-2 text-error">
-                            <strong>Errors:</strong><br/>
+                            <strong>ข้อผิดพลาด:</strong><br/>
                             @foreach (var error in _importResult.Errors)
                             {
                                 <span>• @error<br/></span>
@@ -221,7 +222,7 @@
         </div>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel">Close</MudButton>
+        <MudButton OnClick="Cancel">ปิด</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -297,17 +298,17 @@
             if (_availableTransactions.Any())
             {
                 var dateRangeText = GetDateRangeDisplayText();
-                Snackbar.Add($"Found {_availableTransactions.Count} POSPOS transaction(s) for customer {_customerCode}{dateRangeText}.", Severity.Success);
+                Snackbar.Add($"พบ {_availableTransactions.Count} ธุรกรรม POSPOS สำหรับลูกค้า {_customerCode}{dateRangeText}", Severity.Success);
             }
             else
             {
                 var dateRangeText = GetDateRangeDisplayText();
-                Snackbar.Add($"No POSPOS transactions found{dateRangeText}", Severity.Warning);
+                Snackbar.Add($"ไม่พบธุรกรรม POSPOS{dateRangeText}", Severity.Warning);
             }
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Failed to load POSPOS transactions: {ex.Message}", Severity.Error);
+            Snackbar.Add($"ไม่สามารถโหลดธุรกรรม POSPOS: {ex.Message}", Severity.Error);
         }
         finally
         {
@@ -319,15 +320,15 @@
     {
         if (_fromDate.HasValue && _toDate.HasValue)
         {
-            return $" (from {_fromDate.Value:yyyy-MM-dd} to {_toDate.Value:yyyy-MM-dd})";
+            return $" (ตั้งแต่ {_fromDate.Value:yyyy-MM-dd} ถึง {_toDate.Value:yyyy-MM-dd})";
         }
         else if (_fromDate.HasValue)
         {
-            return $" (from {_fromDate.Value:yyyy-MM-dd})";
+            return $" (ตั้งแต่ {_fromDate.Value:yyyy-MM-dd})";
         }
         else if (_toDate.HasValue)
         {
-            return $" (up to {_toDate.Value:yyyy-MM-dd})";
+            return $" (ถึง {_toDate.Value:yyyy-MM-dd})";
         }
         return "";
     }
@@ -337,23 +338,45 @@
         _fromDate = null;
         _toDate = null;
         await LoadAvailableTransactions();
-        Snackbar.Add("Date filter cleared", Severity.Info);
+        Snackbar.Add("ล้างตัวกรองวันที่แล้ว", Severity.Info);
     }
 
     private void ShowTransactionDetails(PosPosTransaction transaction)
     {
-        var items = string.Join(", ", transaction.OrderList.Select(i => $"{i.Name} (Qty: {i.Stock})"));
-        Snackbar.Add($"Invoice {transaction.Code}: {items}", Severity.Info, configure: config =>
+        // Convert POSPOS transaction items to InvoiceItemDisplay format
+        var invoiceItems = transaction.OrderList.Select(item => new InvoiceDetailsDialog.InvoiceItemDisplay
         {
-            config.VisibleStateDuration = 5000;
-        });
+            ProductCode = item.Code ?? "-",
+            ProductName = item.Name ?? "-",
+            Quantity = item.Stock,
+            Unit = "กระสอบ",
+            UnitPriceBeforeDiscount = item.Price,
+            UnitPrice = item.Price - item.CostDiscountPrice,
+            Discount = item.CostDiscountPrice,
+            Total = item.TotalPriceIncludeDiscount
+        }).ToList();
+
+        var parameters = new DialogParameters<InvoiceDetailsDialog>
+        {
+            { x => x.InvoiceItems, invoiceItems }
+        };
+
+        var options = new DialogOptions() 
+        { 
+            MaxWidth = MaxWidth.Large, 
+            FullWidth = true,
+            CloseButton = true,
+            DisableBackdropClick = false
+        };
+
+        DialogService.Show<InvoiceDetailsDialog>("รายการสินค้า", parameters, options);
     }
 
     private async Task ImportSelectedTransactions()
     {
         if (!_selectedTransactions.Any())
         {
-            Snackbar.Add("Please select at least one transaction to import", Severity.Warning);
+            Snackbar.Add("กรุณาเลือกอย่างน้อย 1 ธุรกรรมเพื่อนำเข้า", Severity.Warning);
             return;
         }
 
@@ -368,17 +391,17 @@
             
             if (_importResult.FailedImports == 0)
             {
-                Snackbar.Add($"Successfully imported {_importResult.SuccessfulImports} transaction(s) with {_importResult.TotalFeedItems} feed items to {PenCode}", Severity.Success);
+                Snackbar.Add($"นำเข้าสำเร็จ {_importResult.SuccessfulImports} ธุรกรรม พร้อมรายการอาหาร {_importResult.TotalFeedItems} รายการ ไปยังคอก {PenCode}", Severity.Success);
                 MudDialog.Close(DialogResult.Ok(_importResult));
             }
             else
             {
-                Snackbar.Add($"Import completed with {_importResult.FailedImports} failures", Severity.Warning);
+                Snackbar.Add($"การนำเข้าเสร็จสิ้นโดยมีข้อผิดพลาด {_importResult.FailedImports} รายการ", Severity.Warning);
             }
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Import failed: {ex.Message}", Severity.Error);
+            Snackbar.Add($"การนำเข้าล้มเหลว: {ex.Message}", Severity.Error);
         }
         finally
         {

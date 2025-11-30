@@ -28,15 +28,31 @@
                 <MudText Color="Color.Success"><strong>฿@context.TotalAmount.ToString("N2")</strong></MudText>
             </MudTd>
             <MudTd DataLabel="Actions" Style="text-align: center">
-                <MudButton Color="Color.Error" 
-                         Size="Size.Small"
-                         Variant="Variant.Outlined"
-                         Title="ลบบิลขาย"
-                         OnClick="@(() => DeleteInvoice(context))">
-                    🗑️ ลบ
-                </MudButton>
+                <MudButtonGroup Size="Size.Small" Variant="Variant.Outlined">
+                    <MudButton Color="Color.Info" 
+                             Size="Size.Small"
+                             Variant="Variant.Outlined"
+                             Title="รายการสินค้า"
+                             OnClick="@(() => ShowInvoiceDetails(context))">
+                        📋 รายการสินค้า
+                    </MudButton>
+                    <MudButton Color="Color.Error" 
+                             Size="Size.Small"
+                             Variant="Variant.Outlined"
+                             Title="ลบบิลขาย"
+                             OnClick="@(() => DeleteInvoice(context))">
+                        🗑️ ลบ
+                    </MudButton>
+                </MudButtonGroup>
             </MudTd>
         </RowTemplate>
+        <FooterContent>
+            <MudTd colspan="3" Style="text-align: right; font-weight: bold;">ยอดรวมทั้งหมด</MudTd>
+            <MudTd Style="text-align: right; font-weight: bold;">
+                <MudText Color="Color.Success" Typo="Typo.h6">฿@invoiceGroups.Sum(i => i.TotalAmount).ToString("N2")</MudText>
+            </MudTd>
+            <MudTd></MudTd>
+        </FooterContent>
     </MudTable>
 }
 else
@@ -76,6 +92,42 @@ else
             ))
             .OrderBy(i => i.InvoiceDate)
             .ToList();
+    }
+
+    private async Task ShowInvoiceDetails(InvoiceGroupDto invoice)
+    {
+        // Get all feed items for this invoice
+        var invoiceFeeds = Feeds
+            .Where(f => f.InvoiceReferenceCode == invoice.InvoiceReferenceCode)
+            .OrderBy(f => f.ProductCode)
+            .ToList();
+
+        // Convert to InvoiceItemDisplay
+        var invoiceItems = invoiceFeeds.Select(f => new InvoiceDetailsDialog.InvoiceItemDisplay
+        {
+            ProductCode = f.ProductCode ?? "-",
+            ProductName = f.ProductName ?? "-",
+            Quantity = f.QuantityKg / 25m, // Convert kg to bags
+            Unit = "กระสอบ",
+            UnitPriceBeforeDiscount = f.PricePerKg * 25m, // PricePerKg needs ×25 conversion to per-bag
+            UnitPrice = f.PriceIncludeDiscount ?? (f.PricePerKg * 25m), // Already per-bag from database
+            Discount = f.CostDiscountPrice ?? 0, // Already per-bag from database
+            Total = f.Pos_TotalPriceIncludeDiscount ?? f.Sys_TotalPriceIncludeDiscount ?? 0
+        }).ToList();
+
+        var parameters = new DialogParameters<InvoiceDetailsDialog>
+        {
+            { x => x.InvoiceItems, invoiceItems }
+        };
+
+        var options = new DialogOptions() 
+        { 
+            CloseButton = true, 
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        await DialogService.ShowAsync<InvoiceDetailsDialog>($"รายการสินค้า - {invoice.InvoiceReferenceCode}", parameters, options);
     }
 
     private async Task DeleteInvoice(InvoiceGroupDto invoice)
