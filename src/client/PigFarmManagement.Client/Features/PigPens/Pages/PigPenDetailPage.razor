@@ -140,11 +140,11 @@
                                     <td>@pigPen.RegisterDate.ToString("dd/MM/yyyy")</td>
                                 </tr>
                                 <tr>
-                                    <td><strong>วันเก็บเกี่ยวจริง:</strong></td>
+                                    <td><strong>วันจับสุกรจริง:</strong></td>
                                     <td>@(pigPen.ActHarvestDate?.ToString("dd/MM/yyyy") ?? "ยังดำเนินการ")</td>
                                 </tr>
                                 <tr>
-                                    <td><strong>วันเก็บเกี่ยวโดยประมาณ:</strong></td>
+                                    <td><strong>วันจับสุกรโดยประมาณ:</strong></td>
                                     <td>@(pigPen.EstimatedHarvestDate?.ToString("dd/MM/yyyy") ?? "ไม่ได้ตั้ง")</td>
                                 </tr>
                                 @if (!string.IsNullOrWhiteSpace(pigPen.Note))
@@ -589,7 +589,7 @@
                 <CardHeaderContent>
                     <MudText Typo="Typo.h5">
                         <MudIcon Icon="@Icons.Material.Filled.Agriculture" Class="mr-2" />
-                        บันทึกการเก็บเกี่ยว (@harvests.Count)
+                        บันทึกการจับสุกร (@harvests.Count)
                     </MudText>
                 </CardHeaderContent>
                 <CardHeaderActions>
@@ -597,7 +597,7 @@
                                Color="Color.Primary"
                                StartIcon="@Icons.Material.Filled.Add"
                                OnClick="AddHarvest">
-                        เพิ่มบันทึกการเก็บเกี่ยว
+                        เพิ่มบันทึกการจับสุกร
                     </MudButton>
                 </CardHeaderActions>
             </MudCardHeader>
@@ -689,14 +689,14 @@
                                     <MudButton Color="Color.Primary" 
                                              Size="Size.Small"
                                              Variant="Variant.Outlined"
-                                             Title="แก้ไขบันทึกการเก็บเกี่ยว"
+                                             Title="แก้ไขบันทึกการจับสุกร"
                                              OnClick="@(() => EditHarvest(context))">
                                         ✏️ แก้ไข
                                     </MudButton>
                                     <MudButton Color="Color.Error" 
                                              Size="Size.Small"
                                              Variant="Variant.Outlined"
-                                             Title="ลบบันทึกการเก็บเกี่ยว"
+                                             Title="ลบบันทึกการจับสุกร"
                                              OnClick="@(() => DeleteHarvest(context))">
                                         🗑️ ลบ
                                     </MudButton>
@@ -708,7 +708,7 @@
                 else
                 {
                     <MudAlert Severity="Severity.Info">
-                        <MudText>ไม่มีบันทึกการเก็บเกี่ยวสำหรับคอกสุกรนี้</MudText>
+                        <MudText>ไม่มีบันทึกการจับสุกรสำหรับคอกสุกรนี้</MudText>
                     </MudAlert>
                 }
             </MudCardContent>
