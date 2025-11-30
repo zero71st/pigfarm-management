@@ -9,10 +9,16 @@ Base path: `/import/customers`
 ## GET /import/customers/candidates
 Fetch a list of candidate members from the POSPOS API and return as a simplified candidate DTO.
 
-Response: 200 OK
-Content-Type: application/json
+**Query Parameters** (Optional):
+- `source` (string): Filter context for candidates
+  - `pospos`: Return only the latest POSPOS member (newest by CreatedAt, then Id)
+  - `all`: Return all available POSPOS members (default if omitted)
+  - Default: `all` (backward compatible)
 
-Sample item:
+**Response**: 200 OK  
+**Content-Type**: application/json
+
+**Sample item**:
 ```json
 {
   "id": "600d4ad69412705f72ae7b92",
@@ -27,9 +33,48 @@ Sample item:
 }
 ```
 
-Notes:
+**Examples**:
+```bash
+# Get all candidates (default)
+curl "https://pigfarm.example.com/import/customers/candidates" \
+  -H "X-Api-Key: YOUR_API_KEY"
+
+# Get all candidates (explicit)
+curl "https://pigfarm.example.com/import/customers/candidates?source=all" \
+  -H "X-Api-Key: YOUR_API_KEY"
+
+# Get latest candidate only
+curl "https://pigfarm.example.com/import/customers/candidates?source=pospos" \
+  -H "X-Api-Key: YOUR_API_KEY"
+```
+
+**Response Status Codes**:
+- `200 OK`: Success (returns array, may be empty)
+- `400 Bad Request`: Invalid source parameter (e.g., `?source=invalid`)
+- `401 Unauthorized`: Missing or invalid X-Api-Key header
+- `500 Internal Server Error`: Unexpected server error
+- `503 Service Unavailable`: POSPOS API unreachable (distinct from other errors)
+
+**Error Response** (invalid source):
+```json
+{
+  "message": "Invalid source. Must be 'pospos' or 'all'."
+}
+```
+
+**Error Response** (POSPOS service down):
+```json
+{
+  "message": "POSPOS service unavailable. Please try again later."
+}
+```
+
+**Notes**:
 - Server maps POSPOS response fields to `CandidateMember` DTO.
-- If POSPOS API is unreachable the server returns 5xx with an explanation.
+- When `source=pospos`: Returns 0-1 items (latest member only, ordered by CreatedAt DESC then Id DESC)
+- When `source=all` or omitted: Returns 0-N items (all available members, existing behavior)
+- If POSPOS API is unreachable, returns 503 with distinct error message
+- If other server errors occur, returns 500 with explanation
 
 ---
 

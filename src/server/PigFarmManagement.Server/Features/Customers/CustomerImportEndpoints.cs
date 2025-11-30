@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using PigFarmManagement.Shared.Models;
 using PigFarmManagement.Server.Services.ExternalServices;
+using PigFarmManagement.Server.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace PigFarmManagement.Server.Features.Customers;
 
@@ -119,30 +121,38 @@ public static class CustomerImportEndpoints
     /// Get POSPOS members available for import
     /// </summary>
     private static async Task<IResult> GetCandidates(
-        IPosposMemberClient posposClient)
+        IPosposMemberClient posposClient,
+        [FromQuery] string source = "all")
     {
         try
         {
             var members = await posposClient.GetMembersAsync();
 
-            // Project to a shape the Blazor client expects (PascalCase properties)
-            var projected = members.Select(m => new
-            {
-                Id = m.Id,
-                Code = string.IsNullOrWhiteSpace(m.Code) ? m.Id : m.Code,
-                FirstName = m.FirstName,
-                LastName = m.LastName,
-                Phone = string.IsNullOrWhiteSpace(m.Phone) ? m.PhoneNumber : m.Phone,
-                Email = m.Email,
-                Address = m.Address,
-                KeyCardId = m.KeyCardId,
-                ExternalId = m.Id,
-                Sex = m.Sex,
-                Zipcode = m.Zipcode,
-                CreatedAt = m.CreatedAt
-            });
+            // Return all members sorted by ID descending
+            var projected = members
+                .OrderByDescending(m => m.Id)
+                .Select(m => new
+                {
+                    Id = m.Id,
+                    Code = string.IsNullOrWhiteSpace(m.Code) ? m.Id : m.Code,
+                    FirstName = m.FirstName,
+                    LastName = m.LastName,
+                    Phone = string.IsNullOrWhiteSpace(m.Phone) ? m.PhoneNumber : m.Phone,
+                    Email = m.Email,
+                    Address = m.Address,
+                    KeyCardId = m.KeyCardId,
+                    ExternalId = m.Id,
+                    Sex = m.Sex,
+                    Zipcode = m.Zipcode,
+                    CreatedAt = m.CreatedAt
+                });
 
             return Results.Ok(projected);
+        }
+        catch (HttpRequestException ex)
+        {
+            // POSPOS service unavailable or network error
+            return Results.Json(new { error = "POSPOS service unavailable. Please try again later." }, statusCode: 503);
         }
         catch (Exception ex)
         {

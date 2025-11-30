@@ -4,6 +4,11 @@
 
 <MudDialog>
     <DialogContent>
+        <style>
+            .no-select-all thead tr th:first-child .mud-checkbox {
+                visibility: hidden !important;
+            }
+        </style>
         <div class="pa-4">
             <MudText Typo="Typo.h6" Class="mb-4">Import POSPOS Feed for Pig Pen @PenCode</MudText>
             
@@ -89,7 +94,9 @@
                 <MudText Typo="Typo.h6" Class="mb-3">Available POSPOS Invoices for Customer Code: @_customerCode</MudText>
                 
                 <MudTable Items="_availableTransactions" Hover="true" Striped="true" MultiSelection="true" 
-                         @bind-SelectedItems="_selectedTransactions" T="PosPosTransaction">
+                         @bind-SelectedItems="_selectedTransactions" T="PosPosTransaction"
+                         SelectOnRowClick="false"
+                         Class="no-select-all">
                     <HeaderContent>
                         <MudTh><MudTableSortLabel SortBy="new Func<PosPosTransaction, object>(x => x.InvoiceReference.Code)">Invoice Code</MudTableSortLabel></MudTh>
                         <MudTh><MudTableSortLabel SortBy="new Func<PosPosTransaction, object>(x => x.Timestamp)">Date</MudTableSortLabel></MudTh>

@@ -14,14 +14,15 @@
     </TitleContent>
     
     <DialogContent>
-        <MudContainer Style="max-width: 900px; max-height: 600px;">
-            <!-- Search Section -->
-            <MudPaper Class="pa-3 mb-3" Elevation="1">
+        <div style="display: flex; flex-direction: column; max-height: 500px;">
+            <!-- Search Section - Fixed at Top (flex-shrink: 0) -->
+            <div Style="flex-shrink: 0; padding: 16px; border-bottom: 1px solid #e0e0e0;">
                 <MudGrid AlignItems="Center">
                     <MudItem xs="12" sm="9">
                         <MudTextField @bind-Value="searchText"
                                      Label="Search by product code or name..."
                                      Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
                                      Adornment="Adornment.Start"
                                      AdornmentIcon="@Icons.Material.Filled.Search"
                                      OnKeyDown="OnSearchKeyDown"
@@ -46,57 +47,46 @@
                         </MudButton>
                     </MudItem>
                 </MudGrid>
-            </MudPaper>
+            </div>
 
+            <!-- Content Area -->
             @if (searching)
             {
-                <div style="display: flex; justify-content: center; align-items: center; height: 200px;">
+                <div style="display: flex; justify-content: center; align-items: center; padding: 32px 16px;">
                     <MudProgressCircular Size="Size.Large" Indeterminate="true" />
                     <MudText Class="ml-3">Searching products...</MudText>
                 </div>
             }
             else if (!hasSearched)
             {
-                <MudAlert Severity="Severity.Info" Class="text-center">
-                    <MudIcon Icon="@Icons.Material.Filled.Search" Class="mr-2" />
-                    Enter a product code or name above and click Search to find products to import.
-                </MudAlert>
+                <div style="display: flex; justify-content: center; align-items: center; padding: 32px 16px; text-align: center;">
+                    <MudAlert Severity="Severity.Info">
+                        <MudIcon Icon="@Icons.Material.Filled.Search" Class="mr-2" />
+                        Enter a product code or name above and click Search to find products to import.
+                    </MudAlert>
+                </div>
             }
             else if (products.Count == 0)
             {
-                <MudAlert Severity="Severity.Warning">
-                    No products found matching your search criteria. Try a different search term.
-                </MudAlert>
+                <div style="display: flex; justify-content: center; align-items: center; padding: 32px 16px; text-align: center;">
+                    <MudAlert Severity="Severity.Warning">
+                        No products found matching your search criteria. Try a different search term.
+                    </MudAlert>
+                </div>
             }
             else
             {
-                <MudStack Spacing="3">
-                    <!-- Selection Summary -->
+                <!-- Selection Summary -->
+                <div Style="flex-shrink: 0; padding: 12px 16px; border-bottom: 1px solid #e0e0e0;">
                     <MudPaper Class="pa-3" Elevation="1">
-                        <MudGrid AlignItems="Center">
-                            <MudItem xs="8">
-                                <MudText Typo="Typo.body1">
-                                    <strong>@selectedProducts.Count</strong> of <strong>@products.Count</strong> products selected
-                                </MudText>
-                            </MudItem>
-                            <MudItem xs="4" Class="d-flex justify-end">
-                                <MudButtonGroup Size="Size.Small" Variant="Variant.Outlined">
-                                    <MudButton OnClick="SelectAll" 
-                                              StartIcon="@Icons.Material.Filled.SelectAll"
-                                              Disabled="@(selectedProducts.Count == products.Count)">
-                                        Select All
-                                    </MudButton>
-                                    <MudButton OnClick="ClearSelection" 
-                                              StartIcon="@Icons.Material.Filled.Clear"
-                                              Disabled="@(selectedProducts.Count == 0)">
-                                        Clear
-                                    </MudButton>
-                                </MudButtonGroup>
-                            </MudItem>
-                        </MudGrid>
+                        <MudText Typo="Typo.body1">
+                            <strong>@selectedProducts.Count</strong> of <strong>@products.Count</strong> products selected
+                        </MudText>
                     </MudPaper>
+                </div>
 
-                    <!-- Products Grid -->
+                <!-- Products Grid - Only This Scrolls -->
+                <div style="flex-grow: 1; overflow-y: auto; min-height: 0; padding: 0 16px;">
                     <MudDataGrid T="PosposProduct" 
                                 Items="@products" 
                                 Dense="true" 
@@ -104,11 +94,17 @@
                                 MultiSelection="true"
                                 @bind-SelectedItems="selectedProductsHashSet"
                                 SelectOnRowClick="true"
-                                Height="350px"
+                                Height="auto"
                                 FixedHeader="true">
                         
                         <Columns>
-                            <SelectColumn T="PosposProduct" />
+                            <TemplateColumn Title="Select">
+                                <CellTemplate>
+                                    <MudCheckBox T="bool" 
+                                               Value="@selectedProductsHashSet.Contains(context.Item)"
+                                               ValueChanged="@((bool value) => HandleProductSelection(context.Item, value))" />
+                                </CellTemplate>
+                            </TemplateColumn>
                             <PropertyColumn Property="x => x.Code" Title="Code" />
                             <PropertyColumn Property="x => x.Name" Title="Product Name" />
                             <TemplateColumn Title="Category">
@@ -130,9 +126,9 @@
                             <MudText>No products match your search criteria.</MudText>
                         </NoRecordsContent>
                     </MudDataGrid>
-                </MudStack>
+                </div>
             }
-        </MudContainer>
+        </div>
     </DialogContent>
     
     <DialogActions>
@@ -209,18 +205,6 @@
         }
     }
 
-    private void SelectAll()
-    {
-        selectedProductsHashSet = products.ToHashSet();
-        StateHasChanged();
-    }
-
-    private void ClearSelection()
-    {
-        selectedProductsHashSet.Clear();
-        StateHasChanged();
-    }
-
     private async Task ImportSelected()
     {
         if (selectedProducts.Count == 0)
@@ -283,6 +267,19 @@
             importing = false;
             StateHasChanged();
         }
+    }
+
+    private void HandleProductSelection(PosposProduct product, bool isSelected)
+    {
+        if (isSelected)
+        {
+            selectedProductsHashSet.Add(product);
+        }
+        else
+        {
+            selectedProductsHashSet.Remove(product);
+        }
+        StateHasChanged();
     }
 
     private void Cancel()
