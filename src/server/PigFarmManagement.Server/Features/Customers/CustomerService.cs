@@ -146,31 +146,35 @@ public class CustomerService : ICustomerService
 
         foreach (var customer in customers.Where(c => !c.IsDeleted))
         {
-            var request = new CustomerDeletionRequest
+            // First validate if customer can be deleted (check for pig pens)
+            var validation = await _deletionService.ValidateCustomerDeletionAsync(customer.Id);
+            
+            // Only delete if customer has no pig pens
+            if (validation.CanDelete)
             {
-                CustomerId = customer.Id,
-                ForceDelete = true,
-                DeletedBy = "System",
-                Reason = "Bulk delete all customers"
-            };
+                var request = new CustomerDeletionRequest
+                {
+                    CustomerId = customer.Id,
+                    ForceDelete = true,
+                    DeletedBy = "System",
+                    Reason = "Bulk delete all customers"
+                };
 
-            try
-            {
-                // Force delete to bypass pig pen validation for bulk delete
-                await _deletionService.HardDeleteCustomerAsync(request);
-                count++;
+                try
+                {
+                    await _deletionService.HardDeleteCustomerAsync(request);
+                    count++;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning("Failed to delete customer {CustomerId} during bulk delete: {Reason}", customer.Id, ex.Message);
+                    continue;
+                }
             }
-            catch (InvalidOperationException ex)
+            else
             {
-                // Skip customers that cannot be deleted
-                _logger.LogWarning("Skipped customer {CustomerId} during bulk delete: {Reason}", customer.Id, ex.Message);
-                continue;
-            }
-            catch (ArgumentException ex)
-            {
-                // Skip customers that don't exist
-                _logger.LogWarning("Skipped customer {CustomerId} during bulk delete: {Reason}", customer.Id, ex.Message);
-                continue;
+                _logger.LogInformation("Skipped customer {CustomerId} ({DisplayName}) during bulk delete - has pig pens", 
+                    customer.Id, customer.DisplayName);
             }
         }
 
