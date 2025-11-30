@@ -17,12 +17,12 @@
 @inject ISnackbar Snackbar
 @inject HttpClient Http
 
-<PageTitle>PigFarm - Customer Management</PageTitle>
+<PageTitle>PigFarm - จัดการลูกค้า</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge">
     <MudText Typo="Typo.h4" GutterBottom="true" Class="mb-1">
         <MudIcon Icon="@Icons.Material.Filled.People" Class="mr-2" />
-        Customer Management
+        จัดการลูกค้า
     </MudText>
 
     <!-- Customer Management statistics (moved to sit between title and search/action bar) -->
@@ -34,22 +34,22 @@
     <!-- Action Bar -->
     <MudGrid Class="pa-1 mb-1" AlignItems="Center">
         <MudItem xs="12" md="6">
-            <MudTextField @bind-Value="searchText" Label="Search customers..." Variant="Variant.Outlined"
+            <MudTextField @bind-Value="searchText" Label="ค้นหาลูกค้า..." Variant="Variant.Outlined"
                 Margin="Margin.Dense" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search"
                 OnKeyUp="OnSearchKeyUp" Immediate="true" />
         </MudItem>
         <MudItem xs="12" md="3">
             <MudSelect T="CustomerStatus?" Value="selectedCustomerStatus"
                        ValueChanged="OnStatusFilterChanged"
-                       Label="Filter by Status"
+                       Label="กรองตามสถานะ"
                        Variant="Variant.Outlined" 
                        Clearable="true" 
                        Margin="Margin.Dense" 
                        FullWidth="true"
                        AnchorOrigin="Origin.BottomCenter">
-                <MudSelectItem T="CustomerStatus?" Value="@((CustomerStatus?)null)">All Statuses</MudSelectItem>
-                <MudSelectItem T="CustomerStatus?" Value="@CustomerStatus.Active">Active</MudSelectItem>
-                <MudSelectItem T="CustomerStatus?" Value="@CustomerStatus.Inactive">Inactive</MudSelectItem>
+                <MudSelectItem T="CustomerStatus?" Value="@((CustomerStatus?)null)">ทุกสถานะ</MudSelectItem>
+                <MudSelectItem T="CustomerStatus?" Value="@CustomerStatus.Active">ใช้งาน</MudSelectItem>
+                <MudSelectItem T="CustomerStatus?" Value="@CustomerStatus.Inactive">ไม่ใช้งาน</MudSelectItem>
             </MudSelect>
         </MudItem>
         <MudItem xs="12" md="3" class="text-right align-self-center">
@@ -60,7 +60,7 @@
                                 IsLoading="isLoading" />
                 
                 <!-- POS Sync Trigger -->
-                <MudTooltip Text="@(_posSyncRunning ? "Syncing with POS..." : "Sync with POS system")">
+                <MudTooltip Text="@(_posSyncRunning ? "กำลังซิงค์กับ POS..." : "ซิงค์กับระบบ POS")">
                     <MudIconButton Icon="@Icons.Material.Filled.Sync" 
                                    Color="Color.Info" 
                                    OnClick="TriggerPosSync"
@@ -69,7 +69,7 @@
                                    Class="@(_posSyncRunning ? "rotate-animation" : "")" />
                 </MudTooltip>
 
-                <MudTooltip Text="Import customers from external source">
+                <MudTooltip Text="นำเข้าลูกค้าจากแหล่งภายนอก">
                     <MudIconButton Icon="@Icons.Material.Filled.Download" 
                                    Color="Color.Secondary" 
                                    OnClick="StartImport"
@@ -77,7 +77,7 @@
                                    Size="Size.Medium" />
                 </MudTooltip>
 
-                <MudTooltip Text="Delete all customers (Admin only)">
+                <MudTooltip Text="ลบลูกค้าทั้งหมด (ผู้ดูแลระบบเท่านั้น)">
                     <MudIconButton Icon="@Icons.Material.Filled.DeleteSweep" 
                                    Color="Color.Error" 
                                    OnClick="DeleteAllCustomers"
@@ -173,7 +173,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error loading data: {ex.Message}", Severity.Error);
+            Snackbar.Add($"ข้อผิดพลาดในการโหลดข้อมูล: {ex.Message}", Severity.Error);
         }
         finally
         {
@@ -228,26 +228,26 @@
 
     private async Task OpenAddCustomerDialog()
     {
-        var dialog = await DialogService.ShowAsync<AddCustomerDialog>("Add New Customer");
+        var dialog = await DialogService.ShowAsync<AddCustomerDialog>("เพิ่มลูกค้าใหม่");
         var result = await dialog.Result;
 
         if (!result.Canceled)
         {
             await LoadData();
-            Snackbar.Add("Customer added successfully!", Severity.Success);
+            Snackbar.Add("เพิ่มลูกค้าสำเร็จ!", Severity.Success);
         }
     }
 
     private async Task EditCustomer(Customer customer)
     {
         var parameters = new DialogParameters { ["Customer"] = customer };
-        var dialog = await DialogService.ShowAsync<EditCustomerDialog>("Edit Customer", parameters);
+        var dialog = await DialogService.ShowAsync<EditCustomerDialog>("แก้ไขลูกค้า", parameters);
         var result = await dialog.Result;
 
         if (!result.Canceled)
         {
             await LoadData();
-            Snackbar.Add("Customer updated successfully!", Severity.Success);
+            Snackbar.Add("อัปเดตลูกค้าสำเร็จ!", Severity.Success);
         }
     }
 
@@ -255,13 +255,13 @@
     {
         var parameters = new DialogParameters
         {
-            ["ContentText"] = $"Are you sure you want to delete customer '{customer.DisplayName}'? This action cannot be undone.",
-            ["ButtonText"] = "Delete",
+            ["ContentText"] = $"คุณแน่ใจหรือไม่ว่าต้องการลบลูกค้า '{customer.DisplayName}'? การกระทำนี้ไม่สามารถย้อนกลับได้",
+            ["ButtonText"] = "ลบ",
             ["ButtonColor"] = Color.Error
         };
 
         var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
-        var dialog = await DialogService.ShowAsync<DeleteConfirmationDialog>("Delete Customer", parameters, options);
+        var dialog = await DialogService.ShowAsync<DeleteConfirmationDialog>("ลบลูกค้า", parameters, options);
         var result = await dialog.Result;
 
         if (!result.Canceled)
@@ -272,16 +272,16 @@
                 if (success)
                 {
                     await LoadData();
-                    Snackbar.Add("Customer deleted successfully!", Severity.Success);
+                    Snackbar.Add("ลบลูกค้าสำเร็จ!", Severity.Success);
                 }
                 else
                 {
-                    Snackbar.Add("Failed to delete customer. Please try again.", Severity.Error);
+                    Snackbar.Add("ไม่สามารถลบลูกค้าได้ กรุณาลองอีกครั้ง", Severity.Error);
                 }
             }
             catch (Exception ex)
             {
-                Snackbar.Add($"Error deleting customer: {ex.Message}", Severity.Error);
+                Snackbar.Add($"ข้อผิดพลาดในการลบลูกค้า: {ex.Message}", Severity.Error);
             }
         }
     }
@@ -301,7 +301,7 @@
             };
             
             var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
-            var dialog = await DialogService.ShowAsync<DeleteCustomerDialog>("Delete Customer", parameters, options);
+            var dialog = await DialogService.ShowAsync<DeleteCustomerDialog>("ลบลูกค้า", parameters, options);
             var result = await dialog.Result;
 
             if (!result.Canceled && result.Data is CustomerDeletionRequest deletionRequest)
@@ -315,11 +315,11 @@
                         if (success)
                         {
                             await LoadData();
-                            Snackbar.Add("Customer permanently deleted!", Severity.Success);
+                            Snackbar.Add("ลบลูกค้าถาวรสำเร็จ!", Severity.Success);
                         }
                         else
                         {
-                            Snackbar.Add("Failed to delete customer permanently.", Severity.Error);
+                            Snackbar.Add("ไม่สามารถลบลูกค้าถาวรได้", Severity.Error);
                         }
                     }
                     else
@@ -327,7 +327,7 @@
                         // Soft delete
                         var updatedCustomer = await CustomerService.SoftDeleteCustomerAsync(deletionRequest);
                         await LoadData();
-                        Snackbar.Add("Customer marked as deleted successfully!", Severity.Info);
+                        Snackbar.Add("ทำเครื่องหมายลบลูกค้าสำเร็จ!", Severity.Info);
                     }
                 }
                 catch (Exception ex)
@@ -338,7 +338,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error validating customer deletion: {ex.Message}", Severity.Error);
+            Snackbar.Add($"ข้อผิดพลาดในการตรวจสอบการลบลูกค้า: {ex.Message}", Severity.Error);
         }
     }
 
@@ -347,7 +347,7 @@
     {
         // TODO: Implement location editing dialog with Google Maps
         // For now, show a simple message
-        Snackbar.Add($"Location editing for {customer.DisplayName} - Coming soon with Google Maps integration!", Severity.Info);
+        Snackbar.Add($"การแก้ไขตำแหน่งสำหรับ {customer.DisplayName} - เร็วๆ นี้พร้อมการรวม Google Maps!", Severity.Info);
     }
 
     // View mode toggle
@@ -370,17 +370,17 @@
             if (response.IsSuccessStatusCode)
             {
                 await LoadData();
-                Snackbar.Add("POS sync completed successfully!", Severity.Success);
+                Snackbar.Add("ซิงค์ POS สำเร็จ!", Severity.Success);
             }
             else
             {
                 var error = await response.Content.ReadAsStringAsync();
-                Snackbar.Add($"POS sync failed: {error}", Severity.Error);
+                Snackbar.Add($"ซิงค์ POS ล้มเหลว: {error}", Severity.Error);
             }
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error during POS sync: {ex.Message}", Severity.Error);
+            Snackbar.Add($"ข้อผิดพลาดระหว่างซิงค์ POS: {ex.Message}", Severity.Error);
         }
         finally
         {
@@ -392,7 +392,7 @@
     private async Task ViewCustomerDetails(Customer customer)
     {
         var parameters = new DialogParameters { ["Customer"] = customer };
-        await DialogService.ShowAsync<CustomerDetailsDialog>("Customer Details", parameters);
+        await DialogService.ShowAsync<CustomerDetailsDialog>("รายละเอียดลูกค้า", parameters);
     }
 }
 
@@ -405,13 +405,13 @@
         // Show confirmation dialog
         var parameters = new DialogParameters
         {
-            ["ContentText"] = "Are you sure you want to delete ALL customers from the database? This action cannot be undone.",
-            ["ButtonText"] = "Delete All",
+            ["ContentText"] = "คุณแน่ใจหรือไม่ว่าต้องการลบลูกค้าทั้งหมดจากฐานข้อมูล? การกระทำนี้ไม่สามารถย้อนกลับได้",
+            ["ButtonText"] = "ลบทั้งหมด",
             ["ButtonColor"] = Color.Error
         };
 
         var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
-        var dialog = await DialogService.ShowAsync<DeleteConfirmationDialog>("Delete All Customers", parameters, options);
+        var dialog = await DialogService.ShowAsync<DeleteConfirmationDialog>("ลบลูกค้าทั้งหมด", parameters, options);
         var result = await dialog.Result;
 
         if (!result.Canceled)
@@ -424,17 +424,17 @@
                 if (response.IsSuccessStatusCode)
                 {
                     await LoadData();
-                    Snackbar.Add("All customers deleted successfully!", Severity.Success);
+                    Snackbar.Add("ลบลูกค้าทั้งหมดสำเร็จ!", Severity.Success);
                 }
                 else
                 {
                     var error = await response.Content.ReadAsStringAsync();
-                    Snackbar.Add($"Failed to delete customers: {error}", Severity.Error);
+                    Snackbar.Add($"ไม่สามารถลบลูกค้าได้: {error}", Severity.Error);
                 }
             }
             catch (Exception ex)
             {
-                Snackbar.Add($"Error deleting all customers: {ex.Message}", Severity.Error);
+                Snackbar.Add($"ข้อผิดพลาดในการลบลูกค้าทั้งหมด: {ex.Message}", Severity.Error);
             }
             finally
             {
@@ -446,7 +446,7 @@
     private async Task StartImport()
     {
         var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
-        var dialog = await DialogService.ShowAsync<Components.ImportCandidatesDialog>("Import from POSPOS", new DialogParameters(), options);
+        var dialog = await DialogService.ShowAsync<Components.ImportCandidatesDialog>("นำเข้าจาก POSPOS", new DialogParameters(), options);
         var result = await dialog.Result;
         if (!result.Canceled)
         {
@@ -463,21 +463,21 @@
             if (resp.IsSuccessStatusCode)
             {
                 var txt = await resp.Content.ReadAsStringAsync();
-                Snackbar.Add("Summary loaded.", Severity.Info);
+                Snackbar.Add("โหลดสรุปสำเร็จ", Severity.Info);
             }
             else if (resp.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                Snackbar.Add("No import has been run yet.", Severity.Warning);
+                Snackbar.Add("ยังไม่มีการนำเข้า", Severity.Warning);
             }
             else
             {
                 var txt = await resp.Content.ReadAsStringAsync();
-                Snackbar.Add($"Failed to load summary: {resp.StatusCode} - {txt}", Severity.Error);
+                Snackbar.Add($"ไม่สามารถโหลดสรุปได้: {resp.StatusCode} - {txt}", Severity.Error);
             }
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Summary error: {ex.Message}", Severity.Error);
+            Snackbar.Add($"ข้อผิดพลาดในการสรุป: {ex.Message}", Severity.Error);
         }
     }
 }

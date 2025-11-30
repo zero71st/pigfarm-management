@@ -11,6 +11,12 @@ using PigFarmManagement.Client.Features.Admin.Services;
 using PigFarmManagement.Client.Services;
 using PigFarmManagement.Client.Features.Authentication.Services;
 using MudBlazor.Services;
+using System.Globalization;
+
+// Configure Thai culture for the application
+var thaiCulture = new CultureInfo("th-TH");
+CultureInfo.DefaultThreadCurrentCulture = thaiCulture;
+CultureInfo.DefaultThreadCurrentUICulture = thaiCulture;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 

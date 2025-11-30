@@ -9,7 +9,7 @@
     <TitleContent>
         <div style="display: flex; align-items: center;">
             <MudIcon Icon="@Icons.Material.Filled.CloudDownload" Class="mr-2" />
-            <MudText Typo="Typo.h6">Select Products to Import from POSPOS</MudText>
+            <MudText Typo="Typo.h6">เลือกผลิตภัณฑ์เพื่อนำเข้าจาก POSPOS</MudText>
         </div>
     </TitleContent>
     
@@ -20,7 +20,7 @@
                 <MudGrid AlignItems="Center">
                     <MudItem xs="12" sm="9">
                         <MudTextField @bind-Value="searchText"
-                                     Label="Search by product code or name..."
+                                     Label="ค้นหาตามรหัสหรือชื่อผลิตภัณฑ์..."
                                      Variant="Variant.Outlined"
                                      Margin="Margin.Dense"
                                      Adornment="Adornment.Start"
@@ -38,11 +38,11 @@
                             @if (searching)
                             {
                                 <MudProgressCircular Class="mr-2" Size="Size.Small" Indeterminate="true" />
-                                <span>Searching...</span>
+                                <span>กำลังค้นหา...</span>
                             }
                             else
                             {
-                                <span>Search</span>
+                                <span>ค้นหา</span>
                             }
                         </MudButton>
                     </MudItem>
@@ -54,7 +54,7 @@
             {
                 <div style="display: flex; justify-content: center; align-items: center; padding: 32px 16px;">
                     <MudProgressCircular Size="Size.Large" Indeterminate="true" />
-                    <MudText Class="ml-3">Searching products...</MudText>
+                    <MudText Class="ml-3">กำลังค้นหาผลิตภัณฑ์...</MudText>
                 </div>
             }
             else if (!hasSearched)
@@ -62,7 +62,7 @@
                 <div style="display: flex; justify-content: center; align-items: center; padding: 32px 16px; text-align: center;">
                     <MudAlert Severity="Severity.Info">
                         <MudIcon Icon="@Icons.Material.Filled.Search" Class="mr-2" />
-                        Enter a product code or name above and click Search to find products to import.
+                        ป้อนรหัสหรือชื่อผลิตภัณฑ์ด้านบนและคลิกค้นหาเพื่อค้นหาผลิตภัณฑ์ที่ต้องการนำเข้า
                     </MudAlert>
                 </div>
             }
@@ -70,7 +70,7 @@
             {
                 <div style="display: flex; justify-content: center; align-items: center; padding: 32px 16px; text-align: center;">
                     <MudAlert Severity="Severity.Warning">
-                        No products found matching your search criteria. Try a different search term.
+                        ไม่พบผลิตภัณฑ์ที่ตรงกับเงื่อนไขการค้นหา ลองค้นหาด้วยคำค้นอื่น
                     </MudAlert>
                 </div>
             }
@@ -80,7 +80,7 @@
                 <div Style="flex-shrink: 0; padding: 12px 16px; border-bottom: 1px solid #e0e0e0;">
                     <MudPaper Class="pa-3" Elevation="1">
                         <MudText Typo="Typo.body1">
-                            <strong>@selectedProducts.Count</strong> of <strong>@products.Count</strong> products selected
+                            <strong>@selectedProducts.Count</strong> จาก <strong>@products.Count</strong> ผลิตภัณฑ์ที่เลือก
                         </MudText>
                     </MudPaper>
                 </div>
@@ -98,24 +98,24 @@
                                 FixedHeader="true">
                         
                         <Columns>
-                            <TemplateColumn Title="Select">
+                            <TemplateColumn Title="เลือก">
                                 <CellTemplate>
                                     <MudCheckBox T="bool" 
                                                Value="@selectedProductsHashSet.Contains(context.Item)"
                                                ValueChanged="@((bool value) => HandleProductSelection(context.Item, value))" />
                                 </CellTemplate>
                             </TemplateColumn>
-                            <PropertyColumn Property="x => x.Code" Title="Code" />
-                            <PropertyColumn Property="x => x.Name" Title="Product Name" />
-                            <TemplateColumn Title="Category">
+                            <PropertyColumn Property="x => x.Code" Title="รหัส" />
+                            <PropertyColumn Property="x => x.Name" Title="ชื่อผลิตภัณฑ์" />
+                            <TemplateColumn Title="หมวดหมู่">
                                 <CellTemplate>
                                     <MudChip Size="Size.Small" Color="Color.Info">
                                         @(context.Item.Category?.Name ?? "N/A")
                                     </MudChip>
                                 </CellTemplate>
                             </TemplateColumn>
-                            <PropertyColumn Property="x => x.Cost" Title="Cost" Format="N2" />
-                            <TemplateColumn Title="Unit">
+                            <PropertyColumn Property="x => x.Cost" Title="ราคา" Format="N2" />
+                            <TemplateColumn Title="หน่วย">
                                 <CellTemplate>
                                     @(context.Item.Unit?.Name ?? "N/A")
                                 </CellTemplate>
@@ -123,7 +123,7 @@
                         </Columns>
 
                         <NoRecordsContent>
-                            <MudText>No products match your search criteria.</MudText>
+                            <MudText>ไม่มีผลิตภัณฑ์ที่ตรงกับเงื่อนไขการค้นหา</MudText>
                         </NoRecordsContent>
                     </MudDataGrid>
                 </div>
@@ -132,7 +132,7 @@
     </DialogContent>
     
     <DialogActions>
-        <MudButton OnClick="Cancel" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">ยกเลิก</MudButton>
         <MudButton Color="Color.Primary" 
                   Variant="Variant.Filled" 
                   OnClick="ImportSelected"
@@ -141,11 +141,11 @@
             @if (importing)
             {
                 <MudProgressCircular Class="mr-2" Size="Size.Small" Indeterminate="true" />
-                <span>Importing @selectedProducts.Count products...</span>
+                <span>กำลังนำเข้า @selectedProducts.Count ผลิตภัณฑ์...</span>
             }
             else
             {
-                <span>Import @selectedProducts.Count Selected</span>
+                <span>นำเข้า @selectedProducts.Count ที่เลือก</span>
             }
         </MudButton>
     </DialogActions>
@@ -175,7 +175,7 @@
     {
         if (string.IsNullOrWhiteSpace(searchText))
         {
-            Snackbar.Add("Please enter a search term", Severity.Warning);
+            Snackbar.Add("กรุณาป้อนคำค้นหา", Severity.Warning);
             return;
         }
 
@@ -195,7 +195,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error searching products: {ex.Message}", Severity.Error);
+            Snackbar.Add($"เกิดข้อผิดพลาดในการค้นหาผลิตภัณฑ์: {ex.Message}", Severity.Error);
             products = new List<PosposProduct>();
         }
         finally
@@ -209,7 +209,7 @@
     {
         if (selectedProducts.Count == 0)
         {
-            Snackbar.Add("Please select at least one product to import", Severity.Warning);
+            Snackbar.Add("กรุณาเลือกผลิตภัณฑ์อย่างน้อย 1 รายการ", Severity.Warning);
             return;
         }
 
@@ -226,7 +226,7 @@
 
             if (productCodes.Count == 0)
             {
-                Snackbar.Add("Selected products have no valid codes", Severity.Error);
+                Snackbar.Add("ผลิตภัณฑ์ที่เลือกไม่มีรหัสที่ถูกต้อง", Severity.Error);
                 return;
             }
 
@@ -236,22 +236,22 @@
             // Show results using the old ImportResultResponse structure
             if (result.SuccessCount > 0)
             {
-                Snackbar.Add($"✅ Successfully imported {result.SuccessCount} products", Severity.Success);
+                Snackbar.Add($"✅ นำเข้าสำเร็จ {result.SuccessCount} ผลิตภัณฑ์", Severity.Success);
             }
 
             if (result.SkippedCount > 0)
             {
-                Snackbar.Add($"⚠️ Skipped {result.SkippedCount} duplicate products", Severity.Warning);
+                Snackbar.Add($"⚠️ ข้าม {result.SkippedCount} ผลิตภัณฑ์ซ้ำกัน", Severity.Warning);
             }
 
             if (result.ErrorCount > 0)
             {
-                Snackbar.Add($"❌ Failed to import {result.ErrorCount} products", Severity.Error);
+                Snackbar.Add($"❌ นำเข้าล้มเหลว {result.ErrorCount} ผลิตภัณฑ์", Severity.Error);
                 
                 // Show individual error messages
                 foreach (var error in result.Errors.Take(3))
                 {
-                    Snackbar.Add($"Error: {error}", Severity.Error);
+                    Snackbar.Add($"ข้อผิดพลาด: {error}", Severity.Error);
                 }
             }
 
@@ -260,7 +260,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Import failed: {ex.Message}", Severity.Error);
+            Snackbar.Add($"การนำเข้าล้มเหลว: {ex.Message}", Severity.Error);
         }
         finally
         {

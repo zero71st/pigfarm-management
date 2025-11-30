@@ -2,19 +2,19 @@
 
 <MudNavMenu>
     <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">
-        <MudText Typo="Typo.body2">Dashboard</MudText>
+        <MudText Typo="Typo.body2">แดชบอร์ด</MudText>
     </MudNavLink>
     <MudNavLink Href="/pigpens" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Pets">
-        <MudText Typo="Typo.body2">Pig Pens</MudText>
+        <MudText Typo="Typo.body2">คอกสุกร</MudText>
     </MudNavLink>
     <MudNavLink Href="/customers" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.People">
-        <MudText Typo="Typo.body2">Customers</MudText>
+        <MudText Typo="Typo.body2">ลูกค้า</MudText>
     </MudNavLink>
     <MudNavLink Href="/feed-formulas" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Science">
-        <MudText Typo="Typo.body2">Feed Formulas</MudText>
+        <MudText Typo="Typo.body2">สูตรอาหาร</MudText>
     </MudNavLink>
     <MudNavLink Href="/reports" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Assessment">
-        <MudText Typo="Typo.body2">Reports</MudText>
+        <MudText Typo="Typo.body2">รายงาน</MudText>
     </MudNavLink>
     
     <AuthorizeView Roles="Admin">
@@ -23,12 +23,12 @@
             <!-- Admin Section Header -->
             <div class="mud-nav-item mud-nav-link" style="padding: 8px 16px; display: flex; align-items: center; color: var(--mud-palette-text-secondary);">
                 <MudIcon Icon="@Icons.Material.Filled.AdminPanelSettings" Style="margin-right: 12px;" />
-                <MudText Typo="Typo.body2" Style="font-weight: 500;">Administration</MudText>
+                <MudText Typo="Typo.body2" Style="font-weight: 500;">การจัดการ</MudText>
             </div>
             <!-- Admin Menu Items -->
             <div style="padding-left: 16px;">
                 <MudNavLink Href="/admin/users" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.ManageAccounts">
-                    <MudText Typo="Typo.body2">User Management</MudText>
+                    <MudText Typo="Typo.body2">จัดการผู้ใช้</MudText>
                 </MudNavLink>
             </div>
         </Authorized>

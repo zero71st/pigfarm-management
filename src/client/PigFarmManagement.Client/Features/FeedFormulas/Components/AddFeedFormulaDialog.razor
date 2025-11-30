@@ -8,35 +8,35 @@
         <MudContainer Style="max-width: 600px;">
             <MudForm @ref="form" @bind-IsValid="@isValid" @bind-Errors="@errors">
                 <MudTextField @bind-Value="productCode"
-                             Label="Product Code"
+                             Label="รหัสผลิตภัณฑ์"
                              Required="true"
-                             RequiredError="Product code is required"
+                             RequiredError="กรุณาระบุรหัสผลิตภัณฑ์"
                              Validation="@(new Func<string, Task<string>>(ValidateProductCode))"
                              Immediate="true"
                              For="@(() => productCode)" />
 
                 <MudTextField @bind-Value="productName"
-                             Label="Product Name"
+                             Label="ชื่อผลิตภัณฑ์"
                              Required="true"
-                             RequiredError="Product name is required"
+                             RequiredError="กรุณาระบุชื่อผลิตภัณฑ์"
                              For="@(() => productName)" />
 
                 <MudTextField @bind-Value="categoryName"
-                             Label="Category"
+                             Label="หมวดหมู่"
                              Required="true"
-                             RequiredError="Category is required"
+                             RequiredError="กรุณาระบุหมวดหมู่"
                              For="@(() => categoryName)" />
 
                 <MudTextField @bind-Value="brand"
-                             Label="Brand"
+                             Label="แบรนด์"
                              Required="false"
-                             HelperText="Set brand manually as needed"
+                             HelperText="กำหนดแบรนด์ตามความต้องการ"
                              For="@(() => brand)" />
 
                 <MudNumericField @bind-Value="consumeRate"
-                               Label="Consume Rate"
+                               Label="อัตราการใช้"
                                Required="true"
-                               RequiredError="Consume rate is required"
+                               RequiredError="กรุณาระบุอัตราการใช้"
                                Min="0.1m"
                                Max="10.0m"
                                Step="0.1m"
@@ -44,26 +44,26 @@
                                For="@(() => consumeRate)" />
 
                 <MudNumericField @bind-Value="cost"
-                               Label="Cost"
+                               Label="ราคา"
                                Required="true"
-                               RequiredError="Cost is required"
+                               RequiredError="กรุณาระบุราคา"
                                Min="0m"
                                Step="0.01m"
                                Format="F2"
                                For="@(() => cost)" />
 
                 <MudTextField @bind-Value="unitName"
-                             Label="Unit"
+                             Label="หน่วย"
                              For="@(() => unitName)" />
 
                 <MudText Typo="Typo.caption" Class="mt-2">
-                    Consumption rate: @consumeRate.ToString("F2") per pig
+                    อัตราการกิน: @consumeRate.ToString("F2") ต่อสุกร
                 </MudText>
             </MudForm>
         </MudContainer>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton OnClick="Cancel">ยกเลิก</MudButton>
         <MudButton Color="Color.Primary" 
                   Variant="Variant.Filled" 
                   OnClick="Submit" 
@@ -71,11 +71,11 @@
             @if (saving)
             {
                 <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/>
-                <MudText Class="ms-2">Creating...</MudText>
+                <MudText Class="ms-2">กำลังสร้าง...</MudText>
             }
             else
             {
-                <MudText>Create Feed Formula</MudText>
+                <MudText>สร้างสูตรอาหาร</MudText>
             }
         </MudButton>
     </DialogActions>
@@ -100,13 +100,13 @@
     private async Task<string> ValidateProductCode(string code)
     {
         if (string.IsNullOrWhiteSpace(code))
-            return "Product code is required";
+            return "กรุณาระบุรหัสผลิตภัณฑ์";
 
         try
         {
             var exists = await FeedFormulaService.ExistsAsync(code);
             if (exists)
-                return "Product code already exists";
+                return "มีรหัสผลิตภัณฑ์นี้อยู่แล้ว";
         }
         catch
         {
@@ -135,7 +135,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error creating feed formula: {ex.Message}", Severity.Error);
+            Snackbar.Add($"เกิดข้อผิดพลาดในการสร้างสูตรอาหาร: {ex.Message}", Severity.Error);
         }
         finally
         {

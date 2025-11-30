@@ -11,10 +11,10 @@
           Class="customer-table">
     
     <ToolBarContent>
-        <MudText Typo="Typo.h6">Customers</MudText>
+        <MudText Typo="Typo.h6">ลูกค้า</MudText>
         <MudSpacer />
         <MudTextField @bind-Value="searchString" 
-                      Placeholder="Search customers..." 
+                      Placeholder="ค้นหาลูกค้า..." 
                       Adornment="Adornment.Start" 
                       AdornmentIcon="@Icons.Material.Filled.Search" 
                       IconSize="Size.Medium" 
@@ -22,18 +22,18 @@
     </ToolBarContent>
     
     <HeaderContent>
-        <MudTh><MudTableSortLabel SortBy="new Func<Customer, object>(x => x.Status)">Status</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel SortBy="new Func<Customer, object>(x => x.Code)">Code</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel SortBy="new Func<Customer, object>(x => x.DisplayName)">Name</MudTableSortLabel></MudTh>
-        <MudTh>Phone</MudTh>
-        <MudTh>Email</MudTh>
-        <MudTh>Location</MudTh>
-        <MudTh><MudTableSortLabel SortBy="new Func<Customer, object>(x => x.CreatedAt)">Created</MudTableSortLabel></MudTh>
-        <MudTh>Actions</MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<Customer, object>(x => x.Status)">สถานะ</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<Customer, object>(x => x.Code)">รหัส</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<Customer, object>(x => x.DisplayName)">ชื่อ</MudTableSortLabel></MudTh>
+        <MudTh>เบอร์โทรศัพท์</MudTh>
+        <MudTh>อีเมล</MudTh>
+        <MudTh>ตำแหน่ง</MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<Customer, object>(x => x.CreatedAt)">วันที่สร้าง</MudTableSortLabel></MudTh>
+        <MudTh>การดำเนินการ</MudTh>
     </HeaderContent>
     
     <RowTemplate>
-        <MudTd DataLabel="Status">
+        <MudTd DataLabel="สถานะ">
             <div class="d-flex align-center">
                 <MudIcon Icon="@GetCustomerIcon(context.Status)" 
                          Color="@GetStatusColor(context.Status)" 
@@ -41,48 +41,48 @@
                 <MudText Typo="Typo.caption" Class="ml-2">@context.Status</MudText>
             </div>
         </MudTd>
-        <MudTd DataLabel="Code">@context.Code</MudTd>
-        <MudTd DataLabel="Name">@context.DisplayName</MudTd>
-        <MudTd DataLabel="Phone">@context.Phone</MudTd>
-        <MudTd DataLabel="Email">@context.Email</MudTd>
-        <MudTd DataLabel="Location">
+        <MudTd DataLabel="รหัส">@context.Code</MudTd>
+        <MudTd DataLabel="ชื่อ">@context.DisplayName</MudTd>
+        <MudTd DataLabel="เบอร์โทรศัพท์">@context.Phone</MudTd>
+        <MudTd DataLabel="อีเมล">@context.Email</MudTd>
+        <MudTd DataLabel="ตำแหน่ง">
             <div class="d-flex align-center">
                 @if (context.HasLocation)
                 {
                     <MudIcon Icon="@Icons.Material.Filled.LocationOn" 
                              Color="Color.Success" 
                              Size="Size.Small" />
-                    <MudText Typo="Typo.caption" Class="ml-1">Set</MudText>
+                    <MudText Typo="Typo.caption" Class="ml-1">มี</MudText>
                 }
                 else
                 {
                     <MudIcon Icon="@Icons.Material.Filled.LocationOff" 
                              Color="Color.Default" 
                              Size="Size.Small" />
-                    <MudText Typo="Typo.caption" Class="ml-1">None</MudText>
+                    <MudText Typo="Typo.caption" Class="ml-1">ไม่มี</MudText>
                 }
             </div>
         </MudTd>
-        <MudTd DataLabel="Created">@context.CreatedAt.ToString("MM/dd/yyyy")</MudTd>
-        <MudTd DataLabel="Actions">
+        <MudTd DataLabel="วันที่สร้าง">@context.CreatedAt.ToString("MM/dd/yyyy")</MudTd>
+        <MudTd DataLabel="การดำเนินการ">
             <div class="d-flex">
                 <MudIconButton Icon="@Icons.Material.Filled.Edit" 
                                Color="Color.Primary" 
                                Size="Size.Small"
                                OnClick="@(() => OnEditCustomer.InvokeAsync(context))"
-                               title="Edit customer" />
+                               title="แก้ไขลูกค้า" />
                 
                 <MudIconButton Icon="@Icons.Material.Filled.LocationOn" 
                                Color="Color.Info" 
                                Size="Size.Small"
                                OnClick="@(() => OnEditLocation.InvokeAsync(context))"
-                               title="Edit location" />
+                               title="แก้ไขตำแหน่ง" />
                 
                 <MudIconButton Icon="@Icons.Material.Filled.Delete" 
                                Color="Color.Error" 
                                Size="Size.Small"
                                OnClick="@(() => OnDeleteCustomer.InvokeAsync(context))"
-                               title="Delete customer" />
+                               title="ลบลูกค้า" />
             </div>
         </MudTd>
     </RowTemplate>
