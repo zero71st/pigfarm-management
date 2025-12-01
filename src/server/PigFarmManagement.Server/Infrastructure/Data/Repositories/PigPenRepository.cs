@@ -60,14 +60,20 @@ public class PigPenRepository : IPigPenRepository
         return entity.ToModel();
     }
 
-    public async Task<PigPen> UpdateAsync(PigPen pigPen)
+    public async Task<(PigPen pigPen, int updatedAssignmentCount)> UpdateAsync(PigPen pigPen)
     {
+        // T005: Load with formula assignments for recalculation
         var entity = await _context.PigPens
             .Include(p => p.Customer)
+            .Include(p => p.FormulaAssignments)
             .FirstOrDefaultAsync(p => p.Id == pigPen.Id);
 
         if (entity == null)
             throw new ArgumentException($"PigPen with ID {pigPen.Id} not found");
+
+        // Track old PigQty to detect changes
+        var oldPigQty = entity.PigQty;
+        var updatedAssignmentCount = 0;
 
         entity.CustomerId = pigPen.CustomerId;
         entity.PenCode = pigPen.PenCode;
@@ -85,20 +91,63 @@ public class PigPenRepository : IPigPenRepository
         entity.IsCalculationLocked = pigPen.IsCalculationLocked;
         entity.UpdatedAt = DateTime.UtcNow;
 
+        // T005: Recalculate formula assignments if PigQty changed
+        // This must happen BEFORE replacing assignments, so we modify the incoming pigPen model
+        var updatedFormulaAssignments = new List<PigPenFormulaAssignment>();
+        
+        if (oldPigQty != pigPen.PigQty)
+        {
+            foreach (var assignment in pigPen.FormulaAssignments.Where(a => a.IsActive && !a.IsLocked))
+            {
+                // T006: Use _context directly to load source formula
+                var feedFormula = await _context.FeedFormulas.FindAsync(assignment.OriginalFormulaId);
+                
+                // T011: Error handling for missing formulas
+                if (feedFormula == null)
+                {
+                    // Skip this assignment if formula not found, keep original
+                    updatedFormulaAssignments.Add(assignment);
+                    continue;
+                }
+
+                // Create updated assignment with recalculated values
+                var updatedAssignment = assignment with
+                {
+                    AssignedPigQuantity = pigPen.PigQty,
+                    AssignedBagPerPig = feedFormula.ConsumeRate ?? 0,
+                    AssignedTotalBags = Math.Ceiling((feedFormula.ConsumeRate ?? 0) * pigPen.PigQty)
+                };
+                
+                updatedFormulaAssignments.Add(updatedAssignment);
+                updatedAssignmentCount++;
+            }
+            
+            // Add inactive/locked assignments unchanged
+            updatedFormulaAssignments.AddRange(pigPen.FormulaAssignments.Where(a => !a.IsActive || a.IsLocked));
+        }
+        else
+        {
+            // No PigQty change, use original assignments
+            updatedFormulaAssignments.AddRange(pigPen.FormulaAssignments);
+        }
+
         // Update formula assignments
         // Remove existing assignments
         var existingAssignments = _context.PigPenFormulaAssignments.Where(fa => fa.PigPenId == pigPen.Id);
         _context.PigPenFormulaAssignments.RemoveRange(existingAssignments);
 
-        // Add new assignments
-        foreach (var assignment in pigPen.FormulaAssignments)
+        // Add new/updated assignments
+        foreach (var assignment in updatedFormulaAssignments)
         {
             var assignmentEntity = PigPenFormulaAssignmentEntity.FromModel(assignment);
             _context.PigPenFormulaAssignments.Add(assignmentEntity);
         }
 
+        // T010: SaveChangesAsync wraps all assignment updates in single transaction (EF default behavior)
         await _context.SaveChangesAsync();
-        return entity.ToModel();
+        
+        // T008: Return tuple with updated model and count
+        return (entity.ToModel(), updatedAssignmentCount);
     }
 
     public async Task DeleteAsync(Guid id)

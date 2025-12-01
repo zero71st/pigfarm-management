@@ -9,30 +9,35 @@
 @inject IPigPenService PigPenService
 @inject IFeedFormulaCalculationService FeedFormulaCalculationService
 @inject IFeedFormulaService FeedFormulaService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
 
 <MudDialog>
     <DialogContent>
         <MudContainer Style="max-width: 500px;">
             <MudGrid>
                 <MudItem xs="12">
-                    <MudSelect T="Guid?" @bind-Value="selectedCustomerId" Label="ลูกค้า" Variant="Variant.Outlined" Required="true">
-                        <MudSelectItem T="Guid?" Value="@((Guid?)null)">-- เลือกลูกค้า --</MudSelectItem>
-                        @foreach (var customer in customers)
-                        {
-                            <MudSelectItem T="Guid?" Value="@((Guid?)customer.Id)">@customer.DisplayName (@customer.Status)</MudSelectItem>
-                        }
-                    </MudSelect>
+                    <MudAutocomplete T="Customer"
+                                   Label="ลูกค้า"
+                                   @bind-Value="selectedCustomer"
+                                   SearchFunc="@SearchCustomers"
+                                   ToStringFunc="@(c => c == null ? "" : $"{c.DisplayName} ({c.Status})")"
+                                   Variant="Variant.Outlined"
+                                   Required="true"
+                                   Clearable="true"
+                                   AdornmentIcon="@Icons.Material.Filled.Search"
+                                   AdornmentColor="Color.Primary" />
                 </MudItem>
                 <MudItem xs="12">
                     <MudTextField @bind-Value="penCode" Label="รหัสคอก" Variant="Variant.Outlined" Required="true" />
                 </MudItem>
                 <MudItem xs="12">
-                    <MudSelect T="PigPenType" @bind-Value="selectedType" Label="ประเภทคอก" Variant="Variant.Outlined" Required="true">
+                    <MudSelect T="PigPenType" Value="selectedType" ValueChanged="@((PigPenType value) => { selectedType = value; StateHasChanged(); })" Label="ประเภทคอก" Variant="Variant.Outlined" Required="true">
                         <MudSelectItem T="PigPenType" Value="PigPenType.Cash">เงินสด</MudSelectItem>
                         <MudSelectItem T="PigPenType" Value="PigPenType.Project">โครงการ</MudSelectItem>
                     </MudSelect>
                 </MudItem>
-                <MudItem xs="6">
+                <MudItem xs="@(selectedType == PigPenType.Project ? 6 : 12)">
                     <MudNumericField Value="pigQty" 
                                    ValueChanged="@((int value) => OnPigQuantityChanged(value))"
                                    Label="จำนวนสุกร" 
@@ -40,17 +45,51 @@
                                    Min="1" 
                                    Required="true" />
                 </MudItem>
-                <MudItem xs="6">
-                    <MudNumericField @bind-Value="depositPerPig" 
-                                   Label="Deposit Per Pig (บาท)" 
-                                   Variant="Variant.Outlined" 
-                                   Min="0" 
-                                   Step="100"
-                                   Format="N0"
-                                   Required="true" 
-                                   Adornment="Adornment.End" 
-                                   AdornmentText="฿" />
-                </MudItem>
+                @if (selectedType == PigPenType.Project)
+                {
+                    <MudItem xs="6">
+                        <MudNumericField @bind-Value="depositPerPig" 
+                                       Label="ค่ามัดจำ/ตัว" 
+                                       Variant="Variant.Outlined" 
+                                       Min="0" 
+                                       Step="100"
+                                       Format="N0"
+                                       Required="true" 
+                                       Adornment="Adornment.End" 
+                                       AdornmentText="฿" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudPaper Class="pa-3" Elevation="2" Style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <div class="d-flex justify-space-between align-center">
+                                <MudText Typo="Typo.h6" Style="color: white; font-weight: 500;">ยอดเงินมัดจำทั้งหมด</MudText>
+                                <MudText Typo="Typo.h4" Style="color: white; font-weight: bold;">฿@((pigQty * depositPerPig).ToString("N2"))</MudText>
+                            </div>
+                            <MudText Typo="Typo.body2" Style="color: rgba(255,255,255,0.9); margin-top: 4px;">
+                                @pigQty สุกร × ฿@depositPerPig.ToString("N0") = ฿@((pigQty * depositPerPig).ToString("N2"))
+                            </MudText>
+                            @if (tempDeposits.Any())
+                            {
+                                <MudDivider Class="my-2" Style="background-color: rgba(255,255,255,0.3);" />
+                                <MudText Typo="Typo.body2" Style="color: rgba(255,255,255,0.9);">
+                                    จ่ายแล้ว: ฿@totalPaidDeposit.ToString("N2") (@tempDeposits.Count รายการ)
+                                </MudText>
+                                <MudText Typo="Typo.body2" Style="color: rgba(255,255,255,0.9);">
+                                    คงเหลือ: ฿@((pigQty * depositPerPig - totalPaidDeposit).ToString("N2"))
+                                </MudText>
+                            }
+                            <MudDivider Class="my-3" Style="background-color: rgba(255,255,255,0.3);" />
+                            <MudButton Variant="Variant.Filled" 
+                                       Color="Color.Warning"
+                                       FullWidth="true"
+                                       Size="Size.Large"
+                                       StartIcon="@Icons.Material.Filled.Payment"
+                                       Style="background: white; color: #667eea; font-weight: 600; box-shadow: 0 4px 6px rgba(0,0,0,0.2);"
+                                       OnClick="ShowAddDepositDialog">
+                                จ่ายเงินมัดจำ
+                            </MudButton>
+                        </MudPaper>
+                    </MudItem>
+                }
                 <MudItem xs="6">
                     <MudDatePicker Date="registerDate" 
                                   DateChanged="@OnRegisterDateChanged"
@@ -130,7 +169,7 @@
 
     private List<Customer> customers = new();
     private List<string> availableBrands = new();
-    private Guid? selectedCustomerId;
+    private Customer? selectedCustomer;
     private string penCode = "";
     private PigPenType selectedType = PigPenType.Project;
     private int pigQty = 1;
@@ -144,6 +183,10 @@
     
     // Note property
     private string? note;
+    
+    // Deposit tracking
+    private List<Deposit> tempDeposits = new();
+    private decimal totalPaidDeposit => tempDeposits.Sum(d => d.Amount);
 
     protected override async Task OnInitializedAsync()
     {
@@ -192,6 +235,49 @@
         pigQty = newPigQty;
     }
 
+    private async Task ShowAddDepositDialog()
+    {
+        // Create a temporary pig pen object for deposit calculation
+        var tempPigPen = new PigPen(
+            Id: Guid.NewGuid(), // Temporary ID
+            CustomerId: selectedCustomer?.Id ?? Guid.Empty,
+            PenCode: penCode,
+            PigQty: pigQty,
+            RegisterDate: registerDate ?? DateTime.Today,
+            ActHarvestDate: null,
+            EstimatedHarvestDate: estimatedHarvestDate,
+            FeedCost: 0,
+            Investment: 0,
+            ProfitLoss: 0,
+            Type: selectedType,
+            DepositPerPig: depositPerPig,
+            CreatedAt: DateTime.UtcNow,
+            UpdatedAt: DateTime.UtcNow
+        )
+        {
+            SelectedBrand = selectedBrand,
+            Note = note,
+            FormulaAssignments = new List<PigPenFormulaAssignment>(),
+            IsCalculationLocked = false
+        };
+
+        var parameters = new DialogParameters
+        {
+            { "PigPenId", tempPigPen.Id },
+            { "PigPen", tempPigPen },
+            { "CurrentDeposits", tempDeposits }
+        };
+
+        var dialog = await DialogService.ShowAsync<AddDepositDialog>("เพิ่มเงินมัดจำ", parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is Deposit newDeposit)
+        {
+            tempDeposits.Add(newDeposit);
+            StateHasChanged();
+        }
+    }
+
     private void OnRegisterDateChanged(DateTime? newRegisterDate)
     {
         registerDate = newRegisterDate;
@@ -213,9 +299,19 @@
 
     void Cancel() => MudDialog.Cancel();
 
+    private async Task<IEnumerable<Customer>> SearchCustomers(string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return customers;
+        
+        return customers.Where(c => 
+            c.DisplayName.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
+            (c.Code?.Contains(searchString, StringComparison.OrdinalIgnoreCase) ?? false));
+    }
+
     private bool IsFormValid()
     {
-        return selectedCustomerId.HasValue &&
+        return selectedCustomer != null &&
                !string.IsNullOrWhiteSpace(penCode) &&
                pigQty > 0 &&
                registerDate.HasValue &&
@@ -236,7 +332,7 @@
 
             // Create the pig pen first
             var pigPenDto = new PigPenCreateDto(
-                selectedCustomerId!.Value,
+                selectedCustomer!.Id,
                 penCode,
                 pigQty,
                 registerDateUtc,
@@ -244,7 +340,7 @@
                 estimatedHarvestDateUtc,
                 selectedType,
                 selectedBrand, // Save the selected brand
-                depositPerPig, // Custom deposit per pig amount
+                selectedType == PigPenType.Project ? depositPerPig : 0m, // Deposit only for Project type
                 note // Note
             );
 

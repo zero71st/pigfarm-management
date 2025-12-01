@@ -11,7 +11,7 @@ public interface IPigPenService
     Task<List<PigPen>> GetAllPigPensAsync();
     Task<PigPen?> GetPigPenByIdAsync(Guid id);
     Task<PigPen> CreatePigPenAsync(PigPenCreateDto dto);
-    Task<PigPen> UpdatePigPenAsync(PigPen pigPen);
+    Task<PigPen> UpdatePigPenAsync(PigPen pigPen, string? userId = null);
     Task<bool> DeletePigPenAsync(Guid id);
     Task<List<PigPen>> GetPigPensByCustomerIdAsync(Guid customerId);
     Task<PigPen> ForceClosePigPenAsync(Guid id);
@@ -172,12 +172,24 @@ public class PigPenService : IPigPenService
         }
     }
 
-    public async Task<PigPen> UpdatePigPenAsync(PigPen pigPen)
+    public async Task<PigPen> UpdatePigPenAsync(PigPen pigPen, string? userId = null)
     {
         var existingPigPen = await _pigPenRepository.GetByIdAsync(pigPen.Id);
         if (existingPigPen == null)
         {
             throw new InvalidOperationException("Pig pen not found");
+        }
+
+        // T003: Locked-pen validation
+        if (existingPigPen.IsCalculationLocked)
+        {
+            throw new InvalidOperationException("Cannot modify pig quantity: pen calculations are locked");
+        }
+
+        // T004: Quantity range validation
+        if (pigPen.PigQty < 1 || pigPen.PigQty > 100)
+        {
+            throw new InvalidOperationException("Pig quantity must be between 1 and 100");
         }
 
         // Update the UpdatedAt timestamp while preserving CreatedAt
@@ -186,7 +198,20 @@ public class PigPenService : IPigPenService
             UpdatedAt = DateTime.UtcNow 
         };
 
-        return await _pigPenRepository.UpdateAsync(updatedPigPen);
+        // T005, T008: Repository now returns tuple with updated assignment count
+        var oldQty = existingPigPen.PigQty;
+        var (result, updatedAssignmentCount) = await _pigPenRepository.UpdateAsync(updatedPigPen);
+
+        // T007: Log change event if PigQty changed
+        if (oldQty != pigPen.PigQty)
+        {
+            _logger.LogInformation(
+                "Updated pig pen {PigPenId} quantity from {OldQty} to {NewQty} by user {UserId}, recalculated {AssignmentCount} assignments",
+                pigPen.Id, oldQty, pigPen.PigQty, userId ?? "unknown", updatedAssignmentCount
+            );
+        }
+
+        return result;
     }
 
     public async Task<bool> DeletePigPenAsync(Guid id)
@@ -252,7 +277,9 @@ public class PigPenService : IPigPenService
             UpdatedAt = DateTime.UtcNow
         };
 
-        return await _pigPenRepository.UpdateAsync(forceClosedPigPen);
+        // UpdateAsync returns tuple, extract just the pig pen
+        var (result, _) = await _pigPenRepository.UpdateAsync(forceClosedPigPen);
+        return result;
     }
 
     public async Task<List<PigPenFormulaAssignment>> GetFormulaAssignmentsAsync(Guid pigPenId)

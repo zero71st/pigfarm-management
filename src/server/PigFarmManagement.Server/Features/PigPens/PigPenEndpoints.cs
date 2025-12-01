@@ -123,7 +123,7 @@ public static class PigPenEndpoints
         }
     }
 
-    private static async Task<IResult> UpdatePigPen(Guid id, PigPenUpdateDto dto, IPigPenService pigPenService)
+    private static async Task<IResult> UpdatePigPen(Guid id, PigPenUpdateDto dto, IPigPenService pigPenService, HttpContext context)
     {
         try
         {
@@ -150,7 +150,10 @@ public static class PigPenEndpoints
                 UpdatedAt = DateTime.UtcNow
             };
 
-            var result = await pigPenService.UpdatePigPenAsync(updatedPigPen);
+            // T009: Extract user context for logging
+            var userId = context.User.FindFirst("user_id")?.Value;
+            
+            var result = await pigPenService.UpdatePigPenAsync(updatedPigPen, userId);
             return Results.Ok(result);
         }
         catch (InvalidOperationException ex)

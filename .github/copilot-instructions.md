@@ -1,6 +1,6 @@
 # PigFarmManagement Development Guidelines
 
-Last updated: 2025-11-29
+Last updated: 2025-12-01
 
 ## Tech Stack
 - **Backend**: C# .NET 8 ASP.NET Core Web API with Entity Framework Core
@@ -314,6 +314,57 @@ public class CustomerRepository : ICustomerRepository
 - Delete operation: <50ms for typical invoice
 
 **Testing**: See `specs/014-add-invoice-list/quickstart.md` for manual validation scenarios (6 scenarios).
+
+## Feature 015: Auto-Recalculate Pig Pen Formula Assignments
+
+**Status**: Implementation Complete (Ready for Testing) | **Date**: 2025-12-01
+
+**Scope**: Automatically recalculate all active formula assignments when pig pen quantity changes, syncing with latest formula consume rates
+
+**Files Modified**:
+- Backend: `PigPenService.cs`, `PigPenRepository.cs`, `PigPenEndpoints.cs`, `IRepositories.cs`
+
+**Key Changes**:
+
+1. **Service Enhancement** - `PigPenService.UpdatePigPenAsync`:
+   - Added `IsCalculationLocked` validation (throws `InvalidOperationException` if locked)
+   - Added `PigQty` range validation (1-100, throws `InvalidOperationException` if out of range)
+   - Added optional `userId` parameter for audit logging
+   - Structured logging: logs pen ID, old/new qty, user ID, assignment count on successful update
+
+2. **Repository Enhancement** - `PigPenRepository.UpdateAsync`:
+   - Changed signature to return `Task<(PigPen pigPen, int updatedAssignmentCount)>` tuple
+   - Detects `PigQty` changes by comparing old vs. new values
+   - For each active, unlocked assignment:
+     - Loads source `FeedFormula` via `_context.FeedFormulas.FindAsync()`
+     - Updates `AssignedPigQuantity = newPigQty`
+     - Syncs `AssignedBagPerPig = formula.ConsumeRate`
+     - Recomputes `AssignedTotalBags = Math.Ceiling(AssignedBagPerPig * AssignedPigQuantity)`
+     - Updates `UpdatedAt = DateTime.UtcNow`
+   - Returns count of updated assignments for logging
+   - Error handling: skips assignments if source formula not found (doesn't fail entire update)
+   - Transaction: all updates atomic via `SaveChangesAsync()`
+
+3. **Endpoint Enhancement** - `PigPenEndpoints.UpdatePigPen`:
+   - Added `HttpContext` parameter injection
+   - Extracts `userId` from `HttpContext.User.FindFirst("user_id")?.Value`
+   - Passes `userId` to service for logging
+
+4. **Interface Update** - `IRepositories.IPigPenRepository`:
+   - Updated `UpdateAsync` signature to return tuple
+
+**Pattern**: Backend-only feature (no frontend changes). EF Core change tracking with `Include(p => p.FormulaAssignments)`. Ceiling rounding via `Math.Ceiling(decimal)`. Structured logging with `ILogger<T>`. Validation errors return 400 BadRequest.
+
+**API Contract** (modified):
+- Endpoint: `PUT /api/pigpens/{id}`
+- Side effect: Automatic recalculation of active assignments when `PigQty` changes
+- Validation errors:
+  - 400: "Cannot modify pig quantity: pen calculations are locked" (if `IsCalculationLocked == true`)
+  - 400: "Pig quantity must be between 1 and 100" (if `PigQty < 1` or `PigQty > 100`)
+
+**Performance**: <50ms for typical pen update with 5-10 formula assignments
+
+**Testing**: See `specs/015-description-can-you/quickstart.md` for 6 manual validation scenarios (basic recalculation, locked pen rejection, quantity validation, ceiling rounding, formula sync, logging).
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

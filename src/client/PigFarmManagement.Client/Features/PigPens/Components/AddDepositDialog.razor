@@ -11,7 +11,7 @@
             <MudGrid>
                 <MudItem xs="12">
                     <MudText Typo="Typo.h6" Class="mb-4">
-                        <MudIcon Icon="Icons.Material.Filled.AccountBalance" Class="mr-2" />
+                        <MudIcon Icon="@Icons.Material.Filled.AccountBalance" Class="mr-2" />
                         เพิ่มเงินมัดจำใหม่
                     </MudText>
                 </MudItem>
@@ -143,11 +143,20 @@
     {
         // Set default date to today
         depositDate = DateTime.Today;
-        
+    }
+
+    protected override void OnParametersSet()
+    {
         // Calculate deposit information if pig pen and deposits are provided
         if (PigPen != null && CurrentDeposits != null)
         {
             calculationInfo = DepositCalculationInfo.Create(PigPen, CurrentDeposits);
+            
+            // Auto-fill the remaining deposit amount as default
+            if (calculationInfo.RemainingDeposit > 0 && amount == 0)
+            {
+                amount = calculationInfo.RemainingDeposit;
+            }
         }
     }
 
@@ -190,9 +199,12 @@
             isSubmitting = true;
             StateHasChanged();
 
+            // Convert date to UTC to avoid timezone issues
+            var depositDateUtc = depositDate!.Value.ToUniversalTime();
+
             var depositDto = new DepositCreateDto(
                 amount,
-                depositDate!.Value,
+                depositDateUtc,
                 string.IsNullOrWhiteSpace(remark) ? null : remark.Trim()
             );
 

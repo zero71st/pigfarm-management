@@ -40,31 +40,31 @@
                     </MudText>
                     @if (pigPen.IsCalculationLocked)
                     {
-                        <MudChip Color="Color.Warning" 
-                                 Size="Size.Medium" 
-                                 Variant="Variant.Filled"
-                                 Icon="Icons.Material.Filled.Lock"
-                                 Class="mr-2">
-                            ล็อกการคำนวณ
-                        </MudChip>
-                    }
-                    @if (pigPen.ActHarvestDate.HasValue)
-                    {
                         <MudChip Color="Color.Error" 
                                  Size="Size.Medium" 
                                  Variant="Variant.Filled"
-                                 Icon="Icons.Material.Filled.Cancel"
+                                 Icon="@Icons.Material.Filled.Lock"
                                  Class="mr-2">
-                            ปิดแล้ว
+                            ปิดคอกแล้ว
                         </MudChip>
                     }
-                    @if (!pigPen.IsCalculationLocked && !pigPen.ActHarvestDate.HasValue)
+                    else if (pigPen.ActHarvestDate.HasValue)
+                    {
+                        <MudChip Color="Color.Info" 
+                                 Size="Size.Medium" 
+                                 Variant="Variant.Filled"
+                                 Icon="@Icons.Material.Filled.CheckCircle"
+                                 Class="mr-2">
+                            จับแล้ว
+                        </MudChip>
+                    }
+                    else
                     {
                         <MudChip Color="Color.Success" 
                                  Size="Size.Medium" 
                                  Variant="Variant.Filled"
-                                 Icon="Icons.Material.Filled.CheckCircle">
-                            ใช้งานอยู่
+                                 Icon="@Icons.Material.Filled.CheckCircle">
+                            กำลังเลี้ยง
                         </MudChip>
                     }
                 </div>
@@ -127,7 +127,7 @@
                                     <td>
                                         <MudChip Color="@(pigPen.Type == PigPenType.Cash ? Color.Success : Color.Info)" 
                                                  Size="Size.Small" Variant="Variant.Filled">
-                                            @pigPen.Type
+                                            @(pigPen.Type == PigPenType.Cash ? "เงินสด" : "โครงการ")
                                         </MudChip>
                                     </td>
                                 </tr>
@@ -140,12 +140,31 @@
                                     <td>@pigPen.RegisterDate.ToString("dd/MM/yyyy")</td>
                                 </tr>
                                 <tr>
+                                    <td><strong>วันจับสุกรโดยประมาณ:</strong></td>
+                                    <td>@(pigPen.EstimatedHarvestDate?.ToString("dd/MM/yyyy") ?? "ไม่ได้ตั้ง")</td>
+                                </tr>
+                                <tr>
                                     <td><strong>วันจับสุกรจริง:</strong></td>
                                     <td>@(pigPen.ActHarvestDate?.ToString("dd/MM/yyyy") ?? "ยังดำเนินการ")</td>
                                 </tr>
                                 <tr>
-                                    <td><strong>วันจับสุกรโดยประมาณ:</strong></td>
-                                    <td>@(pigPen.EstimatedHarvestDate?.ToString("dd/MM/yyyy") ?? "ไม่ได้ตั้ง")</td>
+                                    <td><strong>ระยะเวลาการเลี้ยงจริง:</strong></td>
+                                    <td>
+                                        @if (pigPen.ActHarvestDate.HasValue)
+                                        {
+                                            var actualDays = (pigPen.ActHarvestDate.Value - pigPen.RegisterDate).Days;
+                                            <MudChip Color="Color.Primary" Size="Size.Small" Variant="Variant.Filled">
+                                                <strong>@actualDays วัน</strong>
+                                            </MudChip>
+                                        }
+                                        else
+                                        {
+                                            var daysInProgress = (DateTime.Today - pigPen.RegisterDate).Days;
+                                            <MudChip Color="Color.Info" Size="Size.Small" Variant="Variant.Outlined">
+                                                @daysInProgress วัน (กำลังเลี้ยง)
+                                            </MudChip>
+                                        }
+                                    </td>
                                 </tr>
                                 @if (!string.IsNullOrWhiteSpace(pigPen.Note))
                                 {
@@ -1994,10 +2013,9 @@
     {
         if (pigPen == null) return false;
         
-        // A pig pen is considered closed if:
-        // 1. It has an actual harvest date (harvested)
-        // 2. Calculations are locked
-        return pigPen.ActHarvestDate.HasValue || pigPen.IsCalculationLocked;
+        // A pig pen is considered closed only if calculations are locked
+        // Having an ActHarvestDate alone doesn't mean it's closed - user may want to force close later
+        return pigPen.IsCalculationLocked;
     }
 
     private async Task RemoveInvoice(string productCode, string invoiceReferenceCode)
