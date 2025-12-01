@@ -23,7 +23,7 @@ public interface IPigPenRepository
     Task<IEnumerable<PigPen>> GetByCustomerIdAsync(Guid customerId);
     Task<PigPen?> GetByPenCodeAsync(string penCode);
     Task<PigPen> CreateAsync(PigPen pigPen);
-    Task<PigPen> UpdateAsync(PigPen pigPen);
+    Task<(PigPen pigPen, int updatedAssignmentCount)> UpdateAsync(PigPen pigPen);
     Task DeleteAsync(Guid id);
 }
 

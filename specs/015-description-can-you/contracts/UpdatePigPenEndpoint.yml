@@ -1,0 +1,340 @@
+openapi: 3.0.3
+info:
+  title: PigFarmManagement API - PigPen Update Endpoint
+  description: |
+    Modified endpoint contract for Feature 015: Recalculate consume rate when pig pen quantity changes.
+    
+    **Changes from baseline**:
+    - Added validation error responses for locked pens (400)
+    - Added validation error responses for out-of-range PigQty (400)
+    - Documented side effect: automatic recalculation of active formula assignments
+    
+  version: 1.0.0-feature-015
+  contact:
+    name: PigFarmManagement Project Owner
+servers:
+  - url: http://localhost:5000/api
+    description: Local development
+  - url: https://pigfarm-production.up.railway.app/api
+    description: Production (Railway)
+
+paths:
+  /pigpens/{id}:
+    put:
+      summary: Update pig pen
+      description: |
+        Updates an existing pig pen record. When `PigQty` changes, the system automatically:
+        1. Validates the pen is not locked (`IsCalculationLocked == false`)
+        2. Validates the new quantity is between 1 and 100 (inclusive)
+        3. Persists the updated `PigPen` record
+        4. Recalculates all active (unlocked) `PigPenFormulaAssignment` records:
+           - Syncs `AssignedBagPerPig` from source formula's latest `ConsumeRate`
+           - Recomputes `AssignedTotalBags` using ceiling rounding
+        5. Logs a change event for audit trail
+        
+        **Side effects**:
+        - Multiple `PigPenFormulaAssignment` records may be updated atomically
+        - Change event logged to application logs
+        
+        **Idempotency**: Partial (multiple calls with same `PigQty` will sync assignments to latest formula values each time)
+        
+      operationId: updatePigPen
+      tags:
+        - PigPens
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique identifier of the pig pen to update
+          schema:
+            type: string
+            format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+      
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PigPenUpdateDto'
+            examples:
+              updateQuantity:
+                summary: Update pig quantity only
+                value:
+                  pigQty: 12
+              updateMultipleFields:
+                summary: Update quantity and other fields
+                value:
+                  pigQty: 15
+                  note: "Increased capacity"
+                  
+      responses:
+        '200':
+          description: Pig pen updated successfully. Active assignments recalculated if `PigQty` changed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PigPen'
+              examples:
+                success:
+                  summary: Successful update with recalculation
+                  value:
+                    id: "123e4567-e89b-12d3-a456-426614174000"
+                    customerId: "223e4567-e89b-12d3-a456-426614174001"
+                    penCode: "PEN-001"
+                    pigQty: 12
+                    registerDate: "2025-01-15"
+                    estimatedHarvestDate: "2025-07-15"
+                    type: "Finisher"
+                    selectedBrand: "CP"
+                    isCalculationLocked: false
+                    createdAt: "2025-01-15T08:00:00Z"
+                    updatedAt: "2025-12-01T10:30:00Z"
+                    formulaAssignments:
+                      - id: "333e4567-e89b-12d3-a456-426614174002"
+                        pigPenId: "123e4567-e89b-12d3-a456-426614174000"
+                        assignedPigQuantity: 12
+                        assignedBagPerPig: 2.5
+                        assignedTotalBags: 30.0
+                        isActive: true
+                        isLocked: false
+                        updatedAt: "2025-12-01T10:30:00Z"
+        
+        '400':
+          description: |
+            Bad request - validation failure. Possible causes:
+            - Pig pen calculations are locked (`IsCalculationLocked == true`)
+            - `PigQty` is out of valid range (not between 1-100)
+            - Invalid request body format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                lockedPen:
+                  summary: Pen calculations locked
+                  value:
+                    error: "Cannot modify pig quantity: pen calculations are locked"
+                invalidQuantity:
+                  summary: Quantity out of range
+                  value:
+                    error: "Pig quantity must be between 1 and 100"
+                invalidFormat:
+                  summary: Malformed request
+                  value:
+                    error: "Invalid request body"
+        
+        '401':
+          description: Unauthorized - missing or invalid API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missingKey:
+                  summary: API key not provided
+                  value:
+                    error: "Unauthorized"
+        
+        '404':
+          description: Pig pen not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                notFound:
+                  summary: Pen does not exist
+                  value:
+                    error: "Pig pen not found"
+        
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                serverError:
+                  summary: Unexpected error
+                  value:
+                    error: "Error updating pig pen: database connection failed"
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-Api-Key
+      description: API key for authentication (obtained from login endpoint)
+  
+  schemas:
+    PigPenUpdateDto:
+      type: object
+      description: |
+        Request body for updating a pig pen. All fields are optional (partial update).
+        When `pigQty` changes, formula assignments are automatically recalculated.
+      properties:
+        penCode:
+          type: string
+          description: Unique pen code identifier
+          example: "PEN-001"
+        pigQty:
+          type: integer
+          description: Number of pigs in the pen (triggers recalculation when changed)
+          minimum: 1
+          maximum: 100
+          example: 12
+        registerDate:
+          type: string
+          format: date
+          description: Date the pen was registered
+          example: "2025-01-15"
+        actHarvestDate:
+          type: string
+          format: date
+          nullable: true
+          description: Actual harvest date (null if not yet harvested)
+          example: null
+        estimatedHarvestDate:
+          type: string
+          format: date
+          nullable: true
+          description: Estimated harvest date
+          example: "2025-07-15"
+        type:
+          type: string
+          description: Pig pen type (e.g., Starter, Grower, Finisher)
+          example: "Finisher"
+        selectedBrand:
+          type: string
+          description: Feed brand selected for this pen
+          example: "CP"
+        depositPerPig:
+          type: number
+          format: decimal
+          description: Deposit amount per pig
+          example: 1500.00
+        note:
+          type: string
+          nullable: true
+          description: Optional notes about the pen
+          example: "Increased capacity"
+    
+    PigPen:
+      type: object
+      description: Pig pen entity with recalculated formula assignments
+      required:
+        - id
+        - customerId
+        - penCode
+        - pigQty
+        - registerDate
+        - type
+        - isCalculationLocked
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        customerId:
+          type: string
+          format: uuid
+        penCode:
+          type: string
+        pigQty:
+          type: integer
+          minimum: 1
+          maximum: 100
+        registerDate:
+          type: string
+          format: date
+        actHarvestDate:
+          type: string
+          format: date
+          nullable: true
+        estimatedHarvestDate:
+          type: string
+          format: date
+          nullable: true
+        feedCost:
+          type: number
+          format: decimal
+        investment:
+          type: number
+          format: decimal
+        profitLoss:
+          type: number
+          format: decimal
+        type:
+          type: string
+        depositPerPig:
+          type: number
+          format: decimal
+        selectedBrand:
+          type: string
+        note:
+          type: string
+          nullable: true
+        isCalculationLocked:
+          type: boolean
+          description: When true, prevents updates to PigQty and formula assignments
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+          description: Updated whenever pen or assignments change
+        formulaAssignments:
+          type: array
+          description: Active formula assignments (recalculated when PigQty changes)
+          items:
+            $ref: '#/components/schemas/PigPenFormulaAssignment'
+    
+    PigPenFormulaAssignment:
+      type: object
+      description: Formula assignment (automatically updated when parent PigPen.PigQty changes)
+      properties:
+        id:
+          type: string
+          format: uuid
+        pigPenId:
+          type: string
+          format: uuid
+        originalFormulaId:
+          type: string
+          format: uuid
+        assignedPigQuantity:
+          type: integer
+          description: Synced from parent PigPen.PigQty during recalculation
+        assignedBagPerPig:
+          type: number
+          format: decimal
+          description: Synced from source FeedFormula.ConsumeRate during recalculation
+        assignedTotalBags:
+          type: number
+          format: decimal
+          description: Computed as ceiling(assignedBagPerPig * assignedPigQuantity)
+        isActive:
+          type: boolean
+        isLocked:
+          type: boolean
+          description: When true, this assignment is not recalculated
+        assignedAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+          description: Updated during recalculation
+    
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Human-readable error message
