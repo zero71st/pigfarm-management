@@ -16,13 +16,16 @@
         <MudContainer Style="max-width: 500px;">
             <MudGrid>
                 <MudItem xs="12">
-                    <MudSelect T="Guid?" @bind-Value="selectedCustomerId" Label="ลูกค้า" Variant="Variant.Outlined" Required="true">
-                        <MudSelectItem T="Guid?" Value="@((Guid?)null)">-- เลือกลูกค้า --</MudSelectItem>
-                        @foreach (var customer in customers)
-                        {
-                            <MudSelectItem T="Guid?" Value="@((Guid?)customer.Id)">@customer.DisplayName (@customer.Status)</MudSelectItem>
-                        }
-                    </MudSelect>
+                    <MudAutocomplete T="Customer"
+                                   Label="ลูกค้า"
+                                   @bind-Value="selectedCustomer"
+                                   SearchFunc="@SearchCustomers"
+                                   ToStringFunc="@(c => c == null ? "" : $"{c.DisplayName} ({c.Status})")"
+                                   Variant="Variant.Outlined"
+                                   Required="true"
+                                   Clearable="true"
+                                   AdornmentIcon="@Icons.Material.Filled.Search"
+                                   AdornmentColor="Color.Primary" />
                 </MudItem>
                 <MudItem xs="12">
                     <MudTextField @bind-Value="penCode" Label="รหัสคอก" Variant="Variant.Outlined" Required="true" />
@@ -129,7 +132,7 @@
 
     private List<Customer> customers = new();
     private List<string> availableBrands = new();
-    private Guid? selectedCustomerId;
+    private Customer? selectedCustomer;
     private string penCode = "";
     private PigPenType selectedType = PigPenType.Cash;
     private int pigQty = 1;
@@ -150,7 +153,7 @@
         await LoadAvailableBrands();
         
         // Populate form with existing pig pen data
-        selectedCustomerId = PigPen.CustomerId;
+        selectedCustomer = customers.FirstOrDefault(c => c.Id == PigPen.CustomerId);
         penCode = PigPen.PenCode;
         selectedType = PigPen.Type;
         pigQty = PigPen.PigQty;
@@ -240,9 +243,19 @@
         StateHasChanged();
     }
 
+    private async Task<IEnumerable<Customer>> SearchCustomers(string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return customers;
+        
+        return customers.Where(c => 
+            c.DisplayName.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
+            (c.Code?.Contains(searchString, StringComparison.OrdinalIgnoreCase) ?? false));
+    }
+
     private bool IsFormValid()
     {
-        return selectedCustomerId.HasValue && 
+        return selectedCustomer != null && 
                !string.IsNullOrWhiteSpace(penCode) && 
                pigQty > 0 && 
                registerDate.HasValue;
@@ -250,7 +263,7 @@
 
     private async Task Save()
     {
-        if (!IsFormValid() || !selectedCustomerId.HasValue || !registerDate.HasValue)
+        if (!IsFormValid() || selectedCustomer == null || !registerDate.HasValue)
             return;
 
         var updateDto = new PigPenUpdateDto(

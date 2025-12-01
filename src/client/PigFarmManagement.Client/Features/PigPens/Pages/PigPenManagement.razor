@@ -11,30 +11,67 @@
 
 <PageTitle>PIG PEN MANAGEMENT - Pig Pens</PageTitle>
 
-<MudText Typo="Typo.h4" GutterBottom="true">จัดการคอกสุกร</MudText>
+<div class="d-flex align-center mb-4">
+    <MudIcon Icon="@Icons.Material.Filled.Cottage" Size="Size.Large" Class="mr-2" Color="Color.Primary" />
+    <MudText Typo="Typo.h4" GutterBottom="false">จัดการคอกสุกร</MudText>
+</div>
+
+<!-- Statistics Cards -->
+<MudGrid Class="mb-4">
+    <MudItem xs="12" sm="4">
+        <MudPaper Elevation="2" Class="pa-4" Style="cursor: pointer;" @onclick="() => SetStatusFilter(null)">
+            <div class="d-flex flex-column align-center">
+                <MudText Typo="Typo.h3" Color="Color.Primary">@GetTotalCount()</MudText>
+                <MudText Typo="Typo.body1">คอกสุกรทั้งหมด</MudText>
+            </div>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="4">
+        <MudPaper Elevation="2" Class="pa-4" Style="cursor: pointer;" @onclick="() => SetStatusFilter(PigPenStatus.Active)">
+            <div class="d-flex flex-column align-center">
+                <MudText Typo="Typo.h3" Color="Color.Success">@GetActiveCount()</MudText>
+                <MudText Typo="Typo.body1">กำลังเลี้ยง</MudText>
+            </div>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="4">
+        <MudPaper Elevation="2" Class="pa-4" Style="cursor: pointer;" @onclick="() => SetStatusFilter(PigPenStatus.Closed)">
+            <div class="d-flex flex-column align-center">
+                <MudText Typo="Typo.h3" Color="Color.Error">@GetClosedCount()</MudText>
+                <MudText Typo="Typo.body1">ปิดคอกแล้ว</MudText>
+            </div>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
 
 <!-- Filter and Search Section -->
 <MudPaper Class="pa-4 ma-2" Elevation="2">
     <MudGrid>
-        <MudItem xs="12" md="4">
-                <MudSelect T="Guid?" @bind-Value="SelectedCustomerId" Margin="Margin.Dense" Label="กรองลูกค้า" Variant="Variant.Outlined">
-                    <MudSelectItem T="Guid?" Value="@((Guid?)null)">ลูกค้าทั้งหมด</MudSelectItem>
-                @foreach (var customer in customers)
-                {
-                    <MudSelectItem T="Guid?" Value="@((Guid?)customer.Id)">@customer.DisplayName (@customer.Status)</MudSelectItem>
-                }
-            </MudSelect>
+        <MudItem xs="12" md="5">
+                <MudAutocomplete T="Customer"
+                               Label="กรองลูกค้า"
+                               @bind-Value="SelectedCustomer"
+                               SearchFunc="@SearchCustomers"
+                               ToStringFunc="@(c => c == null ? "ลูกค้าทั้งหมด" : $"{c.DisplayName} ({c.Status})")"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Clearable="true"
+                               AdornmentIcon="@Icons.Material.Filled.Search"
+                               AdornmentColor="Color.Primary" />
         </MudItem>
-        <MudItem xs="12" md="4">
+        <MudItem xs="12" md="3">
                 <MudSelect T="PigPenType?" @bind-Value="SelectedPigPenType" Margin="Margin.Dense" Label="กรองประเภท" Variant="Variant.Outlined">
                     <MudSelectItem T="PigPenType?" Value="@((PigPenType?)null)">ทุกประเภท</MudSelectItem>
                     <MudSelectItem T="PigPenType?" Value="PigPenType.Cash">เงินสด</MudSelectItem>
                     <MudSelectItem T="PigPenType?" Value="PigPenType.Project">โครงการ</MudSelectItem>
             </MudSelect>
         </MudItem>
-        <MudItem xs="12" md="4">
-                    <MudTextField @bind-Value="SearchText" Label="ค้นหา" Variant="Variant.Outlined"  Margin="Margin.Dense"
-                         Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" />
+        <MudItem xs="12" md="3">
+                <MudSelect T="PigPenStatus?" @bind-Value="SelectedStatus" Margin="Margin.Dense" Label="กรองสถานะ" Variant="Variant.Outlined">
+                    <MudSelectItem T="PigPenStatus?" Value="@((PigPenStatus?)null)">ทุกสถานะ</MudSelectItem>
+                    <MudSelectItem T="PigPenStatus?" Value="PigPenStatus.Active">กำลังเลี้ยง</MudSelectItem>
+                    <MudSelectItem T="PigPenStatus?" Value="PigPenStatus.Closed">ปิดคอกแล้ว</MudSelectItem>
+            </MudSelect>
         </MudItem>
     </MudGrid>
 </MudPaper>
@@ -77,26 +114,26 @@
             <MudTd DataLabel="Type">
                 <MudChip Color="@(context.Type == PigPenType.Cash ? Color.Success : Color.Info)" 
                          Size="Size.Small" Variant="Variant.Filled">
-                    @context.Type
+                    @(context.Type == PigPenType.Cash ? "เงินสด" : "โครงการ")
                 </MudChip>
             </MudTd>
             <MudTd DataLabel="Status">
-                @if (context.ActHarvestDate.HasValue)
+                @if (context.IsCalculationLocked)
                 {
                     <MudChip Color="Color.Error" 
                              Size="Size.Small" 
                              Variant="Variant.Filled"
-                             Icon="Icons.Material.Filled.Cancel">
-                        ปิดแล้ว
+                             Icon="@Icons.Material.Filled.Lock">
+                        ปิดคอกแล้ว
                     </MudChip>
                 }
-                else if (context.IsCalculationLocked)
+                else if (context.ActHarvestDate.HasValue)
                 {
-                    <MudChip Color="Color.Warning" 
+                    <MudChip Color="Color.Info" 
                              Size="Size.Small" 
                              Variant="Variant.Filled"
-                             Icon="Icons.Material.Filled.Lock">
-                        ล็อกแล้ว
+                             Icon="@Icons.Material.Filled.CheckCircle">
+                        จับแล้ว
                     </MudChip>
                 }
                 else
@@ -104,8 +141,8 @@
                     <MudChip Color="Color.Success" 
                              Size="Size.Small" 
                              Variant="Variant.Filled"
-                             Icon="Icons.Material.Filled.CheckCircle">
-                        ใช้งานอยู่
+                             Icon="@Icons.Material.Filled.Pets">
+                        กำลังเลี้ยง
                     </MudChip>
                 }
             </MudTd>
@@ -176,21 +213,27 @@
 </MudPaper>
 
 @code {
+    private enum PigPenStatus
+    {
+        Active,
+        Closed
+    }
+
     private List<Customer> customers = new();
     private List<PigPen> pigPens = new();
     private List<PigPen> filteredPigPens = new();
     private bool loading = true;
-    private Guid? selectedCustomerId = null;
+    private Customer? selectedCustomer = null;
     private PigPenType? selectedPigPenType = null;
-    private string searchText = "";
+    private PigPenStatus? selectedStatus = null;
     private DateTime lastRefreshTime = DateTime.MinValue;
 
-    private Guid? SelectedCustomerId
+    private Customer? SelectedCustomer
     {
-        get => selectedCustomerId;
+        get => selectedCustomer;
         set
         {
-            selectedCustomerId = value;
+            selectedCustomer = value;
             FilterPigPens();
         }
     }
@@ -205,12 +248,12 @@
         }
     }
 
-    private string SearchText
+    private PigPenStatus? SelectedStatus
     {
-        get => searchText;
+        get => selectedStatus;
         set
         {
-            searchText = value;
+            selectedStatus = value;
             FilterPigPens();
         }
     }
@@ -266,15 +309,69 @@
         Snackbar.Add("รีเฟรชข้อมูลสำเร็จ", Severity.Info);
     }
 
+    private async Task<IEnumerable<Customer>> SearchCustomers(string searchString)
+    {
+        // Return all customers if search is empty
+        if (string.IsNullOrWhiteSpace(searchString))
+            return customers;
+        
+        // Filter customers by display name or code
+        return customers.Where(c => 
+            c.DisplayName.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
+            (c.Code?.Contains(searchString, StringComparison.OrdinalIgnoreCase) ?? false));
+    }
+
     private void FilterPigPens()
     {
+        var selectedCustomerId = selectedCustomer?.Id;
+        
         filteredPigPens = pigPens.Where(p =>
             (selectedCustomerId == null || p.CustomerId == selectedCustomerId) &&
             (selectedPigPenType == null || p.Type == selectedPigPenType) &&
-            (string.IsNullOrEmpty(searchText) || 
-             p.PenCode.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
-             GetCustomerName(p.CustomerId).Contains(searchText, StringComparison.OrdinalIgnoreCase))
+            (selectedStatus == null || 
+                (selectedStatus == PigPenStatus.Active && !p.IsCalculationLocked) ||
+                (selectedStatus == PigPenStatus.Closed && p.IsCalculationLocked))
         ).OrderByDescending(p => p.UpdatedAt).ToList();
+    }
+
+    private void SetStatusFilter(PigPenStatus? status)
+    {
+        SelectedStatus = status;
+    }
+
+    private int GetTotalCount()
+    {
+        // Apply customer and type filters, but not status filter
+        var selectedCustomerId = selectedCustomer?.Id;
+        
+        return pigPens.Where(p =>
+            (selectedCustomerId == null || p.CustomerId == selectedCustomerId) &&
+            (selectedPigPenType == null || p.Type == selectedPigPenType)
+        ).Count();
+    }
+
+    private int GetActiveCount()
+    {
+        // Apply customer and type filters, plus active status
+        var selectedCustomerId = selectedCustomer?.Id;
+        
+        return pigPens.Where(p =>
+            (selectedCustomerId == null || p.CustomerId == selectedCustomerId) &&
+            (selectedPigPenType == null || p.Type == selectedPigPenType) &&
+            !p.IsCalculationLocked
+        ).Count();
+    }
+
+    private int GetClosedCount()
+    {
+        // Apply customer and type filters, plus closed status
+        var selectedCustomerId = selectedCustomer?.Id;
+        
+        return pigPens.Where(p =>
+            (selectedCustomerId == null || p.CustomerId == selectedCustomerId) &&
+            (selectedPigPenType == null || p.Type == selectedPigPenType) &&
+            p.IsCalculationLocked
+        ).Count();
     }
 
     private string GetCustomerName(Guid customerId)
@@ -411,9 +508,8 @@
     {
         if (pigPen == null) return false;
         
-        // A pig pen is considered closed if:
-        // 1. It has an actual harvest date (harvested)
-        // 2. Calculations are locked
-        return pigPen.ActHarvestDate.HasValue || pigPen.IsCalculationLocked;
+        // A pig pen is considered closed only if calculations are locked
+        // Having an ActHarvestDate alone doesn't mean it's closed - user may want to force close later
+        return pigPen.IsCalculationLocked;
     }
 }
