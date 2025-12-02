@@ -406,6 +406,10 @@ else
         
         var filteredComparisonData = ComparisonData?.Where(c => !specificProductCodes.Contains(c.ProductCode)).ToList() ?? new List<FeedComparisonData>();
         
+        // Track which product we're currently processing to know when to skip subtotals
+        string currentProductCode = "";
+        bool skipNextSubTotal = false;
+        
         foreach (var row in allRows)
         {
             if (row.IsGrandTotal)
@@ -441,9 +445,33 @@ else
                     IsFirstProductRow = false
                 });
             }
-            else if (!specificProductCodes.Contains(row.ProductCode) || string.IsNullOrEmpty(row.ProductCode))
+            else if (row.IsSubTotal)
             {
-                filteredRows.Add(row);
+                // Only add subtotal if we didn't skip the product rows
+                if (!skipNextSubTotal)
+                {
+                    filteredRows.Add(row);
+                }
+                skipNextSubTotal = false; // Reset for next product
+            }
+            else if (!string.IsNullOrEmpty(row.ProductCode))
+            {
+                // Track current product and whether to skip it
+                currentProductCode = row.ProductCode;
+                skipNextSubTotal = specificProductCodes.Contains(currentProductCode);
+                
+                if (!skipNextSubTotal)
+                {
+                    filteredRows.Add(row);
+                }
+            }
+            else if (string.IsNullOrEmpty(row.ProductCode))
+            {
+                // This is a continuation row (empty ProductCode) - add if not skipping
+                if (!skipNextSubTotal)
+                {
+                    filteredRows.Add(row);
+                }
             }
         }
         
