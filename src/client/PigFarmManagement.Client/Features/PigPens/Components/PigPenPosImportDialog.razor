@@ -17,8 +17,9 @@
                 <MudText Typo="Typo.body2">
                     <strong>ลูกค้า:</strong> @CustomerDisplayName<br/>
                     <strong>รหัสคอก:</strong> @PenCode<br/>
-                    <strong>หมายเหตุ:</strong> แสดงธุรกรรม POSPOS สำหรับรหัสลูกค้า @_customerCode 
-                    เลือกธุรกรรมที่ต้องการนำเข้าสำหรับคอกนี้
+                    <strong>หมายเหตุ:</strong> @(_searchAllCustomers 
+                        ? "แสดงธุรกรรม POSPOS สำหรับทุกลูกค้า เลือกธุรกรรมที่ต้องการนำเข้าสำหรับคอกนี้" 
+                        : $"แสดงธุรกรรม POSPOS สำหรับรหัสลูกค้า {_customerCode} เลือกธุรกรรมที่ต้องการนำเข้าสำหรับคอกนี้")
                 </MudText>
             </MudAlert>
             
@@ -26,7 +27,37 @@
             <MudCard Class="mb-4">
                 <MudCardContent>
                     <MudText Typo="Typo.h6" Class="mb-3">
-                        <MudIcon Icon="@Icons.Material.Filled.DateRange" Class="mr-2"/>
+                        <MudIcon Icon="@Icons.Material.Filled.Search" Class="mr-2"/>
+                        ตัวกรองการค้นหา
+                    </MudText>
+                    
+                    <!-- 1. Search All Customers Toggle -->
+                    <div class="mb-3">
+                        <MudSwitch @bind-Value="_searchAllCustomers"
+                                   Color="Color.Primary"
+                                   Label="ค้นหาทุกลูกค้า"
+                                   ThumbIcon="@(_searchAllCustomers ? Icons.Material.Filled.Groups : Icons.Material.Filled.Person)"
+                                   UnCheckedColor="Color.Default" />
+                    </div>
+                    
+                    <!-- 2. Invoice Code Search Box - Only show when searching all customers -->
+                    @if (_searchAllCustomers)
+                    {
+                        <div class="mb-3">
+                            <MudTextField @bind-Value="_invoiceCodeSearch"
+                                        Label="รหัสใบแจ้งหนี้"
+                                        Variant="Variant.Outlined"
+                                        Adornment="Adornment.Start"
+                                        AdornmentIcon="@Icons.Material.Filled.Search"
+                                        HelperText="ค้นหาบางส่วนของรหัส เช่น ST6802"
+                                        Clearable="true"
+                                        FullWidth="true" />
+                        </div>
+                    }
+                    
+                    <!-- 3. Date Range Filter -->
+                    <MudText Typo="Typo.subtitle1" Class="mb-2">
+                        <MudIcon Icon="@Icons.Material.Filled.DateRange" Size="Size.Small" Class="mr-1"/>
                         กรองตามช่วงวันที่
                     </MudText>
                     
@@ -92,7 +123,16 @@
             
             @if (_availableTransactions.Any())
             {
-                <MudText Typo="Typo.h6" Class="mb-3">บิลขาย POSPOS ที่พร้อมใช้งานสำหรับรหัสลูกค้า: @_customerCode</MudText>
+                <MudText Typo="Typo.h6" Class="mb-3">
+                    @if (_searchAllCustomers)
+                    {
+                        <span>บิลขาย POSPOS ที่พร้อมใช้งาน (ทุกลูกค้า)</span>
+                    }
+                    else
+                    {
+                        <span>บิลขาย POSPOS ที่พร้อมใช้งานสำหรับรหัสลูกค้า: @_customerCode</span>
+                    }
+                </MudText>
                 
                 <MudTable Items="_availableTransactions" Hover="true" Striped="true" MultiSelection="true" 
                          @bind-SelectedItems="_selectedTransactions" T="PosPosTransaction"
@@ -102,6 +142,7 @@
                         <MudTh><MudTableSortLabel SortBy="new Func<PosPosTransaction, object>(x => x.InvoiceReference.Code)">รหัสบิลขาย</MudTableSortLabel></MudTh>
                         <MudTh><MudTableSortLabel SortBy="new Func<PosPosTransaction, object>(x => x.Timestamp)">วันที่</MudTableSortLabel></MudTh>
                         <MudTh>ลูกค้า</MudTh>
+                        <MudTh>รหัสลูกค้า</MudTh>
                         <MudTh>รายการ</MudTh>
                         <MudTh>ยอดรวม</MudTh>
                         <MudTh>ดูรายละเอียด</MudTh>
@@ -112,6 +153,16 @@
                         </MudTd>
                         <MudTd DataLabel="Date">@context.Timestamp.ToString("yyyy-MM-dd HH:mm")</MudTd>
                         <MudTd DataLabel="Customer">@context.BuyerDetail.FirstName @context.BuyerDetail.LastName</MudTd>
+                        <MudTd DataLabel="Customer Code">
+                            @if (!string.IsNullOrEmpty(context.BuyerDetail.Code))
+                            {
+                                <MudChip Color="Color.Secondary" Size="Size.Small">@context.BuyerDetail.Code</MudChip>
+                            }
+                            else
+                            {
+                                <MudChip Color="Color.Default" Size="Size.Small">N/A</MudChip>
+                            }
+                        </MudTd>
                         <MudTd DataLabel="รายการ">@context.OrderList.Count รายการ</MudTd>
                         <MudTd DataLabel="ยอดรวม">@context.GrandTotal.ToString("N2")</MudTd>
                         <MudTd DataLabel="ดูรายละเอียด">
@@ -243,6 +294,8 @@
     private FeedImportResult? _importResult;
     private DateTime? _fromDate; // Default to  1 week ago
     private DateTime? _toDate; // Default to today
+    private bool _searchAllCustomers = false;
+    private string _invoiceCodeSearch = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -264,31 +317,50 @@
         {
             List<PosPosTransaction> allTransactions;
             
-            // Use customer and date range filtering to get only transactions for this customer
+            // Determine date range
+            DateTime fromDate;
+            DateTime toDate;
+            
             if (_fromDate.HasValue && _toDate.HasValue)
             {
-                // Both dates specified - get customer transactions in date range
-                allTransactions = await FeedImportService.GetPosPosFeedByCustomerAndDateRangeAsync(
-                    _customerCode, _fromDate.Value, _toDate.Value);
+                fromDate = _fromDate.Value;
+                toDate = _toDate.Value;
             }
             else if (_fromDate.HasValue)
             {
-                // Only from date - get customer transactions from date to now
-                var to = DateTime.UtcNow;
-                allTransactions = await FeedImportService.GetPosPosFeedByCustomerAndDateRangeAsync(_customerCode, _fromDate.Value, to);
+                fromDate = _fromDate.Value;
+                toDate = DateTime.UtcNow;
             }
             else if (_toDate.HasValue)
             {
-                // Only to date - get customer transactions up to that date
-                var from = DateTime.UtcNow.AddDays(-30); // Default to last 30 days if no from date
-                allTransactions = await FeedImportService.GetPosPosFeedByCustomerAndDateRangeAsync(_customerCode, from, _toDate.Value);
+                fromDate = DateTime.UtcNow.AddDays(-30);
+                toDate = _toDate.Value;
             }
             else
             {
-                // No date filter - default to last 2 days
-                var from = DateTime.Today.AddDays(-2);
-                var to = DateTime.Today;
-                allTransactions = await FeedImportService.GetPosPosFeedByCustomerAndDateRangeAsync(_customerCode, from, to);
+                fromDate = DateTime.Today.AddDays(-2);
+                toDate = DateTime.Today;
+            }
+            
+            // Search by customer or all customers
+            if (_searchAllCustomers)
+            {
+                // Search all customers
+                allTransactions = await FeedImportService.GetPosPosFeedByDateRangeAsync(fromDate, toDate);
+            }
+            else
+            {
+                // Search specific customer
+                allTransactions = await FeedImportService.GetPosPosFeedByCustomerAndDateRangeAsync(
+                    _customerCode, fromDate, toDate);
+            }
+            
+            // Filter by invoice code if provided (case-insensitive partial match)
+            if (!string.IsNullOrWhiteSpace(_invoiceCodeSearch))
+            {
+                allTransactions = allTransactions
+                    .Where(t => t.InvoiceReference?.Code?.Contains(_invoiceCodeSearch, StringComparison.OrdinalIgnoreCase) == true)
+                    .ToList();
             }
             
             _availableTransactions = allTransactions
@@ -298,7 +370,9 @@
             if (_availableTransactions.Any())
             {
                 var dateRangeText = GetDateRangeDisplayText();
-                Snackbar.Add($"พบ {_availableTransactions.Count} ธุรกรรม POSPOS สำหรับลูกค้า {_customerCode}{dateRangeText}", Severity.Success);
+                var searchModeText = _searchAllCustomers ? "ทุกลูกค้า" : $"ลูกค้า {_customerCode}";
+                var invoiceFilterText = !string.IsNullOrWhiteSpace(_invoiceCodeSearch) ? $" (กรองด้วยรหัส: {_invoiceCodeSearch})" : "";
+                Snackbar.Add($"พบ {_availableTransactions.Count} ธุรกรรม POSPOS สำหรับ{searchModeText}{dateRangeText}{invoiceFilterText}", Severity.Success);
             }
             else
             {
