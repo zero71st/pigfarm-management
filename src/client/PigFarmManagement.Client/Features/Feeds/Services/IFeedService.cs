@@ -6,5 +6,5 @@ public interface IFeedService
 {
     Task<List<FeedItem>> GetFeedsByPigPenIdAsync(Guid pigPenId);
     Task<FeedItem> AddFeedToPigPenAsync(Guid pigPenId, FeedCreateDto dto);
-    Task<bool> DeleteFeedAsync(Guid id);
+    Task<bool> DeleteFeedAsync(Guid pigPenId, Guid feedItemId);
 }

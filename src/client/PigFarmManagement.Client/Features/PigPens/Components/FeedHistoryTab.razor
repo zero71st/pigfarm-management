@@ -3,6 +3,10 @@
 @using PigFarmManagement.Shared.Models
 @using PigFarmManagement.Shared.DTOs
 @using static PigFarmManagement.Client.Features.PigPens.Pages.PigPenDetailPage
+@using PigFarmManagement.Client.Features.PigPens.Services
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IFeedService FeedService
 
 @if ((FeedFormulaCalculations != null && FeedFormulaCalculations.Any()) || (ComparisonData != null && ComparisonData.Any()))
 {
@@ -36,6 +40,7 @@
                 <MudTh Style="text-align: center">รวม (POS)</MudTh>
                 <MudTh Style="text-align: center">กำไร</MudTh>
             }
+            <MudTh Style="text-align: center">การจัดการ</MudTh>
         </HeaderContent>
         <RowTemplate>
             @{
@@ -106,6 +111,16 @@
                     <span style="@textStyle">@row.Profit</span>
                 </MudTd>
             }
+            <MudTd Style="@($"text-align: center; {rowStyle}")">
+                @if (!row.IsSubTotal && !row.IsGrandTotal && !string.IsNullOrEmpty(row.InvNo) && row.InvNo != "No Feeds" && row.FeedId != Guid.Empty)
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                   Color="Color.Error"
+                                   Size="Size.Small"
+                                   OnClick="@(() => RemoveFeedItem(row.FeedId, row.ProductName, row.InvNo, row.Quantity))"
+                                   Title="ลบรายการอาหาร" />
+                }
+            </MudTd>
         </RowTemplate>
     </MudTable>
 }
@@ -117,14 +132,49 @@ else
 }
 
 @code {
+    [Parameter] public Guid PigPenId { get; set; }
     [Parameter] public List<FeedItem> Feeds { get; set; } = new();
     [Parameter] public IEnumerable<FeedFormulaWithCalculationDto>? FeedFormulaCalculations { get; set; }
     [Parameter] public List<FeedComparisonData> ComparisonData { get; set; } = new();
     [Parameter] public bool ShowFinancial { get; set; } = false;
     [Parameter] public bool ShowSpecificProducts { get; set; } = false;
+    [Parameter] public EventCallback OnFeedsChanged { get; set; }
 
     private bool _showFinancial = false;
     private bool _showSpecificProducts = false;
+
+    private async Task RemoveFeedItem(Guid feedId, string productName, string invoiceRef, decimal quantity)
+    {
+        try
+        {
+            bool? confirm = await DialogService.ShowMessageBox(
+                "ยืนยันการลบรายการอาหาร",
+                $"คุณต้องการลบรายการนี้หรือไม่?\n\nสินค้า: {productName}\nใบแจ้งหนี้: {invoiceRef}\nจำนวน: {quantity:N0} กระสอบ\n\nการดำเนินการนี้ไม่สามารถย้อนกลับได้",
+                yesText: "ลบ",
+                cancelText: "ยกเลิก");
+
+            if (confirm != true)
+            {
+                return;
+            }
+
+            var success = await FeedService.DeleteFeedAsync(PigPenId, feedId);
+
+            if (success)
+            {
+                Snackbar.Add($"ลบรายการอาหารสำเร็จ", Severity.Success);
+                await OnFeedsChanged.InvokeAsync();
+            }
+            else
+            {
+                Snackbar.Add("ไม่สามารถลบรายการอาหารได้", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"เกิดข้อผิดพลาด: {ex.Message}", Severity.Error);
+        }
+    }
 
     protected override void OnParametersSet()
     {
@@ -218,12 +268,14 @@ else
                 
                 rows.Add(new TableRowData
                 {
+                    FeedId = firstInvoice.FeedId,
                     ProductCode = comparison.ProductCode,
                     ProductName = comparison.ProductName,
                     Formula = combinedFormula,
                     InvNo = firstInvoice.InvoiceReferenceCode,
                     InvDate = firstInvoice.FeedDate.ToString("MM/dd/yyyy"),
                     PerInvoiceBags = firstInvoice.Quantity.ToString("0"),
+                    Quantity = firstInvoice.Quantity,
                     FeedCost = firstInvoice.FeedCost?.ToString("N2") ?? "-",
                     PriceIncludeDiscount = firstInvoice.PriceIncludeDiscount?.ToString("N2") ?? "-",
                     SysTotalPriceIncludeDiscount = firstInvoice.SysTotalPriceIncludeDiscount?.ToString("N2") ?? "-",
@@ -238,12 +290,14 @@ else
                 {
                     rows.Add(new TableRowData
                     {
+                        FeedId = invoice.FeedId,
                         ProductCode = comparison.ProductCode,
                         ProductName = "",
                         Formula = "",
                         InvNo = invoice.InvoiceReferenceCode,
                         InvDate = invoice.FeedDate.ToString("MM/dd/yyyy"),
                         PerInvoiceBags = invoice.Quantity.ToString("0"),
+                        Quantity = invoice.Quantity,
                         FeedCost = invoice.FeedCost?.ToString("N2") ?? "-",
                         PriceIncludeDiscount = invoice.PriceIncludeDiscount?.ToString("N2") ?? "-",
                         SysTotalPriceIncludeDiscount = invoice.SysTotalPriceIncludeDiscount?.ToString("N2") ?? "-",

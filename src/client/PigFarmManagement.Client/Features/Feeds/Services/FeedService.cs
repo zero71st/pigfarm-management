@@ -27,9 +27,9 @@ public class FeedService : IFeedService
         return result ?? throw new InvalidOperationException("Failed to create feed");
     }
 
-    public async Task<bool> DeleteFeedAsync(Guid id)
+    public async Task<bool> DeleteFeedAsync(Guid pigPenId, Guid feedItemId)
     {
-        var response = await _httpClient.DeleteAsync($"/api/feeds/{id}");
+        var response = await _httpClient.DeleteAsync($"/api/pigpens/{pigPenId}/feeds/{feedItemId}");
         return response.IsSuccessStatusCode;
     }
 }
