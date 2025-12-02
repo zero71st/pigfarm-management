@@ -357,32 +357,25 @@ public static class PigPenEndpoints
         }
     }
 
-    private static async Task<IResult> ForceClosePigPen(Guid id, IPigPenService pigPenService)
+    private static async Task<IResult> ForceClosePigPen(Guid id, PigPenForceCloseRequest request, IPigPenService pigPenService)
     {
         try
         {
+            // Validate that the ID in the route matches the ID in the request body
+            if (id != request.PigPenId)
+            {
+                return Results.BadRequest("Pig pen ID mismatch between route and request body");
+            }
+
             var pigPen = await pigPenService.GetPigPenByIdAsync(id);
             if (pigPen == null)
             {
                 return Results.NotFound("Pig pen not found");
             }
 
-            // Check if pig pen is already closed
-            if (pigPen.ActHarvestDate.HasValue)
-            {
-                return Results.BadRequest("Pig pen is already closed");
-            }
-
-            // Force close the pig pen by setting actual harvest date to today
-            var closedPigPen = pigPen with 
-            { 
-                ActHarvestDate = DateTime.Today,
-                IsCalculationLocked = true,
-                UpdatedAt = DateTime.UtcNow
-            };
-
-            var updatedPigPen = await pigPenService.UpdatePigPenAsync(closedPigPen);
-            return Results.Ok(updatedPigPen);
+            // Force close the pig pen by calling the service method
+            var closedPigPen = await pigPenService.ForceClosePigPenAsync(id);
+            return Results.Ok(closedPigPen);
         }
         catch (InvalidOperationException ex)
         {

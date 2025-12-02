@@ -63,41 +63,46 @@ public class DashboardService : IDashboardService
         // Get all data
         var pigPens = await _pigPenService.GetAllPigPensAsync();
         var customers = await _customerService.GetAllCustomersAsync();
-        var allDeposits = await _depositRepository.GetAllAsync();
-        var allHarvests = await _harvestRepository.GetAllAsync();
 
-        // Filter active pig pens (those without actual harvest date or actual harvest date in future) and with active customers
-        var activePigPens = pigPens.Where(p => 
-            (p.ActHarvestDate == null || p.ActHarvestDate > DateTime.Now) &&
-            customers.FirstOrDefault(c => c.Id == p.CustomerId)?.Status == CustomerStatus.Active).ToList();
+        // Filter ACTIVE pig pens only (ActHarvestDate == null or in future)
+        // This is the key change: only show active pens in dashboard
+        var activePigPens = pigPens.Where(p => p.IsActive).ToList();
 
-        // Group by pig pen type
+        // Group by pig pen type (both must be active)
         var cashPigPens = activePigPens.Where(p => p.Type == PigPenType.Cash).ToList();
         var projectPigPens = activePigPens.Where(p => p.Type == PigPenType.Project).ToList();
 
-        // Calculate totals
+        // Calculate activity metrics
         int totalActivePigPens = activePigPens.Count;
         int totalPigs = activePigPens.Sum(p => p.PigQty);
         int totalPigsCash = cashPigPens.Sum(p => p.PigQty);
         int totalPigsProject = projectPigPens.Sum(p => p.PigQty);
 
-        // Calculate financial metrics
-        decimal totalInvestment = await CalculateTotalInvestmentAsync(activePigPens);
-        decimal totalInvestmentCash = await CalculateTotalInvestmentAsync(cashPigPens);
-        decimal totalInvestmentProject = await CalculateTotalInvestmentAsync(projectPigPens);
-        decimal totalProfitLoss = await CalculateTotalProfitLossAsync(activePigPens);
-        decimal totalProfitLossCash = await CalculateTotalProfitLossAsync(cashPigPens);
-        decimal totalProfitLossProject = await CalculateTotalProfitLossAsync(projectPigPens);
+        // Get active customers (customers with at least 1 active pig pen)
+        var activeCustomerIds = activePigPens.Select(p => p.CustomerId).Distinct().ToHashSet();
+        int totalActiveCustomers = customers.Count(c => activeCustomerIds.Contains(c.Id));
 
-        // Calculate customer statistics
+        // Calculate financial metrics for all active pens
+        var (totalCost, totalDeposit, totalPriceIncludeDiscount) = 
+            await CalculateFinancialMetricsAsync(activePigPens);
+        
+        // Calculate financial metrics for Cash pens
+        var (totalCostCash, totalDepositCash, totalPriceIncludeDiscountCash) = 
+            await CalculateFinancialMetricsAsync(cashPigPens);
+        
+        // Calculate financial metrics for Project pens
+        var (totalCostProject, totalDepositProject, totalPriceIncludeDiscountProject) = 
+            await CalculateFinancialMetricsAsync(projectPigPens);
+
+        // Calculate customer statistics (only customers with active pens)
         var customerStats = new List<CustomerPigPenStats>();
         foreach (var customer in customers)
         {
             var customerPigPens = activePigPens.Where(p => p.CustomerId == customer.Id).ToList();
-            if (customerPigPens.Count > 0)
+            if (customerPigPens.Count > 0) // Only include if has active pens
             {
-                var customerInvestment = await CalculateTotalInvestmentAsync(customerPigPens);
-                var customerProfitLoss = await CalculateTotalProfitLossAsync(customerPigPens);
+                var (customerCost, customerDeposit, customerPrice) = 
+                    await CalculateFinancialMetricsAsync(customerPigPens);
 
                 customerStats.Add(new CustomerPigPenStats(
                     customer.Id,
@@ -105,30 +110,36 @@ public class DashboardService : IDashboardService
                     customer.Status,
                     customerPigPens.Count,
                     customerPigPens.Sum(p => p.PigQty),
-                    customerInvestment,
-                    customerProfitLoss
+                    customerCost,
+                    customerDeposit,
+                    customerPrice
                 ));
             }
         }
 
         return new DashboardOverview(
             totalActivePigPens,
+            totalActiveCustomers,
             totalPigs,
             totalPigsCash,
             totalPigsProject,
-            totalInvestment,
-            totalInvestmentCash,
-            totalInvestmentProject,
-            totalProfitLoss,
-            totalProfitLossCash,
-            totalProfitLossProject,
+            totalCost,
+            totalDeposit,
+            totalPriceIncludeDiscount,
+            totalCostCash,
+            totalDepositCash,
+            totalPriceIncludeDiscountCash,
+            totalCostProject,
+            totalDepositProject,
+            totalPriceIncludeDiscountProject,
             customerStats
         );
     }
 
-    private async Task<decimal> CalculateTotalInvestmentAsync(List<PigPen> pigPens)
+    private async Task<(decimal totalCost, decimal totalDeposit, decimal totalPriceIncludeDiscount)> 
+        CalculateFinancialMetricsAsync(List<PigPen> pigPens)
     {
-        if (!pigPens.Any()) return 0;
+        if (!pigPens.Any()) return (0, 0, 0);
 
         var pigPenIds = pigPens.Select(p => p.Id).ToHashSet();
         
@@ -148,25 +159,6 @@ public class DashboardService : IDashboardService
             allDeposits.AddRange(deposits);
         }
 
-        var totalFeed = allFeeds.Sum(f => f.Cost);
-        var totalDeposit = allDeposits.Sum(d => d.Amount);
-        return totalFeed - totalDeposit;
-    }
-
-    private async Task<decimal> CalculateTotalProfitLossAsync(List<PigPen> pigPens)
-    {
-        if (!pigPens.Any()) return 0;
-
-        var pigPenIds = pigPens.Select(p => p.Id).ToHashSet();
-        
-        // Get all feeds for these pig pens
-        var allFeeds = new List<FeedItem>();
-        foreach (var pigPenId in pigPenIds)
-        {
-            var feeds = await _feedService.GetFeedsByPigPenIdAsync(pigPenId);
-            allFeeds.AddRange(feeds);
-        }
-
         // Get all harvests for these pig pens
         var allHarvests = new List<HarvestResult>();
         foreach (var pigPenId in pigPenIds)
@@ -175,8 +167,10 @@ public class DashboardService : IDashboardService
             allHarvests.AddRange(harvests);
         }
 
-        var totalFeed = allFeeds.Sum(f => f.Cost);
-        var totalRevenue = allHarvests.Sum(h => h.Revenue);
-        return totalRevenue - totalFeed;
+        var totalCost = allFeeds.Sum(f => (f.FeedCost ?? 0) * f.Quantity);
+        var totalDeposit = allDeposits.Sum(d => d.Amount);
+        var totalPriceIncludeDiscount = allFeeds.Sum(f => f.Cost); // Cost parameter = TotalPriceIncludeDiscount from entity
+        
+        return (totalCost, totalDeposit, totalPriceIncludeDiscount);
     }
 }

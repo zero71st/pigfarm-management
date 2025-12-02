@@ -283,11 +283,13 @@
                                        OnInvoiceDeleted="HandleInvoiceDeleted" />
                     </MudTabPanel>
                     <MudTabPanel Text="ประวัติการให้อาหาร" Icon="@Icons.Material.Filled.Fastfood">
-                        <FeedHistoryTab Feeds="@feeds" 
+                        <FeedHistoryTab PigPenId="@PigPenId"
+                                       Feeds="@feeds" 
                                        FeedFormulaCalculations="@feedFormulaCalculations"
                                        ComparisonData="@comparisonData"
                                        ShowFinancial="@_showFinancial"
-                                       ShowSpecificProducts="@_showSpecificProducts" />
+                                       ShowSpecificProducts="@_showSpecificProducts"
+                                       OnFeedsChanged="HandleFeedsChanged" />
                     </MudTabPanel>
                 </MudTabs>
             </MudCardContent>
@@ -603,6 +605,12 @@
     private async Task HandleInvoiceDeleted()
     {
         // Reload feeds after invoice deletion
+        await RefreshFeeds();
+    }
+
+    private async Task HandleFeedsChanged()
+    {
+        // Reload feeds after feed changes (e.g., deletion from FeedHistoryTab)
         await RefreshFeeds();
     }
 
@@ -1237,18 +1245,19 @@
 
                 // Group by invoice reference code for detailed breakdown
                 var feedHistoryEntries = matchingFeeds
-                    .GroupBy(f => string.IsNullOrEmpty(f.InvoiceReferenceCode) ? "N/A" : f.InvoiceReferenceCode)
-                    .Select(g => new FeedHistoryEntry
+                    .Select(f => new FeedHistoryEntry
                     {
-                        InvoiceReferenceCode = g.Key ?? "N/A",
-                        Quantity = g.Sum(f => f.QuantityKg) / 25m, // Convert KG to bags
-                        FeedDate = g.OrderByDescending(f => f.Date).First().Date, // Take the most recent date in the group
-                        FeedCost = g.FirstOrDefault()?.FeedCost,
-                        PriceIncludeDiscount = g.FirstOrDefault()?.PriceIncludeDiscount,
-                        SysTotalPriceIncludeDiscount = g.Sum(f => f.Sys_TotalPriceIncludeDiscount ?? 0),
-                        PosTotalPriceIncludeDiscount = g.Sum(f => f.Pos_TotalPriceIncludeDiscount ?? 0)
+                        FeedId = f.Id,
+                        InvoiceReferenceCode = string.IsNullOrEmpty(f.InvoiceReferenceCode) ? "N/A" : f.InvoiceReferenceCode,
+                        Quantity = f.QuantityKg / 25m, // Convert KG to bags
+                        FeedDate = f.Date,
+                        FeedCost = f.FeedCost,
+                        PriceIncludeDiscount = f.PriceIncludeDiscount,
+                        SysTotalPriceIncludeDiscount = f.Sys_TotalPriceIncludeDiscount,
+                        PosTotalPriceIncludeDiscount = f.Pos_TotalPriceIncludeDiscount
                     })
-                    .OrderBy(e => e.InvoiceReferenceCode) // Sort by InvoiceReferenceCode
+                    .OrderBy(e => e.InvoiceReferenceCode)
+                    .ThenBy(e => e.FeedDate)
                     .ToList();
 
                 var result = new FeedComparisonData
@@ -1289,18 +1298,19 @@
 
                 // Group by invoice reference code for unmatched feeds too
                 var feedHistoryEntries = group
-                    .GroupBy(f => string.IsNullOrEmpty(f.InvoiceReferenceCode) ? "N/A" : f.InvoiceReferenceCode)
-                    .Select(g => new FeedHistoryEntry
+                    .Select(f => new FeedHistoryEntry
                     {
-                        InvoiceReferenceCode = g.Key ?? "N/A",
-                        Quantity = g.Sum(f => f.QuantityKg) / 25m,
-                        FeedDate = g.OrderByDescending(f => f.Date).First().Date, // Take the most recent date in the group
-                        FeedCost = g.FirstOrDefault()?.FeedCost,
-                        PriceIncludeDiscount = g.FirstOrDefault()?.PriceIncludeDiscount,
-                        SysTotalPriceIncludeDiscount = g.Sum(f => f.Sys_TotalPriceIncludeDiscount ?? 0),
-                        PosTotalPriceIncludeDiscount = g.Sum(f => f.Pos_TotalPriceIncludeDiscount ?? 0)
+                        FeedId = f.Id,
+                        InvoiceReferenceCode = string.IsNullOrEmpty(f.InvoiceReferenceCode) ? "N/A" : f.InvoiceReferenceCode,
+                        Quantity = f.QuantityKg / 25m,
+                        FeedDate = f.Date,
+                        FeedCost = f.FeedCost,
+                        PriceIncludeDiscount = f.PriceIncludeDiscount,
+                        SysTotalPriceIncludeDiscount = f.Sys_TotalPriceIncludeDiscount,
+                        PosTotalPriceIncludeDiscount = f.Pos_TotalPriceIncludeDiscount
                     })
-                    .OrderBy(e => e.InvoiceReferenceCode) // Sort by InvoiceReferenceCode
+                    .OrderBy(e => e.InvoiceReferenceCode)
+                    .ThenBy(e => e.FeedDate)
                     .ToList();
 
                 comparisonData.Add(new FeedComparisonData
@@ -1684,12 +1694,14 @@
 
     public class TableRowData
     {
+        public Guid FeedId { get; set; } = Guid.Empty;
         public string ProductCode { get; set; } = "";
         public string ProductName { get; set; } = "";
         public string Formula { get; set; } = ""; // Combined: "PerPig / PerPen"
         public string InvNo { get; set; } = "";
         public string InvDate { get; set; } = "";
         public string PerInvoiceBags { get; set; } = "";
+        public decimal Quantity { get; set; } = 0m;
         public string FeedCost { get; set; } = ""; // From FeedFormula.Cost
         public string PriceIncludeDiscount { get; set; } = ""; // UnitPrice - CostDiscountPrice
         public string SysTotalPriceIncludeDiscount { get; set; } = ""; // System calculated total
@@ -1714,6 +1726,7 @@
 
     public class FeedHistoryEntry
     {
+        public Guid FeedId { get; set; } = Guid.Empty;
         public string InvoiceReferenceCode { get; set; } = "";
         public decimal Quantity { get; set; }
         public DateTime FeedDate { get; set; }

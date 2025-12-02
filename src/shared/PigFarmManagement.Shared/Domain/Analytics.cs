@@ -22,23 +22,45 @@ public record PigPenSummary(Guid PigPenId, decimal TotalFeedCost, decimal TotalD
 
 public record DashboardOverview(
     int TotalActivePigPens,
+    int TotalActiveCustomers,
     int TotalPigs,
     int TotalPigsCash,
     int TotalPigsProject,
-    decimal TotalInvestment,
-    decimal TotalInvestmentCash,
-    decimal TotalInvestmentProject,
-    decimal TotalProfitLoss,
-    decimal TotalProfitLossCash,
-    decimal TotalProfitLossProject,
+    decimal TotalCost,
+    decimal TotalDeposit,
+    decimal TotalPriceIncludeDiscount,
+    decimal TotalCostCash,
+    decimal TotalDepositCash,
+    decimal TotalPriceIncludeDiscountCash,
+    decimal TotalCostProject,
+    decimal TotalDepositProject,
+    decimal TotalPriceIncludeDiscountProject,
     List<CustomerPigPenStats> CustomerStats)
 {
-    // Dashboard analytics
-    public decimal OverallROI => TotalInvestment != 0 ? (TotalProfitLoss / TotalInvestment) * 100 : 0;
-    public decimal CashROI => TotalInvestmentCash != 0 ? (TotalProfitLossCash / TotalInvestmentCash) * 100 : 0;
-    public decimal ProjectROI => TotalInvestmentProject != 0 ? (TotalProfitLossProject / TotalInvestmentProject) * 100 : 0;
+    // Financial metrics - NEW
+    public decimal TotalCustomerCapital => TotalDeposit;
+    public decimal TotalOwnerCapital => TotalCost;
+    public decimal TotalProfit => TotalPriceIncludeDiscount - TotalCost;
+    public decimal TotalInvestment => TotalOwnerCapital + TotalCustomerCapital + TotalProfit;
+    
+    // Cash section metrics - NEW
+    public decimal TotalCustomerCapitalCash => TotalDepositCash;
+    public decimal TotalOwnerCapitalCash => TotalCostCash;
+    public decimal TotalProfitCash => TotalPriceIncludeDiscountCash - TotalCostCash;
+    public decimal TotalInvestmentCash => TotalOwnerCapitalCash + TotalCustomerCapitalCash + TotalProfitCash;
+    
+    // Project section metrics - NEW
+    public decimal TotalCustomerCapitalProject => TotalDepositProject;
+    public decimal TotalOwnerCapitalProject => TotalCostProject;
+    public decimal TotalProfitProject => TotalPriceIncludeDiscountProject - TotalCostProject;
+    public decimal TotalInvestmentProject => TotalOwnerCapitalProject + TotalCustomerCapitalProject + TotalProfitProject;
+    
+    // Dashboard analytics (updated to use new formulas)
+    public decimal OverallROI => TotalInvestment != 0 ? (TotalProfit / TotalInvestment) * 100 : 0;
+    public decimal CashROI => TotalInvestmentCash != 0 ? (TotalProfitCash / TotalInvestmentCash) * 100 : 0;
+    public decimal ProjectROI => TotalInvestmentProject != 0 ? (TotalProfitProject / TotalInvestmentProject) * 100 : 0;
     public decimal AveragePigsPerPen => TotalActivePigPens != 0 ? (decimal)TotalPigs / TotalActivePigPens : 0;
-    public string BusinessHealthStatus => TotalProfitLoss switch
+    public string BusinessHealthStatus => TotalProfit switch
     {
         > 10000 => "Excellent",
         > 0 => "Healthy",
@@ -53,10 +75,17 @@ public record CustomerPigPenStats(
     CustomerStatus CustomerStatus,
     int PigPenCount,
     int TotalPigs,
-    decimal TotalInvestment,
-    decimal TotalProfitLoss)
+    decimal TotalCost,
+    decimal TotalDeposit,
+    decimal TotalPriceIncludeDiscount)
 {
-    // Customer analytics
+    // Financial metrics - NEW formulas
+    public decimal TotalCustomerCapital => TotalDeposit;
+    public decimal TotalOwnerCapital => TotalCost;
+    public decimal TotalProfitLoss => TotalPriceIncludeDiscount - TotalCost;
+    public decimal TotalInvestment => TotalOwnerCapital + TotalCustomerCapital + TotalProfitLoss;
+    
+    // Customer analytics (updated to use new formulas)
     public decimal CustomerROI => TotalInvestment != 0 ? (TotalProfitLoss / TotalInvestment) * 100 : 0;
     public decimal AveragePigsPerPen => PigPenCount != 0 ? (decimal)TotalPigs / PigPenCount : 0;
     public bool IsTopPerformer => TotalProfitLoss > 5000 && CustomerROI > 15;

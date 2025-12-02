@@ -3,6 +3,10 @@
 @using PigFarmManagement.Shared.Models
 @using PigFarmManagement.Shared.DTOs
 @using static PigFarmManagement.Client.Features.PigPens.Pages.PigPenDetailPage
+@using PigFarmManagement.Client.Features.PigPens.Services
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IFeedService FeedService
 
 @if ((FeedFormulaCalculations != null && FeedFormulaCalculations.Any()) || (ComparisonData != null && ComparisonData.Any()))
 {
@@ -36,6 +40,7 @@
                 <MudTh Style="text-align: center">รวม (POS)</MudTh>
                 <MudTh Style="text-align: center">กำไร</MudTh>
             }
+            <MudTh Style="text-align: center">การจัดการ</MudTh>
         </HeaderContent>
         <RowTemplate>
             @{
@@ -77,7 +82,7 @@
                 <span style="@textStyle">@(row.IsFirstProductRow ? row.ProductName : "")</span>
             </MudTd>
             <MudTd Style="@($"text-align: center; {rowStyle}")">
-                <span style="@textStyle">@row.Formula</span>
+                <span style="@textStyle">@(row.IsSubTotal ? "" : row.Formula)</span>
             </MudTd>
             <MudTd Style="@($"text-align: center; {rowStyle}")">
                 <span style="@textStyle">@row.InvNo</span>
@@ -86,7 +91,38 @@
                 <span style="@textStyle">@row.InvDate</span>
             </MudTd>
             <MudTd Style="@($"text-align: center; {rowStyle}")">
-                <span style="@textStyle">@row.PerInvoiceBags</span>
+                <span style="@textStyle">
+                    @if ((row.IsSubTotal || row.IsGrandTotal) && !row.IsUnmatchedFeed)
+                    {
+                        var parts = row.PerInvoiceBags.Split(" / ");
+                        if (parts.Length == 2 && decimal.TryParse(parts[0], out var actual) && decimal.TryParse(parts[1], out var formula))
+                        {
+                            <div class="d-flex align-center justify-center gap-1">
+                                @if (actual == formula)
+                                {
+                                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" />
+                                }
+                                else if (actual < formula)
+                                {
+                                    <MudIcon Icon="@Icons.Material.Filled.Schedule" Color="Color.Warning" Size="Size.Small" />
+                                }
+                                else
+                                {
+                                    <MudIcon Icon="@Icons.Material.Filled.ArrowUpward" Color="Color.Error" Size="Size.Small" />
+                                }
+                                <span>@row.PerInvoiceBags</span>
+                            </div>
+                        }
+                        else
+                        {
+                            @row.PerInvoiceBags
+                        }
+                    }
+                    else
+                    {
+                        @row.PerInvoiceBags
+                    }
+                </span>
             </MudTd>
             @if (_showFinancial)
             {
@@ -106,6 +142,16 @@
                     <span style="@textStyle">@row.Profit</span>
                 </MudTd>
             }
+            <MudTd Style="@($"text-align: center; {rowStyle}")">
+                @if (!row.IsSubTotal && !row.IsGrandTotal && !string.IsNullOrEmpty(row.InvNo) && row.InvNo != "No Feeds" && row.FeedId != Guid.Empty)
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                   Color="Color.Error"
+                                   Size="Size.Small"
+                                   OnClick="@(() => RemoveFeedItem(row.FeedId, row.ProductName, row.InvNo, row.Quantity))"
+                                   Title="ลบรายการอาหาร" />
+                }
+            </MudTd>
         </RowTemplate>
     </MudTable>
 }
@@ -117,14 +163,49 @@ else
 }
 
 @code {
+    [Parameter] public Guid PigPenId { get; set; }
     [Parameter] public List<FeedItem> Feeds { get; set; } = new();
     [Parameter] public IEnumerable<FeedFormulaWithCalculationDto>? FeedFormulaCalculations { get; set; }
     [Parameter] public List<FeedComparisonData> ComparisonData { get; set; } = new();
     [Parameter] public bool ShowFinancial { get; set; } = false;
     [Parameter] public bool ShowSpecificProducts { get; set; } = false;
+    [Parameter] public EventCallback OnFeedsChanged { get; set; }
 
     private bool _showFinancial = false;
     private bool _showSpecificProducts = false;
+
+    private async Task RemoveFeedItem(Guid feedId, string productName, string invoiceRef, decimal quantity)
+    {
+        try
+        {
+            bool? confirm = await DialogService.ShowMessageBox(
+                "ยืนยันการลบรายการอาหาร",
+                $"คุณต้องการลบรายการนี้หรือไม่?\n\nสินค้า: {productName}\nใบแจ้งหนี้: {invoiceRef}\nจำนวน: {quantity:N0} กระสอบ\n\nการดำเนินการนี้ไม่สามารถย้อนกลับได้",
+                yesText: "ลบ",
+                cancelText: "ยกเลิก");
+
+            if (confirm != true)
+            {
+                return;
+            }
+
+            var success = await FeedService.DeleteFeedAsync(PigPenId, feedId);
+
+            if (success)
+            {
+                Snackbar.Add($"ลบรายการอาหารสำเร็จ", Severity.Success);
+                await OnFeedsChanged.InvokeAsync();
+            }
+            else
+            {
+                Snackbar.Add("ไม่สามารถลบรายการอาหารได้", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"เกิดข้อผิดพลาด: {ex.Message}", Severity.Error);
+        }
+    }
 
     protected override void OnParametersSet()
     {
@@ -218,12 +299,14 @@ else
                 
                 rows.Add(new TableRowData
                 {
+                    FeedId = firstInvoice.FeedId,
                     ProductCode = comparison.ProductCode,
                     ProductName = comparison.ProductName,
                     Formula = combinedFormula,
                     InvNo = firstInvoice.InvoiceReferenceCode,
                     InvDate = firstInvoice.FeedDate.ToString("MM/dd/yyyy"),
                     PerInvoiceBags = firstInvoice.Quantity.ToString("0"),
+                    Quantity = firstInvoice.Quantity,
                     FeedCost = firstInvoice.FeedCost?.ToString("N2") ?? "-",
                     PriceIncludeDiscount = firstInvoice.PriceIncludeDiscount?.ToString("N2") ?? "-",
                     SysTotalPriceIncludeDiscount = firstInvoice.SysTotalPriceIncludeDiscount?.ToString("N2") ?? "-",
@@ -238,12 +321,14 @@ else
                 {
                     rows.Add(new TableRowData
                     {
+                        FeedId = invoice.FeedId,
                         ProductCode = comparison.ProductCode,
                         ProductName = "",
                         Formula = "",
                         InvNo = invoice.InvoiceReferenceCode,
                         InvDate = invoice.FeedDate.ToString("MM/dd/yyyy"),
                         PerInvoiceBags = invoice.Quantity.ToString("0"),
+                        Quantity = invoice.Quantity,
                         FeedCost = invoice.FeedCost?.ToString("N2") ?? "-",
                         PriceIncludeDiscount = invoice.PriceIncludeDiscount?.ToString("N2") ?? "-",
                         SysTotalPriceIncludeDiscount = invoice.SysTotalPriceIncludeDiscount?.ToString("N2") ?? "-",
@@ -259,14 +344,19 @@ else
                 var subTotalPosTotal = comparison.FeedHistoryEntries.Sum(e => e.PosTotalPriceIncludeDiscount ?? 0);
                 var subTotalProfit = CalculateSubTotalProfit(comparison.FeedHistoryEntries);
                 
+                // Get formula total for comparison (only for assigned formulas)
+                var formulaTotal = comparison.IsUnmatchedFeed ? 0 : comparison.FormulaTotal;
+                var actualTotal = comparison.ActualTotal;
+                
                 rows.Add(new TableRowData
                 {
                     ProductCode = "",
                     ProductName = "",
-                    Formula = "",
+                    Formula = comparison.IsUnmatchedFeed ? "N/A" : comparison.FormulaTotal.ToString("0"),
                     InvNo = "Sub Total",
                     InvDate = "",
-                    PerInvoiceBags = comparison.ActualTotal.ToString("0"),
+                    PerInvoiceBags = $"{comparison.ActualTotal.ToString("0")} / {(comparison.IsUnmatchedFeed ? "N/A" : comparison.FormulaTotal.ToString("0"))}",
+                    Quantity = actualTotal,
                     FeedCost = "-",
                     PriceIncludeDiscount = "-",
                     SysTotalPriceIncludeDiscount = subTotalSysTotal > 0 ? subTotalSysTotal.ToString("N2") : "-",
@@ -323,7 +413,8 @@ else
             Formula = grandTotalCombined,
             InvNo = "Grand Total",
             InvDate = "",
-            PerInvoiceBags = grandTotalPerInvoice.ToString("0"),
+            PerInvoiceBags = $"{grandTotalPerInvoice.ToString("0")} / {grandTotalPerPigPen.ToString("0")}",
+            Quantity = grandTotalPerInvoice,
             FeedCost = "-",
             PriceIncludeDiscount = "-",
             SysTotalPriceIncludeDiscount = grandTotalSysTotal > 0 ? grandTotalSysTotal.ToString("N2") : "-",
@@ -352,6 +443,10 @@ else
         
         var filteredComparisonData = ComparisonData?.Where(c => !specificProductCodes.Contains(c.ProductCode)).ToList() ?? new List<FeedComparisonData>();
         
+        // Track which product we're currently processing to know when to skip subtotals
+        string currentProductCode = "";
+        bool skipNextSubTotal = false;
+        
         foreach (var row in allRows)
         {
             if (row.IsGrandTotal)
@@ -375,7 +470,8 @@ else
                     Formula = grandTotalCombined,
                     InvNo = "Grand Total",
                     InvDate = "",
-                    PerInvoiceBags = grandTotalPerInvoice.ToString("0"),
+                    PerInvoiceBags = $"{grandTotalPerInvoice.ToString("0")} / {grandTotalPerPigPen.ToString("0")}",
+                    Quantity = grandTotalPerInvoice,
                     FeedCost = "-",
                     PriceIncludeDiscount = "-",
                     SysTotalPriceIncludeDiscount = grandTotalSysTotal > 0 ? grandTotalSysTotal.ToString("N2") : "-",
@@ -387,9 +483,33 @@ else
                     IsFirstProductRow = false
                 });
             }
-            else if (!specificProductCodes.Contains(row.ProductCode) || string.IsNullOrEmpty(row.ProductCode))
+            else if (row.IsSubTotal)
             {
-                filteredRows.Add(row);
+                // Only add subtotal if we didn't skip the product rows
+                if (!skipNextSubTotal)
+                {
+                    filteredRows.Add(row);
+                }
+                skipNextSubTotal = false; // Reset for next product
+            }
+            else if (!string.IsNullOrEmpty(row.ProductCode))
+            {
+                // Track current product and whether to skip it
+                currentProductCode = row.ProductCode;
+                skipNextSubTotal = specificProductCodes.Contains(currentProductCode);
+                
+                if (!skipNextSubTotal)
+                {
+                    filteredRows.Add(row);
+                }
+            }
+            else if (string.IsNullOrEmpty(row.ProductCode))
+            {
+                // This is a continuation row (empty ProductCode) - add if not skipping
+                if (!skipNextSubTotal)
+                {
+                    filteredRows.Add(row);
+                }
             }
         }
         
