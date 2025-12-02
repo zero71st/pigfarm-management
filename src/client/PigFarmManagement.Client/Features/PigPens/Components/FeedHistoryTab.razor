@@ -82,7 +82,7 @@
                 <span style="@textStyle">@(row.IsFirstProductRow ? row.ProductName : "")</span>
             </MudTd>
             <MudTd Style="@($"text-align: center; {rowStyle}")">
-                <span style="@textStyle">@row.Formula</span>
+                <span style="@textStyle">@(row.IsSubTotal ? "" : row.Formula)</span>
             </MudTd>
             <MudTd Style="@($"text-align: center; {rowStyle}")">
                 <span style="@textStyle">@row.InvNo</span>
@@ -91,7 +91,38 @@
                 <span style="@textStyle">@row.InvDate</span>
             </MudTd>
             <MudTd Style="@($"text-align: center; {rowStyle}")">
-                <span style="@textStyle">@row.PerInvoiceBags</span>
+                <span style="@textStyle">
+                    @if ((row.IsSubTotal || row.IsGrandTotal) && !row.IsUnmatchedFeed)
+                    {
+                        var parts = row.PerInvoiceBags.Split(" / ");
+                        if (parts.Length == 2 && decimal.TryParse(parts[0], out var actual) && decimal.TryParse(parts[1], out var formula))
+                        {
+                            <div class="d-flex align-center justify-center gap-1">
+                                @if (actual == formula)
+                                {
+                                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" />
+                                }
+                                else if (actual < formula)
+                                {
+                                    <MudIcon Icon="@Icons.Material.Filled.Schedule" Color="Color.Warning" Size="Size.Small" />
+                                }
+                                else
+                                {
+                                    <MudIcon Icon="@Icons.Material.Filled.ArrowUpward" Color="Color.Error" Size="Size.Small" />
+                                }
+                                <span>@row.PerInvoiceBags</span>
+                            </div>
+                        }
+                        else
+                        {
+                            @row.PerInvoiceBags
+                        }
+                    }
+                    else
+                    {
+                        @row.PerInvoiceBags
+                    }
+                </span>
             </MudTd>
             @if (_showFinancial)
             {
@@ -313,14 +344,19 @@ else
                 var subTotalPosTotal = comparison.FeedHistoryEntries.Sum(e => e.PosTotalPriceIncludeDiscount ?? 0);
                 var subTotalProfit = CalculateSubTotalProfit(comparison.FeedHistoryEntries);
                 
+                // Get formula total for comparison (only for assigned formulas)
+                var formulaTotal = comparison.IsUnmatchedFeed ? 0 : comparison.FormulaTotal;
+                var actualTotal = comparison.ActualTotal;
+                
                 rows.Add(new TableRowData
                 {
                     ProductCode = "",
                     ProductName = "",
-                    Formula = "",
+                    Formula = comparison.IsUnmatchedFeed ? "N/A" : comparison.FormulaTotal.ToString("0"),
                     InvNo = "Sub Total",
                     InvDate = "",
-                    PerInvoiceBags = comparison.ActualTotal.ToString("0"),
+                    PerInvoiceBags = $"{comparison.ActualTotal.ToString("0")} / {(comparison.IsUnmatchedFeed ? "N/A" : comparison.FormulaTotal.ToString("0"))}",
+                    Quantity = actualTotal,
                     FeedCost = "-",
                     PriceIncludeDiscount = "-",
                     SysTotalPriceIncludeDiscount = subTotalSysTotal > 0 ? subTotalSysTotal.ToString("N2") : "-",
@@ -377,7 +413,8 @@ else
             Formula = grandTotalCombined,
             InvNo = "Grand Total",
             InvDate = "",
-            PerInvoiceBags = grandTotalPerInvoice.ToString("0"),
+            PerInvoiceBags = $"{grandTotalPerInvoice.ToString("0")} / {grandTotalPerPigPen.ToString("0")}",
+            Quantity = grandTotalPerInvoice,
             FeedCost = "-",
             PriceIncludeDiscount = "-",
             SysTotalPriceIncludeDiscount = grandTotalSysTotal > 0 ? grandTotalSysTotal.ToString("N2") : "-",
@@ -433,7 +470,8 @@ else
                     Formula = grandTotalCombined,
                     InvNo = "Grand Total",
                     InvDate = "",
-                    PerInvoiceBags = grandTotalPerInvoice.ToString("0"),
+                    PerInvoiceBags = $"{grandTotalPerInvoice.ToString("0")} / {grandTotalPerPigPen.ToString("0")}",
+                    Quantity = grandTotalPerInvoice,
                     FeedCost = "-",
                     PriceIncludeDiscount = "-",
                     SysTotalPriceIncludeDiscount = grandTotalSysTotal > 0 ? grandTotalSysTotal.ToString("N2") : "-",
