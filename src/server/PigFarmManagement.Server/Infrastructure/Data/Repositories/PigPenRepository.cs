@@ -143,6 +143,25 @@ public class PigPenRepository : IPigPenRepository
             _context.PigPenFormulaAssignments.Add(assignmentEntity);
         }
 
+        // Update feed item costs from current formula costs (if formulas exist)
+        var feedItems = await _context.Feeds
+            .Where(f => f.PigPenId == pigPen.Id)
+            .ToListAsync();
+        
+        foreach (var feedItem in feedItems)
+        {
+            // Try to find matching formula by product code
+            var formula = await _context.FeedFormulas
+                .FirstOrDefaultAsync(ff => ff.Code == feedItem.ProductCode);
+            
+            if (formula != null && formula.Cost.HasValue && feedItem.Cost != formula.Cost.Value)
+            {
+                // Update feed item cost to match current formula cost
+                feedItem.Cost = formula.Cost.Value;
+                feedItem.UpdatedAt = DateTime.UtcNow;
+            }
+        }
+
         // T010: SaveChangesAsync wraps all assignment updates in single transaction (EF default behavior)
         await _context.SaveChangesAsync();
         
