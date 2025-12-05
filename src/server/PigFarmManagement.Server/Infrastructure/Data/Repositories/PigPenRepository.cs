@@ -178,4 +178,37 @@ public class PigPenRepository : IPigPenRepository
             await _context.SaveChangesAsync();
         }
     }
+
+    public async Task<PigPen> ForceCloseAsync(Guid pigPenId)
+    {
+        var entity = await _context.PigPens
+            .Include(p => p.FormulaAssignments)
+            .FirstOrDefaultAsync(p => p.Id == pigPenId);
+
+        if (entity == null)
+            throw new ArgumentException($"PigPen with ID {pigPenId} not found");
+
+        // Lock existing active assignments in-place to avoid remove/add cycles
+        var now = DateTime.UtcNow;
+        foreach (var assignment in entity.FormulaAssignments.Where(a => a.IsActive))
+        {
+            assignment.IsActive = false;
+            assignment.IsLocked = true;
+            assignment.LockReason = "ForceClosed";
+            assignment.LockedAt = now;
+            assignment.UpdatedAt = now;
+        }
+
+        // Set harvest date and lock calculations
+        entity.ActHarvestDate = DateTime.Today;
+        entity.IsCalculationLocked = true;
+        entity.UpdatedAt = now;
+
+        await _context.SaveChangesAsync();
+
+        // Reload assignments to ensure navigation is in sync
+        await _context.Entry(entity).Collection(e => e.FormulaAssignments).LoadAsync();
+
+        return entity.ToModel();
+    }
 }

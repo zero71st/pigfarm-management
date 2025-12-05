@@ -241,45 +241,16 @@ public class PigPenService : IPigPenService
 
     public async Task<PigPen> ForceClosePigPenAsync(Guid id)
     {
-        var pigPen = await _pigPenRepository.GetByIdAsync(id);
-        if (pigPen == null)
+        // Use repository-level force-close to update entities in-place (Postgres-friendly)
+        try
         {
-            throw new InvalidOperationException("Pig pen not found");
+            var result = await _pigPenRepository.ForceCloseAsync(id);
+            return result;
         }
-
-        // Create locked formula assignments for historical data integrity
-        var lockedAssignments = new List<PigPenFormulaAssignment>();
-
-        // Handle existing formula assignments (new system)
-        foreach (var assignment in pigPen.FormulaAssignments.Where(a => a.IsActive))
+        catch (ArgumentException ex)
         {
-            var lockedAssignment = assignment with {
-                IsActive = false,
-                IsLocked = true,
-                LockReason = "ForceClosed",
-                LockedAt = DateTime.UtcNow
-            };
-            lockedAssignments.Add(lockedAssignment);
+            throw new InvalidOperationException(ex.Message);
         }
-
-        // Combine existing assignments with new locked ones
-        var allAssignments = pigPen.FormulaAssignments
-            .Where(a => !a.IsActive) // Keep inactive ones
-            .Concat(lockedAssignments) // Add newly locked ones
-            .ToList();
-
-        // Force close by setting actual harvest date to today and lock calculations
-        var forceClosedPigPen = pigPen with 
-        { 
-            ActHarvestDate = DateTime.Today,
-            FormulaAssignments = allAssignments,
-            IsCalculationLocked = true,
-            UpdatedAt = DateTime.UtcNow
-        };
-
-        // UpdateAsync returns tuple, extract just the pig pen
-        var (result, _) = await _pigPenRepository.UpdateAsync(forceClosedPigPen);
-        return result;
     }
 
     public async Task<List<PigPenFormulaAssignment>> GetFormulaAssignmentsAsync(Guid pigPenId)
