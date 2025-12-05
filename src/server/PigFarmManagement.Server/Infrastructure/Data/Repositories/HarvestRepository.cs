@@ -48,8 +48,13 @@ public class HarvestRepository : IHarvestRepository
         if (entity == null)
             throw new ArgumentException($"Harvest with ID {harvest.Id} not found");
 
+        // Normalize DateTime to UTC for PostgreSQL compatibility
+        var harvestDate = harvest.HarvestDate.Kind == DateTimeKind.Unspecified
+            ? DateTime.SpecifyKind(harvest.HarvestDate, DateTimeKind.Utc)
+            : harvest.HarvestDate.ToUniversalTime();
+
         entity.PigPenId = harvest.PigPenId;
-        entity.HarvestDate = harvest.HarvestDate;
+        entity.HarvestDate = harvestDate;
         entity.PigCount = harvest.PigCount;
         entity.AvgWeight = harvest.AvgWeight;
         entity.TotalWeight = harvest.TotalWeight;

@@ -48,11 +48,16 @@ public class HarvestEntity
     // Create from shared model
     public static HarvestEntity FromModel(HarvestResult harvest)
     {
+        // Normalize DateTime to UTC for PostgreSQL compatibility
+        var harvestDate = harvest.HarvestDate.Kind == DateTimeKind.Unspecified
+            ? DateTime.SpecifyKind(harvest.HarvestDate, DateTimeKind.Utc)
+            : harvest.HarvestDate.ToUniversalTime();
+
         return new HarvestEntity
         {
             Id = harvest.Id,
             PigPenId = harvest.PigPenId,
-            HarvestDate = harvest.HarvestDate,
+            HarvestDate = harvestDate,
             PigCount = harvest.PigCount,
             AvgWeight = harvest.AvgWeight,
             TotalWeight = harvest.TotalWeight,
