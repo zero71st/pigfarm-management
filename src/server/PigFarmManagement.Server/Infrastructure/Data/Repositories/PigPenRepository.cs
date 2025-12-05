@@ -211,4 +211,14 @@ public class PigPenRepository : IPigPenRepository
 
         return entity.ToModel();
     }
+
+    public async Task UpdateTimestampAsync(Guid pigPenId)
+    {
+        var entity = await _context.PigPens.FindAsync(pigPenId);
+        if (entity == null)
+            return;
+
+        entity.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+    }
 }

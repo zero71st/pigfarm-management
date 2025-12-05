@@ -26,6 +26,7 @@ public interface IPigPenRepository
     Task<(PigPen pigPen, int updatedAssignmentCount)> UpdateAsync(PigPen pigPen);
     Task<PigPen> ForceCloseAsync(Guid pigPenId);
     Task DeleteAsync(Guid id);
+    Task UpdateTimestampAsync(Guid pigPenId);
 }
 
 public interface IFeedRepository

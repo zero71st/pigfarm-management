@@ -189,6 +189,13 @@ public class FeedImportService : IFeedImportService
             }
         }
 
+        // Update pig pen's UpdatedAt timestamp if any feeds were successfully imported
+        if (result.SuccessfulImports > 0)
+        {
+            await _pigPenRepository.UpdateTimestampAsync(pigPenId);
+            _logger.LogInformation("Updated pig pen {PigPenId} timestamp after importing {Count} transactions", pigPenId, result.SuccessfulImports);
+        }
+
         return result;
     }
 
