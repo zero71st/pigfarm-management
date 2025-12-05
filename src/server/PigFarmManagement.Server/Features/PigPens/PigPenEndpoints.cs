@@ -237,37 +237,85 @@ public static class PigPenEndpoints
     }
 
     // Deposit CRUD
-    private static async Task<IResult> CreateDeposit(Guid id, DepositCreateDto dto, IPigPenDetailService pigPenDetailService)
+    private static async Task<IResult> CreateDeposit(Guid id, DepositCreateDto dto, IPigPenDetailService pigPenDetailService, ILogger<Program> logger)
     {
         try
         {
+            logger.LogInformation("CreateDeposit called for PigPen {PigPenId} with Amount={Amount}, Date={Date}",
+                id, dto.Amount, dto.Date);
+            
             var deposit = await pigPenDetailService.CreateDepositAsync(id, dto);
+            
+            logger.LogInformation("Deposit created successfully with Id={DepositId}", deposit.Id);
             return Results.Created($"/api/pigpens/{id}/deposits/{deposit.Id}", deposit);
         }
         catch (InvalidOperationException ex)
         {
-            return Results.BadRequest(ex.Message);
+            logger.LogWarning(ex, "Business validation error creating deposit for PigPen {PigPenId}", id);
+            return Results.BadRequest(new { error = ex.Message, type = "validation" });
+        }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateException dbEx)
+        {
+            var innerMessage = dbEx.InnerException?.Message ?? dbEx.Message;
+            logger.LogError(dbEx, "Database error creating deposit for PigPen {PigPenId}: {InnerMessage}", id, innerMessage);
+            return Results.Problem(
+                detail: $"Database error: {innerMessage}",
+                title: "Database Error",
+                statusCode: 500
+            );
         }
         catch (Exception ex)
         {
-            return Results.Problem($"Error creating deposit: {ex.Message}");
+            var fullError = ex.InnerException != null 
+                ? $"{ex.Message} -> {ex.InnerException.Message}" 
+                : ex.Message;
+            logger.LogError(ex, "Unexpected error creating deposit for PigPen {PigPenId}: {FullError}", id, fullError);
+            return Results.Problem(
+                detail: fullError,
+                title: "Error creating deposit",
+                statusCode: 500
+            );
         }
     }
 
-    private static async Task<IResult> UpdateDeposit(Guid id, Guid depositId, DepositUpdateDto dto, IPigPenDetailService pigPenDetailService)
+    private static async Task<IResult> UpdateDeposit(Guid id, Guid depositId, DepositUpdateDto dto, IPigPenDetailService pigPenDetailService, ILogger<Program> logger)
     {
         try
         {
+            logger.LogInformation("UpdateDeposit called for PigPen {PigPenId}, Deposit {DepositId} with Amount={Amount}, Date={Date}",
+                id, depositId, dto.Amount, dto.Date);
+            
             var updatedDeposit = await pigPenDetailService.UpdateDepositAsync(id, depositId, dto);
+            
+            logger.LogInformation("Deposit {DepositId} updated successfully", depositId);
             return Results.Ok(updatedDeposit);
         }
         catch (InvalidOperationException ex)
         {
-            return Results.BadRequest(ex.Message);
+            logger.LogWarning(ex, "Business validation error updating deposit {DepositId} for PigPen {PigPenId}", depositId, id);
+            return Results.BadRequest(new { error = ex.Message, type = "validation" });
+        }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateException dbEx)
+        {
+            var innerMessage = dbEx.InnerException?.Message ?? dbEx.Message;
+            logger.LogError(dbEx, "Database error updating deposit {DepositId} for PigPen {PigPenId}: {InnerMessage}", depositId, id, innerMessage);
+            return Results.Problem(
+                detail: $"Database error: {innerMessage}",
+                title: "Database Error",
+                statusCode: 500
+            );
         }
         catch (Exception ex)
         {
-            return Results.Problem($"Error updating deposit: {ex.Message}");
+            var fullError = ex.InnerException != null 
+                ? $"{ex.Message} -> {ex.InnerException.Message}" 
+                : ex.Message;
+            logger.LogError(ex, "Unexpected error updating deposit {DepositId} for PigPen {PigPenId}: {FullError}", depositId, id, fullError);
+            return Results.Problem(
+                detail: fullError,
+                title: "Error updating deposit",
+                statusCode: 500
+            );
         }
     }
 
@@ -289,37 +337,85 @@ public static class PigPenEndpoints
     }
 
     // Harvest CRUD
-    private static async Task<IResult> CreateHarvest(Guid id, HarvestCreateDto dto, IPigPenDetailService pigPenDetailService)
+    private static async Task<IResult> CreateHarvest(Guid id, HarvestCreateDto dto, IPigPenDetailService pigPenDetailService, ILogger<Program> logger)
     {
         try
         {
+            logger.LogInformation("CreateHarvest called for PigPen {PigPenId} with Date={HarvestDate}, PigCount={PigCount}, TotalWeight={TotalWeight}, PricePerKg={PricePerKg}",
+                id, dto.HarvestDate, dto.PigCount, dto.TotalWeight, dto.SalePricePerKg);
+            
             var harvest = await pigPenDetailService.CreateHarvestAsync(id, dto);
+            
+            logger.LogInformation("Harvest created successfully with Id={HarvestId}", harvest.Id);
             return Results.Created($"/api/pigpens/{id}/harvests/{harvest.Id}", harvest);
         }
         catch (InvalidOperationException ex)
         {
-            return Results.BadRequest(ex.Message);
+            logger.LogWarning(ex, "Business validation error creating harvest for PigPen {PigPenId}", id);
+            return Results.BadRequest(new { error = ex.Message, type = "validation" });
+        }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateException dbEx)
+        {
+            var innerMessage = dbEx.InnerException?.Message ?? dbEx.Message;
+            logger.LogError(dbEx, "Database error creating harvest for PigPen {PigPenId}: {InnerMessage}", id, innerMessage);
+            return Results.Problem(
+                detail: $"Database error: {innerMessage}",
+                title: "Database Error",
+                statusCode: 500
+            );
         }
         catch (Exception ex)
         {
-            return Results.Problem($"Error creating harvest: {ex.Message}");
+            var fullError = ex.InnerException != null 
+                ? $"{ex.Message} -> {ex.InnerException.Message}" 
+                : ex.Message;
+            logger.LogError(ex, "Unexpected error creating harvest for PigPen {PigPenId}: {FullError}", id, fullError);
+            return Results.Problem(
+                detail: fullError,
+                title: "Error creating harvest",
+                statusCode: 500
+            );
         }
     }
 
-    private static async Task<IResult> UpdateHarvest(Guid id, Guid harvestId, HarvestUpdateDto dto, IPigPenDetailService pigPenDetailService)
+    private static async Task<IResult> UpdateHarvest(Guid id, Guid harvestId, HarvestUpdateDto dto, IPigPenDetailService pigPenDetailService, ILogger<Program> logger)
     {
         try
         {
+            logger.LogInformation("UpdateHarvest called for PigPen {PigPenId}, Harvest {HarvestId} with Date={HarvestDate}, PigCount={PigCount}, TotalWeight={TotalWeight}, PricePerKg={PricePerKg}",
+                id, harvestId, dto.HarvestDate, dto.PigCount, dto.TotalWeight, dto.SalePricePerKg);
+            
             var updatedHarvest = await pigPenDetailService.UpdateHarvestAsync(id, harvestId, dto);
+            
+            logger.LogInformation("Harvest {HarvestId} updated successfully", harvestId);
             return Results.Ok(updatedHarvest);
         }
         catch (InvalidOperationException ex)
         {
-            return Results.BadRequest(ex.Message);
+            logger.LogWarning(ex, "Business validation error updating harvest {HarvestId} for PigPen {PigPenId}", harvestId, id);
+            return Results.BadRequest(new { error = ex.Message, type = "validation" });
+        }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateException dbEx)
+        {
+            var innerMessage = dbEx.InnerException?.Message ?? dbEx.Message;
+            logger.LogError(dbEx, "Database error updating harvest {HarvestId} for PigPen {PigPenId}: {InnerMessage}", harvestId, id, innerMessage);
+            return Results.Problem(
+                detail: $"Database error: {innerMessage}",
+                title: "Database Error",
+                statusCode: 500
+            );
         }
         catch (Exception ex)
         {
-            return Results.Problem($"Error updating harvest: {ex.Message}");
+            var fullError = ex.InnerException != null 
+                ? $"{ex.Message} -> {ex.InnerException.Message}" 
+                : ex.Message;
+            logger.LogError(ex, "Unexpected error updating harvest {HarvestId} for PigPen {PigPenId}: {FullError}", harvestId, id, fullError);
+            return Results.Problem(
+                detail: fullError,
+                title: "Error updating harvest",
+                statusCode: 500
+            );
         }
     }
 

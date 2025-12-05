@@ -124,7 +124,11 @@ public class PigPenService : IPigPenService
     public async Task<Deposit> AddDepositAsync(Guid pigPenId, DepositCreateDto deposit)
     {
         var response = await _httpClient.PostAsJsonAsync($"api/pigpens/{pigPenId}/deposits", deposit);
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            throw new HttpRequestException($"Failed to create deposit: {response.StatusCode} - {errorContent}");
+        }
         var createdDeposit = await response.Content.ReadFromJsonAsync<Deposit>();
         return createdDeposit!;
     }
@@ -132,7 +136,11 @@ public class PigPenService : IPigPenService
     public async Task<Deposit> UpdateDepositAsync(Guid pigPenId, Guid depositId, DepositUpdateDto dto)
     {
         var response = await _httpClient.PutAsJsonAsync($"api/pigpens/{pigPenId}/deposits/{depositId}", dto);
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            throw new HttpRequestException($"Failed to update deposit: {response.StatusCode} - {errorContent}");
+        }
         var updatedDeposit = await response.Content.ReadFromJsonAsync<Deposit>();
         return updatedDeposit!;
     }
@@ -146,7 +154,11 @@ public class PigPenService : IPigPenService
     public async Task<HarvestResult> AddHarvestResultAsync(Guid pigPenId, HarvestCreateDto harvest)
     {
         var response = await _httpClient.PostAsJsonAsync($"api/pigpens/{pigPenId}/harvests", harvest);
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            throw new HttpRequestException($"Failed to create harvest: {response.StatusCode} - {errorContent}");
+        }
         var createdHarvest = await response.Content.ReadFromJsonAsync<HarvestResult>();
         return createdHarvest!;
     }
@@ -154,7 +166,11 @@ public class PigPenService : IPigPenService
     public async Task<HarvestResult> UpdateHarvestResultAsync(Guid pigPenId, Guid harvestId, HarvestUpdateDto dto)
     {
         var response = await _httpClient.PutAsJsonAsync($"api/pigpens/{pigPenId}/harvests/{harvestId}", dto);
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            throw new HttpRequestException($"Failed to update harvest: {response.StatusCode} - {errorContent}");
+        }
         var updatedHarvest = await response.Content.ReadFromJsonAsync<HarvestResult>();
         return updatedHarvest!;
     }
@@ -168,7 +184,11 @@ public class PigPenService : IPigPenService
     public async Task<PigPen> ForceClosePigPenAsync(PigPenForceCloseRequest request)
     {
         var response = await _httpClient.PostAsJsonAsync($"api/pigpens/{request.PigPenId}/force-close", request);
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            throw new HttpRequestException($"Failed to force close pig pen: {response.StatusCode} - {errorContent}");
+        }
         var closedPigPen = await response.Content.ReadFromJsonAsync<PigPen>();
         return closedPigPen!;
     }

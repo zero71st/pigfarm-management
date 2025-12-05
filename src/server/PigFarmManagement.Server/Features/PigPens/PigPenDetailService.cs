@@ -114,11 +114,16 @@ public class PigPenDetailService : IPigPenDetailService
             throw new InvalidOperationException("Pig pen not found");
         }
 
+        // Normalize DateTime to UTC for PostgreSQL compatibility
+        var depositDate = dto.Date.Kind == DateTimeKind.Unspecified
+            ? DateTime.SpecifyKind(dto.Date, DateTimeKind.Utc)
+            : dto.Date.ToUniversalTime();
+
         var deposit = new Deposit(
             Guid.NewGuid(),
             pigPenId,
             dto.Amount,
-            dto.Date,
+            depositDate,
             dto.Remark
         );
 
@@ -138,10 +143,15 @@ public class PigPenDetailService : IPigPenDetailService
             throw new InvalidOperationException("Deposit does not belong to the specified pig pen");
         }
 
+        // Normalize DateTime to UTC for PostgreSQL compatibility
+        var depositDate = dto.Date.Kind == DateTimeKind.Unspecified
+            ? DateTime.SpecifyKind(dto.Date, DateTimeKind.Utc)
+            : dto.Date.ToUniversalTime();
+
         var updatedDeposit = existingDeposit with
         {
             Amount = dto.Amount,
-            Date = dto.Date,
+            Date = depositDate,
             Remark = dto.Remark
         };
 
@@ -173,10 +183,16 @@ public class PigPenDetailService : IPigPenDetailService
             throw new InvalidOperationException("Pig pen not found");
         }
 
+        // Normalize DateTime to UTC for PostgreSQL compatibility
+        // PostgreSQL requires UTC timestamps when using 'timestamp with time zone'
+        var harvestDate = dto.HarvestDate.Kind == DateTimeKind.Unspecified
+            ? DateTime.SpecifyKind(dto.HarvestDate, DateTimeKind.Utc)
+            : dto.HarvestDate.ToUniversalTime();
+
         var harvest = new HarvestResult(
             Guid.NewGuid(),
             pigPenId,
-            dto.HarvestDate,
+            harvestDate,
             dto.PigCount,
             dto.AvgWeight,
             dto.TotalWeight,
@@ -200,9 +216,14 @@ public class PigPenDetailService : IPigPenDetailService
             throw new InvalidOperationException("Harvest does not belong to the specified pig pen");
         }
 
+        // Normalize DateTime to UTC for PostgreSQL compatibility
+        var harvestDate = dto.HarvestDate.Kind == DateTimeKind.Unspecified
+            ? DateTime.SpecifyKind(dto.HarvestDate, DateTimeKind.Utc)
+            : dto.HarvestDate.ToUniversalTime();
+
         var updatedHarvest = existingHarvest with
         {
-            HarvestDate = dto.HarvestDate,
+            HarvestDate = harvestDate,
             PigCount = dto.PigCount,
             AvgWeight = dto.AvgWeight,
             TotalWeight = dto.TotalWeight,
