@@ -52,8 +52,8 @@ public class PigPenDetailService : IPigPenDetailService
         var totalFeedCost = feeds.Sum(f => f.TotalPriceIncludeDiscount);
         var totalDeposit = deposits.Sum(d => d.Amount);
         var totalRevenue = harvests.Sum(h => h.Revenue);
-        var investment = totalFeedCost - totalDeposit; // Investment = FeedCost - Total Deposit
-        var profitLoss = totalRevenue - totalFeedCost - investment;
+        var investment = 0m; // No longer used, kept for API compatibility
+        var profitLoss = totalRevenue - totalFeedCost; // Simple: Revenue - FeedCost
 
         return new PigPenSummary(
             pigPenId,

@@ -181,17 +181,35 @@
                         {
                             <MudSimpleTable Style="overflow-x: auto;" Dense="true">
                                 <tbody>
+                                    @* 1. ต้นทุนอาหาร *@
                                     <tr>
                                         <td><strong>ต้นทุนอาหาร:</strong></td>
                                         <td class="text-right">
                                             <MudText Color="Color.Primary">฿@summary.TotalFeedCost.ToString("N0")</MudText>
                                         </td>
                                     </tr>
+                                    @* 2. รายได้ขายหมู *@
                                     <tr>
-                                        <td><strong>ยอดเงินมัดจำรวม:</strong></td>
+                                        <td><strong>รายได้ขายหมู:</strong></td>
                                         <td class="text-right">
-                                            @if (pigPen?.Type == PigPenType.Project)
-                                            {
+                                            <MudText Color="Color.Success">฿@GetTotalHarvestRevenue().ToString("N0")</MudText>
+                                        </td>
+                                    </tr>
+                                    @* 3. กำไร/ขาดทุน *@
+                                    <tr>
+                                        <td><strong>กำไร/ขาดทุน:</strong></td>
+                                        <td class="text-right">
+                                            <MudText Color="@(summary.ProfitLoss >= 0 ? Color.Success : Color.Error)">
+                                                ฿@summary.ProfitLoss.ToString("N0")
+                                            </MudText>
+                                        </td>
+                                    </tr>
+                                    @* 4. เงินมัดจำ (Project type only) *@
+                                    @if (pigPen?.Type == PigPenType.Project)
+                                    {
+                                        <tr>
+                                            <td><strong>เงินมัดจำ:</strong></td>
+                                            <td class="text-right">
                                                 @if (depositCalculationInfo != null)
                                                 {
                                                     <div>
@@ -211,29 +229,24 @@
                                                 {
                                                     <MudText Color="Color.Secondary">฿@summary.TotalDeposit.ToString("N0")</MudText>
                                                 }
-                                            }
-                                            else
-                                            {
-                                                <MudText Color="Color.Secondary" Style="font-style: italic;">
-                                                    N/A (Cash Type)
+                                            </td>
+                                        </tr>
+                                        @* 5. เงินคืนทั้งหมด (Project type only) *@
+                                        <tr>
+                                            <td><strong>เงินคืนทั้งหมด:</strong></td>
+                                            <td class="text-right">
+                                                @{
+                                                    var totalRefund = summary.ProfitLoss + GetTotalDeposits();
+                                                }
+                                                <MudText Color="@(totalRefund >= 0 ? Color.Success : Color.Error)">
+                                                    <strong>฿@totalRefund.ToString("N0")</strong>
                                                 </MudText>
-                                            }
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>เงินลงทุน:</strong></td>
-                                        <td class="text-right">
-                                            <MudText Color="Color.Info">฿@summary.Investment.ToString("N0")</MudText>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>กำไร/ขาดทุน:</strong></td>
-                                        <td class="text-right">
-                                            <MudText Color="@(summary.ProfitLoss >= 0 ? Color.Success : Color.Error)">
-                                                ฿@summary.ProfitLoss.ToString("N0")
-                                            </MudText>
-                                        </td>
-                                    </tr>
+                                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                    (กำไร/ขาดทุน + เงินมัดจำ)
+                                                </MudText>
+                                            </td>
+                                        </tr>
+                                    }
                                 </tbody>
                             </MudSimpleTable>
                         }
@@ -1787,6 +1800,17 @@
             DepositCompletionStatus.Started => Color.Info,
             _ => Color.Error
         };
+    }
+
+    // Financial calculation helper methods
+    private decimal GetTotalHarvestRevenue()
+    {
+        return harvests?.Sum(h => h.Revenue) ?? 0;
+    }
+
+    private decimal GetTotalDeposits()
+    {
+        return deposits?.Sum(d => d.Amount) ?? 0;
     }
 
     // Harvest progress color methods
