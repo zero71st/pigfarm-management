@@ -7,78 +7,70 @@
 
 <MudDialog>
     <DialogContent>
-        <MudContainer Style="max-width: 600px;">
-            <MudGrid>
+        <MudGrid Spacing="3">
+            <!-- Pig Pen Info Card -->
+            @if (PigPen != null)
+            {
                 <MudItem xs="12">
-                    <MudText Typo="Typo.h6" Class="mb-4">
-                        <MudIcon Icon="Icons.Material.Filled.Agriculture" Class="mr-2" />
-                        เพิ่มบันทึกการจับสุกร
-                    </MudText>
-                </MudItem>
-                
-                <!-- Pig Pen Info Card -->
-                @if (PigPen != null)
-                {
-                    <MudItem xs="12">
-                        <MudCard Class="mb-4" Style="background-color: #f8f9fa;">
-                            <MudCardContent>
-                                <MudGrid>
+                    <MudCard Style="background-color: #f8f9fa;">
+                        <MudCardContent>
+                            <MudGrid>
+                                <MudItem xs="12">
+                                    <MudText Typo="Typo.subtitle2" Class="mb-2">
+                                        🐷 ข้อมูลคอกสุกร
+                                    </MudText>
+                                </MudItem>
+                                <MudItem xs="6">
+                                    <MudText Typo="Typo.body2" Class="text-muted">
+                                        รหัสคอก:
+                                    </MudText>
+                                    <MudText Typo="Typo.body1" Style="font-weight: 600;">
+                                        @PigPen.PenCode
+                                    </MudText>
+                                </MudItem>
+                                <MudItem xs="6">
+                                    <MudText Typo="Typo.body2" Class="text-muted">
+                                        จำนวนสุกรทั้งหมด:
+                                    </MudText>
+                                    <MudText Typo="Typo.body1" Style="font-weight: 600;">
+                                        @PigPen.PigQty ตัว
+                                    </MudText>
+                                </MudItem>
+                                @if (remainingPigs > 0)
+                                {
                                     <MudItem xs="12">
-                                        <MudText Typo="Typo.subtitle2" Class="mb-2">
-                                            🐷 ข้อมูลคอกสุกร
-                                        </MudText>
+                                        <MudAlert Severity="Severity.Info" Dense="true">
+                                            <MudText Typo="Typo.body2">
+                                                <strong>@remainingPigs ตัว</strong> พร้อมสำหรับจับสุกร
+                                            </MudText>
+                                        </MudAlert>
                                     </MudItem>
-                                    <MudItem xs="6">
-                                        <MudText Typo="Typo.body2" Class="text-muted">
-                                            รหัสคอก:
-                                        </MudText>
-                                        <MudText Typo="Typo.body1" Style="font-weight: 600;">
-                                            @PigPen.PenCode
-                                        </MudText>
+                                }
+                                else if (remainingPigs < 0)
+                                {
+                                    <MudItem xs="12">
+                                        <MudAlert Severity="Severity.Warning" Dense="true">
+                                            <MudText Typo="Typo.body2">
+                                                <strong>คำเตือน:</strong> จำนวนสุกรที่จับแล้ว (@totalHarvestedPigs) เกินจำนวนที่คอกรองรับ (@PigPen.PigQty)
+                                            </MudText>
+                                        </MudAlert>
                                     </MudItem>
-                                    <MudItem xs="6">
-                                        <MudText Typo="Typo.body2" Class="text-muted">
-                                            จำนวนสุกรทั้งหมด:
-                                        </MudText>
-                                        <MudText Typo="Typo.body1" Style="font-weight: 600;">
-                                            @PigPen.PigQty ตัว
-                                        </MudText>
+                                }
+                                else
+                                {
+                                    <MudItem xs="12">
+                                        <MudAlert Severity="Severity.Success" Dense="true">
+                                            <MudText Typo="Typo.body2">
+                                                จับสุกรครบทั้งหมดจากคอกนี้แล้ว
+                                            </MudText>
+                                        </MudAlert>
                                     </MudItem>
-                                    @if (remainingPigs > 0)
-                                    {
-                                        <MudItem xs="12">
-                                            <MudAlert Severity="Severity.Info" Dense="true">
-                                                <MudText Typo="Typo.body2">
-                                                    <strong>@remainingPigs ตัว</strong> พร้อมสำหรับจับสุกร
-                                                </MudText>
-                                            </MudAlert>
-                                        </MudItem>
-                                    }
-                                    else if (remainingPigs < 0)
-                                    {
-                                        <MudItem xs="12">
-                                            <MudAlert Severity="Severity.Warning" Dense="true">
-                                                <MudText Typo="Typo.body2">
-                                                    <strong>คำเตือน:</strong> จำนวนสุกรที่จับแล้ว (@totalHarvestedPigs) เกินจำนวนที่คอกรองรับ (@PigPen.PigQty)
-                                                </MudText>
-                                            </MudAlert>
-                                        </MudItem>
-                                    }
-                                    else
-                                    {
-                                        <MudItem xs="12">
-                                            <MudAlert Severity="Severity.Success" Dense="true">
-                                                <MudText Typo="Typo.body2">
-                                                    จับสุกรครบทั้งหมดจากคอกนี้แล้ว
-                                                </MudText>
-                                            </MudAlert>
-                                        </MudItem>
-                                    }
-                                </MudGrid>
-                            </MudCardContent>
-                        </MudCard>
-                    </MudItem>
-                }
+                                }
+                            </MudGrid>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            }
 
                 <MudItem xs="12">
                     <MudForm @ref="form" @bind-IsValid="@isFormValid">
@@ -177,7 +169,6 @@
                     </MudForm>
                 </MudItem>
             </MudGrid>
-        </MudContainer>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">ยกเลิก</MudButton>

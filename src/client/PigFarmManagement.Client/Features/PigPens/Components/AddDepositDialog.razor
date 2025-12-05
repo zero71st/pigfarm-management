@@ -7,20 +7,12 @@
 
 <MudDialog>
     <DialogContent>
-        <MudContainer Style="max-width: 500px;">
-            <MudGrid>
+        <MudGrid Spacing="3">
+            <!-- Deposit Calculation Info Card -->
+            @if (calculationInfo != null)
+            {
                 <MudItem xs="12">
-                    <MudText Typo="Typo.h6" Class="mb-4">
-                        <MudIcon Icon="@Icons.Material.Filled.AccountBalance" Class="mr-2" />
-                        เพิ่มเงินมัดจำใหม่
-                    </MudText>
-                </MudItem>
-                
-                <!-- Deposit Calculation Info Card -->
-                @if (calculationInfo != null)
-                {
-                    <MudItem xs="12">
-                        <MudCard Class="mb-4" Style="background-color: #f8f9fa;">
+                    <MudCard Style="background-color: #f8f9fa;">
                             <MudCardContent>
                                 <MudGrid>
                                     <MudItem xs="12">
@@ -71,41 +63,40 @@
                     </MudItem>
                 }
                 
-                <MudItem xs="12">
-                    <MudNumericField @bind-Value="amount" 
-                                   Label="Amount (฿)" 
-                                   Variant="Variant.Outlined" 
-                                   Required="true"
-                                   Min="0.01m"
-                                   Format="N2"
-                                   Culture="@System.Globalization.CultureInfo.GetCultureInfo("th-TH")"
-                                   HelperText="Enter the deposit amount in Thai Baht"
-                                   Error="@(!IsAmountValid())"
-                                   ErrorText="Amount must be greater than 0" />
-                </MudItem>
-                
-                <MudItem xs="12">
-                    <MudDatePicker @bind-Date="depositDate" 
-                                 Label="Deposit Date" 
-                                 Variant="Variant.Outlined" 
-                                 Required="true"
-                                 MaxDate="DateTime.Today"
-                                 HelperText="Select the date of deposit (cannot be future date)"
-                                 Error="@(!IsDateValid())"
-                                 ErrorText="Date is required and cannot be in the future" />
-                </MudItem>
-                
-                <MudItem xs="12">
-                    <MudTextField @bind-Value="remark" 
-                                Label="หมายเหตุ (ถ้าต้องการ)" 
-                                Variant="Variant.Outlined" 
-                                Lines="3"
-                                MaxLength="500"
-                                Counter="500"
-                                HelperText="เพิ่มบันทึกเกี่ยวกับเงินมัดจำนี้" />
-                </MudItem>
-            </MudGrid>
-        </MudContainer>
+            <MudItem xs="12">
+                <MudNumericField @bind-Value="amount" 
+                               Label="จำนวนเงิน (฿)" 
+                               Variant="Variant.Outlined" 
+                               Required="true"
+                               Min="0.01m"
+                               Format="N2"
+                               Culture="@System.Globalization.CultureInfo.GetCultureInfo("th-TH")"
+                               HelperText="ระบุจำนวนเงินมัดจำเป็นบาท"
+                               Error="@(!IsAmountValid())"
+                               ErrorText="จำนวนเงินต้องมากกว่า 0" />
+            </MudItem>
+            
+            <MudItem xs="12">
+                <MudDatePicker @bind-Date="depositDate" 
+                             Label="วันที่มัดจำ" 
+                             Variant="Variant.Outlined" 
+                             Required="true"
+                             MaxDate="DateTime.Today"
+                             HelperText="เลือกวันที่ทำการมัดจำ (ไม่สามารถเลือกวันในอนาคต)"
+                             Error="@(!IsDateValid())"
+                             ErrorText="กรุณาระบุวันที่และต้องไม่เป็นวันในอนาคต" />
+            </MudItem>
+            
+            <MudItem xs="12">
+                <MudTextField @bind-Value="remark" 
+                            Label="หมายเหตุ (ถ้าต้องการ)" 
+                            Variant="Variant.Outlined" 
+                            Lines="3"
+                            MaxLength="500"
+                            Counter="500"
+                            HelperText="เพิ่มบันทึกเกี่ยวกับเงินมัดจำนี้" />
+            </MudItem>
+        </MudGrid>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">ยกเลิก</MudButton>
@@ -210,12 +201,12 @@
 
             var createdDeposit = await PigPenService.AddDepositAsync(PigPenId, depositDto);
             
-            Snackbar.Add($"Deposit of ฿{amount:N2} added successfully", Severity.Success);
+            Snackbar.Add($"เพิ่มเงินมัดจำ ฿{amount:N2} สำเร็จ", Severity.Success);
             MudDialog.Close(DialogResult.Ok(createdDeposit));
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error adding deposit: {ex.Message}", Severity.Error);
+            Snackbar.Add($"เกิดข้อผิดพลาดในการเพิ่มเงินมัดจำ: {ex.Message}", Severity.Error);
         }
         finally
         {
