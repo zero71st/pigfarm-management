@@ -1117,7 +1117,7 @@
             FullWidth = true
         };
 
-        var dialog = await DialogService.ShowAsync<AddHarvestDialog>("Add Harvest Record", parameters, options);
+        var dialog = await DialogService.ShowAsync<AddHarvestDialog>("เพิ่มบันทึกการจับสุกร", parameters, options);
         var result = await dialog.Result;
 
         if (!result.Canceled && result.Data is HarvestResult newHarvest)
@@ -1152,7 +1152,7 @@
             FullWidth = true
         };
 
-        var dialog = await DialogService.ShowAsync<EditHarvestDialog>("Edit Harvest Record", parameters, options);
+        var dialog = await DialogService.ShowAsync<EditHarvestDialog>("แก้ไขบันทึกการจับสุกร", parameters, options);
         var result = await dialog.Result;
 
         if (!result.Canceled && result.Data is HarvestResult updatedHarvest)
