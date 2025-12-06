@@ -89,9 +89,14 @@ public class PigPenEntity
             CustomerId = pigPen.CustomerId,
             PenCode = pigPen.PenCode,
             PigQty = pigPen.PigQty,
-            RegisterDate = pigPen.RegisterDate,
-            ActHarvestDate = pigPen.ActHarvestDate,
-            EstimatedHarvestDate = pigPen.EstimatedHarvestDate,
+            // PostgreSQL timestamp with time zone requires UTC-normalized DateTime
+            RegisterDate = DateTime.SpecifyKind(pigPen.RegisterDate, DateTimeKind.Utc),
+            ActHarvestDate = pigPen.ActHarvestDate.HasValue 
+                ? DateTime.SpecifyKind(pigPen.ActHarvestDate.Value, DateTimeKind.Utc) 
+                : null,
+            EstimatedHarvestDate = pigPen.EstimatedHarvestDate.HasValue 
+                ? DateTime.SpecifyKind(pigPen.EstimatedHarvestDate.Value, DateTimeKind.Utc) 
+                : null,
             FeedCost = pigPen.FeedCost,
             Investment = pigPen.Investment,
             ProfitLoss = pigPen.ProfitLoss,

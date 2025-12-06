@@ -78,9 +78,14 @@ public class PigPenRepository : IPigPenRepository
         entity.CustomerId = pigPen.CustomerId;
         entity.PenCode = pigPen.PenCode;
         entity.PigQty = pigPen.PigQty;
-        entity.RegisterDate = pigPen.RegisterDate;
-        entity.ActHarvestDate = pigPen.ActHarvestDate;
-        entity.EstimatedHarvestDate = pigPen.EstimatedHarvestDate;
+        // PostgreSQL timestamp with time zone requires UTC-normalized DateTime
+        entity.RegisterDate = DateTime.SpecifyKind(pigPen.RegisterDate, DateTimeKind.Utc);
+        entity.ActHarvestDate = pigPen.ActHarvestDate.HasValue 
+            ? DateTime.SpecifyKind(pigPen.ActHarvestDate.Value, DateTimeKind.Utc) 
+            : null;
+        entity.EstimatedHarvestDate = pigPen.EstimatedHarvestDate.HasValue 
+            ? DateTime.SpecifyKind(pigPen.EstimatedHarvestDate.Value, DateTimeKind.Utc) 
+            : null;
         entity.FeedCost = pigPen.FeedCost;
         entity.Investment = pigPen.Investment;
         entity.ProfitLoss = pigPen.ProfitLoss;
