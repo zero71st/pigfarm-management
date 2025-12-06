@@ -4,7 +4,7 @@
     <TitleContent>
         <MudText Typo="Typo.h6">
             <MudIcon Icon="Icons.Material.Filled.Warning" Class="mr-3" Color="Color.Warning"/>
-            Force Close Pig Pen
+            บังคับปิดคอกสุกร
         </MudText>
     </TitleContent>
     <DialogContent>
@@ -12,11 +12,11 @@
             <MudCardContent>
                 <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-4">
                     <MudText Typo="Typo.subtitle2" Class="mb-2">
-                        ⚠️ Warning: You are about to force close this pig pen
+                        ⚠️ คำเตือน: คุณกำลังจะบังคับปิดคอกสุกรนี้
                     </MudText>
                     <MudText Typo="Typo.body2">
-                        This action will mark the pig pen as completed even though not all pigs have been harvested. 
-                        The actual harvest date will be set to today.
+                        การดำเนินการนี้จะทำเครื่องหมายว่าคอกสุกรเสร็จสิ้นแล้ว แม้ว่าจะยังไม่ได้จับสุกรครบทั้งหมด 
+                        วันที่จับสุกรจริงจะถูกตั้งเป็นวันนี้
                     </MudText>
                 </MudAlert>
                 
@@ -25,27 +25,27 @@
                     <MudGrid>
                         <MudItem xs="12">
                             <MudText Typo="Typo.subtitle1" Class="mb-2">
-                                <strong>Pig Pen Details:</strong>
+                                <strong>รายละเอียดคอกสุกร:</strong>
                             </MudText>
                         </MudItem>
                         <MudItem xs="6">
-                            <MudText Typo="Typo.body2" Color="Color.Secondary">Pen Code:</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">รหัสคอก:</MudText>
                             <MudText Typo="Typo.body1"><strong>@PigPen.PenCode</strong></MudText>
                         </MudItem>
                         <MudItem xs="6">
-                            <MudText Typo="Typo.body2" Color="Color.Secondary">Total Pigs:</MudText>
-                            <MudText Typo="Typo.body1"><strong>@PigPen.PigQty</strong></MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">จำนวนสุกรทั้งหมด:</MudText>
+                            <MudText Typo="Typo.body1"><strong>@PigPen.PigQty ตัว</strong></MudText>
                         </MudItem>
                         <MudItem xs="6">
-                            <MudText Typo="Typo.body2" Color="Color.Secondary">Harvested Pigs:</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">จับแล้ว:</MudText>
                             <MudText Typo="Typo.body1" Color="Color.Info">
-                                <strong>@HarvestInfo.HarvestedPigQuantity</strong>
+                                <strong>@HarvestInfo.HarvestedPigQuantity ตัว</strong>
                             </MudText>
                         </MudItem>
                         <MudItem xs="6">
-                            <MudText Typo="Typo.body2" Color="Color.Secondary">Remaining Pigs:</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">คงเหลือ:</MudText>
                             <MudText Typo="Typo.body1" Color="@(HarvestInfo.RemainingPigQuantity > 0 ? Color.Warning : Color.Success)">
-                                <strong>@HarvestInfo.RemainingPigQuantity</strong>
+                                <strong>@HarvestInfo.RemainingPigQuantity ตัว</strong>
                             </MudText>
                         </MudItem>
                         
@@ -55,14 +55,14 @@
                                 <MudDivider Class="my-2" />
                                 <MudAlert Severity="Severity.Info" Dense="true">
                                     <MudText Typo="Typo.body2">
-                                        <strong>@HarvestInfo.RemainingPigQuantity pig(s)</strong> will be marked as unaccounted for. 
-                                        Common reasons include:
+                                        <strong>@HarvestInfo.RemainingPigQuantity ตัว</strong> จะถูกทำเครื่องหมายว่าไม่ได้ถูกบันทึก 
+                                        สาเหตุที่พบบ่อย:
                                     </MudText>
                                     <ul style="margin: 8px 0; padding-left: 20px;">
-                                        <li>Pigs died during raising period</li>
-                                        <li>Pigs kept for breeding purposes</li>
-                                        <li>Pigs sold through different channels</li>
-                                        <li>Data entry corrections needed</li>
+                                        <li>สุกรตายระหว่างการเลี้ยง</li>
+                                        <li>เก็บไว้เพื่อการเพาะพันธุ์</li>
+                                        <li>ขายผ่านช่องทางอื่น</li>
+                                        <li>ต้องแก้ไขข้อมูล</li>
                                     </ul>
                                 </MudAlert>
                             </MudItem>
@@ -71,12 +71,12 @@
                         <MudItem xs="12">
                             <MudDivider Class="my-2" />
                             <MudText Typo="Typo.subtitle2" Class="mb-2">
-                                Actions that will be performed:
+                                การดำเนินการที่จะเกิดขึ้น:
                             </MudText>
                             <MudList Dense="true">
-                                <MudListItem Icon="Icons.Material.Filled.CalendarToday" Text="Set actual harvest date to today" />
-                                <MudListItem Icon="Icons.Material.Filled.Block" Text="Mark pig pen as completed/closed" />
-                                <MudListItem Icon="Icons.Material.Filled.Lock" Text="Prevent further harvest entries" />
+                                <MudListItem Icon="Icons.Material.Filled.CalendarToday" Text="ตั้งวันที่จับสุกรจริงเป็นวันนี้" />
+                                <MudListItem Icon="Icons.Material.Filled.Block" Text="ทำเครื่องหมายคอกสุกรว่าเสร็จสิ้น/ปิดแล้ว" />
+                                <MudListItem Icon="Icons.Material.Filled.Lock" Text="ป้องกันการเพิ่มรายการจับสุกรเพิ่มเติม" />
                             </MudList>
                         </MudItem>
                     </MudGrid>
@@ -85,12 +85,12 @@
         </MudCard>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton OnClick="Cancel">ยกเลิก</MudButton>
         <MudButton Color="Color.Warning" 
                    Variant="Variant.Filled" 
                    OnClick="Confirm"
                    StartIcon="Icons.Material.Filled.Warning">
-            Force Close Pig Pen
+            บังคับปิดคอก
         </MudButton>
     </DialogActions>
 </MudDialog>

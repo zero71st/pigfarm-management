@@ -200,7 +200,8 @@ public class PigPenRepository : IPigPenRepository
         }
 
         // Set harvest date and lock calculations
-        entity.ActHarvestDate = DateTime.Today;
+        // Normalize to UTC for PostgreSQL compatibility
+        entity.ActHarvestDate = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Utc);
         entity.IsCalculationLocked = true;
         entity.UpdatedAt = now;
 
