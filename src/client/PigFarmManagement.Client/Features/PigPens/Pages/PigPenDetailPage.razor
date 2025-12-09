@@ -31,10 +31,10 @@
     else
     {
         <!-- Header Section -->
-        <div class="d-flex justify-space-between align-center mb-6">
-            <div>
-                <div class="d-flex align-center mb-2">
-                    <MudText Typo="Typo.h3" GutterBottom="true" Class="mr-3">
+        <div class="d-flex flex-column flex-sm-row justify-space-between align-start align-sm-center mb-6" style="gap: 1rem;">
+            <div class="flex-grow-1">
+                <div class="d-flex align-center mb-2 flex-wrap" style="gap: 0.5rem;">
+                    <MudText Typo="Typo.h3" GutterBottom="true">
                         <MudIcon Icon="@Icons.Material.Filled.Widgets" Class="mr-3" />
                         @pigPen.Name
                     </MudText>
@@ -43,8 +43,7 @@
                         <MudChip Color="Color.Error" 
                                  Size="Size.Medium" 
                                  Variant="Variant.Filled"
-                                 Icon="@Icons.Material.Filled.Lock"
-                                 Class="mr-2">
+                                 Icon="@Icons.Material.Filled.Lock">
                             ปิดคอกแล้ว
                         </MudChip>
                     }
@@ -53,8 +52,7 @@
                         <MudChip Color="Color.Info" 
                                  Size="Size.Medium" 
                                  Variant="Variant.Filled"
-                                 Icon="@Icons.Material.Filled.CheckCircle"
-                                 Class="mr-2">
+                                 Icon="@Icons.Material.Filled.CheckCircle">
                             จับแล้ว
                         </MudChip>
                     }
@@ -70,29 +68,45 @@
                 </div>
                 <MudBreadcrumbs Items="@breadcrumbItems" />
             </div>
-            <div>
+            <div class="d-flex flex-column flex-sm-row align-stretch align-sm-center" style="gap: 0.5rem; width: 100%; max-width: 100%;">
                 <MudButton Variant="Variant.Outlined" 
                            StartIcon="@Icons.Material.Filled.ArrowBack"
                            OnClick="@(() => Navigation.NavigateTo("/pigpens"))"
-                           Class="mr-2">
+                           FullWidth="true"
+                           Class="flex-sm-grow-0">
                     กลับไปรายการ
                 </MudButton>
                 <MudButton Variant="Variant.Filled" 
                            Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.Edit"
                            OnClick="EditPigPen"
-                           Disabled="@IsPigPenClosed()">
+                           Disabled="@IsPigPenClosed()"
+                           FullWidth="true"
+                           Class="flex-sm-grow-0">
                     แก้ไข
                 </MudButton>
-                @* Force Close button - Show for all pig pens with smart behavior *@
-                @if (ShouldShowForceCloseButton())
+                @* Force Close button - Show only when not locked *@
+                @if (pigPen != null && !pigPen.IsCalculationLocked)
                 {
                     <MudButton Variant="Variant.Filled" 
-                               Color="@GetForceCloseButtonColor()"
-                               StartIcon="@GetForceCloseButtonIcon()"
+                               Color="Color.Warning"
+                               StartIcon="@Icons.Material.Filled.GppMaybe"
                                OnClick="ForceClosePigPen"
-                               Class="ml-2">
-                        @GetForceCloseButtonText()
+                               FullWidth="true"
+                               Class="flex-sm-grow-0">
+                        Force Close
+                    </MudButton>
+                }
+                @* Manage button - Show only when locked *@
+                @if (pigPen != null && pigPen.IsCalculationLocked)
+                {
+                    <MudButton Variant="Variant.Filled" 
+                               Color="Color.Info"
+                               StartIcon="@Icons.Material.Filled.Settings"
+                               OnClick="ForceClosePigPen"
+                               FullWidth="true"
+                               Class="flex-sm-grow-0">
+                        Manage
                     </MudButton>
                 }
                 @* Remove debug info in production *@
@@ -269,31 +283,43 @@
         <MudCard Elevation="2" Class="mb-6">
             <MudCardHeader>
                 <CardHeaderContent>
-                    <MudText Typo="Typo.h5">
-                        <MudIcon Icon="@Icons.Material.Filled.Fastfood" Class="mr-2" />
-                        การจัดการบิลขาย (@feeds.GroupBy(f => f.InvoiceReferenceCode).Count())
-                    </MudText>
-                    @if (pigPen?.IsCalculationLocked == true)
-                    {
-                        <MudChip Color="Color.Warning" 
-                                 Size="Size.Small" 
-                                 Variant="Variant.Filled" 
-                                 Class="ml-3"
-                                 Icon="@Icons.Material.Filled.Lock">
-                            ล็อกการคำนวณ
-                        </MudChip>
-                    }
+                    <div class="d-flex flex-column flex-sm-row align-start align-sm-center" style="gap: 0.5rem;">
+                        <MudText Typo="Typo.h5">
+                            <MudIcon Icon="@Icons.Material.Filled.Fastfood" Class="mr-2" />
+                            การจัดการบิลขาย (@feeds.GroupBy(f => f.InvoiceReferenceCode).Count())
+                        </MudText>
+                        @if (pigPen?.IsCalculationLocked == true)
+                        {
+                            <MudChip Color="Color.Warning" 
+                                     Size="Size.Small" 
+                                     Variant="Variant.Filled" 
+                                     Icon="@Icons.Material.Filled.Lock">
+                                ล็อกการคำนวณ
+                            </MudChip>
+                        }
+                    </div>
                 </CardHeaderContent>
                 <CardHeaderActions>
-                    <MudButton Variant="Variant.Filled" 
-                               Color="Color.Primary"
-                               StartIcon="@Icons.Material.Filled.Download"
-                               OnClick="ImportFeeds">
-                        นำเข้าบิลขาย
-                    </MudButton>
+                    <div class="d-none d-sm-flex">
+                        <MudButton Variant="Variant.Filled" 
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Download"
+                                   OnClick="ImportFeeds">
+                            นำเข้าบิลขาย
+                        </MudButton>
+                    </div>
                 </CardHeaderActions>
             </MudCardHeader>
             <MudCardContent>
+                <div class="d-flex d-sm-none mb-3">
+                    <MudButton Variant="Variant.Filled" 
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Download"
+                               OnClick="ImportFeeds"
+                               FullWidth="true">
+                        นำเข้าบิลขาย
+                    </MudButton>
+                </div>
                 <MudTabs Elevation="0" 
                          Rounded="true" 
                          ApplyEffectsToContainer="true"
@@ -330,15 +356,26 @@
                         </MudText>
                     </CardHeaderContent>
                     <CardHeaderActions>
-                        <MudButton Variant="Variant.Filled" 
-                                   Color="Color.Primary"
-                                   StartIcon="@Icons.Material.Filled.Add"
-                                   OnClick="AddDeposit">
-                            เพิ่มเงินมัดจำ
-                        </MudButton>
+                        <div class="d-none d-sm-flex">
+                            <MudButton Variant="Variant.Filled" 
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.Add"
+                                       OnClick="AddDeposit">
+                                เพิ่มเงินมัดจำ
+                            </MudButton>
+                        </div>
                     </CardHeaderActions>
                 </MudCardHeader>
             <MudCardContent>
+                <div class="d-flex d-sm-none mb-3">
+                    <MudButton Variant="Variant.Filled" 
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Add"
+                               OnClick="AddDeposit"
+                               FullWidth="true">
+                        เพิ่มเงินมัดจำ
+                    </MudButton>
+                </div>
                 <!-- Deposit Progress Card -->
                 @if (pigPen != null && depositCalculationInfo != null)
                 {
@@ -455,15 +492,26 @@
                     </MudText>
                 </CardHeaderContent>
                 <CardHeaderActions>
-                    <MudButton Variant="Variant.Filled" 
-                               Color="Color.Primary"
-                               StartIcon="@Icons.Material.Filled.Add"
-                               OnClick="AddHarvest">
-                        เพิ่มบันทึกการจับสุกร
-                    </MudButton>
+                    <div class="d-none d-sm-flex">
+                        <MudButton Variant="Variant.Filled" 
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Add"
+                                   OnClick="AddHarvest">
+                            เพิ่มบันทึกการจับสุกร
+                        </MudButton>
+                    </div>
                 </CardHeaderActions>
             </MudCardHeader>
             <MudCardContent>
+                <div class="d-flex d-sm-none mb-3">
+                    <MudButton Variant="Variant.Filled" 
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Add"
+                               OnClick="AddHarvest"
+                               FullWidth="true">
+                        เพิ่มบันทึกการจับสุกร
+                    </MudButton>
+                </div>
                 
                 <!-- Harvest Progress Card -->
                 @if (pigPen != null && harvestCalculationInfo != null)
@@ -900,12 +948,6 @@
         if (pigPen == null)
         {
             Snackbar.Add("Pig pen data not available", Severity.Error);
-            return;
-        }
-
-        if (pigPen.ActHarvestDate.HasValue)
-        {
-            Snackbar.Add("Pig pen is already closed", Severity.Warning);
             return;
         }
 
