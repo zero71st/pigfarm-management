@@ -104,7 +104,6 @@
             <MudTh>จำนวน</MudTh>
             <MudTh>วันที่ลงทะเบียน</MudTh>
             <MudTh>ประมาณการจับ</MudTh>
-            <MudTh>เดือน/สัปดาห์จับ</MudTh>
             <MudTh>ระยะเวลาเลี้ยง</MudTh>
             <MudTh>อัปเดตล่าสุด</MudTh>
             <MudTh>การดำเนินการ</MudTh>
@@ -158,14 +157,36 @@
             </MudTd>
             <MudTd DataLabel="Quantity">@context.PigQty</MudTd>
             <MudTd DataLabel="Register Date">@context.RegisterDate.ToString("d/M/yyyy")</MudTd>
-            <MudTd DataLabel="Est. Harvest">@(context.EstimatedHarvestDate?.ToString("d/M/yyyy") ?? "N/A")</MudTd>
-            <MudTd DataLabel="Month/Week">
+            <MudTd DataLabel="Week" Style="text-align: center;">
                 @if (context.EstimatedHarvestDate.HasValue)
                 {
-                    var date = context.EstimatedHarvestDate.Value;
-                    var month = date.Month;
-                    var week = (date.Day - 1) / 7 + 1;
-                    <MudText>@($"{month}/{week}")</MudText>
+                    var harvestDate = context.EstimatedHarvestDate.Value;
+                    var weekOfMonth = (harvestDate.Day - 1) / 7 + 1;
+                    
+                    // Calculate week start (Monday) and end (Sunday)
+                    var dayOfWeek = (int)harvestDate.DayOfWeek;
+                    var daysToMonday = dayOfWeek == 0 ? 6 : dayOfWeek - 1;
+                    var weekStart = harvestDate.AddDays(-daysToMonday);
+                    var weekEnd = weekStart.AddDays(6);
+                    
+                    // Thai month abbreviations
+                    string[] thaiMonths = { "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค." };
+                    var startMonth = thaiMonths[weekStart.Month - 1];
+                    var endMonth = thaiMonths[weekEnd.Month - 1];
+                    var startYear = (weekStart.Year + 543) % 100;
+                    var endYear = (weekEnd.Year + 543) % 100;
+                    
+                    <div class="d-flex flex-column align-center" style="gap: 2px;">
+                        <MudChip Size="Size.Small" Color="Color.Primary" Variant="Variant.Text" Style="font-size: 1.1rem; font-weight: 600; height: 24px;">
+                            @weekOfMonth
+                        </MudChip>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary" Style="white-space: nowrap; font-size: 0.7rem;">
+                            @weekStart.Day @startMonth @startYear.ToString("00") - @weekEnd.Day @endMonth @endYear.ToString("00")
+                        </MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Primary" Style="white-space: nowrap; font-size: 0.75rem; font-weight: 500; margin-top: 2px;">
+                            @harvestDate.ToString("d/M/yyyy")
+                        </MudText>
+                    </div>
                 }
                 else
                 {

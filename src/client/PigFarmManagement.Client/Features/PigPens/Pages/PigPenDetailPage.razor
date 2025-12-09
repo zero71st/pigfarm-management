@@ -84,15 +84,26 @@
                            Disabled="@IsPigPenClosed()">
                     แก้ไข
                 </MudButton>
-                @* Force Close button - Show for all pig pens with smart behavior *@
-                @if (ShouldShowForceCloseButton())
+                @* Force Close button - Show only when not locked *@
+                @if (pigPen != null && !pigPen.IsCalculationLocked)
                 {
                     <MudButton Variant="Variant.Filled" 
-                               Color="@GetForceCloseButtonColor()"
-                               StartIcon="@GetForceCloseButtonIcon()"
+                               Color="Color.Warning"
+                               StartIcon="@Icons.Material.Filled.GppMaybe"
                                OnClick="ForceClosePigPen"
                                Class="ml-2">
-                        @GetForceCloseButtonText()
+                        Force Close
+                    </MudButton>
+                }
+                @* Manage button - Show only when locked *@
+                @if (pigPen != null && pigPen.IsCalculationLocked)
+                {
+                    <MudButton Variant="Variant.Filled" 
+                               Color="Color.Info"
+                               StartIcon="@Icons.Material.Filled.Settings"
+                               OnClick="ForceClosePigPen"
+                               Class="ml-2">
+                        Manage
                     </MudButton>
                 }
                 @* Remove debug info in production *@
@@ -900,12 +911,6 @@
         if (pigPen == null)
         {
             Snackbar.Add("Pig pen data not available", Severity.Error);
-            return;
-        }
-
-        if (pigPen.ActHarvestDate.HasValue)
-        {
-            Snackbar.Add("Pig pen is already closed", Severity.Warning);
             return;
         }
 
