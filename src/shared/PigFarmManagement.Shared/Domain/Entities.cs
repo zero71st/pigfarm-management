@@ -53,6 +53,9 @@ public record PigPen(Guid Id, Guid CustomerId, string PenCode, int PigQty,
     // Flag to indicate if calculations are locked (for closed pig pens)
     public bool IsCalculationLocked { get; init; }
 
+    // Flag to indicate if pig pen has harvest records
+    public bool HasHarvests { get; init; }
+
     // Business computed properties
     public string Name => $"Pen {PenCode}";
     public string Code => PenCode;

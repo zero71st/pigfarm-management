@@ -76,7 +76,8 @@ public class PigPenEntity
             SelectedBrand = SelectedBrand,
             Note = Note,
             FormulaAssignments = FormulaAssignments.Select(fa => fa.ToModel()).ToList(),
-            IsCalculationLocked = IsCalculationLocked
+            IsCalculationLocked = IsCalculationLocked,
+            HasHarvests = Harvests != null && Harvests.Any()
         };
     }
     

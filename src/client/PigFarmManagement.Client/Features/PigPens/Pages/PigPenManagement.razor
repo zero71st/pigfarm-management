@@ -104,7 +104,7 @@
             <MudTh>จำนวน</MudTh>
             <MudTh>วันที่ลงทะเบียน</MudTh>
             <MudTh>วันจับสุกรโดยประมาณ</MudTh>
-            <MudTh>จำนวนวันที่เหลือ</MudTh>
+            <MudTh>ระยะเวลาเลี้ยง</MudTh>
             <MudTh>อัปเดตล่าสุด</MudTh>
             <MudTh>การดำเนินการ</MudTh>
         </HeaderContent>
@@ -127,13 +127,22 @@
                         ปิดคอกแล้ว
                     </MudChip>
                 }
-                else if (context.ActHarvestDate.HasValue)
+                else if (context.HasHarvests)
                 {
                     <MudChip Color="Color.Info" 
                              Size="Size.Small" 
                              Variant="Variant.Filled"
                              Icon="@Icons.Material.Filled.CheckCircle">
                         จับแล้ว
+                    </MudChip>
+                }
+                else if (context.ActHarvestDate.HasValue)
+                {
+                    <MudChip Color="Color.Warning" 
+                             Size="Size.Small" 
+                             Variant="Variant.Filled"
+                             Icon="@Icons.Material.Filled.EventAvailable">
+                        นัดหมายแล้ว
                     </MudChip>
                 }
                 else
@@ -150,12 +159,19 @@
             <MudTd DataLabel="Register Date">@context.RegisterDate.ToString("yyyy-MM-dd")</MudTd>
             <MudTd DataLabel="Est. Harvest">@(context.EstimatedHarvestDate?.ToString("yyyy-MM-dd") ?? "N/A")</MudTd>
             <MudTd DataLabel="Days Remaining">
-                @if (context.EstimatedHarvestDate.HasValue)
+                @if (context.ActHarvestDate.HasValue)
                 {
-                    var daysRemaining = (context.EstimatedHarvestDate.Value - DateTime.Now).Days;
-                    <MudText Color="@(daysRemaining > 30 ? Color.Success : daysRemaining > 7 ? Color.Warning : Color.Error)">
-                        @daysRemaining วัน
-                    </MudText>
+                    var daysRaised = (context.ActHarvestDate.Value - context.RegisterDate).Days;
+                    <MudChip Size="Size.Small" Color="Color.Info" Variant="Variant.Filled">
+                        เลี้ยง @daysRaised วัน
+                    </MudChip>
+                }
+                else if (context.EstimatedHarvestDate.HasValue)
+                {
+                    var daysRemaining = (context.EstimatedHarvestDate.Value - context.RegisterDate).Days;
+                    <MudChip Size="Size.Small" Color="Color.Success" Variant="Variant.Filled">
+                        เหลือ @daysRemaining วัน
+                    </MudChip>
                 }
                 else
                 {
