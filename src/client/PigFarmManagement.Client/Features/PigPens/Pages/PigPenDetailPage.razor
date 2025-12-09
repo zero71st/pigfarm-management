@@ -299,13 +299,15 @@
                         }
                     </div>
                 </CardHeaderContent>
-                <CardHeaderActions Class="d-none d-sm-flex">
-                    <MudButton Variant="Variant.Filled" 
-                               Color="Color.Primary"
-                               StartIcon="@Icons.Material.Filled.Download"
-                               OnClick="ImportFeeds">
-                        นำเข้าบิลขาย
-                    </MudButton>
+                <CardHeaderActions>
+                    <div class="d-none d-sm-flex">
+                        <MudButton Variant="Variant.Filled" 
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Download"
+                                   OnClick="ImportFeeds">
+                            นำเข้าบิลขาย
+                        </MudButton>
+                    </div>
                 </CardHeaderActions>
             </MudCardHeader>
             <MudCardContent>
@@ -353,13 +355,15 @@
                             เงินมัดจำ (@deposits.Count)
                         </MudText>
                     </CardHeaderContent>
-                    <CardHeaderActions Class="d-none d-sm-flex">
-                        <MudButton Variant="Variant.Filled" 
-                                   Color="Color.Primary"
-                                   StartIcon="@Icons.Material.Filled.Add"
-                                   OnClick="AddDeposit">
-                            เพิ่มเงินมัดจำ
-                        </MudButton>
+                    <CardHeaderActions>
+                        <div class="d-none d-sm-flex">
+                            <MudButton Variant="Variant.Filled" 
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.Add"
+                                       OnClick="AddDeposit">
+                                เพิ่มเงินมัดจำ
+                            </MudButton>
+                        </div>
                     </CardHeaderActions>
                 </MudCardHeader>
             <MudCardContent>
@@ -487,13 +491,15 @@
                         บันทึกการจับสุกร (@harvests.Count)
                     </MudText>
                 </CardHeaderContent>
-                <CardHeaderActions Class="d-none d-sm-flex">
-                    <MudButton Variant="Variant.Filled" 
-                               Color="Color.Primary"
-                               StartIcon="@Icons.Material.Filled.Add"
-                               OnClick="AddHarvest">
-                        เพิ่มบันทึกการจับสุกร
-                    </MudButton>
+                <CardHeaderActions>
+                    <div class="d-none d-sm-flex">
+                        <MudButton Variant="Variant.Filled" 
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Add"
+                                   OnClick="AddHarvest">
+                            เพิ่มบันทึกการจับสุกร
+                        </MudButton>
+                    </div>
                 </CardHeaderActions>
             </MudCardHeader>
             <MudCardContent>
