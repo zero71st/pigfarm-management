@@ -94,12 +94,14 @@ public class DashboardService : IDashboardService
         var (totalCostProject, totalDepositProject, totalPriceIncludeDiscountProject) = 
             await CalculateFinancialMetricsAsync(projectPigPens);
 
-        // Calculate customer statistics (only customers with active pens)
+        // Calculate customer statistics (only customers with active PROJECT pens)
         var customerStats = new List<CustomerPigPenStats>();
         foreach (var customer in customers)
         {
-            var customerPigPens = activePigPens.Where(p => p.CustomerId == customer.Id).ToList();
-            if (customerPigPens.Count > 0) // Only include if has active pens
+            var customerPigPens = activePigPens
+                .Where(p => p.CustomerId == customer.Id && p.Type == PigPenType.Project)
+                .ToList();
+            if (customerPigPens.Count > 0) // Only include if has active project pens
             {
                 var (customerCost, customerDeposit, customerPrice) = 
                     await CalculateFinancialMetricsAsync(customerPigPens);
@@ -117,6 +119,33 @@ public class DashboardService : IDashboardService
             }
         }
 
+        // Calculate customer statistics for CASH pens (ordered by revenue descending)
+        var customerStatsCash = new List<CustomerPigPenStats>();
+        foreach (var customer in customers)
+        {
+            var customerCashPens = activePigPens
+                .Where(p => p.CustomerId == customer.Id && p.Type == PigPenType.Cash)
+                .ToList();
+            if (customerCashPens.Count > 0) // Only include if has active cash pens
+            {
+                var (customerCost, customerDeposit, customerPrice) = 
+                    await CalculateFinancialMetricsAsync(customerCashPens);
+
+                customerStatsCash.Add(new CustomerPigPenStats(
+                    customer.Id,
+                    customer.DisplayName,
+                    customer.Status,
+                    customerCashPens.Count,
+                    customerCashPens.Sum(p => p.PigQty),
+                    customerCost,
+                    customerDeposit,
+                    customerPrice
+                ));
+            }
+        }
+        // Order by revenue (TotalPriceIncludeDiscount) descending
+        customerStatsCash = customerStatsCash.OrderByDescending(c => c.TotalPriceIncludeDiscount).ToList();
+
         return new DashboardOverview(
             totalActivePigPens,
             totalActiveCustomers,
@@ -132,7 +161,8 @@ public class DashboardService : IDashboardService
             totalCostProject,
             totalDepositProject,
             totalPriceIncludeDiscountProject,
-            customerStats
+            customerStats,
+            customerStatsCash
         );
     }
 
