@@ -103,7 +103,8 @@
             <MudTh>สถานะ</MudTh>
             <MudTh>จำนวน</MudTh>
             <MudTh>วันที่ลงทะเบียน</MudTh>
-            <MudTh>วันจับสุกรโดยประมาณ</MudTh>
+            <MudTh>ประมาณการจับ</MudTh>
+            <MudTh>เดือน/สัปดาห์จับ</MudTh>
             <MudTh>ระยะเวลาเลี้ยง</MudTh>
             <MudTh>อัปเดตล่าสุด</MudTh>
             <MudTh>การดำเนินการ</MudTh>
@@ -156,8 +157,21 @@
                 }
             </MudTd>
             <MudTd DataLabel="Quantity">@context.PigQty</MudTd>
-            <MudTd DataLabel="Register Date">@context.RegisterDate.ToString("yyyy-MM-dd")</MudTd>
-            <MudTd DataLabel="Est. Harvest">@(context.EstimatedHarvestDate?.ToString("yyyy-MM-dd") ?? "N/A")</MudTd>
+            <MudTd DataLabel="Register Date">@context.RegisterDate.ToString("d/M/yyyy")</MudTd>
+            <MudTd DataLabel="Est. Harvest">@(context.EstimatedHarvestDate?.ToString("d/M/yyyy") ?? "N/A")</MudTd>
+            <MudTd DataLabel="Month/Week">
+                @if (context.EstimatedHarvestDate.HasValue)
+                {
+                    var date = context.EstimatedHarvestDate.Value;
+                    var month = date.Month;
+                    var week = (date.Day - 1) / 7 + 1;
+                    <MudText>@($"{month}/{week}")</MudText>
+                }
+                else
+                {
+                    <MudText Color="Color.Secondary">N/A</MudText>
+                }
+            </MudTd>
             <MudTd DataLabel="Days Remaining">
                 @if (context.ActHarvestDate.HasValue)
                 {
@@ -168,7 +182,7 @@
                 }
                 else if (context.EstimatedHarvestDate.HasValue)
                 {
-                    var daysRemaining = (context.EstimatedHarvestDate.Value - context.RegisterDate).Days;
+                    var daysRemaining = (context.EstimatedHarvestDate.Value - DateTime.Now).Days;
                     <MudChip Size="Size.Small" Color="Color.Success" Variant="Variant.Filled">
                         เหลือ @daysRemaining วัน
                     </MudChip>
@@ -187,15 +201,6 @@
                 <div class="d-flex gap-1">
                     <MudButton Size="Size.Small"
                               Variant="Variant.Text"
-                              Color="Color.Info"
-                              Class="pa-1"
-                              Style="min-width: 32px; font-size: 16px; line-height: 1;"
-                            OnClick="() => ShowPosImportDialog(context.Id, GetCustomerName(context.CustomerId), context.PenCode, GetCustomerCode(context.CustomerId))"
-                              Title="นำเข้าอาหาร">
-                        <MudIcon Icon="@Icons.Material.Filled.Download" Size="Size.Small" />
-                    </MudButton>
-                    <MudButton Size="Size.Small"
-                              Variant="Variant.Text"
                               Color="Color.Primary"
                               Class="pa-1"
                               Style="min-width: 32px; font-size: 16px; line-height: 1;"
@@ -203,25 +208,26 @@
                               Title="ดูรายละเอียด">
                         <MudIcon Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" />
                     </MudButton>
-                    <MudButton Size="Size.Small"
-                              Variant="Variant.Text"
-                              Color="Color.Warning"
-                              Class="pa-1"
-                              Style="min-width: 32px; font-size: 16px; line-height: 1;"
-                              OnClick="() => ShowEditDialog(context)"
-                              Disabled="@IsPigPenClosed(context)"
-                              Title="แก้ไข">
-                        <MudIcon Icon="@Icons.Material.Filled.Edit" Size="Size.Small" />
-                    </MudButton>
-                    <MudButton Size="Size.Small"
-                              Variant="Variant.Text"
-                              Color="Color.Error"
-                              Class="pa-1"
-                              Style="min-width: 32px; font-size: 16px; line-height: 1;"
-                              OnClick="() => ShowDeleteDialog(context)"
-                              Title="ลบ">
-                        <MudIcon Icon="@Icons.Material.Filled.Delete" Size="Size.Small" />
-                    </MudButton>
+                    <MudMenu Icon="@Icons.Material.Filled.MoreVert" Size="Size.Small" Dense="true">
+                        <MudMenuItem OnClick="() => ShowPosImportDialog(context.Id, GetCustomerName(context.CustomerId), context.PenCode, GetCustomerCode(context.CustomerId))">
+                            <div class="d-flex align-center gap-2">
+                                <MudIcon Icon="@Icons.Material.Filled.Download" Size="Size.Small" Color="Color.Info" />
+                                <MudText>นำเข้าอาหาร</MudText>
+                            </div>
+                        </MudMenuItem>
+                        <MudMenuItem OnClick="() => ShowEditDialog(context)" Disabled="@IsPigPenClosed(context)">
+                            <div class="d-flex align-center gap-2">
+                                <MudIcon Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Warning" />
+                                <MudText>แก้ไข</MudText>
+                            </div>
+                        </MudMenuItem>
+                        <MudMenuItem OnClick="() => ShowDeleteDialog(context)">
+                            <div class="d-flex align-center gap-2">
+                                <MudIcon Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" />
+                                <MudText>ลบ</MudText>
+                            </div>
+                        </MudMenuItem>
+                    </MudMenu>
                 </div>
             </MudTd>
         </RowTemplate>
