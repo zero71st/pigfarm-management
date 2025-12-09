@@ -2,37 +2,35 @@
 @using System.Globalization
 
 <MudCard Elevation="3" Class="mt-4">
-    <MudCardHeader>
+    <MudCardHeader class="ml-4">
         <CardHeaderContent>
             <MudText Typo="Typo.h6">
-                <MudIcon Icon="@Icons.Material.Filled.Group" Class="mr-2" />
-                สรุปผลการดำเนินงานของลูกค้า
+                <MudIcon Icon="@Icons.Material.Filled.Business" Class="mr-2" Color="Color.Info" />
+                สรุปผลการดำเนินงานของลูกค้า (โครงการ)
             </MudText>
         </CardHeaderContent>
     </MudCardHeader>
-    <MudCardContent>
+    <MudCardContent class="ml-4">
         <MudTable Items="@CustomerStats" Hover="true" Striped="true" Dense="true" RowsPerPage="10">
             <HeaderContent>
                 <MudTh>ชื่อลูกค้า</MudTh>
                 <MudTh>จำนวนคอก</MudTh>
                 <MudTh>จำนวนสุกร</MudTh>
                 <MudTh>เงินลงทุนทั้งหมด</MudTh>
-                <MudTh>เงินลงทุนส่วนเจ้าของรวม</MudTh>
-                <MudTh>รวมเงินมัดจำ</MudTh>
-                <MudTh>กำไร/ขาดทุนรวม</MudTh>
+                <MudTh>เงินลงทุนส่วนของร้าน</MudTh>
+                <MudTh>เงินลงทุนส่วนลูกค้า (มัดจำ)</MudTh>
             </HeaderContent>
             <RowTemplate>
                 <MudTd DataLabel="ชื่อลูกค้า">@context.CustomerName</MudTd>
                 <MudTd DataLabel="จำนวนคอก">@context.PigPenCount</MudTd>
                 <MudTd DataLabel="จำนวนสุกร">@context.TotalPigs</MudTd>
                 <MudTd DataLabel="เงินลงทุนทั้งหมด">@FormatCurrency(context.TotalInvestment)</MudTd>
-                <MudTd DataLabel="เงินลงทุนส่วนเจ้าของรวม">@FormatCurrency(context.TotalOwnerCapital)</MudTd>
-                <MudTd DataLabel="รวมเงินมัดจำ">@FormatCurrency(context.TotalCustomerCapital)</MudTd>
-                <MudTd DataLabel="กำไร/ขาดทุนรวม">
-                    <span style="color: @(context.TotalProfitLoss >= 0 ? "green" : "red")">
-                        @FormatCurrency(context.TotalProfitLoss)
+                <MudTd DataLabel="เงินลงทุนส่วนของร้าน">
+                    <span style="color: @(CalculateOwnerPlusProfit(context) >= 0 ? "green" : "red")">
+                        @FormatCurrency(CalculateOwnerPlusProfit(context))
                     </span>
                 </MudTd>
+                <MudTd DataLabel="เงินลงทุนส่วนลูกค้า (มัดจำ)">@FormatCurrency(context.TotalCustomerCapital)</MudTd>
             </RowTemplate>
             <PagerContent>
                 @if (CustomerStats?.Count > 10)
@@ -50,6 +48,11 @@
     private string FormatCurrency(decimal amount)
     {
         return amount.ToString("N2", new CultureInfo("th-TH"));
+    }
+
+    private decimal CalculateOwnerPlusProfit(CustomerPigPenStats stats)
+    {
+        return stats.TotalOwnerCapital + stats.TotalProfitLoss;
     }
 
     private string FormatPercentage(decimal percentage)

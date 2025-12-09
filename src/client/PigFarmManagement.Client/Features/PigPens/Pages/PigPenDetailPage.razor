@@ -144,9 +144,19 @@
                                     <td>@(pigPen.EstimatedHarvestDate?.ToString("dd/MM/yyyy") ?? "ไม่ได้ตั้ง")</td>
                                 </tr>
                                 <tr>
-                                    <td><strong>วันจับสุกรจริง:</strong></td>
-                                    <td>@(pigPen.ActHarvestDate?.ToString("dd/MM/yyyy") ?? "ยังดำเนินการ")</td>
+                                    <td><strong>นัดหมายจับสุกร:</strong></td>
+                                    <td>@(pigPen.ActHarvestDate?.ToString("dd/MM/yyyy") ?? "ยังไม่ได้นัดหมาย")</td>
                                 </tr>
+                                @if (harvests.Any())
+                                {
+                                    var firstHarvest = harvests.OrderBy(h => h.HarvestDate).First();
+                                    <tr>
+                                        <td><strong>จับสุกรจริง:</strong></td>
+                                        <td>
+                                            <MudText Color="Color.Success">@firstHarvest.HarvestDate.ToString("dd/MM/yyyy")</MudText>
+                                        </td>
+                                    </tr>
+                                }
                                 <tr>
                                     <td><strong>ระยะเวลาการเลี้ยงจริง:</strong></td>
                                     <td>
@@ -1853,61 +1863,52 @@
     }
 
     /// <summary>
-    /// Determines whether the Force Close button should be visible based on business rules
+    /// Determines whether the Force Close/Manage button should be visible based on business rules
     /// </summary>
     private bool ShouldShowForceCloseButton()
     {
-        // Don't show if pig pen is null or not loaded
-        if (pigPen == null) return false;
-        
-        // Show for active pig pens (no actual harvest date) - covers scenarios 1, 2, 3
-        if (!pigPen.ActHarvestDate.HasValue) return true;
-        
-        // Show for already completed pig pens (scenario 4) - might need to reopen or adjust
-        if (pigPen.ActHarvestDate.HasValue) return true;
-        
-        // Fallback: show in all cases where pig pen exists
-        return true;
+        // Show button for all pig pens (Manage for locked, Force Close for others)
+        return pigPen != null;
     }
 
     /// <summary>
-    /// Gets the appropriate color for the Force Close button based on pig pen status
+    /// Gets the appropriate color for the Force Close/Manage button based on pig pen status
     /// </summary>
     private Color GetForceCloseButtonColor()
     {
         if (pigPen == null) return Color.Default;
         
-        return pigPen.ActHarvestDate.HasValue switch
+        return pigPen.IsCalculationLocked switch
         {
-            true => Color.Info,      // Already completed - blue for "manage/reopen"
+            true => Color.Info,      // Locked (force closed) - blue for "manage"
             false => Color.Warning   // Active - orange for "force close"
         };
     }
 
     /// <summary>
-    /// Gets the appropriate icon for the Force Close button based on pig pen status
+    /// Gets the appropriate icon for the Force Close/Manage button based on pig pen status
     /// </summary>
     private string GetForceCloseButtonIcon()
     {
         if (pigPen == null) return Icons.Material.Filled.GppMaybe;
         
-        return pigPen.ActHarvestDate.HasValue switch
+        return pigPen.IsCalculationLocked switch
         {
-            true => Icons.Material.Filled.Settings,    // Already completed - settings icon
+            true => Icons.Material.Filled.Settings,    // Locked (force closed) - settings icon
             false => Icons.Material.Filled.GppMaybe    // Active - warning icon
         };
     }
 
     /// <summary>
-    /// Gets the appropriate text for the Force Close button based on pig pen status
+    /// Gets the appropriate text for the Force Close/Manage button based on pig pen status
     /// </summary>
     private string GetForceCloseButtonText()
     {
         if (pigPen == null) return "Force Close";
         
-        return pigPen.ActHarvestDate.HasValue switch
+        return pigPen.IsCalculationLocked switch
         {
-            true => "Manage",        // Already completed - allow management/adjustments
+            true => "Manage",        // Locked (force closed) - allow management/adjustments
             false => "Force Close"   // Active - force close action
         };
     }

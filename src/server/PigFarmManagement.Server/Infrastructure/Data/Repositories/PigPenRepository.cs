@@ -18,6 +18,7 @@ public class PigPenRepository : IPigPenRepository
         var entities = await _context.PigPens
             .Include(p => p.Customer)
             .Include(p => p.FormulaAssignments)
+            .Include(p => p.Harvests)
             .ToListAsync();
         return entities.Select(e => e.ToModel());
     }

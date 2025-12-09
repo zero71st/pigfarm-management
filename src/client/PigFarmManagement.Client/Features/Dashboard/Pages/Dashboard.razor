@@ -19,11 +19,142 @@
 }
 else if (dashboardOverview != null)
 {
-    <!-- Dashboard Overview Cards -->
+    <!-- Dashboard Overview Cards (Activity + Financial Metrics only) -->
     <DashboardOverviewCards Overview="dashboardOverview" />
     
-    <!-- Customer Performance Table -->
+    <!-- 1. การดำเนินงานคอกสุกรโครงการ (Project Operations) -->
+    <MudGrid Class="mt-4">
+        <MudItem xs="12">
+            <MudCard Elevation="3" Class="pa-4">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">
+                            <MudIcon Icon="@Icons.Material.Filled.Business" Class="mr-2" Color="Color.Info" />
+                            การดำเนินงานคอกสุกร (โครงการ)
+                        </MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudGrid Spacing="3">
+                        <!-- Column 1 -->
+                        <MudItem xs="12" sm="6" md="2">
+                            <div class="d-flex flex-column align-center">
+                                <MudIcon Icon="@Icons.Material.Filled.Home" Color="Color.Info" Size="Size.Large" Class="mb-2" />
+                                <MudText Typo="Typo.h5" Color="Color.Info">@(dashboardOverview.TotalActivePigPens - (dashboardOverview.TotalPigsCash > 0 ? GetCashPenEstimate() : 0))</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary" Align="Align.Center">คอกสุกรทั้งหมด</MudText>
+                            </div>
+                        </MudItem>
+                        
+                        <!-- Column 2 -->
+                        <MudItem xs="12" sm="6" md="2">
+                            <div class="d-flex flex-column align-center">
+                                <MudIcon Icon="@Icons.Material.Filled.Pets" Color="Color.Info" Size="Size.Large" Class="mb-2" />
+                                <MudText Typo="Typo.h5" Color="Color.Info">@dashboardOverview.TotalPigsProject</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary" Align="Align.Center">จำนวนสุกรทั้งหมด</MudText>
+                            </div>
+                        </MudItem>
+                        
+                        <!-- Column 3 -->
+                        <MudItem xs="12" sm="6" md="2">
+                            <div class="d-flex flex-column align-center">
+                                <MudIcon Icon="@Icons.Material.Filled.Store" Color="Color.Info" Size="Size.Large" Class="mb-2" />
+                                <MudText Typo="Typo.h6" Color="Color.Info">@FormatCurrency(dashboardOverview.TotalOwnerCapitalProject)</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary" Align="Align.Center">เงินลงทุนส่วนของร้าน</MudText>
+                            </div>
+                        </MudItem>
+                        
+                        <!-- Column 4 -->
+                        <MudItem xs="12" sm="6" md="2">
+                            <div class="d-flex flex-column align-center">
+                                <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Color="@(dashboardOverview.TotalProfitProject >= 0 ? Color.Success : Color.Error)" Size="Size.Large" Class="mb-2" />
+                                <MudText Typo="Typo.h6" Style="@($"color: {(dashboardOverview.TotalProfitProject >= 0 ? "green" : "red")}")">@FormatCurrency(dashboardOverview.TotalProfitProject)</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary" Align="Align.Center">เงินลงทุนส่วนกำไร/ขาดทุน</MudText>
+                            </div>
+                        </MudItem>
+                        
+                        <!-- Column 5 -->
+                        <MudItem xs="12" sm="6" md="2">
+                            <div class="d-flex flex-column align-center">
+                                <MudIcon Icon="@Icons.Material.Filled.People" Color="Color.Info" Size="Size.Large" Class="mb-2" />
+                                <MudText Typo="Typo.h6" Color="Color.Info">@FormatCurrency(dashboardOverview.TotalCustomerCapitalProject)</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary" Align="Align.Center">เงินลงทุนส่วนลูกค้า</MudText>
+                            </div>
+                        </MudItem>
+                        
+                        <!-- Column 6 -->
+                        <MudItem xs="12" sm="6" md="2">
+                            <div class="d-flex flex-column align-center">
+                                <MudIcon Icon="@Icons.Material.Filled.AccountBalance" Color="Color.Info" Size="Size.Large" Class="mb-2" />
+                                <MudText Typo="Typo.h6" Color="Color.Info">@FormatCurrency(dashboardOverview.TotalInvestmentProject)</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary" Align="Align.Center">เงินลงทุนทั้งหมด</MudText>
+                            </div>
+                        </MudItem>
+                    </MudGrid>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+    
+    <!-- 2. สรุปผลการดำเนินงานของลูกค้า (โครงการ) -->
     <CustomerStatsTable CustomerStats="dashboardOverview.CustomerStats" />
+    
+    <!-- 3. การดำเนินงานคอกสุกรเงินสด (Cash Operations) -->
+    <MudGrid Class="mt-4">
+        <MudItem xs="12">
+            <MudCard Elevation="3" Class="pa-4">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">
+                            <MudIcon Icon="@Icons.Material.Filled.Money" Class="mr-2" Color="Color.Success" />
+                            การดำเนินงานคอกสุกร (เงินสด)
+                        </MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudGrid Spacing="3">
+                        <!-- Column 1 -->
+                        <MudItem xs="12" sm="6" md="3">
+                            <div class="d-flex flex-column align-center">
+                                <MudIcon Icon="@Icons.Material.Filled.Home" Color="Color.Success" Size="Size.Large" Class="mb-2" />
+                                <MudText Typo="Typo.h5" Color="Color.Success">@GetCashPenEstimate()</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary" Align="Align.Center">คอกสุกรทั้งหมด</MudText>
+                            </div>
+                        </MudItem>
+                        
+                        <!-- Column 2 -->
+                        <MudItem xs="12" sm="6" md="3">
+                            <div class="d-flex flex-column align-center">
+                                <MudIcon Icon="@Icons.Material.Filled.Pets" Color="Color.Success" Size="Size.Large" Class="mb-2" />
+                                <MudText Typo="Typo.h5" Color="Color.Success">@dashboardOverview.TotalPigsCash</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary" Align="Align.Center">จำนวนสุกรทั้งหมด</MudText>
+                            </div>
+                        </MudItem>
+                        
+                        <!-- Column 3 -->
+                        <MudItem xs="12" sm="6" md="3">
+                            <div class="d-flex flex-column align-center">
+                                <MudIcon Icon="@Icons.Material.Filled.AttachMoney" Color="Color.Success" Size="Size.Large" Class="mb-2" />
+                                <MudText Typo="Typo.h6" Color="Color.Success">@FormatCurrency(dashboardOverview.TotalPriceIncludeDiscountCash)</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary" Align="Align.Center">รายได้จากลูกค้า</MudText>
+                            </div>
+                        </MudItem>
+                        
+                        <!-- Column 4 -->
+                        <MudItem xs="12" sm="6" md="3">
+                            <div class="d-flex flex-column align-center">
+                                <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Color="@(dashboardOverview.TotalProfitCash >= 0 ? Color.Success : Color.Error)" Size="Size.Large" Class="mb-2" />
+                                <MudText Typo="Typo.h6" Style="@($"color: {(dashboardOverview.TotalProfitCash >= 0 ? "green" : "red")}")">@FormatCurrency(dashboardOverview.TotalProfitCash)</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary" Align="Align.Center">กำไร/ขาดทุน</MudText>
+                            </div>
+                        </MudItem>
+                    </MudGrid>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+    
+    <!-- 4. สรุปผลการดำเนินงานของลูกค้า (เงินสด) -->
+    <CustomerStatsTableCash CustomerStatsCash="dashboardOverview.CustomerStatsCash" />
 }
 
 @code {
@@ -52,5 +183,19 @@ else if (dashboardOverview != null)
         {
             loading = false;
         }
+    }
+
+    private string FormatCurrency(decimal amount)
+    {
+        return amount.ToString("N2", new System.Globalization.CultureInfo("th-TH"));
+    }
+
+    private int GetCashPenEstimate()
+    {
+        if (dashboardOverview == null || dashboardOverview.TotalPigsCash == 0)
+            return 0;
+
+        return (int)Math.Ceiling((decimal)dashboardOverview.TotalPigsCash / 
+            (dashboardOverview.TotalPigs > 0 ? (decimal)dashboardOverview.TotalPigs / dashboardOverview.TotalActivePigPens : 1));
     }
 }

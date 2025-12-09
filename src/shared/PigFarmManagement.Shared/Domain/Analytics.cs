@@ -35,7 +35,8 @@ public record DashboardOverview(
     decimal TotalCostProject,
     decimal TotalDepositProject,
     decimal TotalPriceIncludeDiscountProject,
-    List<CustomerPigPenStats> CustomerStats)
+    List<CustomerPigPenStats> CustomerStats,
+    List<CustomerPigPenStats> CustomerStatsCash)
 {
     // Financial metrics - NEW
     public decimal TotalCustomerCapital => TotalDeposit;
