@@ -591,21 +591,21 @@ public static class PigPenEndpoints
         {
             var now = DateTime.UtcNow.Date;
             
-            // Single query: GROUP BY PigPenId and get MAX(CreatedAt) for each
+            // Single query: GROUP BY PigPenId and get MAX(FeedDate) for each (invoice date from POSPOS)
             var results = await db.Feeds
                 .GroupBy(f => f.PigPenId)
                 .Select(g => new
                 {
                     PigPenId = g.Key,
-                    LastImportDate = (DateTime?)g.Max(x => x.CreatedAt)
+                    LastInvoiceDate = (DateTime?)g.Max(x => x.FeedDate)
                 })
                 .ToListAsync();
 
             // Map to DTOs with calculated days
             var dtos = results.Select(r => new LastFeedImportDateDto(
                 r.PigPenId,
-                r.LastImportDate,
-                r.LastImportDate.HasValue ? (int?)(now - r.LastImportDate.Value.Date).Days : null
+                r.LastInvoiceDate,
+                r.LastInvoiceDate.HasValue ? (int?)(now - r.LastInvoiceDate.Value.Date).Days : null
             )).ToList();
 
             return Results.Ok(dtos);

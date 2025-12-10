@@ -363,6 +363,11 @@
                     .ToList();
             }
             
+            // Filter to only show successful transactions
+            allTransactions = allTransactions
+                .Where(t => t.Status?.Equals("success", StringComparison.OrdinalIgnoreCase) == true)
+                .ToList();
+            
             _availableTransactions = allTransactions
                 .OrderByDescending(t => t.Timestamp)
                 .ToList();

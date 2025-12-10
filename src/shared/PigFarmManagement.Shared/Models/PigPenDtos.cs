@@ -98,6 +98,6 @@ public record DeleteInvoiceResponse(
 /// </summary>
 public record LastFeedImportDateDto(
     Guid PigPenId,
-    DateTime? LastImportDate,
+    DateTime? LastInvoiceDate,
     int? DaysSinceLastImport
 );
