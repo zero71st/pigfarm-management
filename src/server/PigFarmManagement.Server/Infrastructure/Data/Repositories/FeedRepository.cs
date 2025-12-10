@@ -116,4 +116,14 @@ public class FeedRepository : IFeedRepository
 
         return feedsToDelete.Count;
     }
+
+    public async Task<DateTime?> GetLastImportDateAsync(Guid pigPenId)
+    {
+        var lastFeed = await _context.Feeds
+            .Where(f => f.PigPenId == pigPenId)
+            .OrderByDescending(f => f.CreatedAt)
+            .FirstOrDefaultAsync();
+
+        return lastFeed?.CreatedAt;
+    }
 }

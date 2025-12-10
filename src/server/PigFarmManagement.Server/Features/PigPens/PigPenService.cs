@@ -15,6 +15,7 @@ public interface IPigPenService
     Task<bool> DeletePigPenAsync(Guid id);
     Task<List<PigPen>> GetPigPensByCustomerIdAsync(Guid customerId);
     Task<PigPen> ForceClosePigPenAsync(Guid id);
+    Task<PigPen> ReopenPigPenAsync(Guid id);
     Task<List<PigPenFormulaAssignment>> GetFormulaAssignmentsAsync(Guid pigPenId);
     Task<List<PigPenFormulaAssignment>> RegenerateFormulaAssignmentsAsync(Guid pigPenId);
 }
@@ -245,6 +246,20 @@ public class PigPenService : IPigPenService
         try
         {
             var result = await _pigPenRepository.ForceCloseAsync(id);
+            return result;
+        }
+        catch (ArgumentException ex)
+        {
+            throw new InvalidOperationException(ex.Message);
+        }
+    }
+
+    public async Task<PigPen> ReopenPigPenAsync(Guid id)
+    {
+        // Use repository-level reopen to update entities in-place (Postgres-friendly)
+        try
+        {
+            var result = await _pigPenRepository.ReopenAsync(id);
             return result;
         }
         catch (ArgumentException ex)

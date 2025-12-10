@@ -14,6 +14,7 @@ public interface IPigPenService
     Task<PigPen> UpdatePigPenAsync(Guid id, PigPenUpdateDto dto);
     Task<bool> DeletePigPenAsync(Guid id);
     Task<PigPen> ForceClosePigPenAsync(PigPenForceCloseRequest request);
+    Task<PigPen> ReopenPigPenAsync(Guid pigPenId);
 
     // Feed Items
     Task<List<FeedItem>> GetFeedItemsAsync(Guid pigPenId);
@@ -37,6 +38,9 @@ public interface IPigPenService
     
     // Invoice Management
     Task<DeleteInvoiceResponse> DeleteInvoiceByReferenceAsync(Guid pigPenId, string invoiceReferenceCode);
+    
+    // Last Feed Import (batch)
+    Task<List<LastFeedImportDateDto>> GetLastFeedImportsAsync();
 }
 
 public class PigPenService : IPigPenService
@@ -193,6 +197,18 @@ public class PigPenService : IPigPenService
         return closedPigPen!;
     }
 
+    public async Task<PigPen> ReopenPigPenAsync(Guid pigPenId)
+    {
+        var response = await _httpClient.PostAsync($"api/pigpens/{pigPenId}/reopen", null);
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            throw new HttpRequestException($"Failed to reopen pig pen: {response.StatusCode} - {errorContent}");
+        }
+        var reopenedPigPen = await response.Content.ReadFromJsonAsync<PigPen>();
+        return reopenedPigPen!;
+    }
+
     public async Task<List<PigPenFormulaAssignment>> GetFormulaAssignmentsAsync(Guid pigPenId)
     {
         var assignments = await _httpClient.GetFromJsonAsync<List<PigPenFormulaAssignment>>($"api/pigpens/{pigPenId}/formula-assignments");
@@ -205,5 +221,11 @@ public class PigPenService : IPigPenService
         response.EnsureSuccessStatusCode();
         var result = await response.Content.ReadFromJsonAsync<DeleteInvoiceResponse>();
         return result ?? throw new InvalidOperationException("Failed to parse delete response");
+    }
+
+    public async Task<List<LastFeedImportDateDto>> GetLastFeedImportsAsync()
+    {
+        var results = await _httpClient.GetFromJsonAsync<List<LastFeedImportDateDto>>("api/pigpens/last-feed-imports");
+        return results ?? new List<LastFeedImportDateDto>();
     }
 }

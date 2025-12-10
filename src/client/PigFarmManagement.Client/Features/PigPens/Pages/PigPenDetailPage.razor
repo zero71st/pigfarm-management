@@ -68,12 +68,11 @@
                 </div>
                 <MudBreadcrumbs Items="@breadcrumbItems" />
             </div>
-            <div class="d-flex flex-column flex-sm-row align-stretch align-sm-center" style="gap: 0.5rem; width: 100%; max-width: 100%;">
+            <div class="d-flex flex-column flex-sm-row align-stretch align-sm-center button-group-container" style="gap: 0.5rem;">
                 <MudButton Variant="Variant.Outlined" 
                            StartIcon="@Icons.Material.Filled.ArrowBack"
                            OnClick="@(() => Navigation.NavigateTo("/pigpens"))"
-                           FullWidth="true"
-                           Class="flex-sm-grow-0">
+                           Class="flex-sm-grow-0 full-width-mobile">
                     กลับไปรายการ
                 </MudButton>
                 <MudButton Variant="Variant.Filled" 
@@ -81,8 +80,7 @@
                            StartIcon="@Icons.Material.Filled.Edit"
                            OnClick="EditPigPen"
                            Disabled="@IsPigPenClosed()"
-                           FullWidth="true"
-                           Class="flex-sm-grow-0">
+                           Class="flex-sm-grow-0 full-width-mobile">
                     แก้ไข
                 </MudButton>
                 @* Force Close button - Show only when not locked *@
@@ -92,26 +90,42 @@
                                Color="Color.Warning"
                                StartIcon="@Icons.Material.Filled.GppMaybe"
                                OnClick="ForceClosePigPen"
-                               FullWidth="true"
-                               Class="flex-sm-grow-0">
+                               Class="flex-sm-grow-0 full-width-mobile">
                         Force Close
                     </MudButton>
                 }
                 @* Manage button - Show only when locked *@
                 @if (pigPen != null && pigPen.IsCalculationLocked)
                 {
-                    <MudButton Variant="Variant.Filled" 
-                               Color="Color.Info"
-                               StartIcon="@Icons.Material.Filled.Settings"
-                               OnClick="ForceClosePigPen"
-                               FullWidth="true"
-                               Class="flex-sm-grow-0">
-                        Manage
-                    </MudButton>
+                    <MudMenu StartIcon="@Icons.Material.Filled.Settings"
+                             Variant="Variant.Filled"
+                             Color="Color.Info"
+                             Class="flex-sm-grow-0 full-width-mobile"
+                             Label="จัดการ"
+                             EndIcon="@Icons.Material.Filled.ArrowDropDown"
+                             Dense="false">
+                        <MudMenuItem Icon="@Icons.Material.Filled.LockOpen" OnClick="ReopenPigPen" Class="d-flex align-center" Style="white-space: nowrap; min-width: 200px;">เปิดใหม่</MudMenuItem>
+                        @* <MudMenuItem Icon="@Icons.Material.Filled.Settings" OnClick="ForceClosePigPen" Class="d-flex align-center" Style="white-space: nowrap; min-width: 200px;">ตั้งค่าการปิดคอก</MudMenuItem> *@
+                    </MudMenu>
                 }
                 @* Remove debug info in production *@
             </div>
         </div>
+
+        <style>
+            /* Mobile: Full width buttons */
+            .full-width-mobile {
+                width: 100%;
+            }
+            
+            /* Desktop: Same width buttons */
+            @@media (min-width: 600px) {
+                .button-group-container > .full-width-mobile {
+                    width: auto !important;
+                    min-width: 140px !important;
+                }
+            }
+        </style>
 
         <!-- Section 1: Pig Pen Details -->
         <MudCard Elevation="2" Class="mb-6">
@@ -992,6 +1006,63 @@
             catch (Exception ex)
             {
                 Snackbar.Add($"Error force closing pig pen: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    private async Task ReopenPigPen()
+    {
+        if (pigPen == null)
+        {
+            Snackbar.Add("ไม่มีข้อมูลคอกสุกร", Severity.Error);
+            return;
+        }
+
+        if (!pigPen.IsCalculationLocked)
+        {
+            Snackbar.Add("คอกสุกรนี้ยังไม่ได้ปิด ไม่สามารถเปิดอีกครั้งได้", Severity.Warning);
+            return;
+        }
+
+        var parameters = new DialogParameters
+        {
+            { "PigPen", pigPen }
+        };
+
+        var options = new DialogOptions() 
+        { 
+            CloseButton = true, 
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<ReopenPigPenDialog>("เปิดคอกสุกรอีกครั้ง", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is bool confirmed && confirmed)
+        {
+            try
+            {
+                var reopenedPigPen = await PigPenService.ReopenPigPenAsync(pigPen.Id);
+                
+                if (reopenedPigPen != null)
+                {
+                    // Update the local pig pen data
+                    pigPen = reopenedPigPen;
+                    
+                    // Refresh the page data to show updates
+                    await LoadData();
+                    
+                    Snackbar.Add("เปิดคอกสุกรอีกครั้งเรียบร้อยแล้ว", Severity.Success);
+                }
+                else
+                {
+                    Snackbar.Add("ไม่สามารถเปิดคอกสุกรได้", Severity.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"เกิดข้อผิดพลาดในการเปิดคอกสุกร: {ex.Message}", Severity.Error);
             }
         }
     }

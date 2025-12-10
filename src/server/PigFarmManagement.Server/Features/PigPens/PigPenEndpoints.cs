@@ -1,6 +1,7 @@
 using PigFarmManagement.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using PigFarmManagement.Server.Infrastructure.Data.Repositories;
+using PigFarmManagement.Server.Infrastructure.Data;
 
 namespace PigFarmManagement.Server.Features.PigPens;
 
@@ -65,12 +66,19 @@ public static class PigPenEndpoints
         group.MapPost("/{id:guid}/force-close", ForceClosePigPen)
             .WithName("ForceClosePigPen");
 
+        group.MapPost("/{id:guid}/reopen", ReopenPigPen)
+            .WithName("ReopenPigPen");
+
         group.MapPost("/{id:guid}/regenerate-assignments", RegenerateFormulaAssignments)
             .WithName("RegenerateFormulaAssignments");
 
         // Delete invoice by reference code
         group.MapDelete("/{pigPenId:guid}/invoices/{invoiceReferenceCode}", DeleteInvoiceByReference)
             .WithName("DeleteInvoiceByReference");
+
+        // Get last feed import dates for all pig pens (batch)
+        group.MapGet("/last-feed-imports", GetLastFeedImports)
+            .WithName("GetLastFeedImports");
 
         return builder;
     }
@@ -483,6 +491,35 @@ public static class PigPenEndpoints
         }
     }
 
+    private static async Task<IResult> ReopenPigPen(Guid id, IPigPenService pigPenService)
+    {
+        try
+        {
+            var pigPen = await pigPenService.GetPigPenByIdAsync(id);
+            if (pigPen == null)
+            {
+                return Results.NotFound("Pig pen not found");
+            }
+
+            if (!pigPen.IsCalculationLocked)
+            {
+                return Results.BadRequest("Pig pen is not closed, cannot reopen");
+            }
+
+            // Reopen the pig pen by calling the service method
+            var reopenedPigPen = await pigPenService.ReopenPigPenAsync(id);
+            return Results.Ok(reopenedPigPen);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Results.BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Error reopening pig pen: {ex.Message}");
+        }
+    }
+
     private static async Task<IResult> RegenerateFormulaAssignments(Guid id, IPigPenService pigPenService)
     {
         try
@@ -545,6 +582,37 @@ public static class PigPenEndpoints
             logger.LogError(ex, "Error deleting invoice {InvoiceReferenceCode} for pig pen {PigPenId}", 
                 invoiceReferenceCode, pigPenId);
             return Results.Problem($"Error deleting invoice: {ex.Message}");
+        }
+    }
+
+    private static async Task<IResult> GetLastFeedImports(PigFarmDbContext db)
+    {
+        try
+        {
+            var now = DateTime.UtcNow.Date;
+            
+            // Single query: GROUP BY PigPenId and get MAX(CreatedAt) for each
+            var results = await db.Feeds
+                .GroupBy(f => f.PigPenId)
+                .Select(g => new
+                {
+                    PigPenId = g.Key,
+                    LastImportDate = (DateTime?)g.Max(x => x.CreatedAt)
+                })
+                .ToListAsync();
+
+            // Map to DTOs with calculated days
+            var dtos = results.Select(r => new LastFeedImportDateDto(
+                r.PigPenId,
+                r.LastImportDate,
+                r.LastImportDate.HasValue ? (int?)(now - r.LastImportDate.Value.Date).Days : null
+            )).ToList();
+
+            return Results.Ok(dtos);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Error retrieving last feed imports: {ex.Message}");
         }
     }
 }
