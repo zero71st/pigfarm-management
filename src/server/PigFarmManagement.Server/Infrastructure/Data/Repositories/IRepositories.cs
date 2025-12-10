@@ -40,6 +40,7 @@ public interface IFeedRepository
     Task<IEnumerable<Feed>> CreateManyAsync(IEnumerable<Feed> feeds);
     Task<bool> ExistsByInvoiceNumberAsync(string invoiceNumber); // Note: actually checks TransactionCode field
     Task<int> DeleteByInvoiceReferenceAsync(Guid pigPenId, string invoiceReferenceCode);
+    Task<DateTime?> GetLastImportDateAsync(Guid pigPenId);
 }
 
 public interface IDepositRepository

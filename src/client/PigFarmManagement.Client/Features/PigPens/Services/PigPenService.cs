@@ -37,6 +37,9 @@ public interface IPigPenService
     
     // Invoice Management
     Task<DeleteInvoiceResponse> DeleteInvoiceByReferenceAsync(Guid pigPenId, string invoiceReferenceCode);
+    
+    // Last Feed Import (batch)
+    Task<List<LastFeedImportDateDto>> GetLastFeedImportsAsync();
 }
 
 public class PigPenService : IPigPenService
@@ -205,5 +208,11 @@ public class PigPenService : IPigPenService
         response.EnsureSuccessStatusCode();
         var result = await response.Content.ReadFromJsonAsync<DeleteInvoiceResponse>();
         return result ?? throw new InvalidOperationException("Failed to parse delete response");
+    }
+
+    public async Task<List<LastFeedImportDateDto>> GetLastFeedImportsAsync()
+    {
+        var results = await _httpClient.GetFromJsonAsync<List<LastFeedImportDateDto>>("api/pigpens/last-feed-imports");
+        return results ?? new List<LastFeedImportDateDto>();
     }
 }

@@ -11,6 +11,26 @@
 
 <PageTitle>PIG PEN MANAGEMENT - Pig Pens</PageTitle>
 
+<style>
+    /* Responsive text switches: show Thai on small screens, English on larger */
+    @@media (max-width: 600px) {
+        .desktop-only { display: none !important; }
+        .mobile-only { display: inline !important; }
+    }
+    @@media (min-width: 601px) {
+        .desktop-only { display: inline !important; }
+        .mobile-only { display: none !important; }
+    }
+
+    /* Header action stacking on mobile */
+    .header-row { display: flex; }
+    .actions-row { display: flex; gap: 8px; }
+    @@media (max-width: 600px) {
+        .header-row { flex-direction: column !important; align-items: stretch !important; gap: 8px; }
+        .actions-row { flex-direction: column !important; width: 100% !important; }
+        .actions-row .mud-button-root { width: 100% !important; }
+    }
+</style>
 <div class="d-flex align-center mb-4">
     <MudIcon Icon="@Icons.Material.Filled.Pets" Size="Size.Large" Class="mr-2" Color="Color.Primary" />
     <MudText Typo="Typo.h4" GutterBottom="false">จัดการคอกสุกร</MudText>
@@ -20,25 +40,34 @@
 <MudGrid Class="mb-4">
     <MudItem xs="12" sm="4">
         <MudPaper Elevation="2" Class="pa-4" Style="cursor: pointer;" @onclick="() => SetStatusFilter(null)">
-            <div class="d-flex flex-column align-center">
-                <MudText Typo="Typo.h3" Color="Color.Primary">@GetTotalCount()</MudText>
-                <MudText Typo="Typo.body1">คอกสุกรทั้งหมด</MudText>
+            <div class="d-flex align-center" style="gap:12px;">
+                <MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Large" Color="Color.Primary" />
+                <div class="d-flex flex-column" style="line-height:1;">
+                    <MudText Typo="Typo.h3" Style="margin:0;color:#6C4CFF;">@GetTotalCount()</MudText>
+                    <MudText Typo="Typo.caption" Style="color:#FF4D79;">คอกสุกรกำลังเลี้ยงทั้งหมด</MudText>
+                </div>
             </div>
         </MudPaper>
     </MudItem>
     <MudItem xs="12" sm="4">
         <MudPaper Elevation="2" Class="pa-4" Style="cursor: pointer;" @onclick="() => SetStatusFilter(PigPenStatus.Active)">
-            <div class="d-flex flex-column align-center">
-                <MudText Typo="Typo.h3" Color="Color.Success">@GetActiveCount()</MudText>
-                <MudText Typo="Typo.body1">กำลังเลี้ยง</MudText>
+            <div class="d-flex align-center" style="gap:12px;">
+                <MudIcon Icon="@Icons.Material.Filled.Pets" Size="Size.Large" Color="Color.Success" />
+                <div class="d-flex flex-column" style="line-height:1;">
+                    <MudText Typo="Typo.h3" Style="margin:0;color:#21B573;">@GetActiveCount()</MudText>
+                    <MudText Typo="Typo.caption" Style="color:#FF4D79;">กำลังเลี้ยง</MudText>
+                </div>
             </div>
         </MudPaper>
     </MudItem>
     <MudItem xs="12" sm="4">
         <MudPaper Elevation="2" Class="pa-4" Style="cursor: pointer;" @onclick="() => SetStatusFilter(PigPenStatus.Closed)">
-            <div class="d-flex flex-column align-center">
-                <MudText Typo="Typo.h3" Color="Color.Error">@GetClosedCount()</MudText>
-                <MudText Typo="Typo.body1">ปิดคอกแล้ว</MudText>
+            <div class="d-flex align-center" style="gap:12px;">
+                <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Large" Color="Color.Error" />
+                <div class="d-flex flex-column" style="line-height:1;">
+                    <MudText Typo="Typo.h3" Style="margin:0;color:#FF5A5F;">@GetClosedCount()</MudText>
+                    <MudText Typo="Typo.caption" Style="color:#FF4D79;">ปิดคอกแล้ว</MudText>
+                </div>
             </div>
         </MudPaper>
     </MudItem>
@@ -78,9 +107,12 @@
 
 <!-- Pig Pen Management Section -->
 <MudPaper Class="pa-4 ma-2" Elevation="2">
-    <div class="d-flex justify-space-between align-center mb-4">
-        <MudText Typo="Typo.h6">รายการคอกสุกร</MudText>
-        <div class="d-flex gap-2">
+    <div class="d-flex justify-space-between align-center mb-4 header-row">
+        <div class="d-flex align-center" style="gap:8px;">
+            <MudIcon Icon="@Icons.Material.Filled.List" Color="Color.Primary" />
+            <MudText Typo="Typo.h6">รายการคอกสุกร</MudText>
+        </div>
+        <div class="d-flex gap-2 actions-row">
             <MudButton Variant="Variant.Outlined" 
                        Color="Color.Info"
                        StartIcon="@Icons.Material.Filled.Refresh"
@@ -105,19 +137,19 @@
             <MudTh>วันที่ลงทะเบียน</MudTh>
             <MudTh>ประมาณการจับ</MudTh>
             <MudTh>ระยะเวลาเลี้ยง</MudTh>
-            <MudTh>อัปเดตล่าสุด</MudTh>
+            <MudTh>ระยะห่างการรับอาหาร</MudTh>
             <MudTh>การดำเนินการ</MudTh>
         </HeaderContent>
         <RowTemplate>
-            <MudTd DataLabel="Customer">@GetCustomerName(context.CustomerId)</MudTd>
-            <MudTd DataLabel="Pen Code">@context.PenCode</MudTd>
-            <MudTd DataLabel="Type">
+            <MudTd DataLabel="ลูกค้า">@GetCustomerName(context.CustomerId)</MudTd>
+            <MudTd DataLabel="รหัสคอก">@context.PenCode</MudTd>
+            <MudTd DataLabel="ประเภท">
                 <MudChip Color="@(context.Type == PigPenType.Cash ? Color.Success : Color.Info)" 
                          Size="Size.Small" Variant="Variant.Filled">
                     @(context.Type == PigPenType.Cash ? "เงินสด" : "โครงการ")
                 </MudChip>
             </MudTd>
-            <MudTd DataLabel="Status">
+            <MudTd DataLabel="สถานะ">
                 @if (context.IsCalculationLocked)
                 {
                     <MudChip Color="Color.Error" 
@@ -155,12 +187,13 @@
                     </MudChip>
                 }
             </MudTd>
-            <MudTd DataLabel="Quantity">@context.PigQty</MudTd>
-            <MudTd DataLabel="Register Date">@context.RegisterDate.ToString("d/M/yyyy")</MudTd>
-            <MudTd DataLabel="Week" Style="text-align: center;">
+            <MudTd DataLabel="จำนวน">@context.PigQty</MudTd>
+            <MudTd DataLabel="วันที่ลงทะเบียน">@context.RegisterDate.ToString("d/M/yyyy")</MudTd>
+            <MudTd DataLabel="ประมาณการจับ" Style="text-align: center;">
                 @if (context.EstimatedHarvestDate.HasValue)
                 {
                     var harvestDate = context.EstimatedHarvestDate.Value;
+                    var month = harvestDate.Month;
                     var weekOfMonth = (harvestDate.Day - 1) / 7 + 1;
                     
                     // Calculate week start (Monday) and end (Sunday)
@@ -176,24 +209,29 @@
                     var startYear = (weekStart.Year + 543) % 100;
                     var endYear = (weekEnd.Year + 543) % 100;
                     
-                    <div class="d-flex flex-column align-center" style="gap: 2px;">
-                        <MudChip Size="Size.Small" Color="Color.Primary" Variant="Variant.Text" Style="font-size: 1.1rem; font-weight: 600; height: 24px;">
-                            @weekOfMonth
-                        </MudChip>
+                    <div class="d-flex flex-column align-center" style="gap: 4px;">
+                        <div class="d-flex align-center" style="gap:8px;">
+                            <MudChip Size="Size.Small" Color="Color.Primary" Variant="Variant.Text" Style="font-size: 1.1rem; font-weight: 600; height: 24px;">
+                                @month/@weekOfMonth
+                            </MudChip>
+                            <MudText Typo="Typo.overline" Color="Color.Primary" Style="font-size:0.72rem; opacity:0.95;">
+                                (@harvestDate.ToString("d/M/yyyy"))
+                            </MudText>
+                        </div>
                         <MudText Typo="Typo.caption" Color="Color.Secondary" Style="white-space: nowrap; font-size: 0.7rem;">
                             @weekStart.Day @startMonth @startYear.ToString("00") - @weekEnd.Day @endMonth @endYear.ToString("00")
-                        </MudText>
-                        <MudText Typo="Typo.caption" Color="Color.Primary" Style="white-space: nowrap; font-size: 0.75rem; font-weight: 500; margin-top: 2px;">
-                            @harvestDate.ToString("d/M/yyyy")
                         </MudText>
                     </div>
                 }
                 else
                 {
-                    <MudText Color="Color.Secondary">N/A</MudText>
+                    <MudText Color="Color.Secondary">
+                        <span class="desktop-only">N/A</span>
+                        <span class="mobile-only">ไม่ระบุ</span>
+                    </MudText>
                 }
             </MudTd>
-            <MudTd DataLabel="Days Remaining">
+            <MudTd DataLabel="ระยะเวลาเลี้ยง">
                 @if (context.ActHarvestDate.HasValue)
                 {
                     var daysRaised = (context.ActHarvestDate.Value - context.RegisterDate).Days;
@@ -210,45 +248,70 @@
                 }
                 else
                 {
-                    <MudText Color="Color.Secondary">N/A</MudText>
+                    <MudText Color="Color.Secondary">
+                        <span class="desktop-only">N/A</span>
+                        <span class="mobile-only">ไม่ระบุ</span>
+                    </MudText>
                 }
             </MudTd>
-            <MudTd DataLabel="Last Updated">
-                <MudText Typo="Typo.body2" Color="@(IsRecentlyUpdated(context.UpdatedAt) ? Color.Primary : Color.Secondary)">
-                    @FormatRelativeTime(context.UpdatedAt)
-                </MudText>
+            <MudTd DataLabel="ระยะห่างการรับอาหาร" Style="text-align: center;">
+                @if (feedImportDates.TryGetValue(context.Id, out var importData) && importData?.LastImportDate.HasValue == true)
+                {
+                    var days = importData.DaysSinceLastImport ?? 0;
+                    var badgeColor = days <= 15 ? Color.Success : (days <= 30 ? Color.Warning : Color.Error);
+                    <div class="d-flex flex-column align-center" style="gap: 4px;">
+                        <MudChip Size="Size.Small" Color="@badgeColor" Variant="Variant.Filled" Style="font-weight: 600;">
+                            @days วัน
+                        </MudChip>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary" Style="font-size: 0.7rem;">
+                            @importData.LastImportDate.Value.ToString("d/M/yyyy")
+                        </MudText>
+                    </div>
+                }
+                else
+                {
+                    <MudText Color="Color.Secondary" Typo="Typo.caption">ไม่เคยรับอาหาร</MudText>
+                }
             </MudTd>
-            <MudTd DataLabel="Actions">
-                <div class="d-flex gap-1">
-                    <MudButton Size="Size.Small"
-                              Variant="Variant.Text"
-                              Color="Color.Primary"
-                              Class="pa-1"
-                              Style="min-width: 32px; font-size: 16px; line-height: 1;"
-                              OnClick="() => NavigateToPigPenDetail(context.Id)"
-                              Title="ดูรายละเอียด">
-                        <MudIcon Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" />
-                    </MudButton>
-                    <MudMenu Icon="@Icons.Material.Filled.MoreVert" Size="Size.Small" Dense="true">
-                        <MudMenuItem OnClick="() => ShowPosImportDialog(context.Id, GetCustomerName(context.CustomerId), context.PenCode, GetCustomerCode(context.CustomerId))">
-                            <div class="d-flex align-center gap-2">
-                                <MudIcon Icon="@Icons.Material.Filled.Download" Size="Size.Small" Color="Color.Info" />
-                                <MudText>นำเข้าอาหาร</MudText>
-                            </div>
-                        </MudMenuItem>
-                        <MudMenuItem OnClick="() => ShowEditDialog(context)" Disabled="@IsPigPenClosed(context)">
-                            <div class="d-flex align-center gap-2">
-                                <MudIcon Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Warning" />
-                                <MudText>แก้ไข</MudText>
-                            </div>
-                        </MudMenuItem>
-                        <MudMenuItem OnClick="() => ShowDeleteDialog(context)">
-                            <div class="d-flex align-center gap-2">
-                                <MudIcon Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" />
-                                <MudText>ลบ</MudText>
-                            </div>
-                        </MudMenuItem>
-                    </MudMenu>
+            <MudTd DataLabel="การดำเนินการ">
+                <div class="d-flex flex-column" style="gap:6px;">
+                    <div class="d-flex gap-1" style="align-items:center;">
+                        <MudButton Size="Size.Small"
+                                  Variant="Variant.Text"
+                                  Color="Color.Primary"
+                                  Class="pa-1"
+                                  Style="min-width: 32px; font-size: 16px; line-height: 1;"
+                                  OnClick="() => NavigateToPigPenDetail(context.Id)"
+                                  Title="ดูรายละเอียด">
+                            <MudIcon Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" />
+                        </MudButton>
+                        <MudMenu Icon="@Icons.Material.Filled.MoreVert" Size="Size.Small" Dense="true">
+                            <MudMenuItem OnClick="() => ShowPosImportDialog(context.Id, GetCustomerName(context.CustomerId), context.PenCode, GetCustomerCode(context.CustomerId))">
+                                <div class="d-flex align-center gap-2">
+                                    <MudIcon Icon="@Icons.Material.Filled.Download" Size="Size.Small" Color="Color.Info" />
+                                    <MudText>นำเข้าอาหาร</MudText>
+                                </div>
+                            </MudMenuItem>
+                            <MudMenuItem OnClick="() => ShowEditDialog(context)" Disabled="@IsPigPenClosed(context)">
+                                <div class="d-flex align-center gap-2">
+                                    <MudIcon Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Warning" />
+                                    <MudText>แก้ไข</MudText>
+                                </div>
+                            </MudMenuItem>
+                            <MudMenuItem OnClick="() => ShowDeleteDialog(context)">
+                                <div class="d-flex align-center gap-2">
+                                    <MudIcon Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" />
+                                    <MudText>ลบ</MudText>
+                                </div>
+                            </MudMenuItem>
+                        </MudMenu>
+                    </div>
+
+                    <div>
+                        <MudText Typo="Typo.caption" Color="@(IsRecentlyUpdated(context.UpdatedAt) ? Color.Primary : Color.Secondary)" Style="font-size:0.75rem; white-space:nowrap;">
+                            @FormatRelativeShort(context.UpdatedAt)
+                        </MudText>
+                    </div>
                 </div>
             </MudTd>
         </RowTemplate>
@@ -265,10 +328,11 @@
     private List<Customer> customers = new();
     private List<PigPen> pigPens = new();
     private List<PigPen> filteredPigPens = new();
+    private Dictionary<Guid, LastFeedImportDateDto?> feedImportDates = new();
     private bool loading = true;
     private Customer? selectedCustomer = null;
     private PigPenType? selectedPigPenType = null;
-    private PigPenStatus? selectedStatus = null;
+    private PigPenStatus? selectedStatus = PigPenStatus.Active;
     private DateTime lastRefreshTime = DateTime.MinValue;
 
     private Customer? SelectedCustomer
@@ -327,11 +391,15 @@
 
             var customersTask = CustomerService.GetCustomersAsync();
             var pigPensTask = PigPenService.GetPigPensAsync();
+            var feedImportsTask = PigPenService.GetLastFeedImportsAsync();
 
-            await Task.WhenAll(customersTask, pigPensTask);
+            await Task.WhenAll(customersTask, pigPensTask, feedImportsTask);
 
             customers = customersTask.Result;
             pigPens = pigPensTask.Result;
+            
+            // Map batch results to dictionary
+            feedImportDates = feedImportsTask.Result.ToDictionary(x => x.PigPenId, x => (LastFeedImportDateDto?)x);
 
             FilterPigPens();
             lastRefreshTime = DateTime.Now;
@@ -419,7 +487,8 @@
 
     private string GetCustomerName(Guid customerId)
     {
-        return customers.FirstOrDefault(c => c.Id == customerId)?.DisplayName ?? "Unknown";
+        // Default to Thai label for unknown customers (mobile-friendly)
+        return customers.FirstOrDefault(c => c.Id == customerId)?.DisplayName ?? "ไม่ทราบ";
     }
 
     private async Task ShowAddDialog()
@@ -489,6 +558,23 @@
             return $"{(int)timeSpan.TotalDays} วันที่แล้ว";
         
         return dateTime.ToString("MMM dd, yyyy");
+    }
+
+    private string FormatRelativeShort(DateTime dateTime)
+    {
+        var ts = DateTime.UtcNow.Subtract(dateTime);
+
+        if (ts.TotalMinutes < 1)
+            return "เมื่อสักครู่";
+        if (ts.TotalMinutes < 60)
+            return $"{(int)ts.TotalMinutes} นาที";
+        if (ts.TotalHours < 24)
+            return $"{(int)ts.TotalHours} ชม.";
+        if (ts.TotalDays < 7)
+            return $"{(int)ts.TotalDays} วัน";
+
+        // Fallback to short date for older entries
+        return dateTime.ToString("d/M/yy");
     }
 
     private async Task ShowEditDialog(PigPen pigPen)

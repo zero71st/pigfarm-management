@@ -92,3 +92,12 @@ public record DeleteInvoiceResponse(
     string InvoiceReferenceCode,
     string Message
 );
+
+/// <summary>
+/// Response for last feed import date for a pig pen
+/// </summary>
+public record LastFeedImportDateDto(
+    Guid PigPenId,
+    DateTime? LastImportDate,
+    int? DaysSinceLastImport
+);
