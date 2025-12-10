@@ -143,8 +143,8 @@
             <MudTh>ประเภท</MudTh>
             <MudTh>สถานะ</MudTh>
             <MudTh>จำนวน</MudTh>
-            <MudTh>วันที่ลงทะเบียน</MudTh>
-            <MudTh>ประมาณการจับ</MudTh>
+            <MudTh>ลงทะเบียน</MudTh>
+            <MudTh>ประมาณจับ 120 วัน</MudTh>
             <MudTh>ระยะเวลาเลี้ยง</MudTh>
             <MudTh>รับอาหารล่าสุด</MudTh>
             <MudTh>การดำเนินการ</MudTh>
@@ -197,8 +197,8 @@
                 }
             </MudTd>
             <MudTd DataLabel="จำนวน">@context.PigQty</MudTd>
-            <MudTd DataLabel="วันที่ลงทะเบียน">@context.RegisterDate.ToString("d/M/yyyy")</MudTd>
-            <MudTd DataLabel="ประมาณการจับ" Style="text-align: center;">
+            <MudTd DataLabel="ลงทะเบียน">@context.RegisterDate.ToString("d/M/yyyy")</MudTd>
+            <MudTd DataLabel="ประมาณจับ 120 วัน" Style="text-align: center;">
                 @if (context.EstimatedHarvestDate.HasValue)
                 {
                     var harvestDate = context.EstimatedHarvestDate.Value;
@@ -265,16 +265,15 @@
                 }
             </MudTd>
             <MudTd DataLabel="รับอาหารล่าสุด" Style="text-align: center;">
-                @if (feedImportDates.TryGetValue(context.Id, out var importData) && importData?.LastImportDate.HasValue == true)
+                @if (feedImportDates.TryGetValue(context.Id, out var importData) && importData?.LastInvoiceDate.HasValue == true)
                 {
                     var days = importData.DaysSinceLastImport ?? 0;
-                    var badgeColor = days <= 15 ? Color.Success : (days <= 30 ? Color.Warning : Color.Error);
                     <div class="d-flex flex-column align-center" style="gap: 4px;">
-                        <MudChip Size="Size.Small" Color="@badgeColor" Variant="Variant.Filled" Style="font-weight: 600;">
+                        <MudChip Size="Size.Small" Color="Color.Default" Variant="Variant.Filled" Style="font-weight: 600;">
                             @days วัน
                         </MudChip>
                         <MudText Typo="Typo.caption" Color="Color.Secondary" Style="font-size: 0.7rem;">
-                            @importData.LastImportDate.Value.ToString("d/M/yyyy")
+                            @importData.LastInvoiceDate.Value.ToString("d/M/yyyy")
                         </MudText>
                     </div>
                 }
@@ -613,11 +612,9 @@
             return $"{(int)ts.TotalMinutes} นาที";
         if (ts.TotalHours < 24)
             return $"{(int)ts.TotalHours} ชม.";
-        if (ts.TotalDays < 7)
-            return $"{(int)ts.TotalDays} วัน";
-
-        // Fallback to short date for older entries
-        return dateTime.ToString("d/M/yy");
+        
+        // Always show days, even for older entries
+        return $"{(int)ts.TotalDays} วัน";
     }
 
     private async Task ShowEditDialog(PigPen pigPen)
