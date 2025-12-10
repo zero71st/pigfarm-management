@@ -66,6 +66,9 @@ public static class PigPenEndpoints
         group.MapPost("/{id:guid}/force-close", ForceClosePigPen)
             .WithName("ForceClosePigPen");
 
+        group.MapPost("/{id:guid}/reopen", ReopenPigPen)
+            .WithName("ReopenPigPen");
+
         group.MapPost("/{id:guid}/regenerate-assignments", RegenerateFormulaAssignments)
             .WithName("RegenerateFormulaAssignments");
 
@@ -485,6 +488,35 @@ public static class PigPenEndpoints
         catch (Exception ex)
         {
             return Results.Problem($"Error force closing pig pen: {ex.Message}");
+        }
+    }
+
+    private static async Task<IResult> ReopenPigPen(Guid id, IPigPenService pigPenService)
+    {
+        try
+        {
+            var pigPen = await pigPenService.GetPigPenByIdAsync(id);
+            if (pigPen == null)
+            {
+                return Results.NotFound("Pig pen not found");
+            }
+
+            if (!pigPen.IsCalculationLocked)
+            {
+                return Results.BadRequest("Pig pen is not closed, cannot reopen");
+            }
+
+            // Reopen the pig pen by calling the service method
+            var reopenedPigPen = await pigPenService.ReopenPigPenAsync(id);
+            return Results.Ok(reopenedPigPen);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Results.BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Error reopening pig pen: {ex.Message}");
         }
     }
 

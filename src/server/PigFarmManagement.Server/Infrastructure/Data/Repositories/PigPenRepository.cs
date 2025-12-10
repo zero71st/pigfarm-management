@@ -219,6 +219,39 @@ public class PigPenRepository : IPigPenRepository
         return entity.ToModel();
     }
 
+    public async Task<PigPen> ReopenAsync(Guid pigPenId)
+    {
+        var entity = await _context.PigPens
+            .Include(p => p.FormulaAssignments)
+            .FirstOrDefaultAsync(p => p.Id == pigPenId);
+
+        if (entity == null)
+            throw new ArgumentException($"PigPen with ID {pigPenId} not found");
+
+        if (!entity.IsCalculationLocked)
+            throw new ArgumentException($"PigPen with ID {pigPenId} is not closed, cannot reopen");
+
+        // Clear the force-close state
+        var now = DateTime.UtcNow;
+        
+        // Clear harvest date and unlock calculations
+        entity.ActHarvestDate = null;
+        entity.IsCalculationLocked = false;
+        entity.UpdatedAt = now;
+
+        // Note: We don't unlock formula assignments here because:
+        // 1. They were locked when force-closed and should remain locked
+        // 2. Users can regenerate assignments if needed
+        // 3. This preserves the historical state of what was force-closed
+
+        await _context.SaveChangesAsync();
+
+        // Reload assignments to ensure navigation is in sync
+        await _context.Entry(entity).Collection(e => e.FormulaAssignments).LoadAsync();
+
+        return entity.ToModel();
+    }
+
     public async Task UpdateTimestampAsync(Guid pigPenId)
     {
         var entity = await _context.PigPens.FindAsync(pigPenId);

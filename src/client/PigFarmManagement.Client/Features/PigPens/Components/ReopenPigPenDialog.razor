@@ -1,0 +1,97 @@
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="Icons.Material.Filled.LockOpen" Class="mr-3" Color="Color.Info"/>
+            เปิดคอกสุกรอีกครั้ง
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudCard Elevation="0" Class="mb-4">
+            <MudCardContent>
+                <MudAlert Severity="Severity.Info" Dense="true" Class="mb-4">
+                    <MudText Typo="Typo.subtitle2" Class="mb-2">
+                        ℹ️ คุณกำลังจะเปิดคอกสุกรนี้อีกครั้ง
+                    </MudText>
+                    <MudText Typo="Typo.body2">
+                        การดำเนินการนี้จะยกเลิกการปิดคอกและอนุญาตให้เพิ่มรายการจับสุกรเพิ่มเติมได้ 
+                        วันที่จับสุกรจริงจะถูกล้าง และคอกจะกลับสู่สถานะเปิดให้บริหารจัดการต่อ
+                    </MudText>
+                </MudAlert>
+                
+                @if (PigPen != null)
+                {
+                    <MudGrid>
+                        <MudItem xs="12">
+                            <MudText Typo="Typo.subtitle1" Class="mb-2">
+                                <strong>รายละเอียดคอกสุกร:</strong>
+                            </MudText>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">รหัสคอก:</MudText>
+                            <MudText Typo="Typo.body1"><strong>@PigPen.PenCode</strong></MudText>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">จำนวนสุกรทั้งหมด:</MudText>
+                            <MudText Typo="Typo.body1"><strong>@PigPen.PigQty ตัว</strong></MudText>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">สถานะปัจจุบัน:</MudText>
+                            <MudChip Size="Size.Small" Color="Color.Error" Variant="Variant.Filled">
+                                ปิดคอกแล้ว
+                            </MudChip>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">วันที่จับจริง:</MudText>
+                            <MudText Typo="Typo.body1">
+                                @(PigPen.ActHarvestDate?.ToString("d/M/yyyy") ?? "ไม่ระบุ")
+                            </MudText>
+                        </MudItem>
+                        
+                        <MudItem xs="12">
+                            <MudDivider Class="my-2" />
+                            <MudText Typo="Typo.subtitle2" Class="mb-2">
+                                การดำเนินการที่จะเกิดขึ้น:
+                            </MudText>
+                            <MudList Dense="true">
+                                <MudListItem Icon="Icons.Material.Filled.LockOpen" Text="ยกเลิกการล็อคการคำนวณ" />
+                                <MudListItem Icon="Icons.Material.Filled.CalendarToday" Text="ล้างวันที่จับสุกรจริง (ActHarvestDate)" />
+                                <MudListItem Icon="Icons.Material.Filled.Edit" Text="อนุญาตให้เพิ่ม/แก้ไขข้อมูลได้อีกครั้ง" />
+                                <MudListItem Icon="Icons.Material.Filled.Refresh" Text="สามารถเพิ่มรายการจับสุกรต่อได้" />
+                            </MudList>
+                        </MudItem>
+                        
+                        <MudItem xs="12">
+                            <MudAlert Severity="Severity.Warning" Dense="true">
+                                <MudText Typo="Typo.body2">
+                                    <strong>หมายเหตุ:</strong> ข้อมูลการจับสุกรและเงินมัดจำที่มีอยู่จะไม่ถูกลบ 
+                                    คุณสามารถเพิ่มหรือแก้ไขได้ต่อหลังจากเปิดคอกอีกครั้ง
+                                </MudText>
+                            </MudAlert>
+                        </MudItem>
+                    </MudGrid>
+                }
+            </MudCardContent>
+        </MudCard>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">ยกเลิก</MudButton>
+        <MudButton Color="Color.Info" 
+                   Variant="Variant.Filled" 
+                   OnClick="Confirm"
+                   StartIcon="Icons.Material.Filled.LockOpen">
+            เปิดคอกอีกครั้ง
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public MudDialogInstance MudDialog { get; set; } = default!;
+    
+    [Parameter] public PigPen? PigPen { get; set; }
+
+    private void Cancel() => MudDialog.Cancel();
+    
+    private void Confirm() => MudDialog.Close(DialogResult.Ok(true));
+}

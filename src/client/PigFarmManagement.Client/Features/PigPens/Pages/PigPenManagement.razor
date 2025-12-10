@@ -113,6 +113,15 @@
             <MudText Typo="Typo.h6">รายการคอกสุกร</MudText>
         </div>
         <div class="d-flex gap-2 actions-row">
+            <MudSelect T="SortOrder" @bind-Value="SelectedSortOrder" 
+                       Margin="Margin.Dense" 
+                       Variant="Variant.Outlined"
+                       Style="min-width: 200px;"
+                       Dense="true">
+                <MudSelectItem T="SortOrder" Value="SortOrder.LatestUpdate">อัพเดตล่าสุด</MudSelectItem>
+                <MudSelectItem T="SortOrder" Value="SortOrder.LongestSinceFeed">รับอาหารนานสุด</MudSelectItem>
+                <MudSelectItem T="SortOrder" Value="SortOrder.ClosestToHarvest">ใกล้จับที่สุด</MudSelectItem>
+            </MudSelect>
             <MudButton Variant="Variant.Outlined" 
                        Color="Color.Info"
                        StartIcon="@Icons.Material.Filled.Refresh"
@@ -122,7 +131,7 @@
             </MudButton>
             <MudButton Variant="Variant.Filled" Color="Color.Primary" 
                        StartIcon="@Icons.Material.Filled.Add" OnClick="ShowAddDialog">
-                เพิ่มคอกสุกรใหม่
+                เพิ่มคอกใหม่
             </MudButton>
         </div>
     </div>
@@ -137,7 +146,7 @@
             <MudTh>วันที่ลงทะเบียน</MudTh>
             <MudTh>ประมาณการจับ</MudTh>
             <MudTh>ระยะเวลาเลี้ยง</MudTh>
-            <MudTh>ระยะห่างการรับอาหาร</MudTh>
+            <MudTh>รับอาหารล่าสุด</MudTh>
             <MudTh>การดำเนินการ</MudTh>
         </HeaderContent>
         <RowTemplate>
@@ -242,7 +251,8 @@
                 else if (context.EstimatedHarvestDate.HasValue)
                 {
                     var daysRemaining = (context.EstimatedHarvestDate.Value - DateTime.Now).Days;
-                    <MudChip Size="Size.Small" Color="Color.Success" Variant="Variant.Filled">
+                    var chipColor = daysRemaining <= 0 ? Color.Error : (daysRemaining < 20 ? Color.Warning : Color.Success);
+                    <MudChip Size="Size.Small" Color="@chipColor" Variant="Variant.Filled">
                         เหลือ @daysRemaining วัน
                     </MudChip>
                 }
@@ -254,7 +264,7 @@
                     </MudText>
                 }
             </MudTd>
-            <MudTd DataLabel="ระยะห่างการรับอาหาร" Style="text-align: center;">
+            <MudTd DataLabel="รับอาหารล่าสุด" Style="text-align: center;">
                 @if (feedImportDates.TryGetValue(context.Id, out var importData) && importData?.LastImportDate.HasValue == true)
                 {
                     var days = importData.DaysSinceLastImport ?? 0;
@@ -325,6 +335,13 @@
         Closed
     }
 
+    private enum SortOrder
+    {
+        LatestUpdate,
+        LongestSinceFeed,
+        ClosestToHarvest
+    }
+
     private List<Customer> customers = new();
     private List<PigPen> pigPens = new();
     private List<PigPen> filteredPigPens = new();
@@ -333,6 +350,7 @@
     private Customer? selectedCustomer = null;
     private PigPenType? selectedPigPenType = null;
     private PigPenStatus? selectedStatus = PigPenStatus.Active;
+    private SortOrder selectedSortOrder = SortOrder.LatestUpdate;
     private DateTime lastRefreshTime = DateTime.MinValue;
 
     private Customer? SelectedCustomer
@@ -361,6 +379,16 @@
         set
         {
             selectedStatus = value;
+            FilterPigPens();
+        }
+    }
+
+    private SortOrder SelectedSortOrder
+    {
+        get => selectedSortOrder;
+        set
+        {
+            selectedSortOrder = value;
             FilterPigPens();
         }
     }
@@ -414,6 +442,34 @@
         }
     }
 
+    private void FilterPigPens()
+    {
+        var selectedCustomerId = selectedCustomer?.Id;
+        
+        var filtered = pigPens.Where(p =>
+            (selectedCustomerId == null || p.CustomerId == selectedCustomerId) &&
+            (selectedPigPenType == null || p.Type == selectedPigPenType) &&
+            (selectedStatus == null || 
+                (selectedStatus == PigPenStatus.Active && !p.IsCalculationLocked) ||
+                (selectedStatus == PigPenStatus.Closed && p.IsCalculationLocked))
+        );
+
+        // Apply sorting based on selected order
+        filteredPigPens = selectedSortOrder switch
+        {
+            SortOrder.LatestUpdate => filtered.OrderByDescending(p => p.UpdatedAt).ToList(),
+            SortOrder.LongestSinceFeed => filtered.OrderByDescending(p => 
+                feedImportDates.TryGetValue(p.Id, out var importData) && importData?.DaysSinceLastImport.HasValue == true
+                    ? importData.DaysSinceLastImport.Value
+                    : int.MaxValue // Put pens with no feed imports at the top
+            ).ToList(),
+            SortOrder.ClosestToHarvest => filtered.OrderBy(p => 
+                p.EstimatedHarvestDate ?? DateTime.MaxValue // Put pens without harvest date at the end
+            ).ToList(),
+            _ => filtered.OrderByDescending(p => p.UpdatedAt).ToList()
+        };
+    }
+
     private async Task RefreshData()
     {
         await LoadData();
@@ -430,19 +486,6 @@
         return customers.Where(c => 
             c.DisplayName.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
             (c.Code?.Contains(searchString, StringComparison.OrdinalIgnoreCase) ?? false));
-    }
-
-    private void FilterPigPens()
-    {
-        var selectedCustomerId = selectedCustomer?.Id;
-        
-        filteredPigPens = pigPens.Where(p =>
-            (selectedCustomerId == null || p.CustomerId == selectedCustomerId) &&
-            (selectedPigPenType == null || p.Type == selectedPigPenType) &&
-            (selectedStatus == null || 
-                (selectedStatus == PigPenStatus.Active && !p.IsCalculationLocked) ||
-                (selectedStatus == PigPenStatus.Closed && p.IsCalculationLocked))
-        ).OrderByDescending(p => p.UpdatedAt).ToList();
     }
 
     private void SetStatusFilter(PigPenStatus? status)
@@ -493,7 +536,7 @@
 
     private async Task ShowAddDialog()
     {
-        var dialog = await DialogService.ShowAsync<AddPigPenDialog>("เพิ่มคอกสุกรใหม่");
+        var dialog = await DialogService.ShowAsync<AddPigPenDialog>("เพิ่มคอกใหม่");
         var result = await dialog.Result;
 
         if (!result.Canceled)

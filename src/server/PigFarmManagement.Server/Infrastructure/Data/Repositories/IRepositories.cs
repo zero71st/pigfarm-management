@@ -25,6 +25,7 @@ public interface IPigPenRepository
     Task<PigPen> CreateAsync(PigPen pigPen);
     Task<(PigPen pigPen, int updatedAssignmentCount)> UpdateAsync(PigPen pigPen);
     Task<PigPen> ForceCloseAsync(Guid pigPenId);
+    Task<PigPen> ReopenAsync(Guid pigPenId);
     Task DeleteAsync(Guid id);
     Task UpdateTimestampAsync(Guid pigPenId);
 }

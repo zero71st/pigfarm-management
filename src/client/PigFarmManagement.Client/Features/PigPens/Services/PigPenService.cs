@@ -14,6 +14,7 @@ public interface IPigPenService
     Task<PigPen> UpdatePigPenAsync(Guid id, PigPenUpdateDto dto);
     Task<bool> DeletePigPenAsync(Guid id);
     Task<PigPen> ForceClosePigPenAsync(PigPenForceCloseRequest request);
+    Task<PigPen> ReopenPigPenAsync(Guid pigPenId);
 
     // Feed Items
     Task<List<FeedItem>> GetFeedItemsAsync(Guid pigPenId);
@@ -194,6 +195,18 @@ public class PigPenService : IPigPenService
         }
         var closedPigPen = await response.Content.ReadFromJsonAsync<PigPen>();
         return closedPigPen!;
+    }
+
+    public async Task<PigPen> ReopenPigPenAsync(Guid pigPenId)
+    {
+        var response = await _httpClient.PostAsync($"api/pigpens/{pigPenId}/reopen", null);
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            throw new HttpRequestException($"Failed to reopen pig pen: {response.StatusCode} - {errorContent}");
+        }
+        var reopenedPigPen = await response.Content.ReadFromJsonAsync<PigPen>();
+        return reopenedPigPen!;
     }
 
     public async Task<List<PigPenFormulaAssignment>> GetFormulaAssignmentsAsync(Guid pigPenId)
