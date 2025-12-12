@@ -443,12 +443,12 @@
                             <MudTh Style="text-align: center">การดำเนินการ</MudTh>
                         </HeaderContent>
                         <RowTemplate>
-                            <MudTd DataLabel="Date">@context.Date.ToString("dd/MM/yyyy")</MudTd>
-                            <MudTd DataLabel="Amount" Style="text-align: right">
+                            <MudTd DataLabel="วันที่">@context.Date.ToString("dd/MM/yyyy")</MudTd>
+                            <MudTd DataLabel="จำนวนเงิน" Style="text-align: right">
                                 <MudText Color="Color.Success"><strong>฿@context.Amount.ToString("N2")</strong></MudText>
                             </MudTd>
-                            <MudTd DataLabel="Notes">@(context.Remark ?? "-")</MudTd>
-                            <MudTd DataLabel="Actions" Style="text-align: center">
+                            <MudTd DataLabel="หมายเหตุ">@(context.Remark ?? "-")</MudTd>
+                            <MudTd DataLabel="การดำเนินการ" Style="text-align: center">
                                 <MudButtonGroup Size="Size.Small" Variant="Variant.Outlined">
                                     <MudButton Color="Color.Primary" 
                                              Size="Size.Small"
@@ -582,16 +582,16 @@
                             <MudTh Style="text-align: center">การดำเนินการ</MudTh>
                         </HeaderContent>
                         <RowTemplate>
-                            <MudTd DataLabel="Date">@context.HarvestDate.ToString("dd/MM/yyyy")</MudTd>
-                            <MudTd DataLabel="Pigs Sold" Style="text-align: center">
+                            <MudTd DataLabel="วันที่">@context.HarvestDate.ToString("dd/MM/yyyy")</MudTd>
+                            <MudTd DataLabel="จำนวนสุกร" Style="text-align: center">
                                 <MudChip Size="Size.Small" Color="Color.Info">@context.PigCount</MudChip>
                             </MudTd>
-                            <MudTd DataLabel="Avg Weight" Style="text-align: right">@context.AvgWeight.ToString("N1")</MudTd>
-                            <MudTd DataLabel="Price per Kg" Style="text-align: right">฿@context.SalePricePerKg.ToString("N2")</MudTd>
-                            <MudTd DataLabel="Total Revenue" Style="text-align: right">
+                            <MudTd DataLabel="น้ำหนักเฉลี่ย" Style="text-align: right">@context.AvgWeight.ToString("N1")</MudTd>
+                            <MudTd DataLabel="ราคาต่อกก." Style="text-align: right">฿@context.SalePricePerKg.ToString("N2")</MudTd>
+                            <MudTd DataLabel="รายได้รวม" Style="text-align: right">
                                 <MudText Color="Color.Success"><strong>฿@context.Revenue.ToString("N2")</strong></MudText>
                             </MudTd>
-                            <MudTd DataLabel="Actions" Style="text-align: center">
+                            <MudTd DataLabel="การดำเนินการ" Style="text-align: center">
                                 <MudButtonGroup Size="Size.Small" Variant="Variant.Outlined">
                                     <MudButton Color="Color.Primary" 
                                              Size="Size.Small"
@@ -1093,7 +1093,7 @@
     {
         if (pigPen?.Type != PigPenType.Project) 
         {
-            Snackbar.Add("Deposits are only available for Project type pig pens", Severity.Warning);
+            Snackbar.Add("การฝากเงินมีเฉพาะสำหรับคอกประเภทโครงการเท่านั้น", Severity.Warning);
             return;
         }
         
@@ -1148,7 +1148,7 @@
             FullWidth = true
         };
 
-        var dialog = await DialogService.ShowAsync<DeleteDepositConfirmationDialog>("Confirm Delete", parameters, options);
+        var dialog = await DialogService.ShowAsync<DeleteDepositConfirmationDialog>("ยืนยันการลบ", parameters, options);
         var result = await dialog.Result;
 
         if (!result.Canceled && result.Data is bool confirmed && confirmed)
@@ -1302,7 +1302,7 @@
             FullWidth = true
         };
 
-        var dialog = await DialogService.ShowAsync<DeleteHarvestConfirmationDialog>("Confirm Delete", parameters, options);
+        var dialog = await DialogService.ShowAsync<DeleteHarvestConfirmationDialog>("ยืนยันการลบ", parameters, options);
         var result = await dialog.Result;
 
         if (!result.Canceled && result.Data is bool confirmed && confirmed)

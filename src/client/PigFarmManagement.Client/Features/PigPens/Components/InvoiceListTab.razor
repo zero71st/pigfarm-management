@@ -17,17 +17,17 @@
             <MudTh Style="text-align: center">การดำเนินการ</MudTh>
         </HeaderContent>
         <RowTemplate>
-            <MudTd DataLabel="InvoiceReferenceCode">@context.InvoiceReferenceCode</MudTd>
-            <MudTd DataLabel="InvoiceDate" Style="text-align: center">
+            <MudTd DataLabel="รหัสบิลขาย">@context.InvoiceReferenceCode</MudTd>
+            <MudTd DataLabel="วันที่บิลขาย" Style="text-align: center">
                 @context.InvoiceDate.ToString("yyyy-MM-dd")
             </MudTd>
-            <MudTd DataLabel="ItemCount" Style="text-align: center">
+            <MudTd DataLabel="จำนวนรายการ" Style="text-align: center">
                 <MudChip Size="Size.Small" Color="Color.Info">@context.ItemCount</MudChip>
             </MudTd>
-            <MudTd DataLabel="TotalAmount" Style="text-align: right">
+            <MudTd DataLabel="ยอดรวม" Style="text-align: right">
                 <MudText Color="Color.Success"><strong>฿@context.TotalAmount.ToString("N2")</strong></MudText>
             </MudTd>
-            <MudTd DataLabel="Actions" Style="text-align: center">
+            <MudTd DataLabel="การดำเนินการ" Style="text-align: center">
                 <MudButtonGroup Size="Size.Small" Variant="Variant.Outlined">
                     <MudButton Color="Color.Info" 
                              Size="Size.Small"
