@@ -80,6 +80,10 @@ public static class PigPenEndpoints
         group.MapGet("/last-feed-imports", GetLastFeedImports)
             .WithName("GetLastFeedImports");
 
+        // Get used product usages for a pig pen (for recalculation dialog)
+        group.MapGet("/{id:guid}/used-product-usages", GetUsedProductUsages)
+            .WithName("GetUsedProductUsages");
+
         return builder;
     }
 
@@ -161,7 +165,7 @@ public static class PigPenEndpoints
             // T009: Extract user context for logging
             var userId = context.User.FindFirst("user_id")?.Value;
             
-            var result = await pigPenService.UpdatePigPenAsync(updatedPigPen, userId);
+            var result = await pigPenService.UpdatePigPenAsync(updatedPigPen, userId, dto.PreserveProductCodes);
             return Results.Ok(result);
         }
         catch (InvalidOperationException ex)
@@ -613,6 +617,19 @@ public static class PigPenEndpoints
         catch (Exception ex)
         {
             return Results.Problem($"Error retrieving last feed imports: {ex.Message}");
+        }
+    }
+
+    private static async Task<IResult> GetUsedProductUsages(Guid id, IPigPenService pigPenService)
+    {
+        try
+        {
+            var usages = await pigPenService.GetUsedProductUsagesAsync(id);
+            return Results.Ok(usages);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Error retrieving used product usages: {ex.Message}");
         }
     }
 }

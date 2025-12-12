@@ -23,11 +23,12 @@ public interface IPigPenRepository
     Task<IEnumerable<PigPen>> GetByCustomerIdAsync(Guid customerId);
     Task<PigPen?> GetByPenCodeAsync(string penCode);
     Task<PigPen> CreateAsync(PigPen pigPen);
-    Task<(PigPen pigPen, int updatedAssignmentCount)> UpdateAsync(PigPen pigPen);
+    Task<(PigPen pigPen, int updatedAssignmentCount)> UpdateAsync(PigPen pigPen, IEnumerable<string>? preserveProductCodes = null);
     Task<PigPen> ForceCloseAsync(Guid pigPenId);
     Task<PigPen> ReopenAsync(Guid pigPenId);
     Task DeleteAsync(Guid id);
     Task UpdateTimestampAsync(Guid pigPenId);
+    Task<List<ProductUsageDto>> GetUsedProductUsagesAsync(Guid pigPenId);
 }
 
 public interface IFeedRepository

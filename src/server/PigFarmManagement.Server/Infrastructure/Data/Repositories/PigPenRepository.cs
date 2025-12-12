@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using PigFarmManagement.Server.Infrastructure.Data.Entities;
 using PigFarmManagement.Shared.Models;
 
@@ -7,10 +8,12 @@ namespace PigFarmManagement.Server.Infrastructure.Data.Repositories;
 public class PigPenRepository : IPigPenRepository
 {
     private readonly PigFarmDbContext _context;
+    private readonly ILogger<PigPenRepository> _logger;
 
-    public PigPenRepository(PigFarmDbContext context)
+    public PigPenRepository(PigFarmDbContext context, ILogger<PigPenRepository> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     public async Task<IEnumerable<PigPen>> GetAllAsync()
@@ -61,7 +64,7 @@ public class PigPenRepository : IPigPenRepository
         return entity.ToModel();
     }
 
-    public async Task<(PigPen pigPen, int updatedAssignmentCount)> UpdateAsync(PigPen pigPen)
+    public async Task<(PigPen pigPen, int updatedAssignmentCount)> UpdateAsync(PigPen pigPen, IEnumerable<string>? preserveProductCodes = null)
     {
         // T005: Load with formula assignments for recalculation
         var entity = await _context.PigPens
@@ -75,6 +78,20 @@ public class PigPenRepository : IPigPenRepository
         // Track old PigQty to detect changes
         var oldPigQty = entity.PigQty;
         var updatedAssignmentCount = 0;
+
+        // Detect used products from Feed history and merge with client preserve list
+        var usedProductCodes = await _context.Feeds
+            .Where(f => f.PigPenId == pigPen.Id && !string.IsNullOrEmpty(f.ProductCode))
+            .Select(f => f.ProductCode!)
+            .Distinct()
+            .ToListAsync();
+
+        var preservedCodes = preserveProductCodes?.ToHashSet(StringComparer.OrdinalIgnoreCase)
+                             ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        // Auto-preserve products already used in feeds
+        foreach (var code in usedProductCodes)
+            preservedCodes.Add(code);
 
         entity.CustomerId = pigPen.CustomerId;
         entity.PenCode = pigPen.PenCode;
@@ -103,33 +120,58 @@ public class PigPenRepository : IPigPenRepository
         
         if (oldPigQty != pigPen.PigQty)
         {
-            foreach (var assignment in pigPen.FormulaAssignments.Where(a => a.IsActive && !a.IsLocked))
-            {
-                // T006: Use _context directly to load source formula
-                var feedFormula = await _context.FeedFormulas.FindAsync(assignment.OriginalFormulaId);
-                
-                // T011: Error handling for missing formulas
-                if (feedFormula == null)
-                {
-                    // Skip this assignment if formula not found, keep original
-                    updatedFormulaAssignments.Add(assignment);
-                    continue;
-                }
+            // Get preserved assignments (keep their original pig quantity - already fed)
+            var preservedAssignments = pigPen.FormulaAssignments
+                .Where(a => a.IsActive && !a.IsLocked && preservedCodes.Contains(a.ProductCode))
+                .ToList();
 
-                // Create updated assignment with recalculated values
+            // Get unlocked and non-preserved assignments for redistribution
+            var unlocked = pigPen.FormulaAssignments
+                .Where(a => a.IsActive && !a.IsLocked && !preservedCodes.Contains(a.ProductCode))
+                .ToList();
+
+            // Add preserved assignments unchanged (keep original AssignedPigQuantity, but sync bag-per-pig from formula)
+            foreach (var assignment in preservedAssignments)
+            {
+                var feedFormula = await _context.FeedFormulas.FindAsync(assignment.OriginalFormulaId);
                 var updatedAssignment = assignment with
                 {
-                    AssignedPigQuantity = pigPen.PigQty,
-                    AssignedBagPerPig = feedFormula.ConsumeRate ?? 0,
-                    AssignedTotalBags = Math.Ceiling((feedFormula.ConsumeRate ?? 0) * pigPen.PigQty)
+                    AssignedBagPerPig = feedFormula?.ConsumeRate ?? assignment.AssignedBagPerPig,
+                    AssignedTotalBags = Math.Ceiling((feedFormula?.ConsumeRate ?? assignment.AssignedBagPerPig) * assignment.AssignedPigQuantity)
                 };
-                
                 updatedFormulaAssignments.Add(updatedAssignment);
-                updatedAssignmentCount++;
             }
-            
-            // Add inactive/locked assignments unchanged
-            updatedFormulaAssignments.AddRange(pigPen.FormulaAssignments.Where(a => !a.IsActive || a.IsLocked));
+
+            // Add locked assignments unchanged
+            updatedFormulaAssignments.AddRange(pigPen.FormulaAssignments.Where(a => a.IsActive && a.IsLocked));
+
+            // Redistribute unlocked/non-preserved assignments to new pig quantity
+            if (unlocked.Any())
+            {
+                foreach (var assignment in unlocked)
+                {
+                    var feedFormula = await _context.FeedFormulas.FindAsync(assignment.OriginalFormulaId);
+                    var bagPerPig = feedFormula?.ConsumeRate ?? assignment.AssignedBagPerPig;
+                    
+                    // Update to new pig quantity
+                    var updatedAssignment = assignment with
+                    {
+                        AssignedPigQuantity = pigPen.PigQty,
+                        AssignedBagPerPig = bagPerPig,
+                        AssignedTotalBags = Math.Ceiling(bagPerPig * pigPen.PigQty)
+                    };
+                    updatedFormulaAssignments.Add(updatedAssignment);
+                    updatedAssignmentCount++;
+                }
+            }
+
+            // Add inactive assignments unchanged
+            updatedFormulaAssignments.AddRange(pigPen.FormulaAssignments.Where(a => !a.IsActive));
+
+            // Log the update
+            _logger.LogInformation(
+                "PigPen {PenId} qty changed {OldQty}->{NewQty}. preserved: {Preserved}. assignments updated: {Count}",
+                pigPen.Id, oldPigQty, pigPen.PigQty, string.Join(',', preservedCodes), updatedAssignmentCount);
         }
         else
         {
@@ -260,5 +302,15 @@ public class PigPenRepository : IPigPenRepository
 
         entity.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
+    }
+
+    public async Task<List<ProductUsageDto>> GetUsedProductUsagesAsync(Guid pigPenId)
+    {
+        var usages = await _context.Feeds
+            .Where(f => f.PigPenId == pigPenId && !string.IsNullOrEmpty(f.ProductCode))
+            .GroupBy(f => f.ProductCode!)
+            .Select(g => new ProductUsageDto(g.Key, g.Count()))
+            .ToListAsync();
+        return usages;
     }
 }

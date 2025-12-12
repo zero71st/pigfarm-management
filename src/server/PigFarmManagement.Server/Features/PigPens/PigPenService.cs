@@ -11,13 +11,14 @@ public interface IPigPenService
     Task<List<PigPen>> GetAllPigPensAsync();
     Task<PigPen?> GetPigPenByIdAsync(Guid id);
     Task<PigPen> CreatePigPenAsync(PigPenCreateDto dto);
-    Task<PigPen> UpdatePigPenAsync(PigPen pigPen, string? userId = null);
+    Task<PigPen> UpdatePigPenAsync(PigPen pigPen, string? userId = null, IEnumerable<string>? preserveProductCodes = null);
     Task<bool> DeletePigPenAsync(Guid id);
     Task<List<PigPen>> GetPigPensByCustomerIdAsync(Guid customerId);
     Task<PigPen> ForceClosePigPenAsync(Guid id);
     Task<PigPen> ReopenPigPenAsync(Guid id);
     Task<List<PigPenFormulaAssignment>> GetFormulaAssignmentsAsync(Guid pigPenId);
     Task<List<PigPenFormulaAssignment>> RegenerateFormulaAssignmentsAsync(Guid pigPenId);
+    Task<List<ProductUsageDto>> GetUsedProductUsagesAsync(Guid pigPenId);
 }
 
 public class PigPenService : IPigPenService
@@ -173,7 +174,7 @@ public class PigPenService : IPigPenService
         }
     }
 
-    public async Task<PigPen> UpdatePigPenAsync(PigPen pigPen, string? userId = null)
+    public async Task<PigPen> UpdatePigPenAsync(PigPen pigPen, string? userId = null, IEnumerable<string>? preserveProductCodes = null)
     {
         var existingPigPen = await _pigPenRepository.GetByIdAsync(pigPen.Id);
         if (existingPigPen == null)
@@ -201,7 +202,7 @@ public class PigPenService : IPigPenService
 
         // T005, T008: Repository now returns tuple with updated assignment count
         var oldQty = existingPigPen.PigQty;
-        var (result, updatedAssignmentCount) = await _pigPenRepository.UpdateAsync(updatedPigPen);
+        var (result, updatedAssignmentCount) = await _pigPenRepository.UpdateAsync(updatedPigPen, preserveProductCodes);
 
         // T007: Log change event if PigQty changed
         if (oldQty != pigPen.PigQty)
@@ -298,5 +299,10 @@ public class PigPenService : IPigPenService
         }
 
         return pigPen.FormulaAssignments.OrderByDescending(a => a.AssignedAt).ToList();
+    }
+
+    public async Task<List<ProductUsageDto>> GetUsedProductUsagesAsync(Guid pigPenId)
+    {
+        return await _pigPenRepository.GetUsedProductUsagesAsync(pigPenId);
     }
 }
