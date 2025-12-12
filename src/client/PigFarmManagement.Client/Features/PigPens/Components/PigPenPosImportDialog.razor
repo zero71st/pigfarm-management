@@ -61,25 +61,26 @@
                         กรองตามช่วงวันที่
                     </MudText>
                     
-                    <div class="d-flex gap-4 align-center">
+                    <div class="d-flex gap-4 justify-center" style="align-items: flex-end;">
                         <MudDatePicker Date="_fromDate"
                                      DateChanged="OnFromDateChanged"
                                      Label="วันที่เริ่มต้น"
                                      Variant="Variant.Outlined"
-                                     DateFormat="yyyy-MM-dd"
-                                     HelperText="วันที่เริ่มต้น" />
+                                     Margin="Margin.Dense"
+                                     DateFormat="yyyy-MM-dd" />
                         
                         <MudDatePicker @bind-Date="_toDate"
                                      Label="วันที่สิ้นสุด"
                                      Variant="Variant.Outlined"
-                                     DateFormat="yyyy-MM-dd"
-                                     HelperText="วันที่สิ้นสุด" />
+                                    Margin="Margin.Dense"
+                                     DateFormat="yyyy-MM-dd" />
                         
                         <MudButton Color="Color.Info" 
                                  Variant="Variant.Filled" 
                                  StartIcon="@Icons.Material.Filled.Search"
                                  OnClick="LoadAvailableTransactions"
-                                 Disabled="_isLoading">
+                                 Disabled="_isLoading"
+                                 Style="height: 40px;">
                             @if (_isLoading)
                             {
                                 <MudProgressCircular Size="Size.Small" Indeterminate="true" />
@@ -95,7 +96,8 @@
                                  Variant="Variant.Outlined" 
                                  StartIcon="@Icons.Material.Filled.Clear"
                                  OnClick="ClearDateFilter"
-                                 Disabled="_isLoading">
+                                 Disabled="_isLoading"
+                                 Style="height: 40px;">
                             ล้างตัวกรอง
                         </MudButton>
                     </div>

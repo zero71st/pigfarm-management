@@ -8,52 +8,52 @@
             <MudGrid>
                 <MudItem xs="12">
                     <div class="d-flex align-center mb-4">
-                        <MudIcon Icon="Icons.Material.Filled.Warning" 
+                        <MudIcon Icon="@Icons.Material.Filled.Warning" 
                                  Color="Color.Warning" 
                                  Size="Size.Large" 
                                  Class="mr-3" />
                         <MudText Typo="Typo.h6">
-                            Confirm Delete Harvest
+                            ยืนยันการลบบันทึกการจับสุกร
                         </MudText>
                     </div>
                 </MudItem>
                 
                 <MudItem xs="12">
                     <MudAlert Severity="Severity.Warning">
-                        <MudText>Are you sure you want to delete this harvest record? This action cannot be undone.</MudText>
+                        <MudText>คุณแน่ใจหรือไม่ว่าต้องการลบบันทึกการจับสุกรนี้? การกระทำนี้ไม่สามารถย้อนกลับได้</MudText>
                     </MudAlert>
                 </MudItem>
                 
                 <MudItem xs="12">
                     <MudPaper Class="pa-4" Elevation="1">
                         <MudText Typo="Typo.subtitle1" Class="mb-2">
-                            <strong>Harvest Details:</strong>
+                            <strong>รายละเอียดการจับสุกร:</strong>
                         </MudText>
                         <MudGrid>
                             <MudItem xs="6">
-                                <MudText Typo="Typo.body2" Color="Color.Secondary">Date:</MudText>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">วันที่:</MudText>
                                 <MudText Typo="Typo.body1">@HarvestToDelete.HarvestDate.ToString("dd/MM/yyyy")</MudText>
                             </MudItem>
                             <MudItem xs="6">
-                                <MudText Typo="Typo.body2" Color="Color.Secondary">Pigs Sold:</MudText>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">จำนวนสุกรที่ขาย:</MudText>
                                 <MudText Typo="Typo.body1">
-                                    <strong>@HarvestToDelete.PigCount pigs</strong>
+                                    <strong>@HarvestToDelete.PigCount ตัว</strong>
                                 </MudText>
                             </MudItem>
                             <MudItem xs="6">
-                                <MudText Typo="Typo.body2" Color="Color.Secondary">Average Weight:</MudText>
-                                <MudText Typo="Typo.body1">@HarvestToDelete.AvgWeight.ToString("N1") kg</MudText>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">น้ำหนักเฉลี่ย:</MudText>
+                                <MudText Typo="Typo.body1">@HarvestToDelete.AvgWeight.ToString("N1") กก.</MudText>
                             </MudItem>
                             <MudItem xs="6">
-                                <MudText Typo="Typo.body2" Color="Color.Secondary">Total Weight:</MudText>
-                                <MudText Typo="Typo.body1">@HarvestToDelete.TotalWeight.ToString("N1") kg</MudText>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">น้ำหนักรวม:</MudText>
+                                <MudText Typo="Typo.body1">@HarvestToDelete.TotalWeight.ToString("N1") กก.</MudText>
                             </MudItem>
                             <MudItem xs="6">
-                                <MudText Typo="Typo.body2" Color="Color.Secondary">Price per Kg:</MudText>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">ราคาต่อกก.:</MudText>
                                 <MudText Typo="Typo.body1">฿@HarvestToDelete.SalePricePerKg.ToString("N2")</MudText>
                             </MudItem>
                             <MudItem xs="6">
-                                <MudText Typo="Typo.body2" Color="Color.Secondary">Total Revenue:</MudText>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">ยอดรวมรายได้:</MudText>
                                 <MudText Typo="Typo.body1" Color="Color.Success">
                                     <strong>฿@HarvestToDelete.Revenue.ToString("N2")</strong>
                                 </MudText>
@@ -65,7 +65,7 @@
                 <MudItem xs="12">
                     <MudAlert Severity="Severity.Error" Dense="true">
                         <MudText Typo="Typo.body2">
-                            <strong>⚠️ Warning:</strong> Deleting this harvest will affect your pig pen's revenue calculations and may impact financial reports.
+                            <strong>⚠️ คำเตือน:</strong> การลบบันทึกการจับสุกรจะมีผลต่อการคำนวณรายได้ของคอกสุกรและอาจส่งผลต่อรายงานทางการเงิน
                         </MudText>
                     </MudAlert>
                 </MudItem>
@@ -75,13 +75,13 @@
     <DialogActions>
         <MudButton OnClick="Cancel" 
                    Variant="Variant.Text">
-            Cancel
+            ยกเลิก
         </MudButton>
         <MudButton Color="Color.Error" 
                    Variant="Variant.Filled" 
                    OnClick="Confirm"
-                   StartIcon="Icons.Material.Filled.Delete">
-            Delete Harvest
+                   StartIcon="@Icons.Material.Filled.Delete">
+            ลบ
         </MudButton>
     </DialogActions>
 </MudDialog>

@@ -156,7 +156,7 @@
     <DialogActions>
         <MudButton OnClick="Cancel">ยกเลิก</MudButton>
         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save" Disabled="@(!IsFormValid())">
-            ปรับปรุงคอกสุกร
+            บันทึก
         </MudButton>
     </DialogActions>
 </MudDialog>
@@ -344,6 +344,47 @@
         if (!IsFormValid() || selectedCustomer == null || !registerDate.HasValue)
             return;
 
+        var oldQty = PigPen.PigQty;
+        var newQty = pigQty;
+
+        List<string>? preserveCodes = null;
+        
+        // Show confirmation dialog when pig quantity changes
+        if (newQty != oldQty)
+        {
+            try
+            {
+                // Get used product usages from server
+                var usages = await PigPenService.GetUsedProductUsagesAsync(PigPen.Id);
+                
+                var parameters = new DialogParameters<ConfirmReassignmentsDialog>
+                {
+                    { x => x.Assignments, PigPen.FormulaAssignments.Where(a => a.IsActive && !a.IsLocked).ToList() },
+                    { x => x.OldQty, oldQty },
+                    { x => x.NewQty, newQty },
+                    { x => x.UsedProductUsages, usages }
+                };
+
+                var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium };
+                var dialog = await DialogService.ShowAsync<ConfirmReassignmentsDialog>("ปรับการจัดสรรอาหาร", parameters, options);
+                var result = await dialog.Result;
+                
+                if (result == null || result.Canceled)
+                    return;
+                    
+                if (result.Data is List<string> codes)
+                {
+                    preserveCodes = codes;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading product usages: {ex.Message}");
+                Snackbar.Add($"ไม่สามารถโหลดข้อมูลการใช้งานผลิตภัณฑ์: {ex.Message}", Severity.Warning);
+                // Continue without preserve codes if failed to load usages
+            }
+        }
+
         var updateDto = new PigPenUpdateDto(
             PenCode: penCode,
             PigQty: pigQty,
@@ -353,7 +394,8 @@
             Type: selectedType,
             SelectedBrand: selectedBrand,
             DepositPerPig: selectedType == PigPenType.Project ? depositPerPig : 0m,
-            Note: note
+            Note: note,
+            PreserveProductCodes: preserveCodes
         );
 
         try

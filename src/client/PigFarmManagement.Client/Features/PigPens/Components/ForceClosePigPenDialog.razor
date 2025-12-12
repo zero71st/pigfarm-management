@@ -3,7 +3,7 @@
 <MudDialog>
     <TitleContent>
         <MudText Typo="Typo.h6">
-            <MudIcon Icon="Icons.Material.Filled.Warning" Class="mr-3" Color="Color.Warning"/>
+            <MudIcon Icon="@Icons.Material.Filled.Warning" Class="mr-3" Color="Color.Warning"/>
             บังคับปิดคอกสุกร
         </MudText>
     </TitleContent>
@@ -15,8 +15,7 @@
                         ⚠️ คำเตือน: คุณกำลังจะบังคับปิดคอกสุกรนี้
                     </MudText>
                     <MudText Typo="Typo.body2">
-                        การดำเนินการนี้จะทำเครื่องหมายว่าคอกสุกรเสร็จสิ้นแล้ว แม้ว่าจะยังไม่ได้จับสุกรครบทั้งหมด 
-                        วันที่จับสุกรจริงจะถูกตั้งเป็นวันนี้
+                        การดำเนินการนี้จะทำเครื่องหมายว่าคอกสุกรเสร็จสิ้นแล้ว แม้ว่าจะยังไม่ได้จับสุกรครบทั้งหมด
                     </MudText>
                 </MudAlert>
                 
@@ -74,9 +73,8 @@
                                 การดำเนินการที่จะเกิดขึ้น:
                             </MudText>
                             <MudList Dense="true">
-                                <MudListItem Icon="Icons.Material.Filled.CalendarToday" Text="ตั้งวันที่จับสุกรจริงเป็นวันนี้" />
-                                <MudListItem Icon="Icons.Material.Filled.Block" Text="ทำเครื่องหมายคอกสุกรว่าเสร็จสิ้น/ปิดแล้ว" />
-                                <MudListItem Icon="Icons.Material.Filled.Lock" Text="ป้องกันการเพิ่มรายการจับสุกรเพิ่มเติม" />
+                                <MudListItem Icon="@Icons.Material.Filled.Block" Text="ทำเครื่องหมายคอกสุกรว่าเสร็จสิ้น/ปิดแล้ว" />
+                                <MudListItem Icon="@Icons.Material.Filled.Lock" Text="ป้องกันการเพิ่มรายการจับสุกรเพิ่มเติม" />
                             </MudList>
                         </MudItem>
                     </MudGrid>
@@ -89,7 +87,8 @@
         <MudButton Color="Color.Warning" 
                    Variant="Variant.Filled" 
                    OnClick="Confirm"
-                   StartIcon="Icons.Material.Filled.Warning">
+                   Disabled="@(PigPen?.IsCalculationLocked ?? false)"
+                   StartIcon="@Icons.Material.Filled.Warning">
             บังคับปิดคอก
         </MudButton>
     </DialogActions>

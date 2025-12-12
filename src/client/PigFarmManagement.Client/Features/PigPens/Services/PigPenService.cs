@@ -41,6 +41,9 @@ public interface IPigPenService
     
     // Last Feed Import (batch)
     Task<List<LastFeedImportDateDto>> GetLastFeedImportsAsync();
+    
+    // Used Product Usages (for recalculation dialog)
+    Task<List<ProductUsageDto>> GetUsedProductUsagesAsync(Guid pigPenId);
 }
 
 public class PigPenService : IPigPenService
@@ -227,5 +230,11 @@ public class PigPenService : IPigPenService
     {
         var results = await _httpClient.GetFromJsonAsync<List<LastFeedImportDateDto>>("api/pigpens/last-feed-imports");
         return results ?? new List<LastFeedImportDateDto>();
+    }
+
+    public async Task<List<ProductUsageDto>> GetUsedProductUsagesAsync(Guid pigPenId)
+    {
+        var results = await _httpClient.GetFromJsonAsync<List<ProductUsageDto>>($"api/pigpens/{pigPenId}/used-product-usages");
+        return results ?? new List<ProductUsageDto>();
     }
 }

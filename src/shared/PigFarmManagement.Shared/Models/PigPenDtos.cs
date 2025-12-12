@@ -30,7 +30,16 @@ public record PigPenUpdateDto(
     PigPenType? Type = null,
     string? SelectedBrand = null,
     decimal? DepositPerPig = null,
-    string? Note = null
+    string? Note = null,
+    IEnumerable<string>? PreserveProductCodes = null
+);
+
+/// <summary>
+/// Product usage information for a pig pen (used in recalculation dialog)
+/// </summary>
+public record ProductUsageDto(
+    string ProductCode,
+    int UsedQuantity
 );
 
 /// <summary>

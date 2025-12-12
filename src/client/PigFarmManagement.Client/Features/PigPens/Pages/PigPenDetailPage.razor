@@ -91,7 +91,7 @@
                                StartIcon="@Icons.Material.Filled.GppMaybe"
                                OnClick="ForceClosePigPen"
                                Class="flex-sm-grow-0 full-width-mobile">
-                        Force Close
+                        บังคับปิดคอก
                     </MudButton>
                 }
                 @* Manage button - Show only when locked *@
@@ -144,7 +144,7 @@
                             <tbody>
                                 <tr>
                                     <td><strong>ลูกค้า:</strong></td>
-                                    <td>@(customer?.DisplayName ?? "Unknown Customer")</td>
+                                    <td>@(customer?.DisplayName ?? "ไม่พบลูกค้า")</td>
                                 </tr>
                                 <tr>
                                     <td><strong>รหัสคอก:</strong></td>
@@ -164,11 +164,11 @@
                                     <td>@pigPen.PigQty ตัว</td>
                                 </tr>
                                 <tr>
-                                    <td><strong>วันที่ลงทะเบียน:</strong></td>
+                                    <td><strong>ลงทะเบียน:</strong></td>
                                     <td>@pigPen.RegisterDate.ToString("dd/MM/yyyy")</td>
                                 </tr>
                                 <tr>
-                                    <td><strong>วันจับสุกรโดยประมาณ:</strong></td>
+                                    <td><strong>จับประมาณ 120 วัน:</strong></td>
                                     <td>@(pigPen.EstimatedHarvestDate?.ToString("dd/MM/yyyy") ?? "ไม่ได้ตั้ง")</td>
                                 </tr>
                                 <tr>
@@ -318,7 +318,8 @@
                         <MudButton Variant="Variant.Filled" 
                                    Color="Color.Primary"
                                    StartIcon="@Icons.Material.Filled.Download"
-                                   OnClick="ImportFeeds">
+                                       OnClick="ImportFeeds"
+                                       Disabled="@IsPigPenClosed()">
                             นำเข้าบิลขาย
                         </MudButton>
                     </div>
@@ -330,6 +331,7 @@
                                Color="Color.Primary"
                                StartIcon="@Icons.Material.Filled.Download"
                                OnClick="ImportFeeds"
+                               Disabled="@IsPigPenClosed()"
                                FullWidth="true">
                         นำเข้าบิลขาย
                     </MudButton>
@@ -370,12 +372,13 @@
                         </MudText>
                     </CardHeaderContent>
                     <CardHeaderActions>
-                        <div class="d-none d-sm-flex">
+                            <div class="d-none d-sm-flex">
                             <MudButton Variant="Variant.Filled" 
                                        Color="Color.Primary"
                                        StartIcon="@Icons.Material.Filled.Add"
-                                       OnClick="AddDeposit">
-                                เพิ่มเงินมัดจำ
+                                       OnClick="AddDeposit"
+                                       Disabled="@IsPigPenClosed()">
+                                บันทึกเงินมัดจำ
                             </MudButton>
                         </div>
                     </CardHeaderActions>
@@ -386,8 +389,9 @@
                                Color="Color.Primary"
                                StartIcon="@Icons.Material.Filled.Add"
                                OnClick="AddDeposit"
+                               Disabled="@IsPigPenClosed()"
                                FullWidth="true">
-                        เพิ่มเงินมัดจำ
+                        บันทึกเงินมัดจำ
                     </MudButton>
                 </div>
                 <!-- Deposit Progress Card -->
@@ -405,10 +409,10 @@
                                                      Size="Size.Large" 
                                                      Class="mb-2" />
                                     <MudText Typo="Typo.body2" Class="mb-1">
-                                        <strong>@depositCalculationInfo.CurrentTotalDepositsFormatted</strong> of <strong>@depositCalculationInfo.ExpectedTotalDepositFormatted</strong> collected
+                                        <strong>@depositCalculationInfo.CurrentTotalDepositsFormatted</strong> จาก <strong>@depositCalculationInfo.ExpectedTotalDepositFormatted</strong>
                                     </MudText>
                                     <MudText Typo="Typo.caption" Color="Color.Secondary">
-                                        Based on @depositCalculationInfo.PigQuantity pigs × @depositCalculationInfo.DepositPerPigFormatted per pig
+                                        คำนวณจาก @depositCalculationInfo.PigQuantity ตัว × @depositCalculationInfo.DepositPerPigFormatted ต่อหัว
                                     </MudText>
                                 </MudItem>
                                 <MudItem xs="12" sm="4" Class="d-flex flex-column justify-center">
@@ -443,30 +447,35 @@
                             <MudTh Style="text-align: center">การดำเนินการ</MudTh>
                         </HeaderContent>
                         <RowTemplate>
-                            <MudTd DataLabel="Date">@context.Date.ToString("dd/MM/yyyy")</MudTd>
-                            <MudTd DataLabel="Amount" Style="text-align: right">
+                            <MudTd DataLabel="วันที่">@context.Date.ToString("dd/MM/yyyy")</MudTd>
+                            <MudTd DataLabel="จำนวนเงิน" Style="text-align: right">
                                 <MudText Color="Color.Success"><strong>฿@context.Amount.ToString("N2")</strong></MudText>
                             </MudTd>
-                            <MudTd DataLabel="Notes">@(context.Remark ?? "-")</MudTd>
-                            <MudTd DataLabel="Actions" Style="text-align: center">
-                                <MudButtonGroup Size="Size.Small" Variant="Variant.Outlined">
+                            <MudTd DataLabel="หมายเหตุ">@(context.Remark ?? "-")</MudTd>
+                            <MudTd DataLabel="การดำเนินการ" Style="text-align: center">
+                                <div class="d-flex justify-center" style="gap:8px;">
                                     <MudButton Color="Color.Primary" 
                                              Size="Size.Small"
                                              Variant="Variant.Outlined"
                                              Title="แก้ไขเงินมัดจำ"
-                                             OnClick="@(() => EditDeposit(context))">
+                                             OnClick="@(() => EditDeposit(context))"
+                                             Disabled="@IsPigPenClosed()"
+                                             Style="white-space:nowrap;">
                                         ✏️ แก้ไข
                                     </MudButton>
                                     <MudButton Color="Color.Error" 
                                              Size="Size.Small"
                                              Variant="Variant.Outlined"
                                              Title="ลบเงินมัดจำ"
-                                             OnClick="@(() => DeleteDeposit(context))">
+                                             OnClick="@(() => DeleteDeposit(context))"
+                                             Disabled="@IsPigPenClosed()"
+                                             Style="white-space:nowrap;">
                                         🗑️ ลบ
                                     </MudButton>
-                                </MudButtonGroup>
+                                </div>
                             </MudTd>
                         </RowTemplate>
+                        
                     </MudTable>
                 }
                 else
@@ -477,23 +486,6 @@
                 }
             </MudCardContent>
         </MudCard>
-        }
-        @if (pigPen?.Type == PigPenType.Cash)
-        {
-            <!-- Information Card for Cash Type Pig Pens -->
-            <MudCard Elevation="2" Class="mb-6">
-                <MudCardContent>
-                    <MudAlert Severity="Severity.Info" Dense="true">
-                        <MudText Typo="Typo.subtitle2" Class="mb-2">
-                            <MudIcon Icon="Icons.Material.Filled.Info" Class="mr-2" />
-                            คอกสุกรประเภทเงินสด
-                        </MudText>
-                        <MudText Typo="Typo.body2">
-                            ไม่มีการฝากเงินสำหรับคอกสุกรประเภทเงินสด ทุกรายการจะดำเนินการเป็นการชำระเงินสดโดยตรง
-                        </MudText>
-                    </MudAlert>
-                </MudCardContent>
-            </MudCard>
         }
 
         <!-- Section 4: Harvest List -->
@@ -506,12 +498,13 @@
                     </MudText>
                 </CardHeaderContent>
                 <CardHeaderActions>
-                    <div class="d-none d-sm-flex">
+                        <div class="d-none d-sm-flex">
                         <MudButton Variant="Variant.Filled" 
                                    Color="Color.Primary"
                                    StartIcon="@Icons.Material.Filled.Add"
-                                   OnClick="AddHarvest">
-                            เพิ่มบันทึกการจับสุกร
+                                   OnClick="AddHarvest"
+                                   Disabled="@IsPigPenClosed()">
+                            บันทึกการจับสุกร
                         </MudButton>
                     </div>
                 </CardHeaderActions>
@@ -522,8 +515,9 @@
                                Color="Color.Primary"
                                StartIcon="@Icons.Material.Filled.Add"
                                OnClick="AddHarvest"
+                               Disabled="@IsPigPenClosed()"
                                FullWidth="true">
-                        เพิ่มบันทึกการจับสุกร
+                        บันทึกการจับสุกร
                     </MudButton>
                 </div>
                 
@@ -534,31 +528,31 @@
                         <MudCardContent Class="pa-4">
                             <MudGrid AlignItems="Center.Center" Spacing="2">
                                 <MudItem xs="12" sm="6" md="3">
-                                    <MudText Typo="Typo.subtitle2" Class="mb-1">🐷 Harvest Progress</MudText>
+                                        <MudText Typo="Typo.subtitle2" Class="mb-1">🐷 ความคืบหน้าการจับสุกร</MudText>
                                     <MudProgressLinear Value="@((double)(harvestCalculationInfo.CompletionPercentage * 100))" 
                                                      Color="@GetHarvestProgressColor()" 
                                                      Size="Size.Medium" 
                                                      Class="mb-2" />
                                     <MudText Typo="Typo.body2" Color="Color.Secondary">
-                                        <strong>@harvestCalculationInfo.HarvestedPigQuantity</strong> of <strong>@harvestCalculationInfo.TotalPigQuantity</strong> pigs sold
+                                        ขายแล้ว <strong>@harvestCalculationInfo.HarvestedPigQuantity</strong> ตัว จาก <strong>@harvestCalculationInfo.TotalPigQuantity</strong> ตัว
                                     </MudText>
                                     <MudText Typo="Typo.caption" Color="Color.Secondary">
-                                        @harvestCalculationInfo.CompletionPercentageFormatted complete
+                                        เสร็จสิ้น @harvestCalculationInfo.CompletionPercentageFormatted
                                     </MudText>
                                 </MudItem>
                                 
                                 <MudItem xs="12" sm="6" md="3">
-                                    <MudText Typo="Typo.body2" Class="text-muted">Remaining Pigs:</MudText>
+                                    <MudText Typo="Typo.body2" Class="text-muted">สุกรคงเหลือ:</MudText>
                                     @if (harvestCalculationInfo.RemainingPigQuantity > 0)
                                     {
                                         <MudText Typo="Typo.h6" Color="@GetHarvestStatusColor()">
-                                            <strong>@harvestCalculationInfo.RemainingPigQuantity</strong> pigs left
+                                            <strong>@harvestCalculationInfo.RemainingPigQuantity</strong> ตัวที่ยังเหลือ
                                         </MudText>
                                     }
                                     else
                                     {
                                         <MudText Typo="Typo.h6" Style="color: #4caf50;">
-                                            ✅ All pigs harvested
+                                            ✅ จับสุกรหมดแล้ว
                                         </MudText>
                                     }
                                 </MudItem>
@@ -599,32 +593,36 @@
                             <MudTh Style="text-align: center">การดำเนินการ</MudTh>
                         </HeaderContent>
                         <RowTemplate>
-                            <MudTd DataLabel="Date">@context.HarvestDate.ToString("dd/MM/yyyy")</MudTd>
-                            <MudTd DataLabel="Pigs Sold" Style="text-align: center">
+                            <MudTd DataLabel="วันที่">@context.HarvestDate.ToString("dd/MM/yyyy")</MudTd>
+                            <MudTd DataLabel="จำนวนสุกร" Style="text-align: center">
                                 <MudChip Size="Size.Small" Color="Color.Info">@context.PigCount</MudChip>
                             </MudTd>
-                            <MudTd DataLabel="Avg Weight" Style="text-align: right">@context.AvgWeight.ToString("N1")</MudTd>
-                            <MudTd DataLabel="Price per Kg" Style="text-align: right">฿@context.SalePricePerKg.ToString("N2")</MudTd>
-                            <MudTd DataLabel="Total Revenue" Style="text-align: right">
+                            <MudTd DataLabel="น้ำหนักเฉลี่ย" Style="text-align: right">@context.AvgWeight.ToString("N1")</MudTd>
+                            <MudTd DataLabel="ราคาต่อกก." Style="text-align: right">฿@context.SalePricePerKg.ToString("N2")</MudTd>
+                            <MudTd DataLabel="รายได้รวม" Style="text-align: right">
                                 <MudText Color="Color.Success"><strong>฿@context.Revenue.ToString("N2")</strong></MudText>
                             </MudTd>
-                            <MudTd DataLabel="Actions" Style="text-align: center">
-                                <MudButtonGroup Size="Size.Small" Variant="Variant.Outlined">
+                            <MudTd DataLabel="การดำเนินการ" Style="text-align: center">
+                                <div class="d-flex justify-center" style="gap:8px;">
                                     <MudButton Color="Color.Primary" 
                                              Size="Size.Small"
                                              Variant="Variant.Outlined"
                                              Title="แก้ไขบันทึกการจับสุกร"
-                                             OnClick="@(() => EditHarvest(context))">
+                                             OnClick="@(() => EditHarvest(context))"
+                                             Disabled="@IsPigPenClosed()"
+                                             Style="white-space:nowrap;">
                                         ✏️ แก้ไข
                                     </MudButton>
                                     <MudButton Color="Color.Error" 
                                              Size="Size.Small"
                                              Variant="Variant.Outlined"
                                              Title="ลบบันทึกการจับสุกร"
-                                             OnClick="@(() => DeleteHarvest(context))">
+                                            OnClick="@(() => DeleteHarvest(context))"
+                                            Disabled="@IsPigPenClosed()"
+                                             Style="white-space:nowrap;">
                                         🗑️ ลบ
                                     </MudButton>
-                                </MudButtonGroup>
+                                </div>
                             </MudTd>
                         </RowTemplate>
                     </MudTable>
@@ -961,7 +959,7 @@
     {
         if (pigPen == null)
         {
-            Snackbar.Add("Pig pen data not available", Severity.Error);
+            Snackbar.Add("ไม่พบข้อมูลคอกสุกร", Severity.Error);
             return;
         }
 
@@ -978,7 +976,7 @@
             FullWidth = true
         };
 
-        var dialog = await DialogService.ShowAsync<ForceClosePigPenDialog>("Force Close Pig Pen", parameters, options);
+        var dialog = await DialogService.ShowAsync<ForceClosePigPenDialog>("บังคับปิดคอก", parameters, options);
         var result = await dialog.Result;
 
         if (!result.Canceled && result.Data is bool confirmed && confirmed)
@@ -996,16 +994,16 @@
                     // Refresh the page data to show updates
                     await LoadData();
                     
-                    Snackbar.Add("Pig pen has been force closed successfully", Severity.Success);
+                    Snackbar.Add("บังคับปิดคอกเรียบร้อยแล้ว", Severity.Success);
                 }
                 else
                 {
-                    Snackbar.Add("Failed to force close pig pen", Severity.Error);
+                    Snackbar.Add("การบังคับปิดคอกล้มเหลว", Severity.Error);
                 }
             }
             catch (Exception ex)
             {
-                Snackbar.Add($"Error force closing pig pen: {ex.Message}", Severity.Error);
+                Snackbar.Add($"เกิดข้อผิดพลาดขณะบังคับปิดคอก: {ex.Message}", Severity.Error);
             }
         }
     }
@@ -1110,7 +1108,7 @@
     {
         if (pigPen?.Type != PigPenType.Project) 
         {
-            Snackbar.Add("Deposits are only available for Project type pig pens", Severity.Warning);
+            Snackbar.Add("การฝากเงินมีเฉพาะสำหรับคอกประเภทโครงการเท่านั้น", Severity.Warning);
             return;
         }
         
@@ -1165,7 +1163,7 @@
             FullWidth = true
         };
 
-        var dialog = await DialogService.ShowAsync<DeleteDepositConfirmationDialog>("Confirm Delete", parameters, options);
+        var dialog = await DialogService.ShowAsync<DeleteDepositConfirmationDialog>("ยืนยันการลบ", parameters, options);
         var result = await dialog.Result;
 
         if (!result.Canceled && result.Data is bool confirmed && confirmed)
@@ -1211,7 +1209,7 @@
         var parameters = new DialogParameters<PigPenPosImportDialog>
         {
             { x => x.PigPenId, pigPen.Id },
-            { x => x.CustomerDisplayName, customer?.DisplayName ?? "Unknown Customer" },
+            { x => x.CustomerDisplayName, customer?.DisplayName ?? "ไม่พบลูกค้า" },
             { x => x.PenCode, pigPen.PenCode },
             { x => x.CustomerCode, customer?.Code ?? "" }
         };
@@ -1274,6 +1272,13 @@
     {
         if (pigPen == null) return;
 
+        // Prevent editing when pig pen is closed/locked
+        if (IsPigPenClosed())
+        {
+            Snackbar.Add("ไม่สามารถแก้ไขบันทึกการจับสุกรเมื่อคอกถูกปิด", Severity.Warning);
+            return;
+        }
+
         var parameters = new DialogParameters<EditHarvestDialog>
         {
             { x => x.HarvestToEdit, harvest },
@@ -1319,7 +1324,7 @@
             FullWidth = true
         };
 
-        var dialog = await DialogService.ShowAsync<DeleteHarvestConfirmationDialog>("Confirm Delete", parameters, options);
+        var dialog = await DialogService.ShowAsync<DeleteHarvestConfirmationDialog>("ยืนยันการลบ", parameters, options);
         var result = await dialog.Result;
 
         if (!result.Canceled && result.Data is bool confirmed && confirmed)
@@ -1653,7 +1658,7 @@
                     ProductCode = "",
                     ProductName = "",
                     Formula = "",
-                    InvNo = "Sub Total",
+                    InvNo = "ยอดรวมย่อย",
                     InvDate = "",
                     PerInvoiceBags = comparison.ActualTotal.ToString("0"),
                     FeedCost = "-",
@@ -1678,7 +1683,7 @@
                     ProductCode = comparison.ProductCode,
                     ProductName = comparison.ProductName,
                     Formula = combinedFormula,
-                    InvNo = "No Feeds",
+                    InvNo = "ไม่มีบิล",
                     InvDate = "",
                     PerInvoiceBags = "0",
                     FeedCost = "-",
@@ -1713,7 +1718,7 @@
             ProductCode = "",
             ProductName = "",
             Formula = grandTotalCombined,
-            InvNo = "Grand Total",
+            InvNo = "รวมทั้งหมด",
             InvDate = "",
             PerInvoiceBags = grandTotalPerInvoice.ToString("0"),
             FeedCost = "-",
@@ -1771,7 +1776,7 @@
                     ProductCode = "",
                     ProductName = "",
                     Formula = grandTotalCombined,
-                    InvNo = "Grand Total",
+                    InvNo = "รวมทั้งหมด",
                     InvDate = "",
                     PerInvoiceBags = grandTotalPerInvoice.ToString("0"),
                     FeedCost = "-",
@@ -1901,14 +1906,14 @@
 
     private string GetStatusText()
     {
-        if (depositCalculationInfo == null) return "Unknown";
+        if (depositCalculationInfo == null) return "ไม่ทราบ";
         
         return depositCalculationInfo.Status switch
         {
-            DepositCompletionStatus.Complete => "✅ Complete",
-            DepositCompletionStatus.Partial => "🟡 Partial",
-            DepositCompletionStatus.Started => "🔵 Started",
-            _ => "🔴 No Deposits"
+            DepositCompletionStatus.Complete => "✅ สมบูรณ์",
+            DepositCompletionStatus.Partial => "🟡 บางส่วน",
+            DepositCompletionStatus.Started => "🔵 เริ่มต้น",
+            _ => "🔴 ไม่มีเงินมัดจำ"
         };
     }
 
@@ -2017,12 +2022,12 @@
     /// </summary>
     private string GetForceCloseButtonText()
     {
-        if (pigPen == null) return "Force Close";
-        
+        if (pigPen == null) return "บังคับปิดคอก";
+
         return pigPen.IsCalculationLocked switch
         {
-            true => "Manage",        // Locked (force closed) - allow management/adjustments
-            false => "Force Close"   // Active - force close action
+            true => "จัดการ",        // Locked (force closed) - allow management/adjustments
+            false => "บังคับปิดคอก"   // Active - force close action
         };
     }
 
@@ -2187,7 +2192,7 @@
 
             if (!feedsToRemove.Any())
             {
-                Snackbar.Add($"Invoice '{invoiceReferenceCode}' for product '{productCode}' was not found or has already been deleted.", Severity.Info);
+                Snackbar.Add($"ไม่พบใบแจ้งหนี้ '{invoiceReferenceCode}' สำหรับสินค้า '{productCode}' หรือถูกลบไปแล้ว", Severity.Info);
                 // Still refresh to ensure UI is up to date
                 await RefreshFeeds();
                 return;
@@ -2196,10 +2201,10 @@
             // Confirm deletion
             var totalQuantity = feedsToRemove.Sum(f => f.QuantityKg);
             var confirmed = await DialogService.ShowMessageBox(
-                "Confirm Removal",
-                $"Are you sure you want to remove invoice '{invoiceReferenceCode}' for product '{productCode}'? This will remove {feedsToRemove.Count} feed record(s) totaling {totalQuantity:N1} kg.",
-                yesText: "Remove Invoice",
-                cancelText: "Cancel");
+                "ยืนยันการลบ",
+                $"คุณแน่ใจหรือไม่ที่จะลบใบแจ้งหนี้ '{invoiceReferenceCode}' สำหรับสินค้า '{productCode}'? จะลบ {feedsToRemove.Count} รายการ รวม {totalQuantity:N1} กก.",
+                yesText: "ลบใบแจ้งหนี้",
+                cancelText: "ยกเลิก");
 
             if (confirmed == true)
             {
