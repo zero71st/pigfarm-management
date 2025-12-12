@@ -144,10 +144,10 @@
             <MudTh>สถานะ</MudTh>
             <MudTh>จำนวน</MudTh>
             <MudTh>ลงทะเบียน</MudTh>
-            <MudTh>ประมาณจับ 120 วัน</MudTh>
+            <MudTh>จับประมาณ 120 วัน</MudTh>
             <MudTh>ระยะเวลาเลี้ยง</MudTh>
             <MudTh>รับอาหารล่าสุด</MudTh>
-            <MudTh>การดำเนินการ</MudTh>
+            <MudTh>เมนู</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="ลูกค้า">@GetCustomerName(context.CustomerId)</MudTd>
@@ -198,7 +198,7 @@
             </MudTd>
             <MudTd DataLabel="จำนวน">@context.PigQty</MudTd>
             <MudTd DataLabel="ลงทะเบียน">@context.RegisterDate.ToString("d/M/yyyy")</MudTd>
-            <MudTd DataLabel="ประมาณจับ 120 วัน" Style="text-align: center;">
+            <MudTd DataLabel="จับประมาณ 120 วัน" Style="text-align: center;">
                 @if (context.EstimatedHarvestDate.HasValue)
                 {
                     var harvestDate = context.EstimatedHarvestDate.Value;
