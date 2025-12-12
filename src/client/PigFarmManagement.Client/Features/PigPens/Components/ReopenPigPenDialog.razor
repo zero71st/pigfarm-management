@@ -3,20 +3,20 @@
 <MudDialog>
     <TitleContent>
         <MudText Typo="Typo.h6">
-            <MudIcon Icon="Icons.Material.Filled.LockOpen" Class="mr-3" Color="Color.Info"/>
+            <MudIcon Icon="@Icons.Material.Filled.LockOpen" Class="mr-3" Color="Color.Info"/>
             เปิดคอกสุกรอีกครั้ง
         </MudText>
     </TitleContent>
     <DialogContent>
         <MudCard Elevation="0" Class="mb-4">
             <MudCardContent>
-                <MudAlert Severity="Severity.Info" Dense="true" Class="mb-4">
+                    <MudAlert Severity="Severity.Info" Dense="true" Class="mb-4">
                     <MudText Typo="Typo.subtitle2" Class="mb-2">
                         ℹ️ คุณกำลังจะเปิดคอกสุกรนี้อีกครั้ง
                     </MudText>
                     <MudText Typo="Typo.body2">
-                        การดำเนินการนี้จะยกเลิกการปิดคอกและอนุญาตให้เพิ่มรายการจับสุกรเพิ่มเติมได้ 
-                        วันที่จับสุกรจริงจะถูกล้าง และคอกจะกลับสู่สถานะเปิดให้บริหารจัดการต่อ
+                        การดำเนินการนี้จะยกเลิกการปิดคอกและอนุญาตให้เพิ่มรายการจับสุกรเพิ่มเติมได้
+                        คอกจะกลับสู่สถานะเปิดให้บริหารจัดการต่อ (ข้อมูลวันที่จับสุกรจะไม่ถูกแก้ไขโดยอัตโนมัติ)
                     </MudText>
                 </MudAlert>
                 
@@ -55,10 +55,10 @@
                                 การดำเนินการที่จะเกิดขึ้น:
                             </MudText>
                             <MudList Dense="true">
-                                <MudListItem Icon="Icons.Material.Filled.LockOpen" Text="ยกเลิกการล็อคการคำนวณ" />
-                                <MudListItem Icon="Icons.Material.Filled.CalendarToday" Text="ล้างวันที่จับสุกรจริง (ActHarvestDate)" />
-                                <MudListItem Icon="Icons.Material.Filled.Edit" Text="อนุญาตให้เพิ่ม/แก้ไขข้อมูลได้อีกครั้ง" />
-                                <MudListItem Icon="Icons.Material.Filled.Refresh" Text="สามารถเพิ่มรายการจับสุกรต่อได้" />
+                                <MudListItem Icon="@Icons.Material.Filled.LockOpen" Text="ยกเลิกการล็อคการคำนวณ" />
+                                <!-- Do not clear ActHarvestDate on reopen; keep existing date intact -->
+                                <MudListItem Icon="@Icons.Material.Filled.Edit" Text="อนุญาตให้เพิ่ม/แก้ไขข้อมูลได้อีกครั้ง" />
+                                <MudListItem Icon="@Icons.Material.Filled.Refresh" Text="สามารถเพิ่มรายการจับสุกรต่อได้" />
                             </MudList>
                         </MudItem>
                         
@@ -80,7 +80,7 @@
         <MudButton Color="Color.Info" 
                    Variant="Variant.Filled" 
                    OnClick="Confirm"
-                   StartIcon="Icons.Material.Filled.LockOpen">
+                   StartIcon="@Icons.Material.Filled.LockOpen">
             เปิดคอกอีกครั้ง
         </MudButton>
     </DialogActions>

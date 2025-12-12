@@ -42,6 +42,7 @@
                              Variant="Variant.Outlined"
                              Title="ลบบิลขาย"
                              OnClick="@(() => DeleteInvoice(context))"
+                             Disabled="@isLocked"
                              Style="white-space:nowrap;">
                         🗑️ ลบ
                     </MudButton>
@@ -78,10 +79,20 @@ else
     [Parameter] public EventCallback OnInvoiceDeleted { get; set; }
 
     private List<InvoiceGroupDto> invoiceGroups = new();
+    private bool isLocked = false;
 
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
         GroupInvoices();
+        try
+        {
+            var pig = await PigPenService.GetPigPenByIdAsync(PigPenId);
+            isLocked = pig?.IsCalculationLocked ?? false;
+        }
+        catch
+        {
+            isLocked = false;
+        }
     }
 
     private void GroupInvoices()

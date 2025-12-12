@@ -247,9 +247,8 @@ public class PigPenRepository : IPigPenRepository
             assignment.UpdatedAt = now;
         }
 
-        // Set harvest date and lock calculations
-        // Normalize to UTC for PostgreSQL compatibility
-        entity.ActHarvestDate = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Utc);
+        // Lock calculations (do NOT modify ActHarvestDate on force-close)
+        // Keep ActHarvestDate as-is to preserve scheduled/actual harvest dates
         entity.IsCalculationLocked = true;
         entity.UpdatedAt = now;
 
@@ -273,18 +272,22 @@ public class PigPenRepository : IPigPenRepository
         if (!entity.IsCalculationLocked)
             throw new ArgumentException($"PigPen with ID {pigPenId} is not closed, cannot reopen");
 
-        // Clear the force-close state
+        // Clear the force-close state and restore user-edit rights
         var now = DateTime.UtcNow;
         
-        // Clear harvest date and unlock calculations
-        entity.ActHarvestDate = null;
+        // Do not touch ActHarvestDate here if it was intentionally set elsewhere
         entity.IsCalculationLocked = false;
         entity.UpdatedAt = now;
 
-        // Note: We don't unlock formula assignments here because:
-        // 1. They were locked when force-closed and should remain locked
-        // 2. Users can regenerate assignments if needed
-        // 3. This preserves the historical state of what was force-closed
+        // Unlock assignments that were locked by a ForceClose operation
+        foreach (var assignment in entity.FormulaAssignments.Where(a => a.IsLocked && a.LockReason == "ForceClosed"))
+        {
+            assignment.IsLocked = false;
+            assignment.IsActive = true;
+            assignment.LockReason = null;
+            assignment.LockedAt = null;
+            assignment.UpdatedAt = now;
+        }
 
         await _context.SaveChangesAsync();
 

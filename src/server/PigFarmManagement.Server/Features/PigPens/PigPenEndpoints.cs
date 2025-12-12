@@ -249,13 +249,17 @@ public static class PigPenEndpoints
     }
 
     // Deposit CRUD
-    private static async Task<IResult> CreateDeposit(Guid id, DepositCreateDto dto, IPigPenDetailService pigPenDetailService, ILogger<Program> logger)
+    private static async Task<IResult> CreateDeposit(Guid id, DepositCreateDto dto, IPigPenDetailService pigPenDetailService, IPigPenService pigPenService, ILogger<Program> logger)
     {
         try
         {
             logger.LogInformation("CreateDeposit called for PigPen {PigPenId} with Amount={Amount}, Date={Date}",
                 id, dto.Amount, dto.Date);
-            
+            // Guard: disallow mutations when pig pen is force-closed
+            var pigPen = await pigPenService.GetPigPenByIdAsync(id);
+            if (pigPen == null) return Results.NotFound("Pig pen not found");
+            if (pigPen.IsCalculationLocked) return Results.BadRequest("Pig pen is force-closed; mutations are not allowed.");
+
             var deposit = await pigPenDetailService.CreateDepositAsync(id, dto);
             
             logger.LogInformation("Deposit created successfully with Id={DepositId}", deposit.Id);
@@ -290,13 +294,17 @@ public static class PigPenEndpoints
         }
     }
 
-    private static async Task<IResult> UpdateDeposit(Guid id, Guid depositId, DepositUpdateDto dto, IPigPenDetailService pigPenDetailService, ILogger<Program> logger)
+    private static async Task<IResult> UpdateDeposit(Guid id, Guid depositId, DepositUpdateDto dto, IPigPenDetailService pigPenDetailService, IPigPenService pigPenService, ILogger<Program> logger)
     {
         try
         {
             logger.LogInformation("UpdateDeposit called for PigPen {PigPenId}, Deposit {DepositId} with Amount={Amount}, Date={Date}",
                 id, depositId, dto.Amount, dto.Date);
-            
+            // Guard: disallow mutations when pig pen is force-closed
+            var pigPen = await pigPenService.GetPigPenByIdAsync(id);
+            if (pigPen == null) return Results.NotFound("Pig pen not found");
+            if (pigPen.IsCalculationLocked) return Results.BadRequest("Pig pen is force-closed; mutations are not allowed.");
+
             var updatedDeposit = await pigPenDetailService.UpdateDepositAsync(id, depositId, dto);
             
             logger.LogInformation("Deposit {DepositId} updated successfully", depositId);
@@ -331,10 +339,14 @@ public static class PigPenEndpoints
         }
     }
 
-    private static async Task<IResult> DeleteDeposit(Guid id, Guid depositId, IPigPenDetailService pigPenDetailService)
+    private static async Task<IResult> DeleteDeposit(Guid id, Guid depositId, IPigPenDetailService pigPenDetailService, IPigPenService pigPenService)
     {
         try
         {
+            var pigPen = await pigPenService.GetPigPenByIdAsync(id);
+            if (pigPen == null) return Results.NotFound("Pig pen not found");
+            if (pigPen.IsCalculationLocked) return Results.BadRequest("Pig pen is force-closed; mutations are not allowed.");
+
             await pigPenDetailService.DeleteDepositAsync(id, depositId);
             return Results.Ok();
         }
@@ -349,13 +361,17 @@ public static class PigPenEndpoints
     }
 
     // Harvest CRUD
-    private static async Task<IResult> CreateHarvest(Guid id, HarvestCreateDto dto, IPigPenDetailService pigPenDetailService, ILogger<Program> logger)
+    private static async Task<IResult> CreateHarvest(Guid id, HarvestCreateDto dto, IPigPenDetailService pigPenDetailService, IPigPenService pigPenService, ILogger<Program> logger)
     {
         try
         {
             logger.LogInformation("CreateHarvest called for PigPen {PigPenId} with Date={HarvestDate}, PigCount={PigCount}, TotalWeight={TotalWeight}, PricePerKg={PricePerKg}",
                 id, dto.HarvestDate, dto.PigCount, dto.TotalWeight, dto.SalePricePerKg);
-            
+            // Guard: disallow mutations when pig pen is force-closed
+            var pigPen = await pigPenService.GetPigPenByIdAsync(id);
+            if (pigPen == null) return Results.NotFound("Pig pen not found");
+            if (pigPen.IsCalculationLocked) return Results.BadRequest("Pig pen is force-closed; mutations are not allowed.");
+
             var harvest = await pigPenDetailService.CreateHarvestAsync(id, dto);
             
             logger.LogInformation("Harvest created successfully with Id={HarvestId}", harvest.Id);
@@ -390,13 +406,17 @@ public static class PigPenEndpoints
         }
     }
 
-    private static async Task<IResult> UpdateHarvest(Guid id, Guid harvestId, HarvestUpdateDto dto, IPigPenDetailService pigPenDetailService, ILogger<Program> logger)
+    private static async Task<IResult> UpdateHarvest(Guid id, Guid harvestId, HarvestUpdateDto dto, IPigPenDetailService pigPenDetailService, IPigPenService pigPenService, ILogger<Program> logger)
     {
         try
         {
             logger.LogInformation("UpdateHarvest called for PigPen {PigPenId}, Harvest {HarvestId} with Date={HarvestDate}, PigCount={PigCount}, TotalWeight={TotalWeight}, PricePerKg={PricePerKg}",
                 id, harvestId, dto.HarvestDate, dto.PigCount, dto.TotalWeight, dto.SalePricePerKg);
-            
+            // Guard: disallow mutations when pig pen is force-closed
+            var pigPen = await pigPenService.GetPigPenByIdAsync(id);
+            if (pigPen == null) return Results.NotFound("Pig pen not found");
+            if (pigPen.IsCalculationLocked) return Results.BadRequest("Pig pen is force-closed; mutations are not allowed.");
+
             var updatedHarvest = await pigPenDetailService.UpdateHarvestAsync(id, harvestId, dto);
             
             logger.LogInformation("Harvest {HarvestId} updated successfully", harvestId);
@@ -431,10 +451,14 @@ public static class PigPenEndpoints
         }
     }
 
-    private static async Task<IResult> DeleteHarvest(Guid id, Guid harvestId, IPigPenDetailService pigPenDetailService)
+    private static async Task<IResult> DeleteHarvest(Guid id, Guid harvestId, IPigPenDetailService pigPenDetailService, IPigPenService pigPenService)
     {
         try
         {
+            var pigPen = await pigPenService.GetPigPenByIdAsync(id);
+            if (pigPen == null) return Results.NotFound("Pig pen not found");
+            if (pigPen.IsCalculationLocked) return Results.BadRequest("Pig pen is force-closed; mutations are not allowed.");
+
             await pigPenDetailService.DeleteHarvestAsync(id, harvestId);
             return Results.Ok();
         }
@@ -545,10 +569,15 @@ public static class PigPenEndpoints
         Guid pigPenId, 
         string invoiceReferenceCode, 
         IFeedRepository feedRepository,
+        IPigPenService pigPenService,
         ILogger<Program> logger)
     {
         try
         {
+            // Guard: disallow mutations when pig pen is force-closed
+            var pigPen = await pigPenService.GetPigPenByIdAsync(pigPenId);
+            if (pigPen == null) return Results.NotFound(new { error = "Pig pen not found" });
+            if (pigPen.IsCalculationLocked) return Results.BadRequest(new { error = "Pig pen is force-closed; mutations are not allowed." });
             // Validate invoice reference code
             if (string.IsNullOrWhiteSpace(invoiceReferenceCode))
             {

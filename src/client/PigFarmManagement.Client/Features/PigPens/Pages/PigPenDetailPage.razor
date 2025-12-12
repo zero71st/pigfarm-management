@@ -318,7 +318,8 @@
                         <MudButton Variant="Variant.Filled" 
                                    Color="Color.Primary"
                                    StartIcon="@Icons.Material.Filled.Download"
-                                   OnClick="ImportFeeds">
+                                       OnClick="ImportFeeds"
+                                       Disabled="@IsPigPenClosed()">
                             นำเข้าบิลขาย
                         </MudButton>
                     </div>
@@ -330,6 +331,7 @@
                                Color="Color.Primary"
                                StartIcon="@Icons.Material.Filled.Download"
                                OnClick="ImportFeeds"
+                               Disabled="@IsPigPenClosed()"
                                FullWidth="true">
                         นำเข้าบิลขาย
                     </MudButton>
@@ -370,11 +372,12 @@
                         </MudText>
                     </CardHeaderContent>
                     <CardHeaderActions>
-                        <div class="d-none d-sm-flex">
+                            <div class="d-none d-sm-flex">
                             <MudButton Variant="Variant.Filled" 
                                        Color="Color.Primary"
                                        StartIcon="@Icons.Material.Filled.Add"
-                                       OnClick="AddDeposit">
+                                       OnClick="AddDeposit"
+                                       Disabled="@IsPigPenClosed()">
                                 บันทึกเงินมัดจำ
                             </MudButton>
                         </div>
@@ -386,6 +389,7 @@
                                Color="Color.Primary"
                                StartIcon="@Icons.Material.Filled.Add"
                                OnClick="AddDeposit"
+                               Disabled="@IsPigPenClosed()"
                                FullWidth="true">
                         บันทึกเงินมัดจำ
                     </MudButton>
@@ -455,6 +459,7 @@
                                              Variant="Variant.Outlined"
                                              Title="แก้ไขเงินมัดจำ"
                                              OnClick="@(() => EditDeposit(context))"
+                                             Disabled="@IsPigPenClosed()"
                                              Style="white-space:nowrap;">
                                         ✏️ แก้ไข
                                     </MudButton>
@@ -463,6 +468,7 @@
                                              Variant="Variant.Outlined"
                                              Title="ลบเงินมัดจำ"
                                              OnClick="@(() => DeleteDeposit(context))"
+                                             Disabled="@IsPigPenClosed()"
                                              Style="white-space:nowrap;">
                                         🗑️ ลบ
                                     </MudButton>
@@ -492,11 +498,12 @@
                     </MudText>
                 </CardHeaderContent>
                 <CardHeaderActions>
-                    <div class="d-none d-sm-flex">
+                        <div class="d-none d-sm-flex">
                         <MudButton Variant="Variant.Filled" 
                                    Color="Color.Primary"
                                    StartIcon="@Icons.Material.Filled.Add"
-                                   OnClick="AddHarvest">
+                                   OnClick="AddHarvest"
+                                   Disabled="@IsPigPenClosed()">
                             บันทึกการจับสุกร
                         </MudButton>
                     </div>
@@ -508,6 +515,7 @@
                                Color="Color.Primary"
                                StartIcon="@Icons.Material.Filled.Add"
                                OnClick="AddHarvest"
+                               Disabled="@IsPigPenClosed()"
                                FullWidth="true">
                         บันทึกการจับสุกร
                     </MudButton>
@@ -601,6 +609,7 @@
                                              Variant="Variant.Outlined"
                                              Title="แก้ไขบันทึกการจับสุกร"
                                              OnClick="@(() => EditHarvest(context))"
+                                             Disabled="@IsPigPenClosed()"
                                              Style="white-space:nowrap;">
                                         ✏️ แก้ไข
                                     </MudButton>
@@ -608,7 +617,8 @@
                                              Size="Size.Small"
                                              Variant="Variant.Outlined"
                                              Title="ลบบันทึกการจับสุกร"
-                                             OnClick="@(() => DeleteHarvest(context))"
+                                            OnClick="@(() => DeleteHarvest(context))"
+                                            Disabled="@IsPigPenClosed()"
                                              Style="white-space:nowrap;">
                                         🗑️ ลบ
                                     </MudButton>
@@ -1261,6 +1271,13 @@
     private async Task EditHarvest(HarvestResult harvest)
     {
         if (pigPen == null) return;
+
+        // Prevent editing when pig pen is closed/locked
+        if (IsPigPenClosed())
+        {
+            Snackbar.Add("ไม่สามารถแก้ไขบันทึกการจับสุกรเมื่อคอกถูกปิด", Severity.Warning);
+            return;
+        }
 
         var parameters = new DialogParameters<EditHarvestDialog>
         {

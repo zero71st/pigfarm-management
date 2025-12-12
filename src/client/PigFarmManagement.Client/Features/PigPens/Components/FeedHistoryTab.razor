@@ -7,6 +7,7 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject IFeedService FeedService
+@inject IPigPenService PigPenService
 
 @if ((FeedFormulaCalculations != null && FeedFormulaCalculations.Any()) || (ComparisonData != null && ComparisonData.Any()))
 {
@@ -149,6 +150,7 @@
                                    Color="Color.Error"
                                    Size="Size.Small"
                                    OnClick="@(() => RemoveFeedItem(row.FeedId, row.ProductName, row.InvNo, row.Quantity))"
+                                   Disabled="@isLocked"
                                    Title="ลบรายการอาหาร" />
                 }
             </MudTd>
@@ -173,6 +175,7 @@ else
 
     private bool _showFinancial = false;
     private bool _showSpecificProducts = false;
+    private bool isLocked = false;
 
     private async Task RemoveFeedItem(Guid feedId, string productName, string invoiceRef, decimal quantity)
     {
@@ -207,10 +210,19 @@ else
         }
     }
 
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
         _showFinancial = ShowFinancial;
         _showSpecificProducts = ShowSpecificProducts;
+        try
+        {
+            var pig = await PigPenService.GetPigPenByIdAsync(PigPenId);
+            isLocked = pig?.IsCalculationLocked ?? false;
+        }
+        catch
+        {
+            isLocked = false;
+        }
     }
 
     private string CalculateProfit(decimal? posTotal, decimal? feedCost, decimal quantity)
