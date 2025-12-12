@@ -449,31 +449,27 @@
                             </MudTd>
                             <MudTd DataLabel="หมายเหตุ">@(context.Remark ?? "-")</MudTd>
                             <MudTd DataLabel="การดำเนินการ" Style="text-align: center">
-                                <MudButtonGroup Size="Size.Small" Variant="Variant.Outlined">
+                                <div class="d-flex justify-center" style="gap:8px;">
                                     <MudButton Color="Color.Primary" 
                                              Size="Size.Small"
                                              Variant="Variant.Outlined"
                                              Title="แก้ไขเงินมัดจำ"
-                                             OnClick="@(() => EditDeposit(context))">
+                                             OnClick="@(() => EditDeposit(context))"
+                                             Style="white-space:nowrap;">
                                         ✏️ แก้ไข
                                     </MudButton>
                                     <MudButton Color="Color.Error" 
                                              Size="Size.Small"
                                              Variant="Variant.Outlined"
                                              Title="ลบเงินมัดจำ"
-                                             OnClick="@(() => DeleteDeposit(context))">
+                                             OnClick="@(() => DeleteDeposit(context))"
+                                             Style="white-space:nowrap;">
                                         🗑️ ลบ
                                     </MudButton>
-                                </MudButtonGroup>
+                                </div>
                             </MudTd>
                         </RowTemplate>
-                        <FooterContent>
-                            <MudTd colspan="4" Style="text-align: right; font-weight: bold;">ยอดรวมทั้งหมด</MudTd>
-                            <MudTd Style="text-align: right; font-weight: bold;">
-                                <MudText Color="Color.Success" Typo="Typo.h6">฿@harvests.Sum(h => h.Revenue).ToString("N2")</MudText>
-                            </MudTd>
-                            <MudTd></MudTd>
-                        </FooterContent>
+                        
                     </MudTable>
                 }
                 else
@@ -599,22 +595,24 @@
                                 <MudText Color="Color.Success"><strong>฿@context.Revenue.ToString("N2")</strong></MudText>
                             </MudTd>
                             <MudTd DataLabel="การดำเนินการ" Style="text-align: center">
-                                <MudButtonGroup Size="Size.Small" Variant="Variant.Outlined">
+                                <div class="d-flex justify-center" style="gap:8px;">
                                     <MudButton Color="Color.Primary" 
                                              Size="Size.Small"
                                              Variant="Variant.Outlined"
                                              Title="แก้ไขบันทึกการจับสุกร"
-                                             OnClick="@(() => EditHarvest(context))">
+                                             OnClick="@(() => EditHarvest(context))"
+                                             Style="white-space:nowrap;">
                                         ✏️ แก้ไข
                                     </MudButton>
                                     <MudButton Color="Color.Error" 
                                              Size="Size.Small"
                                              Variant="Variant.Outlined"
                                              Title="ลบบันทึกการจับสุกร"
-                                             OnClick="@(() => DeleteHarvest(context))">
+                                             OnClick="@(() => DeleteHarvest(context))"
+                                             Style="white-space:nowrap;">
                                         🗑️ ลบ
                                     </MudButton>
-                                </MudButtonGroup>
+                                </div>
                             </MudTd>
                         </RowTemplate>
                     </MudTable>
