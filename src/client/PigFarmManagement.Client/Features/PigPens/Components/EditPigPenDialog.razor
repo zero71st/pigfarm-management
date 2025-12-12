@@ -93,16 +93,15 @@
                 <MudItem xs="6">
                     <MudDatePicker Date="registerDate" 
                                   DateChanged="@OnRegisterDateChanged"
-                                  Label="วันที่ลงทะเบียน" 
+                                  Label="ลงทะเบียน" 
                                   Variant="Variant.Outlined" 
                                   Required="true" />
                 </MudItem>
                 <MudItem xs="6">
                     <MudDatePicker @bind-Date="estimatedHarvestDate" 
-                                  Label="วันจับสุกรโดยประมาณ" 
+                                  Label="จับประมาณ 120 วัน" 
                                   Variant="Variant.Outlined" 
-                                  ReadOnly="true"
-                                  HelperText="คำนวณอัตโนมัติ: วันลงทะเบียน + 120 วัน" />
+                                  ReadOnly="true"/>
                 </MudItem>
                 <MudItem xs="6">
                     <MudDatePicker @bind-Date="actualHarvestDate" Label="นัดหมายจับสุกร" Variant="Variant.Outlined" />
