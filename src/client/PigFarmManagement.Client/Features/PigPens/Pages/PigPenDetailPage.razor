@@ -467,6 +467,13 @@
                                 </MudButtonGroup>
                             </MudTd>
                         </RowTemplate>
+                        <FooterContent>
+                            <MudTd colspan="4" Style="text-align: right; font-weight: bold;">ยอดรวมทั้งหมด</MudTd>
+                            <MudTd Style="text-align: right; font-weight: bold;">
+                                <MudText Color="Color.Success" Typo="Typo.h6">฿@harvests.Sum(h => h.Revenue).ToString("N2")</MudText>
+                            </MudTd>
+                            <MudTd></MudTd>
+                        </FooterContent>
                     </MudTable>
                 }
                 else

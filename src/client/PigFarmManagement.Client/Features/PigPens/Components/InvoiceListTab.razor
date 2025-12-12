@@ -28,22 +28,24 @@
                 <MudText Color="Color.Success"><strong>฿@context.TotalAmount.ToString("N2")</strong></MudText>
             </MudTd>
             <MudTd DataLabel="การดำเนินการ" Style="text-align: center">
-                <MudButtonGroup Size="Size.Small" Variant="Variant.Outlined">
+                <div class="d-flex justify-center" style="gap:8px;">
                     <MudButton Color="Color.Info" 
                              Size="Size.Small"
                              Variant="Variant.Outlined"
                              Title="รายการสินค้า"
-                             OnClick="@(() => ShowInvoiceDetails(context))">
+                             OnClick="@(() => ShowInvoiceDetails(context))"
+                             Style="white-space:nowrap;">
                         📋 รายการสินค้า
                     </MudButton>
                     <MudButton Color="Color.Error" 
                              Size="Size.Small"
                              Variant="Variant.Outlined"
                              Title="ลบบิลขาย"
-                             OnClick="@(() => DeleteInvoice(context))">
+                             OnClick="@(() => DeleteInvoice(context))"
+                             Style="white-space:nowrap;">
                         🗑️ ลบ
                     </MudButton>
-                </MudButtonGroup>
+                </div>
             </MudTd>
         </RowTemplate>
         <FooterContent>
@@ -54,6 +56,11 @@
             <MudTd></MudTd>
         </FooterContent>
     </MudTable>
+    <!-- Mobile-only grand total bar -->
+    <div class="d-flex d-sm-none justify-space-between align-center pa-3 mt-2" style="background:#ffffff;border:1px solid #e0e0e0;border-radius:6px;">
+        <MudText Typo="Typo.subtitle2">ยอดรวมทั้งหมด</MudText>
+        <MudText Typo="Typo.h6" Color="Color.Success">฿@invoiceGroups.Sum(i => i.TotalAmount).ToString("N2")</MudText>
+    </div>
 }
 else
 {
