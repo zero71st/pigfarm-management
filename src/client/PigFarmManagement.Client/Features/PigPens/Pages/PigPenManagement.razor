@@ -44,7 +44,7 @@
                 <MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Large" Color="Color.Primary" />
                 <div class="d-flex flex-column" style="line-height:1;">
                     <MudText Typo="Typo.h3" Style="margin:0;color:#6C4CFF;">@GetTotalCount()</MudText>
-                    <MudText Typo="Typo.caption" Style="color:#FF4D79;">คอกสุกรกำลังเลี้ยงทั้งหมด</MudText>
+                    <MudText Typo="Typo.caption" Style="color:#FF4D79;">คอกสุกรทั้งหมด</MudText>
                 </div>
             </div>
         </MudPaper>
@@ -295,10 +295,16 @@
                             <MudIcon Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" />
                         </MudButton>
                         <MudMenu Icon="@Icons.Material.Filled.MoreVert" Size="Size.Small" Dense="true">
-                            <MudMenuItem OnClick="() => ShowPosImportDialog(context.Id, GetCustomerName(context.CustomerId), context.PenCode, GetCustomerCode(context.CustomerId))">
+                            <MudMenuItem OnClick="() => ShowPosImportDialog(context.Id, GetCustomerName(context.CustomerId), context.PenCode, GetCustomerCode(context.CustomerId))" Disabled="@IsPigPenClosed(context)">
                                 <div class="d-flex align-center gap-2">
                                     <MudIcon Icon="@Icons.Material.Filled.Download" Size="Size.Small" Color="Color.Info" />
                                     <MudText>นำเข้าอาหาร</MudText>
+                                </div>
+                            </MudMenuItem>
+                            <MudMenuItem OnClick="() => ShowSetAppointmentDialog(context)" Disabled="@IsPigPenClosed(context)">
+                                <div class="d-flex align-center gap-2">
+                                    <MudIcon Icon="@Icons.Material.Filled.Event" Size="Size.Small" Color="Color.Primary" />
+                                    <MudText>นัดหมายจับสุกร</MudText>
                                 </div>
                             </MudMenuItem>
                             <MudMenuItem OnClick="() => ShowEditDialog(context)" Disabled="@IsPigPenClosed(context)">
@@ -670,6 +676,23 @@
             {
                 Snackbar.Add($"เกิดข้อผิดพลาดในการลบคอกสุกร: {ex.Message}", Severity.Error);
             }
+        }
+    }
+
+    private async Task ShowSetAppointmentDialog(PigPen pigPen)
+    {
+        var parameters = new DialogParameters<SetAppointmentDialog>
+        {
+            { x => x.PigPen, pigPen }
+        };
+
+        var dialog = await DialogService.ShowAsync<SetAppointmentDialog>("นัดหมายจับสุกร", parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await LoadData();
+            Snackbar.Add("บันทึกการนัดหมายสำเร็จ!", Severity.Success);
         }
     }
 

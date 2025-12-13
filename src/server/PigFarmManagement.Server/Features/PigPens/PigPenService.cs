@@ -16,6 +16,7 @@ public interface IPigPenService
     Task<List<PigPen>> GetPigPensByCustomerIdAsync(Guid customerId);
     Task<PigPen> ForceClosePigPenAsync(Guid id);
     Task<PigPen> ReopenPigPenAsync(Guid id);
+    Task<PigPen> SetAppointmentAsync(Guid id, DateTime? appointmentDate);
     Task<List<PigPenFormulaAssignment>> GetFormulaAssignmentsAsync(Guid pigPenId);
     Task<List<PigPenFormulaAssignment>> RegenerateFormulaAssignmentsAsync(Guid pigPenId);
     Task<List<ProductUsageDto>> GetUsedProductUsagesAsync(Guid pigPenId);
@@ -261,6 +262,28 @@ public class PigPenService : IPigPenService
         try
         {
             var result = await _pigPenRepository.ReopenAsync(id);
+            return result;
+        }
+        catch (ArgumentException ex)
+        {
+            throw new InvalidOperationException(ex.Message);
+        }
+    }
+
+    public async Task<PigPen> SetAppointmentAsync(Guid id, DateTime? appointmentDate)
+    {
+        try
+        {
+            var pigPen = await _pigPenRepository.GetByIdAsync(id);
+            if (pigPen == null)
+            {
+                throw new InvalidOperationException("Pig pen not found");
+            }
+
+            // Create updated pig pen with new ActHarvestDate (can be null to clear appointment)
+            var updatedPigPen = pigPen with { ActHarvestDate = appointmentDate };
+
+            var result = await UpdatePigPenAsync(updatedPigPen, null, null);
             return result;
         }
         catch (ArgumentException ex)

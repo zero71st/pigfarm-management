@@ -1,0 +1,97 @@
+@using MudBlazor
+@using PigFarmManagement.Shared.Models
+@inject IPigPenService PigPenService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudPaper Class="p-4" Elevation="0">
+            <div class="d-flex align-center">
+                 <MudIcon Icon="@Icons.Material.Filled.Event" Size="Size.Large" Class="mr-2" Color="Color.Primary" />
+                <div class="d-flex flex-column">
+                    <MudText Typo="Typo.h6" Class="mb-0" Color="Color.Primary">
+                        @(PigPen?.ActHarvestDate.HasValue == true ? "แก้ไข/ยกเลิกนัดหมายจับสุกร" : "นัดหมายจับสุกร")
+                    </MudText>
+                    <MudText Typo="Typo.subtitle2" Class="mt-1" Color="Color.Primary">แก้ไข/ยกเลิกนัดหมายจับสุกร</MudText>
+                </div>
+            </div>
+
+            <MudDivider Class="my-3" />
+
+            <!-- Row 1: Register Date -->
+            <div class="mb-3">
+                <MudText Typo="Typo.caption" Class="mb-1">วันที่ลงทะเบียน</MudText>
+                <MudText Typo="Typo.h6" Class="mb-0">@PigPen?.RegisterDate.ToString("dd/MM/yyyy")</MudText>
+            </div>
+
+            <!-- Row 2: Appointment Date -->
+            <div class="mb-3">
+                <MudText Typo="Typo.caption" Class="mb-1">วันที่นัดจับสุกร</MudText>
+                            <MudDatePicker @bind-Date="appointmentDate"
+                                           Label=""
+                                           DateFormat="dd/MM/yyyy"
+                                           Clearable="true"
+                                           HelperText="เคลียร์วันที่เพื่อยกเลิกการนัดหมาย" />
+            </div>
+
+            <!-- Row 3: Total days with badge -->
+            <div class="mt-1">
+                <MudText Typo="Typo.caption" Class="mb-1">รวมระยะเวลาเลี้ยง</MudText>
+                @if (appointmentDate.HasValue)
+                {
+                    var days = (appointmentDate.Value.Date - PigPen!.RegisterDate.Date).Days;
+                    <MudChip Color="Color.Primary" Variant="Variant.Filled">@days</MudChip>
+                }
+                else
+                {
+                    <MudText Typo="Typo.subtitle2" Color="Color.Secondary">ยังไม่ระบุวันที่นัด</MudText>
+                }
+            </div>
+        </MudPaper>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Close" OnClick="Cancel">ยกเลิก</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@(appointmentDate.HasValue ? Icons.Material.Filled.Save : Icons.Material.Filled.Cancel)" OnClick="Save">
+            @(appointmentDate.HasValue ? "บันทึกการนัดหมาย" : "ยกเลิกการนัดหมาย")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter] public PigPen? PigPen { get; set; }
+
+    private DateTime? appointmentDate;
+
+    protected override void OnInitialized()
+    {
+        // Use ActHarvestDate as default (no fallback)
+        appointmentDate = PigPen?.ActHarvestDate;
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Save()
+    {
+        if (PigPen == null) return;
+
+        try
+        {
+            // Call service with nullable appointment date (can be null to clear/cancel)
+            var updatedPigPen = await PigPenService.SetAppointmentAsync(PigPen.Id, appointmentDate);
+            
+            var message = appointmentDate.HasValue 
+                ? "บันทึกการนัดหมายเรียบร้อย" 
+                : "ยกเลิกการนัดหมายเรียบร้อย";
+            Snackbar.Add(message, Severity.Success);
+            
+            MudDialog.Close(DialogResult.Ok(updatedPigPen));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"เกิดข้อผิดพลาด: {ex.Message}", Severity.Error);
+        }
+    }
+}

@@ -78,11 +78,11 @@
                 }
                 <MudItem xs="6">
                     <MudDatePicker Date="registerDate" DateChanged="@OnRegisterDateChanged" Label="ลงทะเบียน"
-                        Variant="Variant.Outlined" Required="true" />
+                        Variant="Variant.Outlined" Required="true" DateFormat="dd/MM/yyyy" />
                 </MudItem>
                 <MudItem xs="6">
                     <MudDatePicker @bind-Date="estimatedHarvestDate" Label="จับประมาณ 120 วัน"
-                        Variant="Variant.Outlined" ReadOnly="true" />
+                        Variant="Variant.Outlined" ReadOnly="true" DateFormat="dd/MM/yyyy" />
                 </MudItem>
                 <!-- Removed actual harvest date picker per request: นัดหมายจับสุกร -->
 

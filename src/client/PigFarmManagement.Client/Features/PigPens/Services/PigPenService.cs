@@ -15,6 +15,7 @@ public interface IPigPenService
     Task<bool> DeletePigPenAsync(Guid id);
     Task<PigPen> ForceClosePigPenAsync(PigPenForceCloseRequest request);
     Task<PigPen> ReopenPigPenAsync(Guid pigPenId);
+    Task<PigPen> SetAppointmentAsync(Guid pigPenId, DateTime? appointmentDate);
 
     // Feed Items
     Task<List<FeedItem>> GetFeedItemsAsync(Guid pigPenId);
@@ -210,6 +211,19 @@ public class PigPenService : IPigPenService
         }
         var reopenedPigPen = await response.Content.ReadFromJsonAsync<PigPen>();
         return reopenedPigPen!;
+    }
+
+    public async Task<PigPen> SetAppointmentAsync(Guid pigPenId, DateTime? appointmentDate)
+    {
+        var dto = new SetAppointmentDto(appointmentDate?.ToUniversalTime());
+        var response = await _httpClient.PostAsJsonAsync($"api/pigpens/{pigPenId}/set-appointment", dto);
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            throw new HttpRequestException($"Failed to set appointment: {response.StatusCode} - {errorContent}");
+        }
+        var updatedPigPen = await response.Content.ReadFromJsonAsync<PigPen>();
+        return updatedPigPen!;
     }
 
     public async Task<List<PigPenFormulaAssignment>> GetFormulaAssignmentsAsync(Guid pigPenId)
