@@ -3,6 +3,7 @@
 @using System.Linq
 @using Microsoft.AspNetCore.Authorization
 @using PigFarmManagement.Client.Features.PigPens.Components
+@using PigFarmManagement.Shared.DTOs
 @inject ICustomerService CustomerService
 @inject IPigPenService PigPenService
 @inject IDialogService DialogService
@@ -44,7 +45,7 @@
                 <MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Large" Color="Color.Primary" />
                 <div class="d-flex flex-column" style="line-height:1;">
                     <MudText Typo="Typo.h3" Style="margin:0;color:#6C4CFF;">@GetTotalCount()</MudText>
-                    <MudText Typo="Typo.caption" Style="color:#FF4D79;">คอกสุกรกำลังเลี้ยงทั้งหมด</MudText>
+                    <MudText Typo="Typo.caption" Style="color:#FF4D79;">คอกสุกรทั้งหมด</MudText>
                 </div>
             </div>
         </MudPaper>
@@ -179,12 +180,14 @@
                 }
                 else if (context.ActHarvestDate.HasValue)
                 {
-                    <MudChip Color="Color.Warning" 
-                             Size="Size.Small" 
-                             Variant="Variant.Filled"
-                             Icon="@Icons.Material.Filled.EventAvailable">
-                        นัดหมายแล้ว
-                    </MudChip>
+                    <MudTooltip Text="@context.ActHarvestDate.Value.ToString("d/M/yyyy")">
+                        <MudChip Color="Color.Warning" 
+                                 Size="Size.Small" 
+                                 Variant="Variant.Filled"
+                                 Icon="@Icons.Material.Filled.EventAvailable">
+                            นัดหมายแล้ว
+                        </MudChip>
+                    </MudTooltip>
                 }
                 else
                 {
@@ -218,19 +221,18 @@
                     var startYear = (weekStart.Year + 543) % 100;
                     var endYear = (weekEnd.Year + 543) % 100;
                     
-                    <div class="d-flex flex-column align-center" style="gap: 4px;">
-                        <div class="d-flex align-center" style="gap:8px;">
-                            <MudChip Size="Size.Small" Color="Color.Primary" Variant="Variant.Text" Style="font-size: 1.1rem; font-weight: 600; height: 24px;">
-                                @month/@weekOfMonth
-                            </MudChip>
-                            <MudText Typo="Typo.overline" Color="Color.Primary" Style="font-size:0.72rem; opacity:0.95;">
-                                (@harvestDate.ToString("d/M/yyyy"))
+                    <MudTooltip Text="@harvestDate.ToString("d/M/yyyy")">
+                        <div class="d-flex flex-column align-center" style="gap: 4px;">
+                            <div class="d-flex align-center" style="gap:8px;">
+                                <MudChip Size="Size.Small" Color="Color.Primary" Variant="Variant.Text" Style="font-size: 1.1rem; font-weight: 600; height: 24px;">
+                                    @month/@weekOfMonth
+                                </MudChip>
+                            </div>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary" Style="white-space: nowrap; font-size: 0.7rem;">
+                                @weekStart.Day @startMonth @startYear.ToString("00") - @weekEnd.Day @endMonth @endYear.ToString("00")
                             </MudText>
                         </div>
-                        <MudText Typo="Typo.caption" Color="Color.Secondary" Style="white-space: nowrap; font-size: 0.7rem;">
-                            @weekStart.Day @startMonth @startYear.ToString("00") - @weekEnd.Day @endMonth @endYear.ToString("00")
-                        </MudText>
-                    </div>
+                    </MudTooltip>
                 }
                 else
                 {
@@ -244,17 +246,40 @@
                 @if (context.ActHarvestDate.HasValue)
                 {
                     var daysRaised = (context.ActHarvestDate.Value - context.RegisterDate).Days;
-                    <MudChip Size="Size.Small" Color="Color.Info" Variant="Variant.Filled">
-                        เลี้ยง @daysRaised วัน
-                    </MudChip>
+                    var progressPercent = Math.Min((double)daysRaised / 120 * 100, 200); // Cap at 200% for display
+                    var barColor = daysRaised > 120 ? "#ff9800" : (daysRaised >= 100 ? "#4caf50" : "#2196f3");
+                    
+                    <div class="d-flex flex-column" style="gap: 6px;">
+                        <MudChip Size="Size.Small" Color="Color.Info" Variant="Variant.Filled">
+                            เลี้ยง @daysRaised วัน
+                        </MudChip>
+                        <div style="position: relative; width: 120px; height: 16px; background-color: #e0e0e0; border-radius: 3px; display: flex; align-items: center;">
+                            <div style="position: absolute; left: 0; top: 0; height: 100%; background-color: @barColor; width: @(Math.Clamp(progressPercent, 0.0, 100.0))%; border-radius: 3px; transition: width 0.3s ease;"></div>
+                            <MudText Typo="Typo.caption" Style="position: relative; z-index: 1; font-weight: 600; width: 100%; text-align: center; color: #333; font-size: 0.65rem;">
+                                @daysRaised/120
+                            </MudText>
+                        </div>
+                    </div>
                 }
                 else if (context.EstimatedHarvestDate.HasValue)
                 {
+                    var daysElapsed = (DateTime.Now - context.RegisterDate).Days;
                     var daysRemaining = (context.EstimatedHarvestDate.Value - DateTime.Now).Days;
+                    var progressPercent = Math.Min((double)daysElapsed / 120 * 100, 200);
+                    var barColor = daysElapsed > 120 ? "#ff9800" : (daysElapsed >= 100 ? "#4caf50" : "#2196f3");
                     var chipColor = daysRemaining <= 0 ? Color.Error : (daysRemaining < 20 ? Color.Warning : Color.Success);
-                    <MudChip Size="Size.Small" Color="@chipColor" Variant="Variant.Filled">
-                        เหลือ @daysRemaining วัน
-                    </MudChip>
+                    
+                    <div class="d-flex flex-column" style="gap: 6px;">
+                        <MudChip Size="Size.Small" Color="@chipColor" Variant="Variant.Filled">
+                            เหลือ @daysRemaining วัน
+                        </MudChip>
+                        <div style="position: relative; width: 120px; height: 16px; background-color: #e0e0e0; border-radius: 3px; display: flex; align-items: center;">
+                            <div style="position: absolute; left: 0; top: 0; height: 100%; background-color: @barColor; width: @(Math.Clamp(progressPercent, 0.0, 100.0))%; border-radius: 3px; transition: width 0.3s ease;"></div>
+                            <MudText Typo="Typo.caption" Style="position: relative; z-index: 1; font-weight: 600; width: 100%; text-align: center; color: #333; font-size: 0.65rem;">
+                                @daysElapsed/120
+                            </MudText>
+                        </div>
+                    </div>
                 }
                 else
                 {
@@ -265,17 +290,33 @@
                 }
             </MudTd>
             <MudTd DataLabel="รับอาหารล่าสุด" Style="text-align: center;">
-                @if (feedImportDates.TryGetValue(context.Id, out var importData) && importData?.LastInvoiceDate.HasValue == true)
+                @if (feedProgress.TryGetValue(context.Id, out var p) && p != null)
                 {
-                    var days = importData.DaysSinceLastImport ?? 0;
-                    <div class="d-flex flex-column align-center" style="gap: 4px;">
-                        <MudChip Size="Size.Small" Color="Color.Default" Variant="Variant.Filled" Style="font-weight: 600;">
-                            @days วัน
-                        </MudChip>
-                        <MudText Typo="Typo.caption" Color="Color.Secondary" Style="font-size: 0.7rem;">
-                            @importData.LastInvoiceDate.Value.ToString("d/M/yyyy")
-                        </MudText>
-                    </div>
+                    var daysValue = feedImportDates.TryGetValue(context.Id, out var importData) && importData?.DaysSinceLastImport.HasValue == true
+                        ? importData.DaysSinceLastImport.Value
+                        : (int?)null;
+                    var tooltipDate = p.LastImportDate?.ToString("d/M/yyyy") ?? "ไม่มีการนำเข้า";
+                    
+                    // Determine progress bar color
+                    var progressPercent = Math.Clamp(p.ProgressPercent, 0.0, 100.0);
+                    var barColor = progressPercent >= 100 ? "#4caf50" : (progressPercent >= 80 ? "#fbc02d" : "#2196f3");
+
+                    <MudTooltip Text="@tooltipDate">
+                        <div class="d-flex flex-column align-center" style="gap: 6px;">
+                            @if (daysValue.HasValue)
+                            {
+                                <MudChip Color="Color.Default" Size="Size.Small" Variant="Variant.Filled" Style="font-weight: 600;">
+                                    @daysValue วัน
+                                </MudChip>
+                            }
+                            <div style="position: relative; width: 120px; height: 16px; background-color: #e0e0e0; border-radius: 3px; display: flex; align-items: center;">
+                                <div style="position: absolute; left: 0; top: 0; height: 100%; background-color: @barColor; width: @progressPercent%; border-radius: 3px; transition: width 0.3s ease;"></div>
+                                <MudText Typo="Typo.caption" Style="position: relative; z-index: 1; font-weight: 600; width: 100%; text-align: center; color: #333; font-size: 0.65rem;">
+                                    @p.AccumulatedBags/@p.ExpectedBags
+                                </MudText>
+                            </div>
+                        </div>
+                    </MudTooltip>
                 }
                 else
                 {
@@ -295,10 +336,16 @@
                             <MudIcon Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" />
                         </MudButton>
                         <MudMenu Icon="@Icons.Material.Filled.MoreVert" Size="Size.Small" Dense="true">
-                            <MudMenuItem OnClick="() => ShowPosImportDialog(context.Id, GetCustomerName(context.CustomerId), context.PenCode, GetCustomerCode(context.CustomerId))">
+                            <MudMenuItem OnClick="() => ShowPosImportDialog(context.Id, GetCustomerName(context.CustomerId), context.PenCode, GetCustomerCode(context.CustomerId))" Disabled="@IsPigPenClosed(context)">
                                 <div class="d-flex align-center gap-2">
                                     <MudIcon Icon="@Icons.Material.Filled.Download" Size="Size.Small" Color="Color.Info" />
                                     <MudText>นำเข้าอาหาร</MudText>
+                                </div>
+                            </MudMenuItem>
+                            <MudMenuItem OnClick="() => ShowSetAppointmentDialog(context)" Disabled="@IsPigPenClosed(context)">
+                                <div class="d-flex align-center gap-2">
+                                    <MudIcon Icon="@Icons.Material.Filled.Event" Size="Size.Small" Color="Color.Primary" />
+                                    <MudText>นัดหมายจับสุกร</MudText>
                                 </div>
                             </MudMenuItem>
                             <MudMenuItem OnClick="() => ShowEditDialog(context)" Disabled="@IsPigPenClosed(context)">
@@ -345,6 +392,7 @@
     private List<PigPen> pigPens = new();
     private List<PigPen> filteredPigPens = new();
     private Dictionary<Guid, LastFeedImportDateDto?> feedImportDates = new();
+    private Dictionary<Guid, FeedProgressDto?> feedProgress = new();
     private bool loading = true;
     private Customer? selectedCustomer = null;
     private PigPenType? selectedPigPenType = null;
@@ -419,14 +467,16 @@
             var customersTask = CustomerService.GetCustomersAsync();
             var pigPensTask = PigPenService.GetPigPensAsync();
             var feedImportsTask = PigPenService.GetLastFeedImportsAsync();
+            var feedProgressTask = PigPenService.GetFeedProgressAsync();
 
-            await Task.WhenAll(customersTask, pigPensTask, feedImportsTask);
+            await Task.WhenAll(customersTask, pigPensTask, feedImportsTask, feedProgressTask);
 
             customers = customersTask.Result;
             pigPens = pigPensTask.Result;
             
-            // Map batch results to dictionary
+            // Map batch results to dictionaries
             feedImportDates = feedImportsTask.Result.ToDictionary(x => x.PigPenId, x => (LastFeedImportDateDto?)x);
+            feedProgress = feedProgressTask.Result.ToDictionary(x => x.PigPenId, x => (FeedProgressDto?)x);
 
             FilterPigPens();
             lastRefreshTime = DateTime.Now;
@@ -670,6 +720,23 @@
             {
                 Snackbar.Add($"เกิดข้อผิดพลาดในการลบคอกสุกร: {ex.Message}", Severity.Error);
             }
+        }
+    }
+
+    private async Task ShowSetAppointmentDialog(PigPen pigPen)
+    {
+        var parameters = new DialogParameters<SetAppointmentDialog>
+        {
+            { x => x.PigPen, pigPen }
+        };
+
+        var dialog = await DialogService.ShowAsync<SetAppointmentDialog>("นัดหมายจับสุกร", parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await LoadData();
+            Snackbar.Add("บันทึกการนัดหมายสำเร็จ!", Severity.Success);
         }
     }
 

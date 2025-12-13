@@ -1,4 +1,5 @@
 using PigFarmManagement.Shared.Models;
+using PigFarmManagement.Shared.DTOs;
 using PigFarmManagement.Client.Features.Feeds.Services;
 using System.Net.Http.Json;
 
@@ -15,6 +16,7 @@ public interface IPigPenService
     Task<bool> DeletePigPenAsync(Guid id);
     Task<PigPen> ForceClosePigPenAsync(PigPenForceCloseRequest request);
     Task<PigPen> ReopenPigPenAsync(Guid pigPenId);
+    Task<PigPen> SetAppointmentAsync(Guid pigPenId, DateTime? appointmentDate);
 
     // Feed Items
     Task<List<FeedItem>> GetFeedItemsAsync(Guid pigPenId);
@@ -41,6 +43,9 @@ public interface IPigPenService
     
     // Last Feed Import (batch)
     Task<List<LastFeedImportDateDto>> GetLastFeedImportsAsync();
+    
+    // Feed Progress (accumulated vs expected)
+    Task<List<FeedProgressDto>> GetFeedProgressAsync();
     
     // Used Product Usages (for recalculation dialog)
     Task<List<ProductUsageDto>> GetUsedProductUsagesAsync(Guid pigPenId);
@@ -212,6 +217,19 @@ public class PigPenService : IPigPenService
         return reopenedPigPen!;
     }
 
+    public async Task<PigPen> SetAppointmentAsync(Guid pigPenId, DateTime? appointmentDate)
+    {
+        var dto = new SetAppointmentDto(appointmentDate?.ToUniversalTime());
+        var response = await _httpClient.PostAsJsonAsync($"api/pigpens/{pigPenId}/set-appointment", dto);
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            throw new HttpRequestException($"Failed to set appointment: {response.StatusCode} - {errorContent}");
+        }
+        var updatedPigPen = await response.Content.ReadFromJsonAsync<PigPen>();
+        return updatedPigPen!;
+    }
+
     public async Task<List<PigPenFormulaAssignment>> GetFormulaAssignmentsAsync(Guid pigPenId)
     {
         var assignments = await _httpClient.GetFromJsonAsync<List<PigPenFormulaAssignment>>($"api/pigpens/{pigPenId}/formula-assignments");
@@ -230,6 +248,12 @@ public class PigPenService : IPigPenService
     {
         var results = await _httpClient.GetFromJsonAsync<List<LastFeedImportDateDto>>("api/pigpens/last-feed-imports");
         return results ?? new List<LastFeedImportDateDto>();
+    }
+
+    public async Task<List<FeedProgressDto>> GetFeedProgressAsync()
+    {
+        var results = await _httpClient.GetFromJsonAsync<List<FeedProgressDto>>("api/pigpens/feed-progress");
+        return results ?? new List<FeedProgressDto>();
     }
 
     public async Task<List<ProductUsageDto>> GetUsedProductUsagesAsync(Guid pigPenId)

@@ -93,20 +93,17 @@
                 <MudItem xs="6">
                     <MudDatePicker Date="registerDate" 
                                   DateChanged="@OnRegisterDateChanged"
-                                  Label="วันที่ลงทะเบียน" 
+                                  Label="ลงทะเบียน" 
                                   Variant="Variant.Outlined" 
-                                  Required="true" />
+                                  Required="true" DateFormat="dd/MM/yyyy" />
                 </MudItem>
                 <MudItem xs="6">
                     <MudDatePicker @bind-Date="estimatedHarvestDate" 
-                                  Label="วันจับสุกรโดยประมาณ" 
+                                  Label="จับประมาณ 120 วัน" 
                                   Variant="Variant.Outlined" 
-                                  ReadOnly="true"
-                                  HelperText="คำนวณอัตโนมัติ: วันลงทะเบียน + 120 วัน" />
+                                  ReadOnly="true" DateFormat="dd/MM/yyyy"/>
                 </MudItem>
-                <MudItem xs="6">
-                    <MudDatePicker @bind-Date="actualHarvestDate" Label="นัดหมายจับสุกร" Variant="Variant.Outlined" />
-                </MudItem>
+                <!-- Appointment date removed from edit dialog to prevent editing ActHarvestDate here -->
                 
                 <!-- Feed Brand Selection -->
                 <MudItem xs="12">
@@ -173,7 +170,6 @@
     private int pigQty = 1;
     private decimal depositPerPig = 1500m;
     private DateTime? registerDate = DateTime.Today;
-    private DateTime? actualHarvestDate;
     private DateTime? estimatedHarvestDate;
     
     // Feed brand selection property
@@ -198,7 +194,6 @@
         pigQty = PigPen.PigQty;
         depositPerPig = PigPen.DepositPerPig;
         registerDate = PigPen.RegisterDate;
-        actualHarvestDate = PigPen.ActHarvestDate;
         estimatedHarvestDate = PigPen.EstimatedHarvestDate;
         note = PigPen.Note;
         
@@ -389,7 +384,7 @@
             PenCode: penCode,
             PigQty: pigQty,
             RegisterDate: registerDate.Value,
-            ActHarvestDate: actualHarvestDate,
+            ActHarvestDate: null,
             EstimatedHarvestDate: estimatedHarvestDate,
             Type: selectedType,
             SelectedBrand: selectedBrand,

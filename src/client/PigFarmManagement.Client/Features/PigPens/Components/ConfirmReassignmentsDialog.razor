@@ -9,11 +9,11 @@
             ผลิตภัณฑ์ที่พบในการให้อาหารจะถูกเลือกเพื่อ "ล็อก" โดยอัตโนมัติ คุณสามารถยกเลิกการเลือกได้ก่อนยืนยัน
         </MudAlert>
 
-        @if (Assignments.Any())
+        @if (Assignments.Any(a => a.IsActive && !a.IsLocked))
         {
-            <MudTable Items="Assignments.OrderBy(a => a.ProductName)" Dense="true" Hover="true">
+            <MudTable Items="Assignments.Where(a => a.IsActive && !a.IsLocked).OrderBy(a => a.ProductName)" Dense="true" Hover="true">
                 <HeaderContent>
-                    <MudTh Style="width:90px">ล็อก</MudTh>
+                    <MudTh Style="width:90px">ไม่ปรับ</MudTh>
                     <MudTh>รหัส / ชื่อสินค้า</MudTh>
                     <MudTh Style="width:100px" Align="Right">ถุง/ตัว</MudTh>
                     <MudTh Style="width:100px" Align="Right">จัดสรร</MudTh>
@@ -31,7 +31,7 @@
                         <MudText Typo="Typo.caption" Color="Color.Secondary">@context.ProductCode</MudText>
                     </MudTd>
                     <MudTd Align="Right">@context.AssignedBagPerPig.ToString("N2")</MudTd>
-                    <MudTd Align="Right">@context.AssignedPigQuantity</MudTd>
+                    <MudTd Align="Right">@((Math.Ceiling(context.AssignedBagPerPig * NewQty)).ToString("N0"))</MudTd>
                     <MudTd Align="Right">
                         @{
                             var usedQty = GetUsedQty(context.ProductCode);

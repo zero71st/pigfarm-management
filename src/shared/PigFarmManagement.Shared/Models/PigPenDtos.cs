@@ -94,6 +94,13 @@ public record PigPenForceCloseRequest(
 );
 
 /// <summary>
+/// Request to set appointment date for pig pen harvest
+/// </summary>
+public record SetAppointmentDto(
+    DateTime? AppointmentDate
+);
+
+/// <summary>
 /// Response for deleting an invoice by reference code
 /// </summary>
 public record DeleteInvoiceResponse(

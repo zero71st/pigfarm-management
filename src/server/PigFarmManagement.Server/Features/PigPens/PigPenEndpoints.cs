@@ -69,6 +69,9 @@ public static class PigPenEndpoints
         group.MapPost("/{id:guid}/reopen", ReopenPigPen)
             .WithName("ReopenPigPen");
 
+        group.MapPost("/{id:guid}/set-appointment", SetAppointment)
+            .WithName("SetAppointment");
+
         group.MapPost("/{id:guid}/regenerate-assignments", RegenerateFormulaAssignments)
             .WithName("RegenerateFormulaAssignments");
 
@@ -79,6 +82,10 @@ public static class PigPenEndpoints
         // Get last feed import dates for all pig pens (batch)
         group.MapGet("/last-feed-imports", GetLastFeedImports)
             .WithName("GetLastFeedImports");
+
+        // Get feed progress for all pig pens (accumulated vs expected)
+        group.MapGet("/feed-progress", GetFeedProgress)
+            .WithName("GetFeedProgress");
 
         // Get used product usages for a pig pen (for recalculation dialog)
         group.MapGet("/{id:guid}/used-product-usages", GetUsedProductUsages)
@@ -548,6 +555,32 @@ public static class PigPenEndpoints
         }
     }
 
+    private static async Task<IResult> SetAppointment(Guid id, SetAppointmentDto dto, IPigPenService pigPenService)
+    {
+        try
+        {
+            var pigPen = await pigPenService.GetPigPenByIdAsync(id);
+            if (pigPen == null)
+            {
+                return Results.NotFound("Pig pen not found");
+            }
+
+            // Validate appointment date only if one is provided (must be after register date)
+            if (dto.AppointmentDate.HasValue && dto.AppointmentDate.Value <= pigPen.RegisterDate)
+            {
+                return Results.BadRequest("Appointment date must be after the registration date");
+            }
+
+            // Set the appointment date (ActHarvestDate) - can be null to clear/cancel appointment
+            var updatedPigPen = await pigPenService.SetAppointmentAsync(id, dto.AppointmentDate);
+            return Results.Ok(updatedPigPen);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Error setting appointment: {ex.Message}");
+        }
+    }
+
     private static async Task<IResult> RegenerateFormulaAssignments(Guid id, IPigPenService pigPenService)
     {
         try
@@ -646,6 +679,19 @@ public static class PigPenEndpoints
         catch (Exception ex)
         {
             return Results.Problem($"Error retrieving last feed imports: {ex.Message}");
+        }
+    }
+
+    private static async Task<IResult> GetFeedProgress(IFeedRepository feedRepository)
+    {
+        try
+        {
+            var feedProgress = await feedRepository.GetFeedProgressAsync();
+            return Results.Ok(feedProgress);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Error retrieving feed progress: {ex.Message}");
         }
     }
 
