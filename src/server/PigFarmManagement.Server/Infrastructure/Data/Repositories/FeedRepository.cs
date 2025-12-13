@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PigFarmManagement.Server.Infrastructure.Data.Entities;
 using PigFarmManagement.Shared.Models;
+using PigFarmManagement.Shared.DTOs;
 
 namespace PigFarmManagement.Server.Infrastructure.Data.Repositories;
 
@@ -125,5 +126,46 @@ public class FeedRepository : IFeedRepository
             .FirstOrDefaultAsync();
 
         return lastFeed?.CreatedAt;
+    }
+
+    /// <summary>
+    /// Get feed progress for all pig pens: accumulated bags, expected bags, and progress percent.
+    /// </summary>
+    public async Task<List<FeedProgressDto>> GetFeedProgressAsync()
+    {
+        // Get accumulated bags per pig pen (sum of all feed quantities)
+        var accumulatedByPen = await _context.Feeds
+            .GroupBy(f => f.PigPenId)
+            .Select(g => new
+            {
+                PigPenId = g.Key,
+                AccumulatedBags = g.Sum(f => f.Quantity),
+                LastImportDate = g.Max(f => f.CreatedAt)
+            })
+            .ToListAsync();
+
+        // Get expected bags per pig pen (sum of all active formula assignment targets)
+        var expectedByPen = await _context.PigPenFormulaAssignments
+            .Where(fa => fa.IsActive && !fa.IsLocked)
+            .GroupBy(fa => fa.PigPenId)
+            .Select(g => new
+            {
+                PigPenId = g.Key,
+                ExpectedBags = (int)g.Sum(fa => fa.AssignedTotalBags)
+            })
+            .ToListAsync();
+
+        // Combine and calculate progress
+        var expectedDict = expectedByPen.ToDictionary(x => x.PigPenId, x => x.ExpectedBags);
+        
+        return accumulatedByPen.Select(a => new FeedProgressDto(
+            a.PigPenId,
+            a.AccumulatedBags,
+            expectedDict.TryGetValue(a.PigPenId, out var expected) ? expected : 0,
+            expectedDict.TryGetValue(a.PigPenId, out var exp) && exp > 0 
+                ? Math.Round((double)a.AccumulatedBags / exp * 100.0, 1)
+                : 0.0,
+            a.LastImportDate
+        )).ToList();
     }
 }

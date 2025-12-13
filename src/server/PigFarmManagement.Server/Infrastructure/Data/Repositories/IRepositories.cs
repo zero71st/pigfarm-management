@@ -1,4 +1,5 @@
 using PigFarmManagement.Shared.Models;
+using PigFarmManagement.Shared.DTOs;
 
 namespace PigFarmManagement.Server.Infrastructure.Data.Repositories;
 
@@ -43,6 +44,7 @@ public interface IFeedRepository
     Task<bool> ExistsByInvoiceNumberAsync(string invoiceNumber); // Note: actually checks TransactionCode field
     Task<int> DeleteByInvoiceReferenceAsync(Guid pigPenId, string invoiceReferenceCode);
     Task<DateTime?> GetLastImportDateAsync(Guid pigPenId);
+    Task<List<FeedProgressDto>> GetFeedProgressAsync();
 }
 
 public interface IDepositRepository

@@ -1,4 +1,5 @@
 using PigFarmManagement.Shared.Models;
+using PigFarmManagement.Shared.DTOs;
 using PigFarmManagement.Client.Features.Feeds.Services;
 using System.Net.Http.Json;
 
@@ -42,6 +43,9 @@ public interface IPigPenService
     
     // Last Feed Import (batch)
     Task<List<LastFeedImportDateDto>> GetLastFeedImportsAsync();
+    
+    // Feed Progress (accumulated vs expected)
+    Task<List<FeedProgressDto>> GetFeedProgressAsync();
     
     // Used Product Usages (for recalculation dialog)
     Task<List<ProductUsageDto>> GetUsedProductUsagesAsync(Guid pigPenId);
@@ -244,6 +248,12 @@ public class PigPenService : IPigPenService
     {
         var results = await _httpClient.GetFromJsonAsync<List<LastFeedImportDateDto>>("api/pigpens/last-feed-imports");
         return results ?? new List<LastFeedImportDateDto>();
+    }
+
+    public async Task<List<FeedProgressDto>> GetFeedProgressAsync()
+    {
+        var results = await _httpClient.GetFromJsonAsync<List<FeedProgressDto>>("api/pigpens/feed-progress");
+        return results ?? new List<FeedProgressDto>();
     }
 
     public async Task<List<ProductUsageDto>> GetUsedProductUsagesAsync(Guid pigPenId)

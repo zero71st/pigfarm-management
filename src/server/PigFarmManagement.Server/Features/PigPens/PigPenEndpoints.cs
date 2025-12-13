@@ -83,6 +83,10 @@ public static class PigPenEndpoints
         group.MapGet("/last-feed-imports", GetLastFeedImports)
             .WithName("GetLastFeedImports");
 
+        // Get feed progress for all pig pens (accumulated vs expected)
+        group.MapGet("/feed-progress", GetFeedProgress)
+            .WithName("GetFeedProgress");
+
         // Get used product usages for a pig pen (for recalculation dialog)
         group.MapGet("/{id:guid}/used-product-usages", GetUsedProductUsages)
             .WithName("GetUsedProductUsages");
@@ -675,6 +679,19 @@ public static class PigPenEndpoints
         catch (Exception ex)
         {
             return Results.Problem($"Error retrieving last feed imports: {ex.Message}");
+        }
+    }
+
+    private static async Task<IResult> GetFeedProgress(IFeedRepository feedRepository)
+    {
+        try
+        {
+            var feedProgress = await feedRepository.GetFeedProgressAsync();
+            return Results.Ok(feedProgress);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem($"Error retrieving feed progress: {ex.Message}");
         }
     }
 
