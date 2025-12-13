@@ -133,8 +133,9 @@ public class FeedRepository : IFeedRepository
     /// </summary>
     public async Task<List<FeedProgressDto>> GetFeedProgressAsync()
     {
-        // Get accumulated bags per pig pen (sum of all feed quantities)
+        // Get accumulated bags per pig pen (sum of all feed quantities, excluding service charges)
         var accumulatedByPen = await _context.Feeds
+            .Where(f => !f.ProductName.Contains("ค่าขนส่ง"))  // Exclude service charge items
             .GroupBy(f => f.PigPenId)
             .Select(g => new
             {

@@ -250,7 +250,7 @@
                     var barColor = daysRaised > 120 ? "#ff9800" : (daysRaised >= 100 ? "#4caf50" : "#2196f3");
                     
                     <div class="d-flex flex-column" style="gap: 6px;">
-                        <MudChip Size="Size.Small" Color="Color.Info" Variant="Variant.Filled">
+                        <MudChip Size="Size.Small" Color="Color.Default" Variant="Variant.Filled" Style="background-color: #e0e0e0; color: #333; font-weight: 600; height: 24px;">
                             เลี้ยง @daysRaised วัน
                         </MudChip>
                         <div style="position: relative; width: 120px; height: 16px; background-color: #e0e0e0; border-radius: 3px; display: flex; align-items: center;">
@@ -270,7 +270,7 @@
                     var chipColor = daysRemaining <= 0 ? Color.Error : (daysRemaining < 20 ? Color.Warning : Color.Success);
                     
                     <div class="d-flex flex-column" style="gap: 6px;">
-                        <MudChip Size="Size.Small" Color="@chipColor" Variant="Variant.Filled">
+                        <MudChip Size="Size.Small" Color="Color.Default" Variant="Variant.Filled" Style="background-color: #e0e0e0; color: #333; font-weight: 600; height: 24px;">
                             เหลือ @daysRemaining วัน
                         </MudChip>
                         <div style="position: relative; width: 120px; height: 16px; background-color: #e0e0e0; border-radius: 3px; display: flex; align-items: center;">
