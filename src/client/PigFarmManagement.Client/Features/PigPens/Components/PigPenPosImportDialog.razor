@@ -25,17 +25,11 @@
             }
         </style>
         <div class="pa-4">
-            <MudText Typo="Typo.h6" Class="mb-4">นำเข้าข้อมูลอาหารจาก POSPOS สำหรับคอก @PenCode</MudText>
-            
-            <MudAlert Severity="Severity.Info" Class="mb-4">
-                <MudText Typo="Typo.body2">
-                    <strong>ลูกค้า:</strong> @CustomerDisplayName<br/>
-                    <strong>รหัสคอก:</strong> @PenCode<br/>
-                    <strong>หมายเหตุ:</strong> @(_searchAllCustomers 
-                        ? "แสดงธุรกรรม POSPOS สำหรับทุกลูกค้า เลือกธุรกรรมที่ต้องการนำเข้าสำหรับคอกนี้" 
-                        : $"แสดงธุรกรรม POSPOS สำหรับรหัสลูกค้า {_customerCode} เลือกธุรกรรมที่ต้องการนำเข้าสำหรับคอกนี้")
-                </MudText>
-            </MudAlert>
+            <MudText Typo="Typo.h6" Class="mb-4">
+                นำเข้าอาหาร
+                <MudChip Color="Color.Default" Size="Size.Small" Class="ml-2 mr-2">ลูกค้า: @CustomerDisplayName</MudChip>
+                <MudChip Color="Color.Default" Size="Size.Small">คอก: @PenCode</MudChip>
+            </MudText>
             
             <!-- Date Range Filter -->
             <MudCard Class="mb-4">
