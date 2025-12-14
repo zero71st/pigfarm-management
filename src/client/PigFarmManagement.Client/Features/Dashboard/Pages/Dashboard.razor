@@ -36,6 +36,15 @@ else if (dashboardOverview != null)
                 </MudCardHeader>
                 <MudCardContent>
                     <MudGrid Spacing="3">
+                        @{
+                            // Compute total investment used as 100% reference. Fallback to sum of parts if TotalInvestmentProject is not provided.
+                            var totalInvestment = dashboardOverview.TotalInvestmentProject != 0
+                                ? dashboardOverview.TotalInvestmentProject
+                                : dashboardOverview.TotalOwnerCapitalProject + dashboardOverview.TotalProfitProject + dashboardOverview.TotalCustomerCapitalProject;
+                            double ownerPercent = totalInvestment != 0 ? (double)(dashboardOverview.TotalOwnerCapitalProject / totalInvestment * 100m) : 0.0;
+                            double profitPercent = totalInvestment != 0 ? (double)(dashboardOverview.TotalProfitProject / totalInvestment * 100m) : 0.0;
+                            double customerPercent = totalInvestment != 0 ? (double)(dashboardOverview.TotalCustomerCapitalProject / totalInvestment * 100m) : 0.0;
+                        }
                         <!-- Column 1 -->
                         <MudItem xs="12" sm="6" md="2">
                             <div class="d-flex flex-column align-center">
@@ -58,7 +67,10 @@ else if (dashboardOverview != null)
                         <MudItem xs="12" sm="6" md="2">
                             <div class="d-flex flex-column align-center">
                                 <MudIcon Icon="@Icons.Material.Filled.Store" Color="Color.Info" Size="Size.Large" Class="mb-2" />
-                                <MudText Typo="Typo.h6" Color="Color.Info">@FormatCurrency(dashboardOverview.TotalOwnerCapitalProject)</MudText>
+                                <MudText Typo="Typo.h6" Color="Color.Info">
+                                    @FormatCurrency(dashboardOverview.TotalOwnerCapitalProject)
+                                    <span style="font-size:0.85rem; color:#666; margin-left:8px;">(@ownerPercent.ToString("0.#")%)</span>
+                                </MudText>
                                 <MudText Typo="Typo.caption" Color="Color.Secondary" Align="Align.Center">เงินลงทุนส่วนของร้าน</MudText>
                             </div>
                         </MudItem>
@@ -67,7 +79,10 @@ else if (dashboardOverview != null)
                         <MudItem xs="12" sm="6" md="2">
                             <div class="d-flex flex-column align-center">
                                 <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Color="@(dashboardOverview.TotalProfitProject >= 0 ? Color.Success : Color.Error)" Size="Size.Large" Class="mb-2" />
-                                <MudText Typo="Typo.h6" Style="@($"color: {(dashboardOverview.TotalProfitProject >= 0 ? "green" : "red")}")">@FormatCurrency(dashboardOverview.TotalProfitProject)</MudText>
+                                <MudText Typo="Typo.h6" Style="@($"color: {(dashboardOverview.TotalProfitProject >= 0 ? "green" : "red")}")">
+                                    @FormatCurrency(dashboardOverview.TotalProfitProject)
+                                    <span style="font-size:0.85rem; color:#666; margin-left:8px;">(@profitPercent.ToString("0.#")%)</span>
+                                </MudText>
                                 <MudText Typo="Typo.caption" Color="Color.Secondary" Align="Align.Center">เงินลงทุนส่วนกำไร/ขาดทุน</MudText>
                             </div>
                         </MudItem>
@@ -76,7 +91,10 @@ else if (dashboardOverview != null)
                         <MudItem xs="12" sm="6" md="2">
                             <div class="d-flex flex-column align-center">
                                 <MudIcon Icon="@Icons.Material.Filled.People" Color="Color.Info" Size="Size.Large" Class="mb-2" />
-                                <MudText Typo="Typo.h6" Color="Color.Info">@FormatCurrency(dashboardOverview.TotalCustomerCapitalProject)</MudText>
+                                <MudText Typo="Typo.h6" Color="Color.Info">
+                                    @FormatCurrency(dashboardOverview.TotalCustomerCapitalProject)
+                                    <span style="font-size:0.85rem; color:#666; margin-left:8px;">(@customerPercent.ToString("0.#")%)</span>
+                                </MudText>
                                 <MudText Typo="Typo.caption" Color="Color.Secondary" Align="Align.Center">เงินลงทุนส่วนลูกค้า</MudText>
                             </div>
                         </MudItem>
@@ -84,9 +102,27 @@ else if (dashboardOverview != null)
                         <!-- Column 6 -->
                         <MudItem xs="12" sm="6" md="2">
                             <div class="d-flex flex-column align-center">
-                                <MudIcon Icon="@Icons.Material.Filled.AccountBalance" Color="Color.Info" Size="Size.Large" Class="mb-2" />
-                                <MudText Typo="Typo.h6" Color="Color.Info">@FormatCurrency(dashboardOverview.TotalInvestmentProject)</MudText>
-                                <MudText Typo="Typo.caption" Color="Color.Secondary" Align="Align.Center">เงินลงทุนทั้งหมด</MudText>
+                                <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" Size="Size.Large" Class="mb-2" />
+                                @{
+                                    var risk = (dashboardOverview.TotalOwnerCapitalProject)
+                                               + (dashboardOverview.TotalProfitProject)
+                                               - (dashboardOverview.TotalCustomerCapitalProject);
+                                    double riskPercent;
+                                    if (dashboardOverview.TotalCustomerCapitalProject != 0)
+                                    {
+                                        riskPercent = (double)(risk / dashboardOverview.TotalCustomerCapitalProject * 100m);
+                                    }
+                                    else
+                                    {
+                                        // When there is no customer capital, treat risk as 100%
+                                        riskPercent = 100.0;
+                                    }
+                                }
+                                <MudText Typo="Typo.h6" Color="Color.Info">
+                                    @FormatCurrency(risk)
+                                    <span style="font-size:0.85rem; color:#666; margin-left:8px;">(@riskPercent.ToString("0.#")%)</span>
+                                </MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary" Align="Align.Center">ความเสี่ยง</MudText>
                             </div>
                         </MudItem>
                     </MudGrid>

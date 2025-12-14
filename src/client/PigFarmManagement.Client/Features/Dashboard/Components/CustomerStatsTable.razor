@@ -1,5 +1,6 @@
 @using PigFarmManagement.Shared.Models
 @using System.Globalization
+@using System.Linq
 
 <MudCard Elevation="3" Class="mt-4">
     <MudCardHeader class="ml-4">
@@ -26,11 +27,24 @@
                 <MudTd DataLabel="จำนวนสุกร">@context.TotalPigs</MudTd>
                 <MudTd DataLabel="เงินลงทุนทั้งหมด">@FormatCurrency(context.TotalInvestment)</MudTd>
                 <MudTd DataLabel="เงินลงทุนส่วนของร้าน">
-                    <span style="color: @(CalculateOwnerPlusProfit(context) >= 0 ? "green" : "red")">
-                        @FormatCurrency(CalculateOwnerPlusProfit(context))
+                    @{
+                        var ownerValue = CalculateOwnerPlusProfit(context);
+                        var total = context.TotalInvestment;
+                        var ownerPercentText = total != 0 ? FormatPercentage(ownerValue / total) : "N/A";
+                    }
+                    <span style="color: @(ownerValue >= 0 ? "green" : "red")">
+                        @FormatCurrency(ownerValue)
                     </span>
+                    <span style="font-size:0.85rem; color:#666; margin-left:8px;">(@ownerPercentText)</span>
                 </MudTd>
-                <MudTd DataLabel="เงินลงทุนส่วนลูกค้า (มัดจำ)">@FormatCurrency(context.TotalCustomerCapital)</MudTd>
+                <MudTd DataLabel="เงินลงทุนส่วนลูกค้า (มัดจำ)">
+                    @{
+                        var total = context.TotalInvestment;
+                        var custPercentText = total != 0 ? FormatPercentage(context.TotalCustomerCapital / total) : "N/A";
+                    }
+                    @FormatCurrency(context.TotalCustomerCapital)
+                    <span style="font-size:0.85rem; color:#666; margin-left:8px;">(@custPercentText)</span>
+                </MudTd>
             </RowTemplate>
             <PagerContent>
                 @if (CustomerStats?.Count > 10)
@@ -44,6 +58,14 @@
 
 @code {
     [Parameter] public List<CustomerPigPenStats> CustomerStats { get; set; } = new();
+
+    protected override void OnParametersSet()
+    {
+        if (CustomerStats != null)
+        {
+            CustomerStats = CustomerStats.OrderByDescending(c => c.TotalInvestment).ToList();
+        }
+    }
 
     private string FormatCurrency(decimal amount)
     {
