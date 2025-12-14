@@ -14,6 +14,10 @@
             @@media (max-width: 600px) {
                 .desktop-only { display: none !important; }
                 .mobile-only { display: inline !important; }
+                .filter-row { flex-direction: column !important; align-items: stretch !important; }
+                .filter-row .mobile-full { width: 100% !important; }
+                .filter-row .mobile-full .mud-date-picker, .filter-row .mobile-full .mud-input-root { width: 100% !important; }
+                .filter-row .mud-button-root { width: 100% !important; }
             }
             @@media (min-width: 601px) {
                 .desktop-only { display: inline !important; }
@@ -71,26 +75,29 @@
                         กรองตามช่วงวันที่
                     </MudText>
                     
-                    <div class="d-flex gap-4 justify-center" style="align-items: flex-end;">
+                    <div class="d-flex gap-4 justify-center filter-row" style="align-items: flex-end;">
                         <MudDatePicker Date="_fromDate"
                                      DateChanged="OnFromDateChanged"
                                      Label="วันที่เริ่มต้น"
                                      Variant="Variant.Outlined"
                                      Margin="Margin.Dense"
-                                     DateFormat="yyyy-MM-dd" />
+                                     DateFormat="yyyy-MM-dd"
+                                     Class="mobile-full" />
                         
                         <MudDatePicker @bind-Date="_toDate"
                                      Label="วันที่สิ้นสุด"
                                      Variant="Variant.Outlined"
-                                    Margin="Margin.Dense"
-                                     DateFormat="yyyy-MM-dd" />
+                                     Margin="Margin.Dense"
+                                     DateFormat="yyyy-MM-dd"
+                                     Class="mobile-full" />
                         
                         <MudButton Color="Color.Info" 
                                  Variant="Variant.Filled" 
                                  StartIcon="@Icons.Material.Filled.Search"
                                  OnClick="LoadAvailableTransactions"
                                  Disabled="_isLoading"
-                                 Style="height: 40px;">
+                                 Style="height: 40px;"
+                                 Class="mobile-full">
                             @if (_isLoading)
                             {
                                 <MudProgressCircular Size="Size.Small" Indeterminate="true" />
@@ -107,7 +114,8 @@
                                  StartIcon="@Icons.Material.Filled.Clear"
                                  OnClick="ClearDateFilter"
                                  Disabled="_isLoading"
-                                 Style="height: 40px;">
+                                 Style="height: 40px;"
+                                 Class="mobile-full">
                             ล้างตัวกรอง
                         </MudButton>
                     </div>
@@ -135,17 +143,6 @@
             
             @if (_availableTransactions.Any())
             {
-                <MudText Typo="Typo.h6" Class="mb-3">
-                    @if (_searchAllCustomers)
-                    {
-                        <span>บิลขาย POSPOS ที่พร้อมใช้งาน (ทุกลูกค้า)</span>
-                    }
-                    else
-                    {
-                        <span>บิลขาย POSPOS ที่พร้อมใช้งานสำหรับรหัสลูกค้า: @_customerCode</span>
-                    }
-                </MudText>
-                
                 <MudTable Items="_availableTransactions" Hover="true" Striped="true" MultiSelection="true" 
                          @bind-SelectedItems="_selectedTransactions" T="PosPosTransaction"
                          SelectOnRowClick="false"
@@ -229,11 +226,11 @@
                         @if (_isImporting)
                         {
                             <MudProgressCircular Size="Size.Small" Indeterminate="true" />
-                            <span class="ml-2">Importing...</span>
+                            <span class="ml-2">กำลังนำเข้า...</span>
                         }
                         else
                         {
-                            <span>Import Selected (@_selectedTransactions.Count)</span>
+                            <span>นำเข้าที่เลือก (@_selectedTransactions.Count)</span>
                         }
                     </MudButton>
                 </div>
