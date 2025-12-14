@@ -253,7 +253,7 @@
                         <MudChip Size="Size.Small" Color="Color.Default" Variant="Variant.Filled" Style="background-color: #e0e0e0; color: #333; font-weight: 600; height: 24px;">
                             เลี้ยง @daysRaised วัน
                         </MudChip>
-                        <div style="position: relative; width: 120px; height: 16px; background-color: #e0e0e0; border-radius: 3px; display: flex; align-items: center;">
+                        <div style="position: relative; width: 96px; height: 16px; background-color: #e0e0e0; border-radius: 3px; display: flex; align-items: center;">
                             <div style="position: absolute; left: 0; top: 0; height: 100%; background-color: @barColor; width: @(Math.Clamp(progressPercent, 0.0, 100.0))%; border-radius: 3px; transition: width 0.3s ease;"></div>
                             <MudText Typo="Typo.caption" Style="position: relative; z-index: 1; font-weight: 600; width: 100%; text-align: center; color: #333; font-size: 0.65rem;">
                                 @daysRaised/120
@@ -273,7 +273,7 @@
                         <MudChip Size="Size.Small" Color="Color.Default" Variant="Variant.Filled" Style="background-color: #e0e0e0; color: #333; font-weight: 600; height: 24px;">
                             เหลือ @daysRemaining วัน
                         </MudChip>
-                        <div style="position: relative; width: 120px; height: 16px; background-color: #e0e0e0; border-radius: 3px; display: flex; align-items: center;">
+                        <div style="position: relative; width: 96px; height: 16px; background-color: #e0e0e0; border-radius: 3px; display: flex; align-items: center;">
                             <div style="position: absolute; left: 0; top: 0; height: 100%; background-color: @barColor; width: @(Math.Clamp(progressPercent, 0.0, 100.0))%; border-radius: 3px; transition: width 0.3s ease;"></div>
                             <MudText Typo="Typo.caption" Style="position: relative; z-index: 1; font-weight: 600; width: 100%; text-align: center; color: #333; font-size: 0.65rem;">
                                 @daysElapsed/120
@@ -305,11 +305,26 @@
                         <div class="d-flex flex-column align-center" style="gap: 6px;">
                             @if (daysValue.HasValue)
                             {
-                                <MudChip Color="Color.Default" Size="Size.Small" Variant="Variant.Filled" Style="font-weight: 600;">
+                                // Badge color rules:
+                                // - If actual harvest date exists -> grey (default)
+                                // - Else if days >= 30 -> red (error)
+                                // - Else if days >= 20 -> yellow (warning)
+                                // - Else -> default (grey)
+                                Color chipColor;
+                                if (context.ActHarvestDate.HasValue)
+                                    chipColor = Color.Default;
+                                else if (daysValue.Value >= 30)
+                                    chipColor = Color.Error;
+                                else if (daysValue.Value >= 20)
+                                    chipColor = Color.Warning;
+                                else
+                                    chipColor = Color.Default;
+
+                                <MudChip Color="@chipColor" Size="Size.Small" Variant="Variant.Filled" Style="font-weight: 600;">
                                     @daysValue วัน
                                 </MudChip>
                             }
-                            <div style="position: relative; width: 120px; height: 16px; background-color: #e0e0e0; border-radius: 3px; display: flex; align-items: center;">
+                            <div style="position: relative; width: 96px; height: 16px; background-color: #e0e0e0; border-radius: 3px; display: flex; align-items: center;">
                                 <div style="position: absolute; left: 0; top: 0; height: 100%; background-color: @barColor; width: @progressPercent%; border-radius: 3px; transition: width 0.3s ease;"></div>
                                 <MudText Typo="Typo.caption" Style="position: relative; z-index: 1; font-weight: 600; width: 100%; text-align: center; color: #333; font-size: 0.65rem;">
                                     @p.AccumulatedBags/@p.ExpectedBags
