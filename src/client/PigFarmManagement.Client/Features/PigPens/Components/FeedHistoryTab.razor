@@ -98,6 +98,8 @@
                         var parts = row.PerInvoiceBags.Split(" / ");
                         if (parts.Length == 2 && decimal.TryParse(parts[0], out var actual) && decimal.TryParse(parts[1], out var formula))
                         {
+                            var diffVal = actual - formula;
+                            var diffStr = diffVal >= 0 ? $"+{diffVal.ToString("0")}" : diffVal.ToString("0");
                             <div class="d-flex align-center justify-center gap-1">
                                 @if (actual == formula)
                                 {
@@ -111,7 +113,7 @@
                                 {
                                     <MudIcon Icon="@Icons.Material.Filled.ArrowUpward" Color="Color.Error" Size="Size.Small" />
                                 }
-                                <span>@row.PerInvoiceBags</span>
+                                <span>@row.PerInvoiceBags (@diffStr)</span>
                             </div>
                         }
                         else
