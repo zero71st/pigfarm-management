@@ -247,7 +247,8 @@
                 {
                     var daysRaised = (context.ActHarvestDate.Value - context.RegisterDate).Days;
                     var progressPercent = Math.Min((double)daysRaised / 120 * 100, 200); // Cap at 200% for display
-                    var barColor = daysRaised > 120 ? "#ff9800" : (daysRaised >= 100 ? "#4caf50" : "#2196f3");
+                    // ActHarvest override -> always blue
+                    var barColor = "#2196f3";
                     
                     <div class="d-flex flex-column" style="gap: 6px;">
                         <MudChip Size="Size.Small" Color="Color.Default" Variant="Variant.Filled" Style="background-color: #e0e0e0; color: #333; font-weight: 600; height: 24px;">
@@ -266,7 +267,18 @@
                     var daysElapsed = (DateTime.Now - context.RegisterDate).Days;
                     var daysRemaining = (context.EstimatedHarvestDate.Value - DateTime.Now).Days;
                     var progressPercent = Math.Min((double)daysElapsed / 120 * 100, 200);
-                    var barColor = daysElapsed > 120 ? "#ff9800" : (daysElapsed >= 100 ? "#4caf50" : "#2196f3");
+                    // Color rules based on remaining days:
+                    // remaining > 99 -> green
+                    // remaining between 20..99 -> blue (default)
+                    // remaining between 1..19 -> yellow
+                    // remaining <= 0 -> orange
+                    string barColor;
+                    if (daysRemaining > 20)
+                        barColor = "#4caf50";
+                    else if (daysRemaining < 0)
+                        barColor = "#ff9800";
+                    else
+                        barColor = "#fbc02d";
                     var chipColor = daysRemaining <= 0 ? Color.Error : (daysRemaining < 20 ? Color.Warning : Color.Success);
                     
                     <div class="d-flex flex-column" style="gap: 6px;">
