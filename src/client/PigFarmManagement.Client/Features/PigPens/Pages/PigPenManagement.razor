@@ -309,9 +309,15 @@
                         : (int?)null;
                     var tooltipDate = p.LastImportDate?.ToString("d/M/yyyy") ?? "ไม่มีการนำเข้า";
                     
-                    // Determine progress bar color
+                    // Determine progress bar color (based on percent only, no ActHarvest override)
                     var progressPercent = Math.Clamp(p.ProgressPercent, 0.0, 100.0);
-                    var barColor = progressPercent >= 100 ? "#4caf50" : (progressPercent >= 80 ? "#fbc02d" : "#2196f3");
+                    string barColor;
+                    if (progressPercent <= 90.0)
+                        barColor = "#4caf50"; // green (0-90%)
+                    else if (progressPercent <= 100.0)
+                        barColor = "#fbc02d"; // yellow (91-100%)
+                    else
+                        barColor = "#ff9800"; // orange
 
                     <MudTooltip Text="@tooltipDate">
                         <div class="d-flex flex-column align-center" style="gap: 6px;">
