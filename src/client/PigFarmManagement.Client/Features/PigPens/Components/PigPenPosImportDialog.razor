@@ -9,6 +9,16 @@
             .no-select-all thead tr th:first-child .mud-checkbox {
                 visibility: hidden !important;
             }
+
+            /* Mobile/desktop text helpers (used for DataLabel and inline switches) */
+            @@media (max-width: 600px) {
+                .desktop-only { display: none !important; }
+                .mobile-only { display: inline !important; }
+            }
+            @@media (min-width: 601px) {
+                .desktop-only { display: inline !important; }
+                .mobile-only { display: none !important; }
+            }
         </style>
         <div class="pa-4">
             <MudText Typo="Typo.h6" Class="mb-4">นำเข้าข้อมูลอาหารจาก POSPOS สำหรับคอก @PenCode</MudText>
@@ -142,20 +152,20 @@
                          Class="no-select-all">
                     <HeaderContent>
                         <MudTh><MudTableSortLabel SortBy="new Func<PosPosTransaction, object>(x => x.InvoiceReference.Code)">รหัสบิลขาย</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<PosPosTransaction, object>(x => x.Timestamp)">วันที่</MudTableSortLabel></MudTh>
-                        <MudTh>ลูกค้า</MudTh>
-                        <MudTh>รหัสลูกค้า</MudTh>
-                        <MudTh>รายการ</MudTh>
-                        <MudTh>ยอดรวม</MudTh>
-                        <MudTh>ดูรายละเอียด</MudTh>
+                            <MudTh><MudTableSortLabel SortBy="new Func<PosPosTransaction, object>(x => x.Timestamp)">วันที่</MudTableSortLabel></MudTh>
+                            <MudTh>ลูกค้า</MudTh>
+                            <MudTh>รหัสลูกค้า</MudTh>
+                            <MudTh>รายการ</MudTh>
+                            <MudTh>ยอดรวม</MudTh>
+                            <MudTh>ดูรายละเอียด</MudTh>
                     </HeaderContent>
                     <RowTemplate>
-                        <MudTd DataLabel="Invoice Code">
+                        <MudTd DataLabel="รหัสบิลขาย">
                             <MudChip Color="Color.Primary" Size="Size.Small">@context.InvoiceReference.Code</MudChip>
                         </MudTd>
-                        <MudTd DataLabel="Date">@context.Timestamp.ToString("yyyy-MM-dd HH:mm")</MudTd>
-                        <MudTd DataLabel="Customer">@context.BuyerDetail.FirstName @context.BuyerDetail.LastName</MudTd>
-                        <MudTd DataLabel="Customer Code">
+                        <MudTd DataLabel="วันที่">@context.Timestamp.ToString("yyyy-MM-dd HH:mm")</MudTd>
+                        <MudTd DataLabel="ลูกค้า">@context.BuyerDetail.FirstName @context.BuyerDetail.LastName</MudTd>
+                        <MudTd DataLabel="รหัสลูกค้า">
                             @if (!string.IsNullOrEmpty(context.BuyerDetail.Code))
                             {
                                 <MudChip Color="Color.Secondary" Size="Size.Small">@context.BuyerDetail.Code</MudChip>
