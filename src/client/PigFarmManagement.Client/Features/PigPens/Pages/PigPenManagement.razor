@@ -147,6 +147,7 @@
             <MudTh>ลงทะเบียน</MudTh>
             <MudTh>จับประมาณ 120 วัน</MudTh>
             <MudTh>ระยะเวลาเลี้ยง</MudTh>
+            <MudTh>การกินอาหาร</MudTh>
             <MudTh>รับอาหารล่าสุด</MudTh>
             <MudTh>เมนู</MudTh>
         </HeaderContent>
@@ -242,7 +243,7 @@
                     </MudText>
                 }
             </MudTd>
-            <MudTd DataLabel="ระยะเวลาเลี้ยง">
+            <MudTd DataLabel="ระยะเวลาเลี้ยง" Style="text-align: center;">
                 @if (context.ActHarvestDate.HasValue)
                 {
                     var daysRaised = (context.ActHarvestDate.Value - context.RegisterDate).Days;
@@ -250,11 +251,11 @@
                     // ActHarvest override -> always blue
                     var barColor = "#2196f3";
                     
-                    <div class="d-flex flex-column" style="gap: 6px;">
-                        <MudChip Size="Size.Small" Color="Color.Default" Variant="Variant.Filled" Style="background-color: #e0e0e0; color: #333; font-weight: 600; height: 24px;">
+                    <div class="d-flex flex-column align-center" style="gap: 6px; justify-content: center;">
+                        <MudChip Size="Size.Small" Color="Color.Default" Variant="Variant.Filled" Style="background-color: #e0e0e0; color: #333; font-weight: 400; height: 24px; font-size: 0.65rem;">
                             เลี้ยง @daysRaised วัน
                         </MudChip>
-                        <div style="position: relative; width: 96px; height: 16px; background-color: #e0e0e0; border-radius: 3px; display: flex; align-items: center;">
+                        <div style="position: relative; width: 86px; height: 16px; background-color: #e0e0e0; border-radius: 3px; display: flex; align-items: center; justify-content: center;">
                             <div style="position: absolute; left: 0; top: 0; height: 100%; background-color: @barColor; width: @(Math.Clamp(progressPercent, 0.0, 100.0))%; border-radius: 3px; transition: width 0.3s ease;"></div>
                             <MudText Typo="Typo.caption" Style="position: relative; z-index: 1; font-weight: 600; width: 100%; text-align: center; color: #333; font-size: 0.65rem;">
                                 @daysRaised/120
@@ -281,11 +282,11 @@
                         barColor = "#fbc02d";
                     var chipColor = daysRemaining <= 0 ? Color.Error : (daysRemaining < 20 ? Color.Warning : Color.Success);
                     
-                    <div class="d-flex flex-column" style="gap: 6px;">
-                        <MudChip Size="Size.Small" Color="Color.Default" Variant="Variant.Filled" Style="background-color: #e0e0e0; color: #333; font-weight: 600; height: 24px;">
+                    <div class="d-flex flex-column align-center" style="gap: 6px; justify-content: center;">
+                        <MudChip Size="Size.Small" Color="Color.Default" Variant="Variant.Filled" Style="background-color: #e0e0e0; color: #333; font-weight: 400; height: 24px; font-size: 0.65rem;">
                             เหลือ @daysRemaining วัน
                         </MudChip>
-                        <div style="position: relative; width: 96px; height: 16px; background-color: #e0e0e0; border-radius: 3px; display: flex; align-items: center;">
+                        <div style="position: relative; width: 86px; height: 16px; background-color: #e0e0e0; border-radius: 3px; display: flex; align-items: center; justify-content: center;">
                             <div style="position: absolute; left: 0; top: 0; height: 100%; background-color: @barColor; width: @(Math.Clamp(progressPercent, 0.0, 100.0))%; border-radius: 3px; transition: width 0.3s ease;"></div>
                             <MudText Typo="Typo.caption" Style="position: relative; z-index: 1; font-weight: 600; width: 100%; text-align: center; color: #333; font-size: 0.65rem;">
                                 @daysElapsed/120
@@ -301,13 +302,14 @@
                     </MudText>
                 }
             </MudTd>
-            <MudTd DataLabel="รับอาหารล่าสุด" Style="text-align: center;">
+            <MudTd DataLabel="การกินอาหาร" Style="text-align: center;">
                 @if (feedProgress.TryGetValue(context.Id, out var p) && p != null)
                 {
                     var daysValue = feedImportDates.TryGetValue(context.Id, out var importData) && importData?.DaysSinceLastImport.HasValue == true
                         ? importData.DaysSinceLastImport.Value
                         : (int?)null;
-                    var tooltipDate = p.LastImportDate?.ToString("d/M/yyyy") ?? "ไม่มีการนำเข้า";
+                    
+                    var restBags = (int)Math.Ceiling((double)(p.ExpectedBags - p.AccumulatedBags));
                     
                     // Determine progress bar color (based on percent only, no ActHarvest override)
                     var progressPercent = Math.Clamp(p.ProgressPercent, 0.0, 100.0);
@@ -319,36 +321,36 @@
                     else
                         barColor = "#ff9800"; // orange
 
-                    <MudTooltip Text="@tooltipDate">
-                        <div class="d-flex flex-column align-center" style="gap: 6px;">
-                            @if (daysValue.HasValue)
-                            {
-                                // Badge color rules:
-                                // - If actual harvest date exists -> grey (default)
-                                // - Else if days >= 30 -> red (error)
-                                // - Else if days >= 20 -> yellow (warning)
-                                // - Else -> default (grey)
-                                Color chipColor;
-                                if (context.ActHarvestDate.HasValue)
-                                    chipColor = Color.Default;
-                                else if (daysValue.Value >= 30)
-                                    chipColor = Color.Error;
-                                else if (daysValue.Value >= 20)
-                                    chipColor = Color.Warning;
-                                else
-                                    chipColor = Color.Default;
-
-                                <MudChip Color="@chipColor" Size="Size.Small" Variant="Variant.Filled" Style="font-weight: 600;">
-                                    @daysValue วัน
-                                </MudChip>
-                            }
-                            <div style="position: relative; width: 96px; height: 16px; background-color: #e0e0e0; border-radius: 3px; display: flex; align-items: center;">
-                                <div style="position: absolute; left: 0; top: 0; height: 100%; background-color: @barColor; width: @progressPercent%; border-radius: 3px; transition: width 0.3s ease;"></div>
-                                <MudText Typo="Typo.caption" Style="position: relative; z-index: 1; font-weight: 600; width: 100%; text-align: center; color: #333; font-size: 0.65rem;">
-                                    @p.AccumulatedBags/@p.ExpectedBags
-                                </MudText>
-                            </div>
+                    <div class="d-flex flex-column align-center" style="gap: 6px;">
+                        <MudChip Size="Size.Small" Color="Color.Default" Variant="Variant.Filled" 
+                                 Style="background-color: #e0e0e0; color: #333; font-weight: 400; height: 24px; font-size: 0.65rem;">
+                            @($"เหลือ {restBags} ถุง")
+                        </MudChip>
+                        <div style="position: relative; width: 86px; height: 16px; background-color: #e0e0e0; border-radius: 3px; display: flex; align-items: center;">
+                            <div style="position: absolute; left: 0; top: 0; height: 100%; background-color: @barColor; border-radius: 3px; width: @progressPercent%; transition: width 0.3s ease;"></div>
+                            <span style="position: relative; width: 100%; text-align: center; font-size: 0.65rem; font-weight: 600; color: #333; z-index: 1;">
+                                @($"{p.AccumulatedBags:F0}/{p.ExpectedBags:F0}")
+                            </span>
                         </div>
+                    </div>
+                }
+                else
+                {
+                    <MudText Color="Color.Secondary" Typo="Typo.caption">ไม่มีข้อมูล</MudText>
+                }
+            </MudTd>
+            <MudTd DataLabel="รับอาหารล่าสุด" Style="text-align: center;">
+                @if (feedProgress.TryGetValue(context.Id, out var p) && p != null)
+                {
+                    var lastImport = p.LastImportDate;
+                    var tooltipDate = lastImport?.ToString("yyyy-MM-dd HH:mm") ?? "ไม่มีการนำเข้า";
+                    int? daysSince = lastImport.HasValue ? (int?)(DateTime.Now.Date - lastImport.Value.Date).Days : null;
+
+                    <MudTooltip Text="@tooltipDate">
+                        <MudChip Size="Size.Small" Color="Color.Default" Variant="Variant.Filled" 
+                                 Style="background-color: #e0e0e0; color: #333; font-weight: 600;">
+                            @((daysSince.HasValue) ? (daysSince.Value == 0 ? "วันนี้" : $"{daysSince} วัน") : "ไม่มีการนำเข้า")
+                        </MudChip>
                     </MudTooltip>
                 }
                 else
