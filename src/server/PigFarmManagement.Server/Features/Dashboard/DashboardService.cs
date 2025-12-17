@@ -3,6 +3,7 @@ using PigFarmManagement.Server.Features.PigPens;
 using PigFarmManagement.Server.Features.Feeds;
 using PigFarmManagement.Server.Features.Customers;
 using PigFarmManagement.Server.Infrastructure.Data.Repositories;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace PigFarmManagement.Server.Features.Dashboard;
 
@@ -18,25 +19,35 @@ public class DashboardService : IDashboardService
     private readonly ICustomerService _customerService;
     private readonly IDepositRepository _depositRepository;
     private readonly IHarvestRepository _harvestRepository;
+    private readonly IMemoryCache _cache;
+    private const string CacheKeyDashboardOverview = "dashboard_overview";
 
     public DashboardService(
         IPigPenService pigPenService, 
         IFeedService feedService,
         ICustomerService customerService,
         IDepositRepository depositRepository,
-        IHarvestRepository harvestRepository)
+        IHarvestRepository harvestRepository,
+        IMemoryCache cache)
     {
         _pigPenService = pigPenService;
         _feedService = feedService;
         _customerService = customerService;
         _depositRepository = depositRepository;
         _harvestRepository = harvestRepository;
+        _cache = cache;
     }
 
     // Dashboard-level pig pen summary removed; use PigPen detail endpoints instead.
 
     public async Task<DashboardOverview> GetDashboardOverviewAsync()
     {
+        // Check cache first; return cached result if available (30-second TTL)
+        if (_cache.TryGetValue(CacheKeyDashboardOverview, out DashboardOverview? cachedOverview))
+        {
+            return cachedOverview!;
+        }
+
         // Get all data (active pig pens only)
         var activePigPens = await _pigPenService.GetActivePigPensAsync();
         var customers = await _customerService.GetActiveCustomersAsync();
@@ -119,7 +130,7 @@ public class DashboardService : IDashboardService
         // Order by revenue (TotalPriceIncludeDiscount) descending
         customerStatsCash = customerStatsCash.OrderByDescending(c => c.TotalPriceIncludeDiscount).ToList();
 
-        return new DashboardOverview(
+        var overview = new DashboardOverview(
             totalActivePigPens,
             totalActiveCustomers,
             totalPigs,
@@ -137,12 +148,18 @@ public class DashboardService : IDashboardService
             customerStats,
             customerStatsCash
         );
+
+        // Cache result for 30 seconds to reduce DB load on repeated requests
+        _cache.Set(CacheKeyDashboardOverview, overview, TimeSpan.FromSeconds(30));
+
+        return overview;
     }
 
     private async Task<(decimal totalCost, decimal totalDeposit, decimal totalPriceIncludeDiscount)> 
         CalculateFinancialMetricsAsync(List<PigPen> pigPens)
     {
         if (!pigPens.Any()) return (0, 0, 0);
+
 
         var pigPenIds = pigPens.Select(p => p.Id).ToHashSet();
         

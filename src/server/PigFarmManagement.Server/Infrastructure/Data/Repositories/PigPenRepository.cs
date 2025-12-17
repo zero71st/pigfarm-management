@@ -28,11 +28,30 @@ public class PigPenRepository : IPigPenRepository
 
     public async Task<IEnumerable<PigPen>> GetActiveAsync()
     {
+        // Dashboard queries - return only essential fields, no related collections
         var entities = await _context.PigPens
+            .AsNoTracking()
             .Where(p => !p.IsCalculationLocked)
-            .Include(p => p.Customer)
-            .Include(p => p.FormulaAssignments)
-            .Include(p => p.Harvests)
+            .Select(p => new PigPenEntity
+            {
+                Id = p.Id,
+                CustomerId = p.CustomerId,
+                PenCode = p.PenCode,
+                PigQty = p.PigQty,
+                RegisterDate = p.RegisterDate,
+                ActHarvestDate = p.ActHarvestDate,
+                EstimatedHarvestDate = p.EstimatedHarvestDate,
+                FeedCost = p.FeedCost,
+                Investment = p.Investment,
+                ProfitLoss = p.ProfitLoss,
+                Type = p.Type,
+                DepositPerPig = p.DepositPerPig,
+                SelectedBrand = p.SelectedBrand,
+                Note = p.Note,
+                IsCalculationLocked = p.IsCalculationLocked,
+                CreatedAt = p.CreatedAt,
+                UpdatedAt = p.UpdatedAt
+            })
             .ToListAsync();
         return entities.Select(e => e.ToModel());
     }
