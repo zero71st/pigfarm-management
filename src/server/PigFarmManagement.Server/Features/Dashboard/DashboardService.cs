@@ -8,7 +8,6 @@ namespace PigFarmManagement.Server.Features.Dashboard;
 
 public interface IDashboardService
 {
-    Task<PigPenSummary> GetPigPenSummaryAsync(Guid pigPenId);
     Task<DashboardOverview> GetDashboardOverviewAsync();
 }
 
@@ -34,39 +33,13 @@ public class DashboardService : IDashboardService
         _harvestRepository = harvestRepository;
     }
 
-    public async Task<PigPenSummary> GetPigPenSummaryAsync(Guid pigPenId)
-    {
-        // Verify pig pen exists
-        var pigPen = await _pigPenService.GetPigPenByIdAsync(pigPenId);
-        if (pigPen == null)
-        {
-            throw new InvalidOperationException("Pig pen not found");
-        }
-
-        // Get related data
-        var feeds = await _feedService.GetFeedsByPigPenIdAsync(pigPenId);
-        var deposits = await _depositRepository.GetByPigPenIdAsync(pigPenId);
-        var harvests = await _harvestRepository.GetByPigPenIdAsync(pigPenId);
-
-        // Calculate summary
-        decimal totalFeed = feeds.Sum(f => f.Cost);
-        decimal totalDeposit = deposits.Sum(d => d.Amount);
-        decimal revenue = harvests.Sum(h => h.Revenue);
-        decimal investment = totalFeed - totalDeposit;
-        decimal profitLoss = revenue - totalFeed;
-
-        return new PigPenSummary(pigPenId, totalFeed, totalDeposit, investment, profitLoss);
-    }
+    // Dashboard-level pig pen summary removed; use PigPen detail endpoints instead.
 
     public async Task<DashboardOverview> GetDashboardOverviewAsync()
     {
-        // Get all data
-        var pigPens = await _pigPenService.GetAllPigPensAsync();
-        var customers = await _customerService.GetAllCustomersAsync();
-
-        // Filter ACTIVE pig pens only (ActHarvestDate == null or in future)
-        // This is the key change: only show active pens in dashboard
-        var activePigPens = pigPens.Where(p => p.IsActive).ToList();
+        // Get all data (active pig pens only)
+        var activePigPens = await _pigPenService.GetActivePigPensAsync();
+        var customers = await _customerService.GetActiveCustomersAsync();
 
         // Group by pig pen type (both must be active)
         var cashPigPens = activePigPens.Where(p => p.Type == PigPenType.Cash).ToList();

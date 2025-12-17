@@ -11,8 +11,7 @@ public static class DashboardEndpoints
         group.MapGet("/overview", GetDashboardOverview)
             .WithName("GetDashboardOverview");
 
-        group.MapGet("/pigpens/{id:guid}/summary", GetPigPenSummary)
-            .WithName("GetPigPenSummary");
+        // Removed dashboard-level pig pen summary endpoint (use /api/pigpens/{id}/summary)
 
         return builder;
     }
@@ -30,20 +29,5 @@ public static class DashboardEndpoints
         }
     }
 
-    private static async Task<IResult> GetPigPenSummary(Guid id, IDashboardService dashboardService)
-    {
-        try
-        {
-            var summary = await dashboardService.GetPigPenSummaryAsync(id);
-            return Results.Ok(summary);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Results.NotFound(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            return Results.Problem($"Error retrieving pig pen summary: {ex.Message}");
-        }
-    }
+    // pig-pen summary endpoint removed from dashboard endpoints
 }

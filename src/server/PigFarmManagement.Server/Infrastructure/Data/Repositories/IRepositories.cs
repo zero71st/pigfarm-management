@@ -6,6 +6,7 @@ namespace PigFarmManagement.Server.Infrastructure.Data.Repositories;
 public interface ICustomerRepository
 {
     Task<IEnumerable<Customer>> GetAllAsync();
+    Task<IEnumerable<Customer>> GetActiveAsync();
     Task<IEnumerable<Customer>> GetAllIncludingDeletedAsync();
     Task<IEnumerable<Customer>> GetDeletedAsync();
     Task<Customer?> GetByIdAsync(Guid id);
@@ -20,6 +21,7 @@ public interface ICustomerRepository
 public interface IPigPenRepository
 {
     Task<IEnumerable<PigPen>> GetAllAsync();
+    Task<IEnumerable<PigPen>> GetActiveAsync();
     Task<PigPen?> GetByIdAsync(Guid id);
     Task<IEnumerable<PigPen>> GetByCustomerIdAsync(Guid customerId);
     Task<PigPen?> GetByPenCodeAsync(string penCode);
