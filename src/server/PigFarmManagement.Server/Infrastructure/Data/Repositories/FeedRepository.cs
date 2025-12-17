@@ -128,6 +128,18 @@ public class FeedRepository : IFeedRepository
         return lastFeed?.CreatedAt;
     }
 
+    public async Task<IEnumerable<Feed>> GetByPigPenIdsAsync(IEnumerable<Guid> pigPenIds)
+    {
+        var ids = pigPenIds.ToList();
+        if (!ids.Any()) return Enumerable.Empty<Feed>();
+
+        var entities = await _context.Feeds
+            .AsNoTracking()
+            .Where(f => ids.Contains(f.PigPenId) && !f.ProductName.Contains("ค่าขนส่ง"))
+            .ToListAsync();
+        return entities.Select(e => e.ToModel());
+    }
+
     /// <summary>
     /// Get feed progress for all pig pens: accumulated bags, expected bags, and progress percent.
     /// </summary>

@@ -160,32 +160,12 @@ public class DashboardService : IDashboardService
     {
         if (!pigPens.Any()) return (0, 0, 0);
 
-
-        var pigPenIds = pigPens.Select(p => p.Id).ToHashSet();
+        var pigPenIds = pigPens.Select(p => p.Id).ToList();
         
-        // Get all feeds for these pig pens
-        var allFeeds = new List<FeedItem>();
-        foreach (var pigPenId in pigPenIds)
-        {
-            var feeds = await _feedService.GetFeedsByPigPenIdAsync(pigPenId);
-            allFeeds.AddRange(feeds);
-        }
-
-        // Get all deposits for these pig pens
-        var allDeposits = new List<Deposit>();
-        foreach (var pigPenId in pigPenIds)
-        {
-            var deposits = await _depositRepository.GetByPigPenIdAsync(pigPenId);
-            allDeposits.AddRange(deposits);
-        }
-
-        // Get all harvests for these pig pens
-        var allHarvests = new List<HarvestResult>();
-        foreach (var pigPenId in pigPenIds)
-        {
-            var harvests = await _harvestRepository.GetByPigPenIdAsync(pigPenId);
-            allHarvests.AddRange(harvests);
-        }
+        // Batched queries (single query per collection instead of per-pen loop)
+        var allFeeds = await _feedService.GetFeedsByPigPenIdsAsync(pigPenIds);
+        var allDeposits = await _depositRepository.GetByPigPenIdsAsync(pigPenIds);
+        var allHarvests = await _harvestRepository.GetByPigPenIdsAsync(pigPenIds);
 
         var totalCost = allFeeds.Sum(f => (f.FeedCost ?? 0) * f.Quantity);
         var totalDeposit = allDeposits.Sum(d => d.Amount);
