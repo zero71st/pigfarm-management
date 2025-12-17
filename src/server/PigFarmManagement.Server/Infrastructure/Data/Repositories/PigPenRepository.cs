@@ -26,6 +26,17 @@ public class PigPenRepository : IPigPenRepository
         return entities.Select(e => e.ToModel());
     }
 
+    public async Task<IEnumerable<PigPen>> GetActiveAsync()
+    {
+        var entities = await _context.PigPens
+            .Where(p => !p.IsCalculationLocked)
+            .Include(p => p.Customer)
+            .Include(p => p.FormulaAssignments)
+            .Include(p => p.Harvests)
+            .ToListAsync();
+        return entities.Select(e => e.ToModel());
+    }
+
     public async Task<PigPen?> GetByIdAsync(Guid id)
     {
         var entity = await _context.PigPens

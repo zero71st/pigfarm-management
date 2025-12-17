@@ -9,6 +9,7 @@ namespace PigFarmManagement.Server.Features.PigPens;
 public interface IPigPenService
 {
     Task<List<PigPen>> GetAllPigPensAsync();
+    Task<List<PigPen>> GetActivePigPensAsync();
     Task<PigPen?> GetPigPenByIdAsync(Guid id);
     Task<PigPen> CreatePigPenAsync(PigPenCreateDto dto);
     Task<PigPen> UpdatePigPenAsync(PigPen pigPen, string? userId = null, IEnumerable<string>? preserveProductCodes = null);
@@ -38,6 +39,12 @@ public class PigPenService : IPigPenService
     public async Task<List<PigPen>> GetAllPigPensAsync()
     {
         var pigPens = await _pigPenRepository.GetAllAsync();
+        return pigPens.OrderByDescending(p => p.UpdatedAt).ToList();
+    }
+
+    public async Task<List<PigPen>> GetActivePigPensAsync()
+    {
+        var pigPens = await _pigPenRepository.GetActiveAsync();
         return pigPens.OrderByDescending(p => p.UpdatedAt).ToList();
     }
 

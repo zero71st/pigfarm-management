@@ -8,6 +8,7 @@ namespace PigFarmManagement.Server.Features.Customers;
 public interface ICustomerService
 {
     Task<List<Customer>> GetAllCustomersAsync();
+        Task<List<Customer>> GetActiveCustomersAsync();
     Task<Customer?> GetCustomerByIdAsync(Guid id);
     Task<Customer> CreateCustomerAsync(CustomerCreateDto dto);
     Task<Customer> UpdateCustomerAsync(Guid id, CustomerUpdateDto dto);
@@ -49,6 +50,12 @@ public class CustomerService : ICustomerService
     public async Task<List<Customer>> GetAllCustomersAsync()
     {
         var customers = await _customerRepository.GetAllAsync();
+        return customers.ToList();
+    }
+
+    public async Task<List<Customer>> GetActiveCustomersAsync()
+    {
+        var customers = await _customerRepository.GetActiveAsync();
         return customers.ToList();
     }
 

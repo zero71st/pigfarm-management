@@ -68,6 +68,25 @@ public class CustomerRepository : ICustomerRepository
         return entities.Select(e => e.ToModel());
     }
 
+    public async Task<IEnumerable<Customer>> GetActiveAsync()
+    {
+        // Active customers are those with at least one pig pen where calculations are not locked
+        var activeCustomerIds = await _context.PigPens
+            .Where(p => !p.IsCalculationLocked)
+            .Select(p => p.CustomerId)
+            .Distinct()
+            .ToListAsync();
+
+        if (!activeCustomerIds.Any())
+            return Enumerable.Empty<Customer>();
+
+        var entities = await _context.Customers
+            .Where(c => !c.IsDeleted && activeCustomerIds.Contains(c.Id))
+            .ToListAsync();
+
+        return entities.Select(e => e.ToModel());
+    }
+
     public async Task<Customer> CreateAsync(CustomerCreateDto dto)
     {
         var customer = new Customer(
