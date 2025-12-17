@@ -7,6 +7,7 @@ namespace PigFarmManagement.Server.Features.Feeds;
 public interface IFeedService
 {
     Task<List<FeedItem>> GetFeedsByPigPenIdAsync(Guid pigPenId);
+    Task<List<FeedItem>> GetFeedsByPigPenIdsAsync(IEnumerable<Guid> pigPenIds);
     Task<FeedItem> AddFeedToPigPenAsync(Guid pigPenId, FeedCreateDto dto);
     Task<bool> DeleteFeedAsync(Guid id);
 }
@@ -25,6 +26,13 @@ public class FeedService : IFeedService
     public async Task<List<FeedItem>> GetFeedsByPigPenIdAsync(Guid pigPenId)
     {
         var feeds = await _feedRepository.GetByPigPenIdAsync(pigPenId);
+        return feeds.Select(ConvertToFeedItem).ToList();
+    }
+
+    public async Task<List<FeedItem>> GetFeedsByPigPenIdsAsync(IEnumerable<Guid> pigPenIds)
+    {
+        // Batched query for multiple pig pens (used by dashboard aggregation)
+        var feeds = await _feedRepository.GetByPigPenIdsAsync(pigPenIds);
         return feeds.Select(ConvertToFeedItem).ToList();
     }
 

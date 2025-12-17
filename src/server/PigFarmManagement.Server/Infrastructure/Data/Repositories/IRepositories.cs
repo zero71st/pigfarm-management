@@ -39,6 +39,7 @@ public interface IFeedRepository
     Task<IEnumerable<Feed>> GetAllAsync();
     Task<Feed?> GetByIdAsync(Guid id);
     Task<IEnumerable<Feed>> GetByPigPenIdAsync(Guid pigPenId);
+    Task<IEnumerable<Feed>> GetByPigPenIdsAsync(IEnumerable<Guid> pigPenIds);
     Task<Feed> CreateAsync(Feed feed);
     Task<Feed> UpdateAsync(Feed feed);
     Task DeleteAsync(Guid id);
@@ -54,6 +55,7 @@ public interface IDepositRepository
     Task<IEnumerable<Deposit>> GetAllAsync();
     Task<Deposit?> GetByIdAsync(Guid id);
     Task<IEnumerable<Deposit>> GetByPigPenIdAsync(Guid pigPenId);
+    Task<IEnumerable<Deposit>> GetByPigPenIdsAsync(IEnumerable<Guid> pigPenIds);
     Task<Deposit> CreateAsync(Deposit deposit);
     Task<Deposit> UpdateAsync(Deposit deposit);
     Task DeleteAsync(Guid id);
@@ -64,6 +66,7 @@ public interface IHarvestRepository
     Task<IEnumerable<HarvestResult>> GetAllAsync();
     Task<HarvestResult?> GetByIdAsync(Guid id);
     Task<IEnumerable<HarvestResult>> GetByPigPenIdAsync(Guid pigPenId);
+    Task<IEnumerable<HarvestResult>> GetByPigPenIdsAsync(IEnumerable<Guid> pigPenIds);
     Task<HarvestResult> CreateAsync(HarvestResult harvest);
     Task<HarvestResult> UpdateAsync(HarvestResult harvest);
     Task DeleteAsync(Guid id);

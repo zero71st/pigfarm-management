@@ -3,6 +3,7 @@ using PigFarmManagement.Server.Features.PigPens;
 using PigFarmManagement.Server.Features.Feeds;
 using PigFarmManagement.Server.Features.Customers;
 using PigFarmManagement.Server.Infrastructure.Data.Repositories;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace PigFarmManagement.Server.Features.Dashboard;
 
@@ -18,25 +19,35 @@ public class DashboardService : IDashboardService
     private readonly ICustomerService _customerService;
     private readonly IDepositRepository _depositRepository;
     private readonly IHarvestRepository _harvestRepository;
+    private readonly IMemoryCache _cache;
+    private const string CacheKeyDashboardOverview = "dashboard_overview";
 
     public DashboardService(
         IPigPenService pigPenService, 
         IFeedService feedService,
         ICustomerService customerService,
         IDepositRepository depositRepository,
-        IHarvestRepository harvestRepository)
+        IHarvestRepository harvestRepository,
+        IMemoryCache cache)
     {
         _pigPenService = pigPenService;
         _feedService = feedService;
         _customerService = customerService;
         _depositRepository = depositRepository;
         _harvestRepository = harvestRepository;
+        _cache = cache;
     }
 
     // Dashboard-level pig pen summary removed; use PigPen detail endpoints instead.
 
     public async Task<DashboardOverview> GetDashboardOverviewAsync()
     {
+        // Check cache first; return cached result if available (30-second TTL)
+        if (_cache.TryGetValue(CacheKeyDashboardOverview, out DashboardOverview? cachedOverview))
+        {
+            return cachedOverview!;
+        }
+
         // Get all data (active pig pens only)
         var activePigPens = await _pigPenService.GetActivePigPensAsync();
         var customers = await _customerService.GetActiveCustomersAsync();
@@ -119,7 +130,7 @@ public class DashboardService : IDashboardService
         // Order by revenue (TotalPriceIncludeDiscount) descending
         customerStatsCash = customerStatsCash.OrderByDescending(c => c.TotalPriceIncludeDiscount).ToList();
 
-        return new DashboardOverview(
+        var overview = new DashboardOverview(
             totalActivePigPens,
             totalActiveCustomers,
             totalPigs,
@@ -137,6 +148,11 @@ public class DashboardService : IDashboardService
             customerStats,
             customerStatsCash
         );
+
+        // Cache result for 30 seconds to reduce DB load on repeated requests
+        _cache.Set(CacheKeyDashboardOverview, overview, TimeSpan.FromSeconds(30));
+
+        return overview;
     }
 
     private async Task<(decimal totalCost, decimal totalDeposit, decimal totalPriceIncludeDiscount)> 
@@ -144,31 +160,12 @@ public class DashboardService : IDashboardService
     {
         if (!pigPens.Any()) return (0, 0, 0);
 
-        var pigPenIds = pigPens.Select(p => p.Id).ToHashSet();
+        var pigPenIds = pigPens.Select(p => p.Id).ToList();
         
-        // Get all feeds for these pig pens
-        var allFeeds = new List<FeedItem>();
-        foreach (var pigPenId in pigPenIds)
-        {
-            var feeds = await _feedService.GetFeedsByPigPenIdAsync(pigPenId);
-            allFeeds.AddRange(feeds);
-        }
-
-        // Get all deposits for these pig pens
-        var allDeposits = new List<Deposit>();
-        foreach (var pigPenId in pigPenIds)
-        {
-            var deposits = await _depositRepository.GetByPigPenIdAsync(pigPenId);
-            allDeposits.AddRange(deposits);
-        }
-
-        // Get all harvests for these pig pens
-        var allHarvests = new List<HarvestResult>();
-        foreach (var pigPenId in pigPenIds)
-        {
-            var harvests = await _harvestRepository.GetByPigPenIdAsync(pigPenId);
-            allHarvests.AddRange(harvests);
-        }
+        // Batched queries (single query per collection instead of per-pen loop)
+        var allFeeds = await _feedService.GetFeedsByPigPenIdsAsync(pigPenIds);
+        var allDeposits = await _depositRepository.GetByPigPenIdsAsync(pigPenIds);
+        var allHarvests = await _harvestRepository.GetByPigPenIdsAsync(pigPenIds);
 
         var totalCost = allFeeds.Sum(f => (f.FeedCost ?? 0) * f.Quantity);
         var totalDeposit = allDeposits.Sum(d => d.Amount);

@@ -34,6 +34,20 @@ public class DepositRepository : IDepositRepository
         return entities.Select(e => e.ToModel());
     }
 
+    public async Task<IEnumerable<Deposit>> GetByPigPenIdsAsync(IEnumerable<Guid> pigPenIds)
+    {
+        // Batched query for dashboard aggregation
+        var penIdList = pigPenIds.ToList();
+        if (!penIdList.Any())
+            return Enumerable.Empty<Deposit>();
+
+        var entities = await _context.Deposits
+            .AsNoTracking()
+            .Where(d => penIdList.Contains(d.PigPenId))
+            .ToListAsync();
+        return entities.Select(e => e.ToModel());
+    }
+
     public async Task<Deposit> CreateAsync(Deposit deposit)
     {
         var entity = DepositEntity.FromModel(deposit);

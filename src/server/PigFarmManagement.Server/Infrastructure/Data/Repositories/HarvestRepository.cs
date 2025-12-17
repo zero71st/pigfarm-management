@@ -34,6 +34,20 @@ public class HarvestRepository : IHarvestRepository
         return entities.Select(e => e.ToModel());
     }
 
+    public async Task<IEnumerable<HarvestResult>> GetByPigPenIdsAsync(IEnumerable<Guid> pigPenIds)
+    {
+        // Batched query for dashboard aggregation
+        var penIdList = pigPenIds.ToList();
+        if (!penIdList.Any())
+            return Enumerable.Empty<HarvestResult>();
+
+        var entities = await _context.Harvests
+            .AsNoTracking()
+            .Where(h => penIdList.Contains(h.PigPenId))
+            .ToListAsync();
+        return entities.Select(e => e.ToModel());
+    }
+
     public async Task<HarvestResult> CreateAsync(HarvestResult harvest)
     {
         var entity = HarvestEntity.FromModel(harvest);

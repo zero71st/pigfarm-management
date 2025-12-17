@@ -72,6 +72,7 @@ public class CustomerRepository : ICustomerRepository
     {
         // Active customers are those with at least one pig pen where calculations are not locked
         var activeCustomerIds = await _context.PigPens
+            .AsNoTracking()
             .Where(p => !p.IsCalculationLocked)
             .Select(p => p.CustomerId)
             .Distinct()
@@ -80,8 +81,21 @@ public class CustomerRepository : ICustomerRepository
         if (!activeCustomerIds.Any())
             return Enumerable.Empty<Customer>();
 
+        // Return only essential fields for dashboard display
         var entities = await _context.Customers
+            .AsNoTracking()
             .Where(c => !c.IsDeleted && activeCustomerIds.Contains(c.Id))
+            .Select(c => new CustomerEntity
+            {
+                Id = c.Id,
+                Code = c.Code,
+                FirstName = c.FirstName,
+                LastName = c.LastName,
+                Status = c.Status,
+                IsDeleted = c.IsDeleted,
+                CreatedAt = c.CreatedAt,
+                UpdatedAt = c.UpdatedAt
+            })
             .ToListAsync();
 
         return entities.Select(e => e.ToModel());
