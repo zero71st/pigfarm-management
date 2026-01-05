@@ -11,18 +11,31 @@ public class PigFarmDbContextFactory : IDesignTimeDbContextFactory<PigFarmDbCont
     {
         var optionsBuilder = new DbContextOptionsBuilder<PigFarmDbContext>();
 
-        // Allow overriding via DATABASE_URL (Railway) or PIGFARM_CONNECTION for CI; fall back to SQLite
+        // PostgreSQL only. Requires DATABASE_URL:
+        // - Railway-style URL: postgresql://user:password@host:port/database
+        // - OR raw Npgsql connection string: Server=...;Port=...;Database=...;User Id=...;Password=...;
         var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
-        if (!string.IsNullOrWhiteSpace(databaseUrl))
+        if (string.IsNullOrWhiteSpace(databaseUrl))
         {
-            // Normalize possible tcp:// urls to postgresql:// and parse DATABASE_URL (postgres://user:pass@host:port/dbname)
-            if (databaseUrl.StartsWith("tcp://", StringComparison.OrdinalIgnoreCase))
-            {
-                databaseUrl = "postgresql://" + databaseUrl.Substring("tcp://".Length);
-            }
+            throw new InvalidOperationException(
+                "DATABASE_URL is required for design-time DbContext creation. SQLite support has been removed.");
+        }
 
-            var uri = new Uri(databaseUrl);
-            var userInfo = uri.UserInfo.Split(':', 2);
+        // If DATABASE_URL looks like a connection string, use it directly.
+        if (databaseUrl.Contains("=", StringComparison.Ordinal) && !databaseUrl.Contains("://", StringComparison.Ordinal))
+        {
+            optionsBuilder.UseNpgsql(databaseUrl);
+            return new PigFarmDbContext(optionsBuilder.Options);
+        }
+
+        // Normalize possible tcp:// urls to postgresql://
+        if (databaseUrl.StartsWith("tcp://", StringComparison.OrdinalIgnoreCase))
+        {
+            databaseUrl = "postgresql://" + databaseUrl.Substring("tcp://".Length);
+        }
+
+        var uri = new Uri(databaseUrl);
+        var userInfo = uri.UserInfo.Split(':', 2);
 
             // Allow overriding SSL mode via query string for local dev (e.g., ?sslmode=disable)
             // Defaults to Require (Railway expects SSL).
@@ -53,16 +66,7 @@ public class PigFarmDbContextFactory : IDesignTimeDbContextFactory<PigFarmDbCont
                 Pooling = true
             };
 
-            optionsBuilder.UseNpgsql(npgsqlBuilder.ToString());
-            return new PigFarmDbContext(optionsBuilder.Options);
-        }
-
-        // Allow overriding via environment variable for CI or custom paths
-        var connectionString = Environment.GetEnvironmentVariable("PIGFARM_CONNECTION")
-                               ?? "Data Source=pigfarm.db";
-
-        optionsBuilder.UseSqlite(connectionString);
-
+        optionsBuilder.UseNpgsql(npgsqlBuilder.ToString());
         return new PigFarmDbContext(optionsBuilder.Options);
     }
 }

@@ -81,13 +81,33 @@ builder.Services.Configure<PigFarmManagement.Server.Infrastructure.Settings.Posp
 // Bind Google Maps options from configuration / environment
 builder.Services.Configure<PigFarmManagement.Server.Infrastructure.Settings.GoogleMapsOptions>(builder.Configuration.GetSection("GoogleMaps"));
 
-// Add Entity Framework
-// Support both PostgreSQL (via DATABASE_URL for Railway) and SQLite (local dev)
-// See specs/011-title-deploy-server/quickstart.md for Railway deployment guidance
+// Add Entity Framework (PostgreSQL only)
+// Requires DATABASE_URL:
+// - Railway-style URL: postgresql://user:password@host:port/database
+// - OR a raw Npgsql connection string: Server=...;Port=...;Database=...;User Id=...;Password=...;
 var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
-if (!string.IsNullOrWhiteSpace(databaseUrl))
+if (string.IsNullOrWhiteSpace(databaseUrl))
 {
-    // Parse Railway PostgreSQL DATABASE_URL format: postgresql://user:password@host:port/database
+    throw new InvalidOperationException(
+        "DATABASE_URL is required. SQLite support has been removed; set DATABASE_URL to a PostgreSQL URL or Npgsql connection string.");
+}
+
+// If DATABASE_URL looks like a connection string, use it directly.
+if (databaseUrl.Contains("=", StringComparison.Ordinal) && !databaseUrl.Contains("://", StringComparison.Ordinal))
+{
+    builder.Services.AddDbContext<PigFarmDbContext>(options =>
+        options.UseNpgsql(databaseUrl, npgOptions =>
+            npgOptions.EnableRetryOnFailure()));
+}
+else
+{
+    // Normalize possible tcp:// urls to postgresql://
+    if (databaseUrl.StartsWith("tcp://", StringComparison.OrdinalIgnoreCase))
+    {
+        databaseUrl = "postgresql://" + databaseUrl.Substring("tcp://".Length);
+    }
+
+    // Parse DATABASE_URL
     var uri = new Uri(databaseUrl);
     var userInfo = uri.UserInfo.Split(':', 2);
 
@@ -121,17 +141,8 @@ if (!string.IsNullOrWhiteSpace(databaseUrl))
     };
 
     builder.Services.AddDbContext<PigFarmDbContext>(options =>
-        options.UseNpgsql(npgsqlBuilder.ToString(), npgOptions => 
+        options.UseNpgsql(npgsqlBuilder.ToString(), npgOptions =>
             npgOptions.EnableRetryOnFailure()));
-}
-else
-{
-    // Fallback to SQLite for local development
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-                          ?? Environment.GetEnvironmentVariable("PIGFARM_CONNECTION")
-                          ?? "Data Source=pigfarm.db";
-    builder.Services.AddDbContext<PigFarmDbContext>(options =>
-        options.UseSqlite(connectionString));
 }
 
 // Add application services
