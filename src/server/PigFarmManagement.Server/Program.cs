@@ -8,6 +8,7 @@ using PigFarmManagement.Server.Features.Authentication;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.OpenApi.Models;
 using Npgsql;
+using Microsoft.AspNetCore.WebUtilities;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -89,6 +90,24 @@ if (!string.IsNullOrWhiteSpace(databaseUrl))
     // Parse Railway PostgreSQL DATABASE_URL format: postgresql://user:password@host:port/database
     var uri = new Uri(databaseUrl);
     var userInfo = uri.UserInfo.Split(':', 2);
+
+    // Allow overriding SSL mode via query string for local dev (e.g., ?sslmode=disable)
+    // Defaults to Require (Railway expects SSL).
+    var sslMode = SslMode.Require;
+    try
+    {
+        var query = QueryHelpers.ParseQuery(uri.Query);
+        if (query.TryGetValue("sslmode", out var sslModeValue))
+        {
+            var raw = sslModeValue.ToString();
+            if (!string.IsNullOrWhiteSpace(raw) && Enum.TryParse<SslMode>(raw, ignoreCase: true, out var parsed))
+                sslMode = parsed;
+        }
+    }
+    catch
+    {
+        // Ignore malformed query string and keep default SSL mode.
+    }
     
     var npgsqlBuilder = new NpgsqlConnectionStringBuilder
     {
@@ -97,7 +116,7 @@ if (!string.IsNullOrWhiteSpace(databaseUrl))
         Username = userInfo.Length > 0 ? Uri.UnescapeDataString(userInfo[0]) : "",
         Password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "",
         Database = uri.AbsolutePath.TrimStart('/'),
-        SslMode = SslMode.Require,
+        SslMode = sslMode,
         Pooling = true
     };
 

@@ -1,6 +1,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.AspNetCore.WebUtilities;
 
 namespace PigFarmManagement.Server.Infrastructure.Data;
 
@@ -22,6 +23,25 @@ public class PigFarmDbContextFactory : IDesignTimeDbContextFactory<PigFarmDbCont
 
             var uri = new Uri(databaseUrl);
             var userInfo = uri.UserInfo.Split(':', 2);
+
+            // Allow overriding SSL mode via query string for local dev (e.g., ?sslmode=disable)
+            // Defaults to Require (Railway expects SSL).
+            var sslMode = Npgsql.SslMode.Require;
+            try
+            {
+                var query = QueryHelpers.ParseQuery(uri.Query);
+                if (query.TryGetValue("sslmode", out var sslModeValue))
+                {
+                    var raw = sslModeValue.ToString();
+                    if (!string.IsNullOrWhiteSpace(raw) && Enum.TryParse<Npgsql.SslMode>(raw, ignoreCase: true, out var parsed))
+                        sslMode = parsed;
+                }
+            }
+            catch
+            {
+                // Ignore malformed query string and keep default SSL mode.
+            }
+
             var npgsqlBuilder = new Npgsql.NpgsqlConnectionStringBuilder
             {
                 Host = uri.Host,
@@ -29,7 +49,7 @@ public class PigFarmDbContextFactory : IDesignTimeDbContextFactory<PigFarmDbCont
                 Username = userInfo.Length > 0 ? Uri.UnescapeDataString(userInfo[0]) : "",
                 Password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "",
                 Database = uri.AbsolutePath.TrimStart('/'),
-                SslMode = Npgsql.SslMode.Require,
+                SslMode = sslMode,
                 Pooling = true
             };
 
