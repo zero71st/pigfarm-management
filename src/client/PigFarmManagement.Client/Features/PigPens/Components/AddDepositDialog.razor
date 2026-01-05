@@ -124,6 +124,9 @@
     [Parameter] public PigPen? PigPen { get; set; }
     [Parameter] public List<Deposit>? CurrentDeposits { get; set; }
 
+    // When true, do not call API; return a local Deposit for the parent dialog to persist later.
+    [Parameter] public bool IsDraft { get; set; } = false;
+
     private decimal amount = 0;
     private DateTime? depositDate = DateTime.Today;
     private string remark = "";
@@ -193,14 +196,26 @@
             // Convert date to UTC to avoid timezone issues
             var depositDateUtc = depositDate!.Value.ToUniversalTime();
 
-            var depositDto = new DepositCreateDto(
-                amount,
-                depositDateUtc,
-                string.IsNullOrWhiteSpace(remark) ? null : remark.Trim()
-            );
+            var cleanedRemark = string.IsNullOrWhiteSpace(remark) ? null : remark.Trim();
 
+            if (IsDraft)
+            {
+                var draftDeposit = new Deposit(
+                    Id: Guid.NewGuid(),
+                    PigPenId: Guid.Empty,
+                    Amount: amount,
+                    Date: depositDateUtc,
+                    Remark: cleanedRemark
+                );
+
+                Snackbar.Add($"เพิ่มเงินมัดจำ ฿{amount:N2} (ชั่วคราว)", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(draftDeposit));
+                return;
+            }
+
+            var depositDto = new DepositCreateDto(amount, depositDateUtc, cleanedRemark);
             var createdDeposit = await PigPenService.AddDepositAsync(PigPenId, depositDto);
-            
+
             Snackbar.Add($"เพิ่มเงินมัดจำ ฿{amount:N2} สำเร็จ", Severity.Success);
             MudDialog.Close(DialogResult.Ok(createdDeposit));
         }
