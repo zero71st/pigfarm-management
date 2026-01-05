@@ -235,6 +235,22 @@ using (var scope = app.Services.CreateScope())
     var logger = loggerFactory.CreateLogger("AdminSeeder");
     var isProduction = app.Environment.IsProduction();
 
+    // Development convenience: auto-apply EF migrations so a fresh PostgreSQL database
+    // has the required tables before admin seeding runs.
+    // Production migration strategy remains manual (no automatic migrations on startup).
+    if (!isProduction)
+    {
+        try
+        {
+            context.Database.Migrate();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to apply EF Core migrations in non-production environment.");
+            throw;
+        }
+    }
+
     try
     {
         var hasAdmin = context.Users.Any(u => u.RolesCsv != null && u.RolesCsv.Contains("Admin"));
