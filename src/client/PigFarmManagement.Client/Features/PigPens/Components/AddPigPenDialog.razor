@@ -209,7 +209,7 @@
     {
         // Create a temporary pig pen object for deposit calculation
         var tempPigPen = new PigPen(
-        Id: Guid.NewGuid(), // Temporary ID
+        Id: Guid.Empty, // Temporary (not yet persisted)
         CustomerId: selectedCustomer?.Id ?? Guid.Empty,
         PenCode: penCode,
         PigQty: pigQty,
@@ -233,9 +233,10 @@
 
         var parameters = new DialogParameters
 {
-{ "PigPenId", tempPigPen.Id },
+{ "PigPenId", Guid.Empty },
 { "PigPen", tempPigPen },
-{ "CurrentDeposits", tempDeposits }
+{ "CurrentDeposits", tempDeposits },
+{ "IsDraft", true }
 };
 
         var dialog = await DialogService.ShowAsync<AddDepositDialog>("เพิ่มเงินมัดจำ", parameters);
@@ -319,6 +320,21 @@
             var createdPigPen = await PigPenService.CreatePigPenAsync(pigPenDto);
 
             Console.WriteLine($"[AddPigPenDialog] Pig pen created successfully: {createdPigPen.Id}");
+
+            // Persist any draft deposits after pig pen exists (Project type only)
+            if (selectedType == PigPenType.Project && tempDeposits.Any())
+            {
+                foreach (var deposit in tempDeposits)
+                {
+                    var dto = new DepositCreateDto(
+                        deposit.Amount,
+                        deposit.Date.ToUniversalTime(),
+                        deposit.Remark
+                    );
+
+                    await PigPenService.AddDepositAsync(createdPigPen.Id, dto);
+                }
+            }
 
             // If a brand is selected, automatically assign all formulas for that brand
             if (!string.IsNullOrEmpty(selectedBrand))

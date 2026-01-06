@@ -8,6 +8,7 @@ using PigFarmManagement.Server.Features.Authentication;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.OpenApi.Models;
 using Npgsql;
+using Microsoft.AspNetCore.WebUtilities;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -80,15 +81,53 @@ builder.Services.Configure<PigFarmManagement.Server.Infrastructure.Settings.Posp
 // Bind Google Maps options from configuration / environment
 builder.Services.Configure<PigFarmManagement.Server.Infrastructure.Settings.GoogleMapsOptions>(builder.Configuration.GetSection("GoogleMaps"));
 
-// Add Entity Framework
-// Support both PostgreSQL (via DATABASE_URL for Railway) and SQLite (local dev)
-// See specs/011-title-deploy-server/quickstart.md for Railway deployment guidance
+// Add Entity Framework (PostgreSQL only)
+// Requires DATABASE_URL:
+// - Railway-style URL: postgresql://user:password@host:port/database
+// - OR a raw Npgsql connection string: Server=...;Port=...;Database=...;User Id=...;Password=...;
 var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
-if (!string.IsNullOrWhiteSpace(databaseUrl))
+if (string.IsNullOrWhiteSpace(databaseUrl))
 {
-    // Parse Railway PostgreSQL DATABASE_URL format: postgresql://user:password@host:port/database
+    throw new InvalidOperationException(
+        "DATABASE_URL is required. SQLite support has been removed; set DATABASE_URL to a PostgreSQL URL or Npgsql connection string.");
+}
+
+// If DATABASE_URL looks like a connection string, use it directly.
+if (databaseUrl.Contains("=", StringComparison.Ordinal) && !databaseUrl.Contains("://", StringComparison.Ordinal))
+{
+    builder.Services.AddDbContext<PigFarmDbContext>(options =>
+        options.UseNpgsql(databaseUrl, npgOptions =>
+            npgOptions.EnableRetryOnFailure()));
+}
+else
+{
+    // Normalize possible tcp:// urls to postgresql://
+    if (databaseUrl.StartsWith("tcp://", StringComparison.OrdinalIgnoreCase))
+    {
+        databaseUrl = "postgresql://" + databaseUrl.Substring("tcp://".Length);
+    }
+
+    // Parse DATABASE_URL
     var uri = new Uri(databaseUrl);
     var userInfo = uri.UserInfo.Split(':', 2);
+
+    // Allow overriding SSL mode via query string for local dev (e.g., ?sslmode=disable)
+    // Defaults to Require (Railway expects SSL).
+    var sslMode = SslMode.Require;
+    try
+    {
+        var query = QueryHelpers.ParseQuery(uri.Query);
+        if (query.TryGetValue("sslmode", out var sslModeValue))
+        {
+            var raw = sslModeValue.ToString();
+            if (!string.IsNullOrWhiteSpace(raw) && Enum.TryParse<SslMode>(raw, ignoreCase: true, out var parsed))
+                sslMode = parsed;
+        }
+    }
+    catch
+    {
+        // Ignore malformed query string and keep default SSL mode.
+    }
     
     var npgsqlBuilder = new NpgsqlConnectionStringBuilder
     {
@@ -97,22 +136,13 @@ if (!string.IsNullOrWhiteSpace(databaseUrl))
         Username = userInfo.Length > 0 ? Uri.UnescapeDataString(userInfo[0]) : "",
         Password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "",
         Database = uri.AbsolutePath.TrimStart('/'),
-        SslMode = SslMode.Require,
+        SslMode = sslMode,
         Pooling = true
     };
 
     builder.Services.AddDbContext<PigFarmDbContext>(options =>
-        options.UseNpgsql(npgsqlBuilder.ToString(), npgOptions => 
+        options.UseNpgsql(npgsqlBuilder.ToString(), npgOptions =>
             npgOptions.EnableRetryOnFailure()));
-}
-else
-{
-    // Fallback to SQLite for local development
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-                          ?? Environment.GetEnvironmentVariable("PIGFARM_CONNECTION")
-                          ?? "Data Source=pigfarm.db";
-    builder.Services.AddDbContext<PigFarmDbContext>(options =>
-        options.UseSqlite(connectionString));
 }
 
 // Add application services
@@ -204,6 +234,22 @@ using (var scope = app.Services.CreateScope())
     var loggerFactory = scope.ServiceProvider.GetRequiredService<ILoggerFactory>();
     var logger = loggerFactory.CreateLogger("AdminSeeder");
     var isProduction = app.Environment.IsProduction();
+
+    // Development convenience: auto-apply EF migrations so a fresh PostgreSQL database
+    // has the required tables before admin seeding runs.
+    // Production migration strategy remains manual (no automatic migrations on startup).
+    if (!isProduction)
+    {
+        try
+        {
+            context.Database.Migrate();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to apply EF Core migrations in non-production environment.");
+            throw;
+        }
+    }
 
     try
     {

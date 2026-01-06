@@ -1,6 +1,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.AspNetCore.WebUtilities;
 
 namespace PigFarmManagement.Server.Infrastructure.Data;
 
@@ -10,18 +11,50 @@ public class PigFarmDbContextFactory : IDesignTimeDbContextFactory<PigFarmDbCont
     {
         var optionsBuilder = new DbContextOptionsBuilder<PigFarmDbContext>();
 
-        // Allow overriding via DATABASE_URL (Railway) or PIGFARM_CONNECTION for CI; fall back to SQLite
+        // PostgreSQL only. Requires DATABASE_URL:
+        // - Railway-style URL: postgresql://user:password@host:port/database
+        // - OR raw Npgsql connection string: Server=...;Port=...;Database=...;User Id=...;Password=...;
         var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
-        if (!string.IsNullOrWhiteSpace(databaseUrl))
+        if (string.IsNullOrWhiteSpace(databaseUrl))
         {
-            // Normalize possible tcp:// urls to postgresql:// and parse DATABASE_URL (postgres://user:pass@host:port/dbname)
-            if (databaseUrl.StartsWith("tcp://", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException(
+                "DATABASE_URL is required for design-time DbContext creation. SQLite support has been removed.");
+        }
+
+        // If DATABASE_URL looks like a connection string, use it directly.
+        if (databaseUrl.Contains("=", StringComparison.Ordinal) && !databaseUrl.Contains("://", StringComparison.Ordinal))
+        {
+            optionsBuilder.UseNpgsql(databaseUrl);
+            return new PigFarmDbContext(optionsBuilder.Options);
+        }
+
+        // Normalize possible tcp:// urls to postgresql://
+        if (databaseUrl.StartsWith("tcp://", StringComparison.OrdinalIgnoreCase))
+        {
+            databaseUrl = "postgresql://" + databaseUrl.Substring("tcp://".Length);
+        }
+
+        var uri = new Uri(databaseUrl);
+        var userInfo = uri.UserInfo.Split(':', 2);
+
+            // Allow overriding SSL mode via query string for local dev (e.g., ?sslmode=disable)
+            // Defaults to Require (Railway expects SSL).
+            var sslMode = Npgsql.SslMode.Require;
+            try
             {
-                databaseUrl = "postgresql://" + databaseUrl.Substring("tcp://".Length);
+                var query = QueryHelpers.ParseQuery(uri.Query);
+                if (query.TryGetValue("sslmode", out var sslModeValue))
+                {
+                    var raw = sslModeValue.ToString();
+                    if (!string.IsNullOrWhiteSpace(raw) && Enum.TryParse<Npgsql.SslMode>(raw, ignoreCase: true, out var parsed))
+                        sslMode = parsed;
+                }
+            }
+            catch
+            {
+                // Ignore malformed query string and keep default SSL mode.
             }
 
-            var uri = new Uri(databaseUrl);
-            var userInfo = uri.UserInfo.Split(':', 2);
             var npgsqlBuilder = new Npgsql.NpgsqlConnectionStringBuilder
             {
                 Host = uri.Host,
@@ -29,20 +62,11 @@ public class PigFarmDbContextFactory : IDesignTimeDbContextFactory<PigFarmDbCont
                 Username = userInfo.Length > 0 ? Uri.UnescapeDataString(userInfo[0]) : "",
                 Password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "",
                 Database = uri.AbsolutePath.TrimStart('/'),
-                SslMode = Npgsql.SslMode.Require,
+                SslMode = sslMode,
                 Pooling = true
             };
 
-            optionsBuilder.UseNpgsql(npgsqlBuilder.ToString());
-            return new PigFarmDbContext(optionsBuilder.Options);
-        }
-
-        // Allow overriding via environment variable for CI or custom paths
-        var connectionString = Environment.GetEnvironmentVariable("PIGFARM_CONNECTION")
-                               ?? "Data Source=pigfarm.db";
-
-        optionsBuilder.UseSqlite(connectionString);
-
+        optionsBuilder.UseNpgsql(npgsqlBuilder.ToString());
         return new PigFarmDbContext(optionsBuilder.Options);
     }
 }
