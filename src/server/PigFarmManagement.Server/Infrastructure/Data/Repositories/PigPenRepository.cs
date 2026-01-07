@@ -94,7 +94,7 @@ public class PigPenRepository : IPigPenRepository
         return entity.ToModel();
     }
 
-    public async Task<(PigPen pigPen, int updatedAssignmentCount)> UpdateAsync(PigPen pigPen, IEnumerable<string>? preserveProductCodes = null)
+    public async Task<(PigPen pigPen, int updatedAssignmentCount)> UpdateAsync(PigPen pigPen, IEnumerable<Guid>? preserveAssignmentIds = null)
     {
         // T005: Load with formula assignments for recalculation
         var entity = await _context.PigPens
@@ -116,12 +116,21 @@ public class PigPenRepository : IPigPenRepository
             .Distinct()
             .ToListAsync();
 
-        var preservedCodes = preserveProductCodes?.ToHashSet(StringComparer.OrdinalIgnoreCase)
-                             ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var preservedAssignmentIds = preserveAssignmentIds?.ToHashSet()
+                                   ?? new HashSet<Guid>();
 
-        // Auto-preserve products already used in feeds
-        foreach (var code in usedProductCodes)
-            preservedCodes.Add(code);
+        // Auto-preserve assignments tied to products already used in feeds
+        if (usedProductCodes.Count > 0)
+        {
+            var usedCodeSet = usedProductCodes.ToHashSet(StringComparer.OrdinalIgnoreCase);
+            foreach (var assignment in pigPen.FormulaAssignments.Where(a => a.IsActive && !a.IsLocked && !string.IsNullOrWhiteSpace(a.ProductCode)))
+            {
+                if (usedCodeSet.Contains(assignment.ProductCode))
+                {
+                    preservedAssignmentIds.Add(assignment.Id);
+                }
+            }
+        }
 
         entity.CustomerId = pigPen.CustomerId;
         entity.PenCode = pigPen.PenCode;
@@ -152,12 +161,12 @@ public class PigPenRepository : IPigPenRepository
         {
             // Get preserved assignments (keep their original pig quantity - already fed)
             var preservedAssignments = pigPen.FormulaAssignments
-                .Where(a => a.IsActive && !a.IsLocked && preservedCodes.Contains(a.ProductCode))
+                .Where(a => a.IsActive && !a.IsLocked && preservedAssignmentIds.Contains(a.Id))
                 .ToList();
 
             // Get unlocked and non-preserved assignments for redistribution
             var unlocked = pigPen.FormulaAssignments
-                .Where(a => a.IsActive && !a.IsLocked && !preservedCodes.Contains(a.ProductCode))
+                .Where(a => a.IsActive && !a.IsLocked && !preservedAssignmentIds.Contains(a.Id))
                 .ToList();
 
             // Add preserved assignments unchanged (keep original AssignedPigQuantity, but sync bag-per-pig from formula)
@@ -201,7 +210,7 @@ public class PigPenRepository : IPigPenRepository
             // Log the update
             _logger.LogInformation(
                 "PigPen {PenId} qty changed {OldQty}->{NewQty}. preserved: {Preserved}. assignments updated: {Count}",
-                pigPen.Id, oldPigQty, pigPen.PigQty, string.Join(',', preservedCodes), updatedAssignmentCount);
+                pigPen.Id, oldPigQty, pigPen.PigQty, string.Join(',', preservedAssignmentIds), updatedAssignmentCount);
         }
         else
         {

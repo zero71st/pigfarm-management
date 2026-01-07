@@ -31,7 +31,7 @@ public record PigPenUpdateDto(
     string? SelectedBrand = null,
     decimal? DepositPerPig = null,
     string? Note = null,
-    IEnumerable<string>? PreserveProductCodes = null
+    IEnumerable<Guid>? PreserveAssignmentIds = null
 );
 
 /// <summary>

@@ -342,7 +342,7 @@
         var oldQty = PigPen.PigQty;
         var newQty = pigQty;
 
-        List<string>? preserveCodes = null;
+        List<Guid>? preserveAssignmentIds = null;
         
         // Show confirmation dialog when pig quantity changes
         if (newQty != oldQty)
@@ -367,9 +367,9 @@
                 if (result == null || result.Canceled)
                     return;
                     
-                if (result.Data is List<string> codes)
+                if (result.Data is List<Guid> preserved)
                 {
-                    preserveCodes = codes;
+                    preserveAssignmentIds = preserved;
                 }
             }
             catch (Exception ex)
@@ -390,7 +390,7 @@
             SelectedBrand: selectedBrand,
             DepositPerPig: selectedType == PigPenType.Project ? depositPerPig : 0m,
             Note: note,
-            PreserveProductCodes: preserveCodes
+            PreserveAssignmentIds: preserveAssignmentIds
         );
 
         try

@@ -16,14 +16,17 @@
                     <MudTh Style="width:90px">ไม่ปรับ</MudTh>
                     <MudTh>รหัส / ชื่อสินค้า</MudTh>
                     <MudTh Style="width:100px" Align="Right">ถุง/ตัว</MudTh>
-                    <MudTh Style="width:100px" Align="Right">จัดสรร</MudTh>
+                    <MudTh Style="width:120px" Align="Right">จัดสรร</MudTh>
                     <MudTh Style="width:100px" Align="Right">ใช้งานแล้ว</MudTh>
                 </HeaderContent>
                 <RowTemplate>
+                    @{
+                        var isPreserved = GetPreserveValue(context.Id);
+                    }
                     <MudTd>
                         <MudCheckBox T="bool" 
-                                    Value="@GetPreserveValue(context.ProductCode)" 
-                                    ValueChanged="@((bool val) => SetPreserveValue(context.ProductCode, val))" 
+                                    Value="@isPreserved" 
+                                    ValueChanged="@((bool val) => SetPreserveValue(context.Id, val))" 
                                     Color="Color.Primary" />
                     </MudTd>
                     <MudTd>
@@ -31,7 +34,18 @@
                         <MudText Typo="Typo.caption" Color="Color.Secondary">@context.ProductCode</MudText>
                     </MudTd>
                     <MudTd Align="Right">@context.AssignedBagPerPig.ToString("N2")</MudTd>
-                    <MudTd Align="Right">@((Math.Ceiling(context.AssignedBagPerPig * NewQty)).ToString("N0"))</MudTd>
+                    <MudTd Align="Right">
+                        @if (isPreserved)
+                        {
+                            <div>@context.AssignedTotalBags.ToString("N0")</div>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">เดิม</MudText>
+                        }
+                        else
+                        {
+                            <div>@(CalculateReassignedTotal(context).ToString("N0"))</div>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">ใหม่</MudText>
+                        }
+                    </MudTd>
                     <MudTd Align="Right">
                         @{
                             var usedQty = GetUsedQty(context.ProductCode);
@@ -67,40 +81,45 @@
     [Parameter] public int NewQty { get; set; }
     [Parameter] public List<ProductUsageDto>? UsedProductUsages { get; set; }
 
-    private Dictionary<string, bool> _preserveMap = new(StringComparer.OrdinalIgnoreCase);
+    private Dictionary<Guid, bool> _preserveMap = new();
     private Dictionary<string, int> _usedMap = new(StringComparer.OrdinalIgnoreCase);
 
     protected override void OnInitialized()
     {
         // Build used quantity map
         _usedMap = (UsedProductUsages ?? new())
+            .Where(u => !string.IsNullOrWhiteSpace(u.ProductCode))
             .ToDictionary(u => u.ProductCode, u => u.UsedQuantity, StringComparer.OrdinalIgnoreCase);
 
         // Initialize preserve map - pre-check items that have usage
         foreach (var a in Assignments.Where(a => a.IsActive && !a.IsLocked))
         {
-            var code = a.ProductCode ?? "";
-            var hasUsage = _usedMap.TryGetValue(code, out var qty) && qty > 0;
-            _preserveMap[code] = hasUsage;
+            var code = a.ProductCode ?? string.Empty;
+            var hasUsage = !string.IsNullOrWhiteSpace(code) && _usedMap.TryGetValue(code, out var qty) && qty > 0;
+            _preserveMap[a.Id] = hasUsage;
         }
     }
 
-    private bool GetPreserveValue(string? code)
+    private bool GetPreserveValue(Guid assignmentId)
     {
-        if (string.IsNullOrEmpty(code)) return false;
-        return _preserveMap.TryGetValue(code, out var val) && val;
+        return _preserveMap.TryGetValue(assignmentId, out var val) && val;
     }
 
-    private void SetPreserveValue(string? code, bool value)
+    private void SetPreserveValue(Guid assignmentId, bool value)
     {
-        if (string.IsNullOrEmpty(code)) return;
-        _preserveMap[code] = value;
+        _preserveMap[assignmentId] = value;
     }
 
     private int GetUsedQty(string? code)
     {
         if (string.IsNullOrEmpty(code)) return 0;
         return _usedMap.TryGetValue(code, out var qty) ? qty : 0;
+    }
+
+    private decimal CalculateReassignedTotal(PigPenFormulaAssignment assignment)
+    {
+        var bagPerPig = assignment.AssignedBagPerPig;
+        return Math.Ceiling(bagPerPig * NewQty);
     }
 
     private void Cancel() => MudDialog.Cancel();
