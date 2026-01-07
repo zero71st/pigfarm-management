@@ -12,7 +12,7 @@ public interface IPigPenService
     Task<List<PigPen>> GetActivePigPensAsync();
     Task<PigPen?> GetPigPenByIdAsync(Guid id);
     Task<PigPen> CreatePigPenAsync(PigPenCreateDto dto);
-    Task<PigPen> UpdatePigPenAsync(PigPen pigPen, string? userId = null, IEnumerable<string>? preserveProductCodes = null);
+    Task<PigPen> UpdatePigPenAsync(PigPen pigPen, string? userId = null, IEnumerable<Guid>? preserveAssignmentIds = null);
     Task<bool> DeletePigPenAsync(Guid id);
     Task<List<PigPen>> GetPigPensByCustomerIdAsync(Guid customerId);
     Task<PigPen> ForceClosePigPenAsync(Guid id);
@@ -182,7 +182,7 @@ public class PigPenService : IPigPenService
         }
     }
 
-    public async Task<PigPen> UpdatePigPenAsync(PigPen pigPen, string? userId = null, IEnumerable<string>? preserveProductCodes = null)
+    public async Task<PigPen> UpdatePigPenAsync(PigPen pigPen, string? userId = null, IEnumerable<Guid>? preserveAssignmentIds = null)
     {
         var existingPigPen = await _pigPenRepository.GetByIdAsync(pigPen.Id);
         if (existingPigPen == null)
@@ -210,7 +210,7 @@ public class PigPenService : IPigPenService
 
         // T005, T008: Repository now returns tuple with updated assignment count
         var oldQty = existingPigPen.PigQty;
-        var (result, updatedAssignmentCount) = await _pigPenRepository.UpdateAsync(updatedPigPen, preserveProductCodes);
+        var (result, updatedAssignmentCount) = await _pigPenRepository.UpdateAsync(updatedPigPen, preserveAssignmentIds);
 
         // T007: Log change event if PigQty changed
         if (oldQty != pigPen.PigQty)

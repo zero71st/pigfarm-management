@@ -172,7 +172,7 @@ public static class PigPenEndpoints
             // T009: Extract user context for logging
             var userId = context.User.FindFirst("user_id")?.Value;
             
-            var result = await pigPenService.UpdatePigPenAsync(updatedPigPen, userId, dto.PreserveProductCodes);
+            var result = await pigPenService.UpdatePigPenAsync(updatedPigPen, userId, dto.PreserveAssignmentIds);
             return Results.Ok(result);
         }
         catch (InvalidOperationException ex)
