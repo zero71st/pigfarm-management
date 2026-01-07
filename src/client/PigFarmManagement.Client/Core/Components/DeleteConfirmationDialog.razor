@@ -5,8 +5,8 @@
     <DialogContent>
         <div class="pa-4">
             <div class="d-flex align-center mb-4">
-                <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" Size="Size.Large" Class="mr-3" />
-                <MudText Typo="Typo.h6">ยืนยันการดำเนินการ</MudText>
+                <MudIcon Icon="@Icons.Material.Filled.DeleteForever" Color="Color.Warning" Size="Size.Large" Class="mr-3" />
+                <MudText Typo="Typo.h6">ยืนยันการลบ</MudText>
             </div>
             <MudText Typo="Typo.body1">@ContentText</MudText>
         </div>
@@ -24,8 +24,8 @@
 @code {
     [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
     [Parameter] public string ContentText { get; set; } = "คุณแน่ใจหรือไม่?";
-    [Parameter] public string ButtonText { get; set; } = "ยืนยัน";
-    [Parameter] public Color ButtonColor { get; set; } = Color.Primary;
+    [Parameter] public string ButtonText { get; set; } = "ลบ";
+    [Parameter] public Color ButtonColor { get; set; } = Color.Error;
 
     void Cancel() => MudDialog.Cancel();
     void Submit() => MudDialog.Close(DialogResult.Ok(true));
