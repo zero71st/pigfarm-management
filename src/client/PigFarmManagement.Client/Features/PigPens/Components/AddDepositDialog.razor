@@ -81,6 +81,7 @@
                              Label="วันที่มัดจำ" 
                              Variant="Variant.Outlined" 
                              Required="true"
+                             DateFormat="d/M/yyyy"
                              MaxDate="DateTime.Today"
                              HelperText="เลือกวันที่ทำการมัดจำ (ไม่สามารถเลือกวันในอนาคต)"
                              Error="@(!IsDateValid())"
