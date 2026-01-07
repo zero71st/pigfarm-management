@@ -20,11 +20,22 @@ public class DepositEntity
     // Navigation Properties
     [ForeignKey("PigPenId")]
     public virtual PigPenEntity PigPen { get; set; } = null!;
+
+    private static DateTime AsUnspecifiedDate(DateTime value)
+        => DateTime.SpecifyKind(value.Date, DateTimeKind.Unspecified);
+
+    // Workaround for storing date-only values in PostgreSQL timestamptz:
+    // store as UTC noon to prevent timezone conversions from shifting the calendar day.
+    private static DateTime ToUtcNoon(DateTime value)
+    {
+        var date = value.Date;
+        return new DateTime(date.Year, date.Month, date.Day, 12, 0, 0, DateTimeKind.Utc);
+    }
     
     // Convert to shared model
     public Deposit ToModel()
     {
-        return new Deposit(Id, PigPenId, Amount, Date, Remark);
+        return new Deposit(Id, PigPenId, Amount, AsUnspecifiedDate(Date), Remark);
     }
     
     // Create from shared model
@@ -35,7 +46,7 @@ public class DepositEntity
             Id = deposit.Id,
             PigPenId = deposit.PigPenId,
             Amount = deposit.Amount,
-            Date = deposit.Date,
+            Date = ToUtcNoon(deposit.Date),
             Remark = deposit.Remark
         };
     }

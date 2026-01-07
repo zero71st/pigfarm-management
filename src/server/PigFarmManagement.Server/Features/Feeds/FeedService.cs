@@ -48,6 +48,9 @@ public class FeedService : IFeedService
         // Business logic: Calculate total cost
         var totalCost = dto.QuantityKg * dto.PricePerKg;
 
+        // Treat manual feed date as date-only and normalize to UTC midnight to avoid timezone day-shifts
+        var feedDateUtc = DateTime.SpecifyKind(dto.Date.Date, DateTimeKind.Utc);
+
         var feedItem = new FeedItem(
             Guid.NewGuid(),
             pigPenId,
@@ -59,7 +62,7 @@ public class FeedService : IFeedService
             dto.QuantityKg,
             dto.PricePerKg,
             totalCost,
-            dto.Date)
+            feedDateUtc)
         {
             // For manually added feeds, new pricing fields are null since they don't come from POSPOS
             FeedCost = null,

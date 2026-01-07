@@ -252,7 +252,7 @@
 
             // Create the updated harvest DTO
             var updateDto = new HarvestUpdateDto(
-                harvestDate!.Value,
+                DateOnlyUtc.AsUnspecifiedDate(harvestDate!.Value),
                 totalPigs,
                 averageWeight,
                 totalWeight,

@@ -236,7 +236,7 @@
             // Create updated deposit DTO
             var updateDto = new DepositUpdateDto(
                 amount,
-                depositDate!.Value,
+                DateOnlyUtc.AsUnspecifiedDate(depositDate!.Value),
                 string.IsNullOrWhiteSpace(remark) ? null : remark.Trim()
             );
 
