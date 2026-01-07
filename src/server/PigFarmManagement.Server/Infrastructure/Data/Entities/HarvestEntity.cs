@@ -29,6 +29,17 @@ public class HarvestEntity
     // Navigation Properties
     [ForeignKey("PigPenId")]
     public virtual PigPenEntity PigPen { get; set; } = null!;
+
+    private static DateTime AsUnspecifiedDate(DateTime value)
+        => DateTime.SpecifyKind(value.Date, DateTimeKind.Unspecified);
+
+    // Workaround for storing date-only values in PostgreSQL timestamptz:
+    // store as UTC noon to prevent timezone conversions from shifting the calendar day.
+    private static DateTime ToUtcNoon(DateTime value)
+    {
+        var date = value.Date;
+        return new DateTime(date.Year, date.Month, date.Day, 12, 0, 0, DateTimeKind.Utc);
+    }
     
     // Convert to shared model
     public HarvestResult ToModel()
@@ -36,7 +47,7 @@ public class HarvestEntity
         return new HarvestResult(
             Id, 
             PigPenId, 
-            HarvestDate, 
+            AsUnspecifiedDate(HarvestDate), 
             PigCount, 
             AvgWeight, 
             TotalWeight, 
@@ -48,10 +59,8 @@ public class HarvestEntity
     // Create from shared model
     public static HarvestEntity FromModel(HarvestResult harvest)
     {
-        // Normalize DateTime to UTC for PostgreSQL compatibility
-        var harvestDate = harvest.HarvestDate.Kind == DateTimeKind.Unspecified
-            ? DateTime.SpecifyKind(harvest.HarvestDate, DateTimeKind.Utc)
-            : harvest.HarvestDate.ToUniversalTime();
+        // Date-only field stored in PostgreSQL timestamptz: store as UTC noon to avoid day shifting.
+        var harvestDate = ToUtcNoon(harvest.HarvestDate);
 
         return new HarvestEntity
         {

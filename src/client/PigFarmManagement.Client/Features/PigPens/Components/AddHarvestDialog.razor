@@ -81,6 +81,7 @@
                                                Label="วันที่จับสุกร"
                                                Required="true"
                                                RequiredError="กรุณาระบุวันที่จับสุกร"
+                                               DateFormat="d/M/yyyy"
                                                MaxDate="DateTime.Today"
                                                HelperText="วันที่ทำการจับสุกร"
                                                Variant="Variant.Outlined" />
@@ -255,7 +256,7 @@
 
             // Create the harvest DTO for the API
             var harvestDto = new HarvestCreateDto(
-                HarvestDate: harvestDate!.Value,
+                HarvestDate: DateOnlyUtc.AsUnspecifiedDate(harvestDate!.Value),
                 PigCount: totalPigs,
                 AvgWeight: averageWeight,
                 TotalWeight: totalWeight,

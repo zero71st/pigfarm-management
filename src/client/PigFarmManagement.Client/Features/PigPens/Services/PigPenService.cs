@@ -1,5 +1,6 @@
 using PigFarmManagement.Shared.Models;
 using PigFarmManagement.Shared.DTOs;
+using PigFarmManagement.Client.Core;
 using PigFarmManagement.Client.Features.Feeds.Services;
 using System.Net.Http.Json;
 
@@ -219,7 +220,7 @@ public class PigPenService : IPigPenService
 
     public async Task<PigPen> SetAppointmentAsync(Guid pigPenId, DateTime? appointmentDate)
     {
-        var dto = new SetAppointmentDto(appointmentDate?.ToUniversalTime());
+        var dto = new SetAppointmentDto(DateOnlyUtc.AsUnspecifiedDate(appointmentDate));
         var response = await _httpClient.PostAsJsonAsync($"api/pigpens/{pigPenId}/set-appointment", dto);
         if (!response.IsSuccessStatusCode)
         {

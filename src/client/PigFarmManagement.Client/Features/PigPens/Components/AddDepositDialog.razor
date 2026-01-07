@@ -81,6 +81,7 @@
                              Label="วันที่มัดจำ" 
                              Variant="Variant.Outlined" 
                              Required="true"
+                             DateFormat="d/M/yyyy"
                              MaxDate="DateTime.Today"
                              HelperText="เลือกวันที่ทำการมัดจำ (ไม่สามารถเลือกวันในอนาคต)"
                              Error="@(!IsDateValid())"
@@ -193,8 +194,8 @@
             isSubmitting = true;
             StateHasChanged();
 
-            // Convert date to UTC to avoid timezone issues
-            var depositDateUtc = depositDate!.Value.ToUniversalTime();
+            // Send date-only value without timezone offset (prevents day shifting on UTC-hosted servers)
+            var depositDateValue = DateOnlyUtc.AsUnspecifiedDate(depositDate!.Value);
 
             var cleanedRemark = string.IsNullOrWhiteSpace(remark) ? null : remark.Trim();
 
@@ -204,7 +205,7 @@
                     Id: Guid.NewGuid(),
                     PigPenId: Guid.Empty,
                     Amount: amount,
-                    Date: depositDateUtc,
+                    Date: depositDateValue,
                     Remark: cleanedRemark
                 );
 
@@ -213,7 +214,7 @@
                 return;
             }
 
-            var depositDto = new DepositCreateDto(amount, depositDateUtc, cleanedRemark);
+            var depositDto = new DepositCreateDto(amount, depositDateValue, cleanedRemark);
             var createdDeposit = await PigPenService.AddDepositAsync(PigPenId, depositDto);
 
             Snackbar.Add($"เพิ่มเงินมัดจำ ฿{amount:N2} สำเร็จ", Severity.Success);

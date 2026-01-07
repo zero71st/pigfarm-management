@@ -296,19 +296,19 @@
 
         try
         {
-            // Convert dates to UTC to avoid timezone parsing issues on server
-            var registerDateUtc = registerDate!.Value.ToUniversalTime();
-            var actualHarvestDateUtc = actualHarvestDate?.ToUniversalTime();
-            var estimatedHarvestDateUtc = estimatedHarvestDate?.ToUniversalTime();
+            // Send date-only values without timezone offset (prevents day shifting on UTC-hosted servers)
+            var registerDateValue = DateOnlyUtc.AsUnspecifiedDate(registerDate!.Value);
+            var actualHarvestDateValue = DateOnlyUtc.AsUnspecifiedDate(actualHarvestDate);
+            var estimatedHarvestDateValue = DateOnlyUtc.AsUnspecifiedDate(estimatedHarvestDate);
 
             // Create the pig pen first
             var pigPenDto = new PigPenCreateDto(
             selectedCustomer!.Id,
             penCode,
             pigQty,
-            registerDateUtc,
-            actualHarvestDateUtc,
-            estimatedHarvestDateUtc,
+            registerDateValue,
+            actualHarvestDateValue,
+            estimatedHarvestDateValue,
             selectedType,
             selectedBrand, // Save the selected brand
             selectedType == PigPenType.Project ? depositPerPig : 0m, // Deposit only for Project type
@@ -328,7 +328,7 @@
                 {
                     var dto = new DepositCreateDto(
                         deposit.Amount,
-                        deposit.Date.ToUniversalTime(),
+                        DateOnlyUtc.AsUnspecifiedDate(deposit.Date),
                         deposit.Remark
                     );
 

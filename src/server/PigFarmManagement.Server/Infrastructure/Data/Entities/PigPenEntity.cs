@@ -52,6 +52,23 @@ public class PigPenEntity
     public virtual ICollection<FeedEntity> Feeds { get; set; } = new List<FeedEntity>();
     public virtual ICollection<DepositEntity> Deposits { get; set; } = new List<DepositEntity>();
     public virtual ICollection<HarvestEntity> Harvests { get; set; } = new List<HarvestEntity>();
+
+    private static DateTime AsUnspecifiedDate(DateTime value)
+        => DateTime.SpecifyKind(value.Date, DateTimeKind.Unspecified);
+
+    private static DateTime? AsUnspecifiedDate(DateTime? value)
+        => value.HasValue ? AsUnspecifiedDate(value.Value) : null;
+
+    // Workaround for storing date-only values in PostgreSQL timestamptz:
+    // store as UTC noon to prevent timezone conversions from shifting the calendar day.
+    private static DateTime ToUtcNoon(DateTime value)
+    {
+        var date = value.Date;
+        return new DateTime(date.Year, date.Month, date.Day, 12, 0, 0, DateTimeKind.Utc);
+    }
+
+    private static DateTime? ToUtcNoon(DateTime? value)
+        => value.HasValue ? ToUtcNoon(value.Value) : null;
     
     // Convert to shared model
     public PigPen ToModel()
@@ -61,9 +78,9 @@ public class PigPenEntity
             CustomerId, 
             PenCode, 
             PigQty, 
-            RegisterDate, 
-            ActHarvestDate, 
-            EstimatedHarvestDate, 
+            AsUnspecifiedDate(RegisterDate), 
+            AsUnspecifiedDate(ActHarvestDate), 
+            AsUnspecifiedDate(EstimatedHarvestDate), 
             FeedCost, 
             Investment, 
             ProfitLoss, 
@@ -90,14 +107,11 @@ public class PigPenEntity
             CustomerId = pigPen.CustomerId,
             PenCode = pigPen.PenCode,
             PigQty = pigPen.PigQty,
-            // PostgreSQL timestamp with time zone requires UTC-normalized DateTime
-            RegisterDate = DateTime.SpecifyKind(pigPen.RegisterDate, DateTimeKind.Utc),
-            ActHarvestDate = pigPen.ActHarvestDate.HasValue 
-                ? DateTime.SpecifyKind(pigPen.ActHarvestDate.Value, DateTimeKind.Utc) 
-                : null,
-            EstimatedHarvestDate = pigPen.EstimatedHarvestDate.HasValue 
-                ? DateTime.SpecifyKind(pigPen.EstimatedHarvestDate.Value, DateTimeKind.Utc) 
-                : null,
+            // Date-only fields stored in PostgreSQL timestamptz: store as UTC noon
+            // to avoid timezone conversions shifting the date.
+            RegisterDate = ToUtcNoon(pigPen.RegisterDate),
+            ActHarvestDate = ToUtcNoon(pigPen.ActHarvestDate),
+            EstimatedHarvestDate = ToUtcNoon(pigPen.EstimatedHarvestDate),
             FeedCost = pigPen.FeedCost,
             Investment = pigPen.Investment,
             ProfitLoss = pigPen.ProfitLoss,
